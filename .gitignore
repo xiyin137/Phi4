@@ -1,0 +1,11 @@
+.lake/
+.claude/
+.DS_Store
+**/.DS_Store
+.vscode/
+CLAUDE.md
+.mcp.json
+/references/
+/test/
+/deprecated/
+REVIEW.md

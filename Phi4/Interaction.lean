@@ -1,0 +1,141 @@
+/-
+Copyright (c) 2026 Phi4 Contributors. All rights reserved.
+Released under Apache 2.0 license.
+-/
+import Phi4.WickProduct
+
+/-!
+# The φ⁴ Interaction Term
+
+The quartic interaction is
+  V_Λ = λ ∫_Λ :φ(x)⁴:_C dx
+where Λ is a bounded volume cutoff region. The central result of this file is that
+e^{-V_Λ} ∈ Lᵖ(dφ_C) for all p < ∞ in d=2 (Theorem 8.6.2 of Glimm-Jaffe).
+
+This is the key estimate that makes the d=2 theory work: the logarithmic divergence
+of c_κ(x) ~ (2π)⁻¹ ln κ in d=2 is "just barely" controlled by the quartic Wick ordering.
+(In d=3, the divergence is worse and additional renormalization is needed.)
+
+## Main definitions
+
+* `interactionCutoff` — V_{Λ,κ} = λ ∫_Λ :φ_κ(x)⁴: dx (both UV and volume cutoff)
+* `interaction` — V_Λ = lim_{κ→∞} V_{Λ,κ} (UV limit, volume cutoff remains)
+
+## Main results
+
+* `interaction_in_L2` — V_Λ ∈ L²(dφ_C)
+* `exp_interaction_Lp` — e^{-V_Λ} ∈ Lᵖ(dφ_C) for all p < ∞
+* `wick_fourth_semibounded` — Lower bound on :φ_κ⁴: in terms of (ln κ)²
+
+## References
+
+* [Glimm-Jaffe] Sections 8.5-8.6, Theorem 8.6.2
+-/
+
+noncomputable section
+
+open MeasureTheory
+open scoped ENNReal NNReal
+
+/-! ## UV-regularized interaction -/
+
+/-- The UV-regularized interaction with volume cutoff:
+    V_{Λ,κ} = λ ∫_Λ :φ_κ(x)⁴:_C dx.
+    Here φ_κ = δ_κ * φ is the UV-smoothed field and :·⁴: is Wick-ordered. -/
+def interactionCutoff (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
+    (ω : FieldConfig2D) : ℝ := by
+  sorry
+
+/-- The interaction V_Λ = lim_{κ→∞} V_{Λ,κ} (UV limit with fixed volume cutoff).
+    The limit exists in L² by Theorem 8.5.3. -/
+def interaction (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) : ℝ := by
+  sorry
+
+/-! ## Semiboundedness of the Wick-ordered quartic
+
+Although :φ⁴: = φ⁴ - 6cφ² + 3c² is not pointwise bounded below (the Wick subtractions
+destroy the positivity of φ⁴), it is "almost" bounded below: the set where it is very
+negative has exponentially small Gaussian measure. -/
+
+/-- Semiboundedness of the UV-regularized quartic Wick product.
+    :φ_κ(x)⁴:_C ≥ -6c_κ(x)² ≥ -const × (ln κ)² for d=2.
+    (Proposition 8.6.3 of Glimm-Jaffe)
+
+    The constant C depends only on the mass, not on the field configuration or point. -/
+theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) :
+    ∃ C : ℝ, ∀ (ω : FieldConfig2D) (x : Spacetime2D),
+      -C * (Real.log κ.κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
+  sorry
+
+/-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ². -/
+theorem wick_fourth_lower_bound_explicit (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+    (ω : FieldConfig2D) (x : Spacetime2D) :
+    -6 * (regularizedPointCovariance mass κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
+  sorry
+
+/-! ## The interaction is in Lᵖ -/
+
+/-- The UV-regularized interaction V_{Λ,κ} is in L²(dφ_C).
+    This follows from the localized Feynman graph bounds (Theorem 8.5.3).
+    The bound is uniform in κ. -/
+theorem interactionCutoff_in_L2 (params : Phi4Params) (Λ : Rectangle)
+    (κ : UVCutoff) :
+    MemLp (interactionCutoff params Λ κ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
+  sorry
+
+/-- Convergence of V_{Λ,κ} → V_Λ in L² as κ → ∞.
+    The limit is taken in the L²(dφ_C) norm:
+      ‖V_{Λ,κ} - V_Λ‖_{L²(dφ_C)} → 0 as κ → ∞. -/
+theorem interactionCutoff_converges_L2 (params : Phi4Params) (Λ : Rectangle) :
+    Filter.Tendsto
+      (fun (κ : ℝ) => if h : 0 < κ then
+        ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        else 0)
+      Filter.atTop
+      (nhds 0) := by
+  sorry
+
+/-- The interaction V_Λ is in L²(dφ_C). -/
+theorem interaction_in_L2 (params : Phi4Params) (Λ : Rectangle) :
+    MemLp (interaction params Λ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
+  sorry
+
+/-! ## The exponential of the interaction is in Lᵖ
+
+This is the central estimate of the chapter (Theorem 8.6.2 of Glimm-Jaffe).
+The proof has two main steps:
+1. Semiboundedness: :P(φ_κ):_C ≥ -const × (ln κ)^{deg P/2}
+2. Gaussian tail estimates: P(|:φ_κ: < threshold|) ≤ exp(-const × κ^δ)
+-/
+
+/-- **Theorem 8.6.2 (Glimm-Jaffe)**: e^{-V_Λ} ∈ Lᵖ(dφ_C) for all p < ∞.
+    This is the key estimate for existence of the finite-volume measure in d=2.
+
+    More precisely:
+      ∫ exp(-p V_Λ) dφ_C ≤ const × exp(const × (N(f) + 1))
+    where N(f) depends on the coupling and volume.
+
+    The proof combines:
+    - Semiboundedness of :φ⁴:_κ (Proposition 8.6.3)
+    - Gaussian measure of the "bad set" where :φ⁴: is very negative
+    - The fact that this bad set has exponentially small measure -/
+theorem exp_interaction_Lp (params : Phi4Params) (Λ : Rectangle)
+    {p : ℝ≥0∞} (hp : p ≠ ⊤) :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  sorry
+
+/-- Positivity of the partition function: Z_Λ = ∫ e^{-V_Λ} dφ_C > 0. -/
+theorem partition_function_pos (params : Phi4Params) (Λ : Rectangle) :
+    0 < ∫ ω, Real.exp (-(interaction params Λ ω))
+        ∂(freeFieldMeasure params.mass params.mass_pos) := by
+  sorry
+
+/-- Finiteness of the partition function: Z_Λ < ∞ (i.e. the exponential is integrable). -/
+theorem partition_function_integrable (params : Phi4Params) (Λ : Rectangle) :
+    Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
+        (freeFieldMeasure params.mass params.mass_pos) := by
+  sorry
+
+end

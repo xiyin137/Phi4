@@ -1,0 +1,104 @@
+/-
+Copyright (c) 2026 Phi4 Contributors. All rights reserved.
+Released under Apache 2.0 license.
+-/
+import Phi4.FiniteVolumeMeasure
+
+/-!
+# Reflection Positivity
+
+Reflection positivity (RP) is the Euclidean counterpart of unitarity (positivity of
+the Hilbert space inner product). It states that for any functional F of the field
+in the positive-time half-space,
+  ⟨F, θF⟩ ≥ 0
+where θ is time reflection (τ ↦ -τ).
+
+RP holds for:
+1. The free covariance C = (-Δ + m²)⁻¹ (intrinsic property)
+2. The Dirichlet covariance C_Λ^D (inherited from free)
+3. The interacting measure dμ_Λ (for symmetric Λ, via checkerboard decomposition)
+
+RP is OS axiom E2 and is the key to constructing the physical Hilbert space
+from the Euclidean theory.
+
+## References
+
+* [Glimm-Jaffe] Sections 7.10, 10.4
+* [Osterwalder-Schrader I] Section on reflection positivity
+-/
+
+noncomputable section
+
+open MeasureTheory
+
+/-! ## Time reflection on field configurations -/
+
+/-- Time reflection on spacetime: (τ, x) ↦ (-τ, x).
+    Convention: coordinate 0 = Euclidean time, coordinate 1 = space. -/
+def timeReflect2D (p : Spacetime2D) : Spacetime2D :=
+  EuclideanSpace.equiv (Fin 2) ℝ |>.symm (fun i => if i = 0 then -p i else p i)
+
+/-- Time reflection on test functions: (θf)(τ, x) = f(-τ, x). -/
+def testFunTimeReflect (f : TestFun2D) : TestFun2D := by
+  sorry -- f ∘ timeReflect2D as a Schwartz map
+
+/-- A test function is supported in positive time if f(τ,x) = 0 for τ ≤ 0. -/
+def supportedInPositiveTime (f : TestFun2D) : Prop :=
+  ∀ x : Spacetime2D, x 0 ≤ 0 → f x = 0
+
+/-! ## Reflection positivity of the free covariance -/
+
+/-- **Reflection positivity of the free covariance** (Glimm-Jaffe 7.10):
+    For the free covariance C = (-Δ + m²)⁻¹ on ℝ²,
+      Σᵢⱼ c̄ᵢ cⱼ C(θfᵢ, fⱼ) ≥ 0
+    for any test functions f₁,...,fₙ supported in positive time {τ > 0}
+    and any complex coefficients c₁,...,cₙ.
+
+    Proof idea: In Fourier space, C(θf, g) = ∫ f̂(-p₀, p⃗)* ĝ(p₀, p⃗) / (p₀² + p⃗² + m²) dp.
+    Writing p₀ = iE for the "energy" continuation, this becomes a positive form. -/
+theorem free_covariance_reflection_positive (mass : ℝ) (hmass : 0 < mass)
+    (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
+    (hf : ∀ i, supportedInPositiveTime (f i)) :
+    0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+      ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
+        ∂(freeFieldMeasure mass hmass)).re := by
+  sorry
+
+/-! ## Reflection positivity of the Dirichlet covariance -/
+
+/-- The Dirichlet covariance inherits reflection positivity from the free covariance,
+    because C_D ≤ C and the difference C - C_D is supported on the boundary.
+
+    Note: RP requires complex coefficients c_i ∈ ℂ with the sesquilinear form
+    Σᵢⱼ c̄ᵢ cⱼ C(θfᵢ, fⱼ) ≥ 0, matching the form used in `free_covariance_reflection_positive`
+    and `OsterwalderSchraderAxioms.E2_reflection_positive`. -/
+theorem dirichlet_covariance_reflection_positive
+    (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
+    (mass : ℝ) (hmass : 0 < mass)
+    (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
+    (hf : ∀ i, supportedInPositiveTime (f i)) :
+    0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+      ↑(∫ x, ∫ y, (testFunTimeReflect (f i)) x * dirichletCov Λ mass hmass x y * (f j) y)).re := by
+  sorry
+
+/-! ## Reflection positivity of the interacting measure -/
+
+/-- **Reflection positivity of the finite-volume φ⁴₂ measure** (Glimm-Jaffe 10.4):
+    For a time-symmetric region Λ = Λ₊ ∪ θΛ₊,
+      Σᵢⱼ c̄ᵢ cⱼ ∫ θFᵢ · Fⱼ dμ_Λ ≥ 0
+    for any "positive-time" functionals Fᵢ.
+
+    The proof uses the checkerboard decomposition:
+    1. Write V_Λ = V_{Λ₊} + V_{θΛ₊} (interaction splits by time reflection)
+    2. Use RP of the free covariance for the Gaussian part
+    3. The interaction terms factorize correctly because V is time-local -/
+theorem interacting_measure_reflection_positive (params : Phi4Params)
+    (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
+    (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
+    (hf : ∀ i, supportedInPositiveTime (f i)) :
+    0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+      ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
+        ∂(finiteVolumeMeasure params Λ)).re := by
+  sorry
+
+end
