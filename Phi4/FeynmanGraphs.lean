@@ -64,8 +64,8 @@ theorem wicks_theorem_even (mass : ℝ) (hmass : 0 < mass)
 
 theorem wicks_theorem_odd (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : Fin (2 * n + 1) → TestFun2D) :
-    ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) = 0 := by
-  sorry
+    ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) = 0 :=
+  GaussianField.odd_moment_vanish _ n f
 
 /-! ## Feynman graphs -/
 

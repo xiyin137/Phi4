@@ -2,6 +2,11 @@
 
 ## 1. Feynman Graphs (Section 8.2)
 
+> **Important conceptual point:** Feynman graphs in Glimm-Jaffe are used *non-perturbatively*,
+> not as a formal power series in lambda. They provide exact Gaussian integral decompositions
+> and bounded (not truncated) sums. See [FeynmanGraphsNonPerturbative.md](FeynmanGraphsNonPerturbative.md)
+> for a detailed discussion of this distinction and why it matters.
+
 **Integration by parts / Wick's theorem:**
     ∫ φ(f) A(φ) dφ_C = ∫ ⟨Cf, δA/δφ⟩ dφ_C
 

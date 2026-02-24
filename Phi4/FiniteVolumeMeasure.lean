@@ -81,11 +81,14 @@ theorem schwingerTwo_symm (params : Phi4Params) (Λ : Rectangle)
     schwingerTwo params Λ f g = schwingerTwo params Λ g f := by
   simp only [schwingerTwo, mul_comm]
 
-/-- The n-point Schwinger function is symmetric under permutations. -/
+/-- The n-point Schwinger function is symmetric under permutations.
+    Proof: the product ∏ᵢ ω(f(σ(i))) = ∏ᵢ ω(f(i)) by `Equiv.prod_comp`. -/
 theorem schwingerN_perm (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
     (f : Fin n → TestFun2D) (σ : Equiv.Perm (Fin n)) :
     schwingerN params Λ n (f ∘ σ) = schwingerN params Λ n f := by
-  sorry
+  simp only [schwingerN, Function.comp]
+  congr 1; funext ω
+  exact Equiv.prod_comp σ (fun i => ω (f i))
 
 /-- The Schwinger functions are multilinear in each argument. -/
 theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)

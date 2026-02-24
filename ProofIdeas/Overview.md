@@ -19,7 +19,7 @@ The construction of the phi^4_2 quantum field theory proceeds through these stag
 10. **Cluster Expansion** (GJ Ch 18): OS4 (ergodicity/clustering) for weak coupling
 11. **Reconstruction** (GJ Ch 19): OS → Wightman via analytic continuation
 
-## Sorry Count by File
+## Sorry Count by File (as of initial commit; now ~74 after Session 2 progress)
 
 | File | Sorries | Primary GJ Chapters |
 |------|---------|---------------------|
@@ -61,3 +61,6 @@ See individual chapter files:
 - [Ch10_11_Estimates_InfiniteVolume.md](Ch10_11_Estimates_InfiniteVolume.md)
 - [Ch12_Regularity.md](Ch12_Regularity.md)
 - [Ch18_19_ClusterExpansion_Reconstruction.md](Ch18_19_ClusterExpansion_Reconstruction.md)
+
+Cross-cutting topics:
+- [FeynmanGraphsNonPerturbative.md](FeynmanGraphsNonPerturbative.md) -- How Feynman graphs are used non-perturbatively (exact Gaussian decompositions, convergent cluster expansion, IBP organization)

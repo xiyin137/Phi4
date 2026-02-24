@@ -41,10 +41,11 @@ open scoped ENNReal NNReal
 
 /-- The UV-regularized interaction with volume cutoff:
     V_{Λ,κ} = λ ∫_Λ :φ_κ(x)⁴:_C dx.
-    Here φ_κ = δ_κ * φ is the UV-smoothed field and :·⁴: is Wick-ordered. -/
+    Here φ_κ = δ_κ * φ is the UV-smoothed field and :·⁴: is Wick-ordered.
+    The integral is over the rectangle Λ with respect to Lebesgue measure on ℝ². -/
 def interactionCutoff (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
-    (ω : FieldConfig2D) : ℝ := by
-  sorry
+    (ω : FieldConfig2D) : ℝ :=
+  params.coupling * ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x
 
 /-- The interaction V_Λ = lim_{κ→∞} V_{Λ,κ} (UV limit with fixed volume cutoff).
     The limit exists in L² by Theorem 8.5.3. -/
@@ -67,11 +68,13 @@ theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) 
       -C * (Real.log κ.κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
   sorry
 
-/-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ². -/
+/-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ².
+    Proof: completing the square, φ⁴ - 6cφ² + 3c² = (φ² - 3c)² - 6c² ≥ -6c². -/
 theorem wick_fourth_lower_bound_explicit (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
     (ω : FieldConfig2D) (x : Spacetime2D) :
     -6 * (regularizedPointCovariance mass κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
-  sorry
+  simp only [wickPower, wickMonomial_four]
+  nlinarith [sq_nonneg (rawFieldEval mass κ ω x ^ 2 - 3 * regularizedPointCovariance mass κ)]
 
 /-! ## The interaction is in Lᵖ -/
 

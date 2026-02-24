@@ -102,12 +102,6 @@ theorem free_singular_values_isBoundedSeq (mass : ℝ) (hmass : 0 < mass) :
     GaussianField.IsBoundedSeq (fun m => freeSingularValue mass m) :=
   free_singular_values_bounded mass hmass
 
-/-- The singular values are summable (nuclear trace class condition).
-    This is the key d=2 fact: Σₘ σₘ < ∞ because eigenvalues grow linearly in m. -/
-theorem free_singular_values_summable (mass : ℝ) (hmass : 0 < mass) :
-    Summable (fun m => freeSingularValue mass m) := by
-  sorry
-
 /-! ## Free covariance CLM and Gaussian measure -/
 
 /-- The covariance CLM T : S(ℝ²) →L[ℝ] ℓ² for the free field.

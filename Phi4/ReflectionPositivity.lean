@@ -38,9 +38,46 @@ open MeasureTheory
 def timeReflect2D (p : Spacetime2D) : Spacetime2D :=
   EuclideanSpace.equiv (Fin 2) ℝ |>.symm (fun i => if i = 0 then -p i else p i)
 
-/-- Time reflection on test functions: (θf)(τ, x) = f(-τ, x). -/
-def testFunTimeReflect (f : TestFun2D) : TestFun2D := by
-  sorry -- f ∘ timeReflect2D as a Schwartz map
+/-- Coordinate access for timeReflect2D. -/
+@[simp]
+theorem timeReflect2D_apply (p : Spacetime2D) (i : Fin 2) :
+    timeReflect2D p i = if i = 0 then -p i else p i := by
+  simp [timeReflect2D]
+
+/-- Time reflection is an involution. -/
+theorem timeReflect2D_involution (p : Spacetime2D) :
+    timeReflect2D (timeReflect2D p) = p := by
+  ext i; by_cases h : i = 0 <;> simp [h]
+
+/-- Time reflection preserves the norm. -/
+theorem timeReflect2D_norm_eq (p : Spacetime2D) :
+    ‖timeReflect2D p‖ = ‖p‖ := by
+  simp only [EuclideanSpace.norm_eq]
+  congr 1
+  apply Finset.sum_congr rfl; intro i _
+  simp [apply_ite (· ^ 2)]
+
+/-- Time reflection as a continuous linear equivalence. -/
+def timeReflectCLE : Spacetime2D ≃L[ℝ] Spacetime2D :=
+  let e : Spacetime2D ≃ₗ[ℝ] Spacetime2D :=
+    { toFun := timeReflect2D
+      invFun := timeReflect2D
+      left_inv := timeReflect2D_involution
+      right_inv := timeReflect2D_involution
+      map_add' := fun x y => by
+        ext i; simp only [timeReflect2D_apply]
+        by_cases h : i = 0 <;> simp [h, add_comm]
+      map_smul' := fun c x => by
+        ext i; simp only [timeReflect2D_apply, RingHom.id_apply]
+        by_cases h : i = 0 <;> simp [h, mul_neg] }
+  { e with
+    continuous_toFun := e.toLinearMap.continuous_of_finiteDimensional
+    continuous_invFun := e.symm.toLinearMap.continuous_of_finiteDimensional }
+
+/-- Time reflection on test functions: (θf)(τ, x) = f(-τ, x).
+    Defined using `compCLMOfContinuousLinearEquiv` applied to the time reflection CLE. -/
+def testFunTimeReflect (f : TestFun2D) : TestFun2D :=
+  SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflectCLE f
 
 /-- A test function is supported in positive time if f(τ,x) = 0 for τ ≤ 0. -/
 def supportedInPositiveTime (f : TestFun2D) : Prop :=

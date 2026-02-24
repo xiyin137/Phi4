@@ -1,6 +1,6 @@
 # Development Plan: phi^4_2 QFT Formalization
 
-## Status: ~83 sorries across 14 files, ~11 proven theorems
+## Status: 70 sorries across 14 files, ~41 proven theorems/lemmas (as of Session 4)
 
 ## Available Infrastructure
 
@@ -26,12 +26,37 @@
 ### From Phi4 (already proven)
 - `Defs.lean` -- All clean (no sorries): Spacetime2D, TestFun2D, FieldConfig2D, Phi4Params, Rectangle, UVCutoff
 - `freeEigenvalue_pos` -- proven
+- `freeEigenvalue_lower_bound` -- proven
+- `freeSingularValue_nonneg` -- proven
+- `free_singular_values_bounded` -- proven (key for freeCovarianceCLM)
+- `free_singular_values_isBoundedSeq` -- proven
+- `freeCovarianceCLM` -- defined (uses spectralCLM)
+- `freeFieldMeasure` -- defined (uses GaussianField.measure)
 - `Rectangle.area_pos` -- proven
 - `freeFieldMeasure_isProbability` -- proven (uses GaussianField)
 - `freeField_centered` -- proven (uses GaussianField)
 - `freeField_two_point` -- proven (uses GaussianField)
 - `freeField_pairing_memLp` -- proven (uses GaussianField)
 - `pos_time_half_exists` (MultipleReflections.lean) -- proven
+- `wickMonomial` -- defined (recursive)
+- `wickMonomial_zero/one/two/three/four` -- proven (simp lemmas)
+- `wickMonomial_zero_variance` -- proven
+- `wickMonomial_bound` -- proven (polynomial bound by induction)
+- `wickMonomial_rewick_two/four` -- proven (algebraic identity, ring)
+- `rewick_fourth` -- proven
+- `rewick_ordering_bounds` -- proven (via wickMonomial_bound)
+- `wickPower`, `wickFourth` -- defined
+- `wickFourth_eq`, `wickFourth_explicit` -- proven
+- `integration_by_parts_free` -- proven
+- `interactionCutoff` -- defined (proper, no sorry)
+- `wick_fourth_lower_bound_explicit` -- proven (nlinarith + completing the square)
+- `wicks_theorem_odd` -- proven (uses GaussianField.odd_moment_vanish)
+- `schwingerTwo_symm` -- proven
+- `schwingerN_perm` -- proven (uses Equiv.prod_comp)
+- `timeReflect2D_apply/involution/norm_eq` -- proven
+- `timeReflectCLE` -- defined (ContinuousLinearEquiv)
+- `testFunTimeReflect` -- defined (via compCLMOfContinuousLinearEquiv)
+- `supportedInPositiveTime` -- defined
 
 ---
 
@@ -39,27 +64,17 @@
 
 ### Priority: CRITICAL -- blocks everything downstream
 
-### 1A. Free Covariance CLM (FreeField.lean)
-**Goal:** Construct `freeCovarianceCLM : TestFun2D ->L[R] ell2'`
+### 1A. Free Covariance CLM (FreeField.lean) -- COMPLETE
+**Status:** Done. `freeCovarianceCLM` constructed via `GaussianField.spectralCLM` with
+the bounded sequence `freeSingularValue`. Key insight: `spectralCLM` only requires
+`IsBoundedSeq`, not summability. (The summability theorem was incorrect and has been removed —
+eigenvalues grow like √m so σ_m ~ m^{-1/4} and the series diverges.)
 
-**Approach:** Use `GaussianField.spectralCLM` with the `freeSingularValue` sequence.
-Need to prove `IsBoundedSeq (freeSingularValue mass)`.
-
-**Tasks:**
-- [ ] `free_singular_values_summable` -- show Sigma sigma_m < infinity
-  - Eigenvalues grow linearly: lambda_m ~ m, so sigma_m ~ m^{-1/2}, and Sigma m^{-1/2} diverges...
-  - **ISSUE:** The summability of sigma_m = lambda_m^{-1/2} is needed for nuclear trace class.
-    In d=2 with harmonic oscillator basis, eigenvalues are ~ (2n1+1) + (2n2+1) + m^2.
-    The number of eigenvalues <= N is ~ N, so sigma_m^2 = lambda_m^{-1} ~ 1/m,
-    and Sigma 1/m diverges! But we need Sigma sigma_m^2 < infinity for Hilbert-Schmidt, not summability of sigma_m.
-  - **Resolution:** Check what `spectralCLM` actually requires. It uses `IsBoundedSeq`, not summability.
-    The Gaussian measure construction uses pushforward from product measure, which works for any bounded sequence.
-    Summability may not be needed. Re-examine the interface.
-- [ ] `free_singular_values_bounded` -- show |sigma_m| <= C. This is straightforward since lambda_m >= m^2 > 0.
-- [ ] `freeCovarianceCLM` -- apply `spectralCLM` with the bounded sequence
-
-**Dependencies:** None (foundational)
-**Blocks:** Everything in WickProduct, FeynmanGraphs, Interaction, and downstream
+**Completed:**
+- [x] `free_singular_values_bounded` -- proven
+- [x] `free_singular_values_isBoundedSeq` -- proven
+- [x] `freeCovarianceCLM` -- defined via spectralCLM
+- [x] `free_singular_values_summable` -- REMOVED (statement was false)
 
 ### 1B. Free Covariance Kernel (FreeField.lean)
 **Goal:** Define the pointwise kernel C(x,y) and its properties

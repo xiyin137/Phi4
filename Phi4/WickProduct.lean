@@ -145,28 +145,90 @@ theorem wickPower_memLp (n : ℕ) (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff
 
 /-! ## Re-Wick-ordering under change of covariance
 
-When the covariance changes from C₁ to C₂, the Wick products transform via:
-  :φⁿ:_{C₁} = Σₖ (n choose 2k) (2k-1)!! δc^k :φ^{n-2k}:_{C₂}
-where δc = c₁ - c₂ is the pointwise covariance difference.
+When the covariance changes from c₁ to c₂, the Wick monomials transform via:
+  :xⁿ:_{c₁} = Σₖ C(n,2k)(2k-1)!!(-1)ᵏ(c₁-c₂)ᵏ :x^{n-2k}:_{c₂}
 
-In particular:
-  :φ⁴:_{C₁} = :φ⁴:_{C₂} + 6δc :φ²:_{C₂} + 3δc²
+This is the Hermite polynomial addition theorem. For the cases we need:
+  :x²:_{c₁} = :x²:_{c₂} - (c₁ - c₂)
+  :x⁴:_{c₁} = :x⁴:_{c₂} - 6(c₁-c₂):x²:_{c₂} + 3(c₁-c₂)²
+
+These are pure algebraic identities, proved by expanding and using `ring`.
 -/
 
-/-- Re-Wick-ordering formula for :φ⁴: under covariance change (Glimm-Jaffe 8.6.1).
-    If the covariance changes by δc = c₁(x) - c₂(x) at point x, then
-      :φ⁴:_{C₁} = :φ⁴:_{C₂} + 6δc :φ²:_{C₂} + 3δc²
+/-- Re-Wick-ordering for the quadratic: :x²:_{c₁} = :x²:_{c₂} - (c₁ - c₂). -/
+theorem wickMonomial_rewick_two (c₁ c₂ x : ℝ) :
+    wickMonomial 2 c₁ x = wickMonomial 2 c₂ x - (c₁ - c₂) := by
+  simp [wickMonomial_two]
 
-    Here the subscript denotes which covariance is used for Wick ordering,
-    while the raw field value φ_κ(x) is unchanged. The formula follows from
-    the Hermite polynomial addition theorem. -/
-theorem rewick_fourth (mass : ℝ) (κ₁ κ₂ : UVCutoff)
-    (δc : ℝ) (ω : FieldConfig2D) (x : Spacetime2D) :
-    wickPower 4 mass κ₁ ω x =
-      wickPower 4 mass κ₂ ω x +
-      6 * δc * wickPower 2 mass κ₂ ω x +
-      3 * δc ^ 2 := by
-  sorry
+/-- **Re-Wick-ordering for the quartic** (Hermite addition theorem, Glimm-Jaffe 8.6.1):
+    :x⁴:_{c₁} = :x⁴:_{c₂} - 6(c₁-c₂) :x²:_{c₂} + 3(c₁-c₂)²
+
+    This is a purely algebraic identity between probabilists' Hermite polynomials.
+    Note the sign: the middle term has a minus when δc = c₁ - c₂. -/
+theorem wickMonomial_rewick_four (c₁ c₂ x : ℝ) :
+    wickMonomial 4 c₁ x =
+      wickMonomial 4 c₂ x - 6 * (c₁ - c₂) * wickMonomial 2 c₂ x
+      + 3 * (c₁ - c₂) ^ 2 := by
+  simp [wickMonomial_four, wickMonomial_two]; ring
+
+/-- Re-Wick-ordering at the field level: when the raw field φ(x) is the same but the
+    Wick-ordering covariance changes from c₁ to c₂, we have
+      :φ⁴:_{c₁} = :φ⁴:_{c₂} - 6δc :φ²:_{c₂} + 3δc²
+    where δc = c₁ - c₂. This restates `wickMonomial_rewick_four` for `wickPower`. -/
+theorem rewick_fourth (c₁ c₂ : ℝ) (φ : ℝ) :
+    wickMonomial 4 c₁ φ =
+      wickMonomial 4 c₂ φ - 6 * (c₁ - c₂) * wickMonomial 2 c₂ φ
+      + 3 * (c₁ - c₂) ^ 2 :=
+  wickMonomial_rewick_four c₁ c₂ φ
+
+/-- **Wick monomials are bounded by a polynomial in |x| of the same degree.**
+    For any variance parameter c and degree n, there exists C > 0 such that
+      |wickMonomial n c x| ≤ C * (1 + |x|)ⁿ  for all x.
+    This is the key algebraic bound underlying the re-Wick-ordering estimates. -/
+theorem wickMonomial_bound : ∀ (n : ℕ) (c : ℝ),
+    ∃ C : ℝ, 0 < C ∧ ∀ x : ℝ, |wickMonomial n c x| ≤ C * (1 + |x|) ^ n
+  | 0, c => ⟨1, one_pos, fun x => by simp⟩
+  | 1, c => ⟨1, one_pos, fun x => by
+    simp only [wickMonomial_one, pow_one, one_mul]
+    linarith [abs_nonneg x]⟩
+  | n + 2, c => by
+    obtain ⟨C₁, hC₁pos, hC₁⟩ := wickMonomial_bound (n + 1) c
+    obtain ⟨C₂, hC₂pos, hC₂⟩ := wickMonomial_bound n c
+    refine ⟨C₁ + (↑n + 1) * |c| * C₂, by positivity, fun x => ?_⟩
+    simp only [wickMonomial_succ_succ]
+    have h1 := hC₁ x
+    have h2 := hC₂ x
+    have hge1 : 1 ≤ 1 + |x| := le_add_of_nonneg_right (abs_nonneg x)
+    -- Set up abbreviations for the two terms
+    set a := x * wickMonomial (n + 1) c x with ha_def
+    set b := (↑n + 1) * c * wickMonomial n c x with hb_def
+    -- Triangle inequality |a - b| ≤ |a| + |b| via norm_add_le
+    have htri : |a - b| ≤ |a| + |b| := by
+      have h := norm_add_le a (-b)
+      simp only [Real.norm_eq_abs, abs_neg, ← sub_eq_add_neg] at h
+      exact h
+    -- Bound |a| using IH
+    have ha_bound : |a| ≤ |x| * (C₁ * (1 + |x|) ^ (n + 1)) := by
+      simp only [ha_def, abs_mul]
+      exact mul_le_mul_of_nonneg_left h1 (abs_nonneg x)
+    -- Bound |b| using IH
+    have hb_bound : |b| ≤ (↑n + 1) * |c| * (C₂ * (1 + |x|) ^ n) := by
+      simp only [hb_def, abs_mul, abs_of_nonneg (show (0 : ℝ) ≤ ↑n + 1 by positivity)]
+      exact mul_le_mul_of_nonneg_left h2 (by positivity)
+    -- Main bound via calc
+    calc |a - b|
+        ≤ |a| + |b| := htri
+      _ ≤ |x| * (C₁ * (1 + |x|) ^ (n + 1))
+          + (↑n + 1) * |c| * (C₂ * (1 + |x|) ^ n) := add_le_add ha_bound hb_bound
+      _ ≤ (1 + |x|) * (C₁ * (1 + |x|) ^ (n + 1))
+          + (↑n + 1) * |c| * (C₂ * (1 + |x|) ^ (n + 2)) := by
+          apply add_le_add
+          · exact mul_le_mul_of_nonneg_right (by linarith [abs_nonneg x]) (by positivity)
+          · exact mul_le_mul_of_nonneg_left
+              (mul_le_mul_of_nonneg_left
+                (pow_le_pow_right₀ hge1 (Nat.le_add_right n 2)) hC₂pos.le)
+              (by positivity)
+      _ = (C₁ + (↑n + 1) * |c| * C₂) * (1 + |x|) ^ (n + 2) := by ring
 
 /-- Quantitative bounds on re-Wick-ordering (Proposition 8.6.1 of Glimm-Jaffe).
     The n-th Wick power is bounded by a polynomial in the raw field value:
@@ -177,7 +239,8 @@ theorem rewick_ordering_bounds (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (κ : UVCutoff) (δc : ℝ) (hδc : |δc| ≤ 1) :
     ∃ C : ℝ, ∀ (ω : FieldConfig2D) (x : Spacetime2D),
       |wickPower n mass κ ω x| ≤ C * (1 + |rawFieldEval mass κ ω x|) ^ n := by
-  sorry
+  obtain ⟨C, hCpos, hC⟩ := wickMonomial_bound n (regularizedPointCovariance mass κ)
+  exact ⟨C, fun ω x => hC (rawFieldEval mass κ ω x)⟩
 
 /-! ## Integration by parts
 
