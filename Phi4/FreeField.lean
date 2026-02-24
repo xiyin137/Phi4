@@ -3,6 +3,7 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Phi4.Defs
+import HeatKernel
 
 /-!
 # Free Euclidean Field in 2D
@@ -65,9 +66,41 @@ theorem freeEigenvalue_pos (mass : ℝ) (hmass : 0 < mass) (m : ℕ) :
   positivity
 
 /-- Singular value σₘ = λₘ⁻¹/² of the free covariance.
-    These are the diagonal entries of T in the adapted basis. -/
+    These are the diagonal entries of T in the adapted basis.
+    Convention matches GaussianField.qftSingularValue: λ ^ (-1/2). -/
 def freeSingularValue (mass : ℝ) (m : ℕ) : ℝ :=
-  (freeEigenvalue mass m)⁻¹ ^ (1/2 : ℝ)
+  (freeEigenvalue mass m)⁻¹ ^ ((1 : ℝ)/2)
+
+/-- The eigenvalues have a uniform lower bound: λₘ ≥ 2 + mass². -/
+theorem freeEigenvalue_lower_bound (mass : ℝ) (m : ℕ) :
+    2 + mass ^ 2 ≤ freeEigenvalue mass m := by
+  unfold freeEigenvalue
+  have h1 : (0 : ℝ) ≤ (m.unpair.1 : ℝ) := Nat.cast_nonneg _
+  have h2 : (0 : ℝ) ≤ (m.unpair.2 : ℝ) := Nat.cast_nonneg _
+  linarith
+
+/-- The singular values are nonneg. -/
+theorem freeSingularValue_nonneg (mass : ℝ) (hmass : 0 < mass) (m : ℕ) :
+    0 ≤ freeSingularValue mass m :=
+  Real.rpow_nonneg (inv_nonneg.mpr (le_of_lt (freeEigenvalue_pos mass hmass m))) _
+
+/-- The singular values are bounded (needed for spectralCLM).
+    Since λₘ ≥ 2 + mass² > 0, we have σₘ = λₘ⁻¹/² ≤ (2+mass²)⁻¹/². -/
+theorem free_singular_values_bounded (mass : ℝ) (hmass : 0 < mass) :
+    ∃ C : ℝ, ∀ m : ℕ, |freeSingularValue mass m| ≤ C := by
+  use (2 + mass ^ 2)⁻¹ ^ ((1 : ℝ)/2)
+  intro m
+  rw [abs_of_nonneg (freeSingularValue_nonneg mass hmass m)]
+  unfold freeSingularValue
+  have hev_pos := freeEigenvalue_pos mass hmass m
+  apply Real.rpow_le_rpow (inv_nonneg.mpr hev_pos.le)
+  · exact (inv_le_inv₀ hev_pos (by positivity)).mpr (freeEigenvalue_lower_bound mass m)
+  · positivity
+
+/-- The singular values form a bounded sequence (IsBoundedSeq form for spectralCLM). -/
+theorem free_singular_values_isBoundedSeq (mass : ℝ) (hmass : 0 < mass) :
+    GaussianField.IsBoundedSeq (fun m => freeSingularValue mass m) :=
+  free_singular_values_bounded mass hmass
 
 /-- The singular values are summable (nuclear trace class condition).
     This is the key d=2 fact: Σₘ σₘ < ∞ because eigenvalues grow linearly in m. -/
@@ -75,19 +108,18 @@ theorem free_singular_values_summable (mass : ℝ) (hmass : 0 < mass) :
     Summable (fun m => freeSingularValue mass m) := by
   sorry
 
-/-- The singular values are bounded (needed for spectralCLM). -/
-theorem free_singular_values_bounded (mass : ℝ) (hmass : 0 < mass) :
-    ∃ C : ℝ, ∀ m : ℕ, |freeSingularValue mass m| ≤ C := by
-  sorry
-
 /-! ## Free covariance CLM and Gaussian measure -/
 
 /-- The covariance CLM T : S(ℝ²) →L[ℝ] ℓ² for the free field.
     This maps test functions to sequences via the Hermite expansion,
-    weighted by the singular values σₘ. -/
+    weighted by the singular values σₘ:
+      T(f)ₘ = σₘ · coeffₘ(f)
+    where coeffₘ are the Schauder coefficients from the DyninMityagin basis. -/
 def freeCovarianceCLM (mass : ℝ) (hmass : 0 < mass) :
-    TestFun2D →L[ℝ] GaussianField.ell2' := by
-  sorry -- spectralCLM applied to freeSingularValue
+    TestFun2D →L[ℝ] GaussianField.ell2' :=
+  GaussianField.spectralCLM
+    (fun m => freeSingularValue mass m)
+    (free_singular_values_isBoundedSeq mass hmass)
 
 /-- The free Gaussian field measure dφ_C on S'(ℝ²).
     This is the centered Gaussian probability measure with covariance

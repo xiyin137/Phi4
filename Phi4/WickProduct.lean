@@ -38,18 +38,62 @@ open scoped ENNReal NNReal
 
 /-! ## Wick products via Hermite polynomials -/
 
-/-- The n-th probabilists' Hermite polynomial Heₙ(x, σ²).
-    He₀ = 1, He₁(x) = x, He₂(x,σ²) = x² - σ²,
-    He₃(x,σ²) = x³ - 3σ²x, He₄(x,σ²) = x⁴ - 6σ²x² + 3σ⁴.
-    In general: Heₙ(x,σ²) = σⁿ Hₙ(x/σ) where Hₙ is the standard Hermite polynomial. -/
-def hermitePoly (n : ℕ) (x σsq : ℝ) : ℝ := by
-  exact match n with
-  | 0 => 1
-  | 1 => x
-  | 2 => x ^ 2 - σsq
-  | 3 => x ^ 3 - 3 * σsq * x
-  | 4 => x ^ 4 - 6 * σsq * x ^ 2 + 3 * σsq ^ 2
-  | n + 5 => sorry -- general case via recurrence
+/-- The Wick monomial `:x^n:_c` (probabilists' Hermite polynomial scaled by variance c).
+
+    Defined via the recursion:
+      `:x⁰: = 1`, `:x¹: = x`, `:x^{n+2}: = x · :x^{n+1}: - (n+1)·c · :x^n:`
+
+    This equals `c^{n/2} · Heₙ(x/√c)` where Heₙ is the probabilists' Hermite polynomial.
+    The recursive definition avoids division by zero when c = 0 and is convenient
+    for computation. Explicitly:
+      He₀ = 1, He₁(x) = x, He₂(x,c) = x² - c,
+      He₃(x,c) = x³ - 3cx, He₄(x,c) = x⁴ - 6cx² + 3c². -/
+def wickMonomial : ℕ → ℝ → ℝ → ℝ
+  | 0, _, _ => 1
+  | 1, _, x => x
+  | n + 2, c, x => x * wickMonomial (n + 1) c x - (n + 1 : ℝ) * c * wickMonomial n c x
+
+@[simp]
+theorem wickMonomial_zero (c x : ℝ) : wickMonomial 0 c x = 1 := rfl
+
+@[simp]
+theorem wickMonomial_one (c x : ℝ) : wickMonomial 1 c x = x := rfl
+
+theorem wickMonomial_succ_succ (n : ℕ) (c x : ℝ) :
+    wickMonomial (n + 2) c x =
+    x * wickMonomial (n + 1) c x - (n + 1 : ℝ) * c * wickMonomial n c x := rfl
+
+/-- Wick monomials at c = 0 are just ordinary monomials. -/
+theorem wickMonomial_zero_variance : ∀ (n : ℕ) (x : ℝ),
+    wickMonomial n 0 x = x ^ n
+  | 0, x => by simp
+  | 1, x => by simp
+  | n + 2, x => by
+    have h1 := wickMonomial_zero_variance (n + 1) x
+    have h2 := wickMonomial_zero_variance n x
+    simp only [wickMonomial_succ_succ, mul_zero, zero_mul, sub_zero, h1, h2]
+    ring
+
+/-- :x²:_c = x² - c -/
+@[simp]
+theorem wickMonomial_two (c x : ℝ) :
+    wickMonomial 2 c x = x ^ 2 - c := by
+  simp [wickMonomial_succ_succ]; ring
+
+/-- :x³:_c = x³ - 3cx -/
+@[simp]
+theorem wickMonomial_three (c x : ℝ) :
+    wickMonomial 3 c x = x ^ 3 - 3 * c * x := by
+  simp [wickMonomial_succ_succ]; ring
+
+/-- :x⁴:_c = x⁴ - 6cx² + 3c² -/
+@[simp]
+theorem wickMonomial_four (c x : ℝ) :
+    wickMonomial 4 c x = x ^ 4 - 6 * c * x ^ 2 + 3 * c ^ 2 := by
+  simp [wickMonomial_succ_succ]; ring
+
+/-- Legacy alias for backward compatibility -/
+abbrev hermitePoly := wickMonomial
 
 /-- The UV-regularized field φ_κ(x) = ∫ δ_κ(x-y) φ(y) dy evaluated at a spacetime point.
     This is the raw (un-Wick-ordered) field value, obtained by convolving the distributional
@@ -61,14 +105,26 @@ def rawFieldEval (mass : ℝ) (κ : UVCutoff)
 /-- Wick product :φ(x)ⁿ:_C for UV-regularized field φ_κ.
     This is Hₙ(φ_κ(x), c_κ(x)) where φ_κ(x) = rawFieldEval and c_κ(x) = C_κ(x,x). -/
 def wickPower (n : ℕ) (mass : ℝ) (κ : UVCutoff)
-    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ := by
-  sorry -- hermitePoly n (rawFieldEval mass κ ω x) (regularizedPointCovariance mass κ)
+    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ :=
+  wickMonomial n (regularizedPointCovariance mass κ) (rawFieldEval mass κ ω x)
 
 /-- The quartic Wick product :φ⁴:_C.
     Explicitly: :φ(x)⁴: = φ(x)⁴ - 6c_κ(x)φ(x)² + 3c_κ(x)². -/
 def wickFourth (mass : ℝ) (κ : UVCutoff)
-    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ := by
-  sorry
+    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ :=
+  wickPower 4 mass κ ω x
+
+/-- wickFourth is wickPower 4. -/
+theorem wickFourth_eq (mass : ℝ) (κ : UVCutoff) (ω : FieldConfig2D) (x : Spacetime2D) :
+    wickFourth mass κ ω x = wickPower 4 mass κ ω x := rfl
+
+/-- Explicit form of :φ⁴: in terms of the raw field and covariance. -/
+theorem wickFourth_explicit (mass : ℝ) (κ : UVCutoff) (ω : FieldConfig2D) (x : Spacetime2D) :
+    wickFourth mass κ ω x =
+      (rawFieldEval mass κ ω x) ^ 4
+      - 6 * (regularizedPointCovariance mass κ) * (rawFieldEval mass κ ω x) ^ 2
+      + 3 * (regularizedPointCovariance mass κ) ^ 2 := by
+  simp [wickFourth, wickPower]
 
 /-! ## Wick product properties -/
 
