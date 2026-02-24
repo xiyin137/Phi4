@@ -1,6 +1,7 @@
 # Development Plan: phi^4_2 QFT Formalization
 
-## Status: 70 sorries across 14 files, ~41 proven theorems/lemmas (as of Session 4)
+## Status: 72 sorries across 15 files, ~45 proven theorems/lemmas (as of Session 5)
+## Note: sorry count increased by 2 because BesselK0.lean adds 6 new sorries (infrastructure), offset by 4 definitions resolved
 
 ## Available Infrastructure
 
@@ -57,6 +58,13 @@
 - `timeReflectCLE` -- defined (ContinuousLinearEquiv)
 - `testFunTimeReflect` -- defined (via compCLMOfContinuousLinearEquiv)
 - `supportedInPositiveTime` -- defined
+- `uvMollifier` -- defined (via ContDiffBump + HasCompactSupport.toSchwartzMap)
+- `rawFieldEval` -- defined (ω applied to uvMollifier)
+- `regularizedPointCovariance` -- defined (GaussianField.covariance of mollifier)
+- `freeCovKernel` -- defined (heat kernel integral representation)
+- `freeCovKernel_symm` -- proven (norm_sub_rev)
+- `besselK1` -- defined + 9 fully proved lemmas (from OSforGFF, 0 sorries)
+- `besselK0` -- defined (cosh integral representation)
 
 ---
 
@@ -76,18 +84,20 @@ eigenvalues grow like √m so σ_m ~ m^{-1/4} and the series diverges.)
 - [x] `freeCovarianceCLM` -- defined via spectralCLM
 - [x] `free_singular_values_summable` -- REMOVED (statement was false)
 
-### 1B. Free Covariance Kernel (FreeField.lean)
+### 1B. Free Covariance Kernel (FreeField.lean) -- PARTIALLY COMPLETE
 **Goal:** Define the pointwise kernel C(x,y) and its properties
 
-**Approach:** C(x,y) = (2pi)^{-1} K_0(m|x-y|) in d=2. Can define via the integral representation:
-C(x,y) = integral_0^infty (4 pi t)^{-1} exp(-|x-y|^2/(4t) - m^2 t) dt
+**Approach:** C(x,y) = (2pi)^{-1} K_0(m|x-y|) in d=2. Defined via heat kernel integral representation.
+Bessel function library (K₁ fully proved, K₀ defined) imported from OSforGFF.
 
 **Tasks:**
-- [ ] `freeCovKernel` -- define via integral representation or Bessel function
-- [ ] `freeCovKernel_symm` -- symmetry of the kernel (immediate from definition)
-- [ ] `freeCovKernel_pos_def` -- positive definiteness. Use Fourier representation: C_hat(p) = (p^2+m^2)^{-1} > 0
-- [ ] `regularizedPointCovariance` -- define c_kappa(x) = integral delta_kappa(x-y) C(x,y') delta_kappa(x-y') dy dy'
+- [x] `freeCovKernel` -- defined via heat kernel integral ∫₀^∞ (4πt)⁻¹ exp(-m²t - |x-y|²/(4t)) dt
+- [x] `freeCovKernel_symm` -- proven (norm_sub_rev)
+- [x] `uvMollifier` -- defined (ContDiffBump + HasCompactSupport.toSchwartzMap)
+- [x] `regularizedPointCovariance` -- defined via GaussianField.covariance of mollifier
+- [ ] `freeCovKernel_pos_def` -- positive definiteness
 - [ ] `regularizedPointCovariance_log_divergence` -- the key d=2 fact: c_kappa ~ (2pi)^{-1} ln kappa
+- [ ] `schwingerIntegral2D_eq_besselK0` -- connect heat kernel integral to K₀
 
 **Dependencies:** None
 **Blocks:** WickProduct (Wick ordering constants), Interaction (semiboundedness), CovarianceOperators

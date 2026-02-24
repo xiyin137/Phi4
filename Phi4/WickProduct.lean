@@ -95,12 +95,13 @@ theorem wickMonomial_four (c x : ℝ) :
 /-- Legacy alias for backward compatibility -/
 abbrev hermitePoly := wickMonomial
 
-/-- The UV-regularized field φ_κ(x) = ∫ δ_κ(x-y) φ(y) dy evaluated at a spacetime point.
-    This is the raw (un-Wick-ordered) field value, obtained by convolving the distributional
-    field ω with an approximate delta function of width ~1/κ. -/
-def rawFieldEval (mass : ℝ) (κ : UVCutoff)
-    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ := by
-  sorry -- ω applied to the UV-smoothed delta function δ_κ(x - ·)
+/-- The UV-regularized field φ_κ(x) = ⟨ω, δ_{κ,x}⟩ evaluated at a spacetime point.
+    This is the raw (un-Wick-ordered) field value, obtained by applying the distributional
+    field configuration ω ∈ S'(ℝ²) to the UV mollifier δ_{κ,x} ∈ S(ℝ²).
+    The mollifier δ_{κ,x} is a smooth bump function centered at x with width ~1/κ. -/
+def rawFieldEval (_mass : ℝ) (κ : UVCutoff)
+    (ω : FieldConfig2D) (x : Spacetime2D) : ℝ :=
+  ω (uvMollifier κ x)
 
 /-- Wick product :φ(x)ⁿ:_C for UV-regularized field φ_κ.
     This is Hₙ(φ_κ(x), c_κ(x)) where φ_κ(x) = rawFieldEval and c_κ(x) = C_κ(x,x). -/

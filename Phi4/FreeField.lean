@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Phi4.Defs
 import HeatKernel
+import Mathlib.Analysis.Calculus.BumpFunction.InnerProduct
 
 /-!
 # Free Euclidean Field in 2D
@@ -165,14 +166,21 @@ Key properties:
 -/
 
 /-- The pointwise covariance C(x,y) = (-Δ+m²)⁻¹(x,y) as a function on ℝ² × ℝ².
-    This is the Green's function / Euclidean propagator. -/
-def freeCovKernel (mass : ℝ) (x y : Spacetime2D) : ℝ := by
-  sorry
+    This is the Green's function / Euclidean propagator.
+
+    Defined via the heat kernel representation:
+      C(x,y) = ∫₀^∞ (4πt)⁻¹ exp(-m²t - |x-y|²/(4t)) dt
+
+    This integral converges for mass > 0 and equals (2π)⁻¹ K₀(m|x-y|)
+    where K₀ is the modified Bessel function of the second kind. -/
+def freeCovKernel (mass : ℝ) (x y : Spacetime2D) : ℝ :=
+  ∫ t in Set.Ioi (0 : ℝ),
+    (4 * Real.pi * t)⁻¹ * Real.exp (-(mass ^ 2 * t + ‖x - y‖ ^ 2 / (4 * t)))
 
 /-- The covariance kernel is symmetric. -/
 theorem freeCovKernel_symm (mass : ℝ) (x y : Spacetime2D) :
     freeCovKernel mass x y = freeCovKernel mass y x := by
-  sorry
+  simp only [freeCovKernel, norm_sub_rev]
 
 /-- The covariance kernel is positive definite. -/
 theorem freeCovKernel_pos_def (mass : ℝ) (hmass : 0 < mass) :
@@ -180,11 +188,29 @@ theorem freeCovKernel_pos_def (mass : ℝ) (hmass : 0 < mass) :
       0 ≤ ∑ i, ∑ j, c i * c j * freeCovKernel mass (x i) (x j) := by
   sorry
 
-/-- The UV-regularized covariance c_κ(x) = C_κ(x,x), where C_κ is the
-    covariance smeared at scale 1/κ.
-    In d=2: c_κ(x) ~ (2π)⁻¹ ln κ + O(1) as κ → ∞. -/
-def regularizedPointCovariance (mass : ℝ) (κ : UVCutoff) : ℝ := by
-  sorry
+/-- UV mollifier: a smooth bump function centered at x with support of radius ~1/κ.
+    This is the approximate delta function δ_{κ,x} used for UV regularization.
+    The function is C^∞, compactly supported in a ball of radius κ⁻¹ around x,
+    and equals 1 on a ball of radius (2κ)⁻¹ around x.
+
+    The exact choice of mollifier does not affect the UV limit (κ → ∞),
+    only the intermediate regularized quantities. -/
+def uvMollifier (κ : UVCutoff) (x : Spacetime2D) : TestFun2D :=
+  let bump : ContDiffBump x :=
+    ⟨(2 * κ.κ)⁻¹, κ.κ⁻¹,
+     inv_pos.mpr (mul_pos two_pos κ.hκ),
+     by rw [inv_lt_inv₀ (mul_pos two_pos κ.hκ) κ.hκ]; linarith [κ.hκ]⟩
+  bump.hasCompactSupport.toSchwartzMap bump.contDiff
+
+/-- The UV-regularized covariance c_κ = Cov(δ_{κ,0}, δ_{κ,0}), where δ_{κ,0} is
+    the UV mollifier centered at the origin.
+    This is the variance of the regularized field: c_κ = E[φ_κ(0)²].
+    By spatial homogeneity, c_κ is independent of the evaluation point.
+    In d=2: c_κ ~ (2π)⁻¹ ln κ + O(1) as κ → ∞ (logarithmic divergence). -/
+def regularizedPointCovariance (mass : ℝ) (κ : UVCutoff) : ℝ :=
+  if h : 0 < mass then
+    GaussianField.covariance (freeCovarianceCLM mass h) (uvMollifier κ 0) (uvMollifier κ 0)
+  else 0
 
 /-- The logarithmic divergence: c_κ ~ (2π)⁻¹ ln κ in d=2. -/
 theorem regularizedPointCovariance_log_divergence (mass : ℝ) (hmass : 0 < mass) :
