@@ -45,22 +45,44 @@ structure Pairing (r : ℕ) where
   /-- Pairs are ordered: first index < second index. -/
   ordered : ∀ p ∈ pairs, p.1 < p.2
 
+/-! ## Abstract pairing/graph expansion interfaces -/
+
+/-- Enumeration model for perfect matchings on finite sets. -/
+class PairingEnumerationModel where
+  num_pairings :
+    ∀ n : ℕ,
+      ∃ (pairings : Finset (Pairing (2 * n))),
+        pairings.card = Nat.doubleFactorial (2 * n - 1)
+
+/-- Gaussian Wick/Feynman expansion model at fixed mass. -/
+class GaussianWickExpansionModel (mass : ℝ) (hmass : 0 < mass) where
+  wicks_theorem_even :
+    ∀ (n : ℕ) (f : Fin (2 * n) → TestFun2D),
+      ∃ (pairings : Finset (Pairing (2 * n))),
+        ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+          ∑ π ∈ pairings, ∏ p ∈ π.pairs,
+            GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2)
+
 /-- The set of pairings of 2n elements is finite and has cardinality (2n-1)!!. -/
 theorem num_pairings (n : ℕ) :
+    [PairingEnumerationModel] →
     ∃ (pairings : Finset (Pairing (2 * n))),
       pairings.card = Nat.doubleFactorial (2 * n - 1) := by
-  sorry
+  intro hpair
+  exact PairingEnumerationModel.num_pairings n
 
 /-- **Wick's theorem** (Proposition 8.3.1): For the Gaussian measure dφ_C,
     ∫ φ(f₁)⋯φ(f_{2n}) dφ_C = Σ_{pairings π} Π_{(i,j)∈π} C(fᵢ, fⱼ)
     and the integral vanishes for odd numbers of fields. -/
 theorem wicks_theorem_even (mass : ℝ) (hmass : 0 < mass)
+    [GaussianWickExpansionModel mass hmass]
     (n : ℕ) (f : Fin (2 * n) → TestFun2D) :
     ∃ (pairings : Finset (Pairing (2 * n))),
       ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
         ∑ π ∈ pairings, ∏ p ∈ π.pairs,
           GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2) := by
-  sorry
+  exact GaussianWickExpansionModel.wicks_theorem_even
+    (mass := mass) (hmass := hmass) n f
 
 theorem wicks_theorem_odd (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : Fin (2 * n + 1) → TestFun2D) :
@@ -85,13 +107,13 @@ structure FeynmanGraph (r : ℕ) where
 
 /-- A self-line connects two legs at the same vertex.
     These contribute a factor of C(x,x) = c_κ(x) (the pointwise covariance). -/
-def FeynmanGraph.isSelfLine {r : ℕ} (G : FeynmanGraph r)
+def FeynmanGraph.isSelfLine {r : ℕ} (_G : FeynmanGraph r)
     (l : (Fin r × ℕ) × (Fin r × ℕ)) : Prop :=
   l.1.1 = l.2.1
 
 /-- An interaction line connects legs at different vertices.
     These contribute a factor of C(xᵢ, xⱼ) (the propagator). -/
-def FeynmanGraph.isInteractionLine {r : ℕ} (G : FeynmanGraph r)
+def FeynmanGraph.isInteractionLine {r : ℕ} (_G : FeynmanGraph r)
     (l : (Fin r × ℕ) × (Fin r × ℕ)) : Prop :=
   l.1.1 ≠ l.2.1
 
@@ -100,15 +122,28 @@ def FeynmanGraph.isInteractionLine {r : ℕ} (G : FeynmanGraph r)
 def graphIntegral {r : ℕ} (G : FeynmanGraph r) (mass : ℝ) : ℝ :=
   ∫ x : Fin r → Spacetime2D, ∏ l ∈ G.lines, freeCovKernel mass (x l.1.1) (x l.2.1)
 
+/-- Feynman graph expansion and graph bounds at fixed mass. -/
+class FeynmanGraphEstimateModel (mass : ℝ) (hmass : 0 < mass) where
+  feynman_graph_expansion :
+    ∀ (r : ℕ) (f : Fin r → TestFun2D),
+      ∃ (graphs : Finset (FeynmanGraph r)),
+        ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+          ∑ G ∈ graphs, graphIntegral G mass
+  localized_graph_bound :
+    ∃ C : ℝ, 0 < C ∧ ∀ (r : ℕ) (G : FeynmanGraph r),
+      |graphIntegral G mass| ≤ C ^ G.lines.card
+
 /-- **Proposition 8.3.1**: The Gaussian integral of a product of Wick monomials
     equals the sum of Feynman graph integrals:
       ∫ A(φ) dφ_C = Σ_G I(G) -/
 theorem feynman_graph_expansion (mass : ℝ) (hmass : 0 < mass)
+    [FeynmanGraphEstimateModel mass hmass]
     (r : ℕ) (f : Fin r → TestFun2D) :
     ∃ (graphs : Finset (FeynmanGraph r)),
       ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
         ∑ G ∈ graphs, graphIntegral G mass := by
-  sorry
+  exact FeynmanGraphEstimateModel.feynman_graph_expansion
+    (mass := mass) (hmass := hmass) r f
 
 /-! ## Localized graph estimates
 
@@ -127,8 +162,11 @@ the total distance between the squares. -/
     The bound C^L where L = total number of lines in G is uniform over all graphs
     with the same number of vertices and legs. -/
 theorem localized_graph_bound (mass : ℝ) (hmass : 0 < mass) :
+    [FeynmanGraphEstimateModel mass hmass] →
     ∃ C : ℝ, 0 < C ∧ ∀ (r : ℕ) (G : FeynmanGraph r),
       |graphIntegral G mass| ≤ C ^ G.lines.card := by
-  sorry
+  intro hw
+  exact FeynmanGraphEstimateModel.localized_graph_bound
+    (mass := mass) (hmass := hmass)
 
 end

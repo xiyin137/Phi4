@@ -31,7 +31,7 @@ The resulting Wightman QFT has:
 
 * [Glimm-Jaffe] Chapter 19
 * [Osterwalder-Schrader II] (1975)
-* OSreconstruction library: `os_to_wightman` theorem
+* OSreconstruction library: reconstruction API (`WightmanFunctions`, `IsWickRotationPair`)
 -/
 
 noncomputable section
@@ -56,7 +56,9 @@ private lemma translateMap_antilipschitz (a : Spacetime2D) :
     AntilipschitzWith 1 (translateMap a) := by
   refine AntilipschitzWith.of_le_mul_dist ?_
   intro x y
-  simpa [translateMap, one_mul] using (dist_add_right x y a).ge
+  calc
+    dist x y ≤ dist (x + a) (y + a) := (dist_add_right x y a).ge
+    _ = 1 * dist (translateMap a x) (translateMap a y) := by simp [translateMap]
 
 /-- Translation of a Schwartz test function by `a`: x ↦ g(x + a). -/
 private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
@@ -64,6 +66,35 @@ private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
     (translateMap_hasTemperateGrowth (toSpacetime2D a))
     (translateMap_antilipschitz (toSpacetime2D a))
     g
+
+/-! ## Abstract reconstruction inputs -/
+
+/-- Inputs needed for OS reconstruction beyond the basic OSreconstruction API.
+    In particular, `wightman_reconstruction` is kept as an explicit assumption
+    interface rather than calling a specific external theorem directly. -/
+class ReconstructionInputModel (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params] where
+  phi4_linear_growth :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS)
+  phi4_os4_weak_coupling :
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+        p.coupling < coupling_bound →
+          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+              let g_shifted : TestFun2D := translateTestFun a g
+              |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
+                infiniteVolumeSchwinger p 1 ![f] *
+                  infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
+                C * Real.exp (-m_gap * ‖a‖)
+  wightman_reconstruction :
+    ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W
 
 /-! ## Linear growth condition (E0') -/
 
@@ -77,11 +108,14 @@ private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
 
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
-theorem phi4_linear_growth (params : Phi4Params) :
+theorem phi4_linear_growth (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params]
+    [ReconstructionInputModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  sorry
+  exact ReconstructionInputModel.phi4_linear_growth (params := params)
 
 /-! ## OS4: Clustering (for weak coupling) -/
 
@@ -99,15 +133,22 @@ theorem phi4_linear_growth (params : Phi4Params) :
     For strong coupling, OS4 requires the phase transition analysis
     and may fail at the critical point. -/
 theorem phi4_os4_weak_coupling (params : Phi4Params) :
-    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧ params.coupling < coupling_bound →
-    ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-      ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-        let g_shifted : TestFun2D := translateTestFun a g
-        |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
-          infiniteVolumeSchwinger params 1 ![f] *
-            infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
-          C * Real.exp (-m_gap * ‖a‖) := by
-  sorry
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+        p.coupling < coupling_bound →
+          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+              let g_shifted : TestFun2D := translateTestFun a g
+              |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
+                infiniteVolumeSchwinger p 1 ![f] *
+                  infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
+                C * Real.exp (-m_gap * ‖a‖) := by
+  intro hlim hos hrec
+  exact ReconstructionInputModel.phi4_os4_weak_coupling
+    (params := params)
 
 /-! ## Wightman reconstruction -/
 
@@ -123,14 +164,19 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
     - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
     - W3: Locality (spacelike commutativity) -/
 theorem phi4_wightman_exists (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
+  intro hlim hos hrec
   obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
   rcases hOS_lg with ⟨hS, hlg_nonempty⟩
   rcases hlg_nonempty with ⟨hlg⟩
-  obtain ⟨Wfn, hWR⟩ := os_to_wightman (d := 1) OS hlg
+  obtain ⟨Wfn, hWR⟩ := ReconstructionInputModel.wightman_reconstruction
+    (params := params) OS hlg
   exact ⟨Wfn, OS, hS, hWR⟩
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
@@ -140,11 +186,15 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     This is encoded in the `hermitian` field of `WightmanFunctions`,
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
+  intro hlim hos hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -154,9 +204,13 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     This follows from the Wightman reconstruction theorem applied to
     the φ⁴₂ Schwinger functions. -/
 theorem phi4_locality (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
+  intro hlim hos hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
@@ -164,9 +218,13 @@ theorem phi4_locality (params : Phi4Params) :
     U(Λ,a) φ(f) U(Λ,a)⁻¹ = φ((Λ,a)·f) for (Λ,a) ∈ ISO(1,1).
     (Glimm-Jaffe Section 19.5) -/
 theorem phi4_lorentz_covariance (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
+  intro hlim hos hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -178,9 +236,13 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     For strong coupling, vacuum uniqueness is related to the absence of
     phase transitions (or selecting a pure phase). -/
 theorem phi4_unique_vacuum (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
+  intro hlim hos hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 

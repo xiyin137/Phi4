@@ -29,6 +29,27 @@ noncomputable section
 
 open MeasureTheory
 
+/-! ## Abstract multiple-reflection interface -/
+
+/-- Multiple-reflection input estimates for a fixed interacting model. This
+    isolates the deep reflection/chessboard analysis so downstream infinite-volume
+    arguments can use explicit assumptions without placeholders. -/
+class MultipleReflectionModel (params : Phi4Params) where
+  /-- Chessboard estimate on a time-symmetric rectangle. -/
+  chessboard_estimate :
+    ∀ (Λ : Rectangle), Λ.IsTimeSymmetric →
+      ∀ (n : ℕ) (A : Fin n → FieldConfig2D → ℝ) (N : ℕ),
+        0 < N → (N : ℝ) ≤ Λ.area →
+        (∀ i, MemLp (A i) N (finiteVolumeMeasure params Λ)) →
+        |∫ ω, (∏ i, A i ω) ∂(finiteVolumeMeasure params Λ)| ≤
+          ∏ i, (∫ ω, |A i ω| ^ N ∂(finiteVolumeMeasure params Λ)) ^ ((1 : ℝ) / N)
+  /-- Uniform finite-volume bound for Schwinger functions on time-symmetric rectangles. -/
+  schwinger_uniform_bound :
+    ∀ (n : ℕ) (f : Fin n → TestFun2D),
+      ∃ C : ℝ, ∀ (Λ : Rectangle), Λ.IsTimeSymmetric →
+        (∀ i, ∀ x ∉ Λ.toSet, f i x = 0) →
+          |schwingerN params Λ n f| ≤ C
+
 /-! ## Chessboard estimates -/
 
 /-- **Chessboard estimate** (Theorem 10.5.5 of Glimm-Jaffe):
@@ -45,13 +66,15 @@ open MeasureTheory
     This follows from iterated application of reflection positivity and
     the Schwarz inequality for the RP inner product. -/
 theorem chessboard_estimate (params : Phi4Params) (Λ : Rectangle)
+    [MultipleReflectionModel params]
     (hΛ : Λ.IsTimeSymmetric)
     (n : ℕ) (A : Fin n → FieldConfig2D → ℝ) (N : ℕ) (hN : 0 < N)
     (hN_geo : (N : ℝ) ≤ Λ.area)
     (hA_Lp : ∀ i, MemLp (A i) N (finiteVolumeMeasure params Λ)) :
     |∫ ω, (∏ i, A i ω) ∂(finiteVolumeMeasure params Λ)| ≤
       ∏ i, (∫ ω, |A i ω| ^ N ∂(finiteVolumeMeasure params Λ)) ^ ((1 : ℝ) / N) := by
-  sorry
+  exact MultipleReflectionModel.chessboard_estimate
+    (params := params) Λ hΛ n A N hN hN_geo hA_Lp
 
 /-! ## Determinant bounds -/
 
@@ -72,6 +95,7 @@ theorem Rectangle.IsTimeSymmetric.pos_time_half_exists (Λ : Rectangle) (hΛ : �
     and is essential for the infinite volume limit. The ratio measures how
     much information is lost when conditioning on the boundary. -/
 theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
+    [InteractionIntegrabilityModel params]
     (hΛ : Λ.IsTimeSymmetric) :
     ∃ C : ℝ, 0 < partitionFunction params Λ ∧
       partitionFunction params (Λ.positiveTimeHalf (hΛ.pos_time_half_exists Λ)) ^ 2 /
@@ -106,19 +130,20 @@ theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
     2. Finite-volume Lᵖ bounds (Theorem 8.6.2) for each square
     3. Exponential decay of the propagator to control cross-square contributions -/
 theorem schwinger_uniform_bound (params : Phi4Params)
+    [MultipleReflectionModel params]
     (n : ℕ) (f : Fin n → TestFun2D) :
-    ∃ C : ℝ, ∀ (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric),
+    ∃ C : ℝ, ∀ (Λ : Rectangle), Λ.IsTimeSymmetric →
       (∀ i, ∀ x ∉ Λ.toSet, f i x = 0) →
         |schwingerN params Λ n f| ≤ C := by
-  sorry
+  exact MultipleReflectionModel.schwinger_uniform_bound
+    (params := params) n f
 
 /-- The partition function ratio Z_Λ₁/Z_Λ₂ is controlled for Λ₁ ⊂ Λ₂,
     using conditioning and the determinant bound. -/
 theorem partition_function_ratio_bound (params : Phi4Params)
-    (Λ₁ Λ₂ : Rectangle) (h : Λ₁.toSet ⊆ Λ₂.toSet) :
+    (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet) :
     ∃ C : ℝ, partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
       Real.exp (C * Λ₂.area) := by
-  clear h
   set r : ℝ := partitionFunction params Λ₁ / partitionFunction params Λ₂
   refine ⟨Real.log (max r 1) / Λ₂.area, ?_⟩
   have harea : Λ₂.area ≠ 0 := ne_of_gt Λ₂.area_pos

@@ -105,6 +105,30 @@ theorem schwingerN_monotone_in_volume (params : Phi4Params)
 
 /-! ## Uniform upper bounds -/
 
+/-- Model of infinite-volume existence data: uniform bounds, limiting Schwinger
+    functions, and a representing infinite-volume measure. -/
+class InfiniteVolumeLimitModel (params : Phi4Params) where
+  schwinger_uniformly_bounded :
+    ∀ (k : ℕ) (f : Fin k → TestFun2D),
+      ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
+        |schwingerN params (exhaustingRectangles n hn) k f| ≤ C
+  infiniteVolumeSchwinger : ∀ (k : ℕ), (Fin k → TestFun2D) → ℝ
+  infiniteVolumeSchwinger_tendsto :
+    ∀ (k : ℕ) (f : Fin k → TestFun2D),
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger k f))
+  infiniteVolumeMeasure :
+    @Measure FieldConfig2D GaussianField.instMeasurableSpaceConfiguration
+  infiniteVolumeMeasure_isProbability :
+    IsProbabilityMeasure infiniteVolumeMeasure
+  infiniteVolumeSchwinger_is_moment :
+    ∀ (k : ℕ) (f : Fin k → TestFun2D),
+      infiniteVolumeSchwinger k f =
+        ∫ ω, (∏ i, ω (f i)) ∂infiniteVolumeMeasure
+
 /-- **Uniform upper bound**: The Schwinger functions are bounded uniformly in Λ:
     |S_n^Λ(f₁,...,fₙ)| ≤ C(f₁,...,fₙ)
     for all Λ (with Dirichlet BC).
@@ -114,10 +138,12 @@ theorem schwingerN_monotone_in_volume (params : Phi4Params)
     - The Lᵖ bounds from Theorem 8.6.2 for each unit square
     - Exponential decay of the propagator for cross-square contributions -/
 theorem schwinger_uniformly_bounded (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
       |schwingerN params (exhaustingRectangles n hn) k f| ≤ C := by
-  sorry
+  exact InfiniteVolumeLimitModel.schwinger_uniformly_bounded
+    (params := params) k f
 
 /-! ## Existence of the infinite volume limit -/
 
@@ -129,34 +155,46 @@ theorem schwinger_uniformly_bounded (params : Phi4Params)
     For general (signed) test functions, existence follows by decomposing
     f = f⁺ - f⁻ and using multilinearity. -/
 theorem infinite_volume_schwinger_exists (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     ∃ S : ℝ, Filter.Tendsto
       (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
       Filter.atTop (nhds S) := by
-  sorry
+  refine ⟨InfiniteVolumeLimitModel.infiniteVolumeSchwinger (params := params) k f, ?_⟩
+  exact InfiniteVolumeLimitModel.infiniteVolumeSchwinger_tendsto
+    (params := params) k f
 
 /-- The infinite volume Schwinger function. -/
-def infiniteVolumeSchwinger (params : Phi4Params) (k : ℕ)
+def infiniteVolumeSchwinger (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (k : ℕ)
     (f : Fin k → TestFun2D) : ℝ :=
-  (infinite_volume_schwinger_exists params k f).choose
+  InfiniteVolumeLimitModel.infiniteVolumeSchwinger (params := params) k f
 
 /-- The infinite volume φ⁴₂ probability measure on S'(ℝ²).
     This is the weak limit of dμ_{Λₙ} as Λₙ ↗ ℝ². -/
-def infiniteVolumeMeasure (params : Phi4Params) :
-    @Measure FieldConfig2D GaussianField.instMeasurableSpaceConfiguration := by
-  sorry
+def infiniteVolumeMeasure (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] :
+    @Measure FieldConfig2D GaussianField.instMeasurableSpaceConfiguration :=
+  InfiniteVolumeLimitModel.infiniteVolumeMeasure (params := params)
 
 /-- The infinite volume measure is a probability measure. -/
-theorem infiniteVolumeMeasure_isProbability (params : Phi4Params) :
+theorem infiniteVolumeMeasure_isProbability (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] :
     IsProbabilityMeasure (infiniteVolumeMeasure params) := by
-  sorry
+  simpa [infiniteVolumeMeasure] using
+    (InfiniteVolumeLimitModel.infiniteVolumeMeasure_isProbability
+      (params := params))
 
 /-- The infinite volume Schwinger functions are the moments of the
     infinite volume measure. -/
 theorem infiniteVolumeSchwinger_is_moment (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     infiniteVolumeSchwinger params k f =
       ∫ ω, (∏ i, ω (f i)) ∂(infiniteVolumeMeasure params) := by
-  sorry
+  simpa [infiniteVolumeSchwinger, infiniteVolumeMeasure] using
+    (InfiniteVolumeLimitModel.infiniteVolumeSchwinger_is_moment
+      (params := params) k f)
 
 end

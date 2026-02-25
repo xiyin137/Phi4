@@ -50,7 +50,9 @@ def finiteVolumeMeasure (params : Phi4Params) (Λ : Rectangle) :
       (fun ω => ENNReal.ofReal (Real.exp (-(interaction params Λ ω))))
 
 /-- The finite-volume measure is a probability measure. -/
-theorem finiteVolumeMeasure_isProbability (params : Phi4Params) (Λ : Rectangle) :
+theorem finiteVolumeMeasure_isProbability (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
   refine ⟨?_⟩
   have hZpos : 0 < partitionFunction params Λ := by
@@ -171,7 +173,8 @@ private theorem freeField_product_memLp
       exact htail.mul' hf0
 
 private theorem finiteVolume_product_integrable
-    (params : Phi4Params) (Λ : Rectangle) (n : ℕ) (f : Fin n → TestFun2D) :
+    (params : Phi4Params) [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (n : ℕ) (f : Fin n → TestFun2D) :
     Integrable (fun ω : FieldConfig2D => ∏ i, ω (f i)) (finiteVolumeMeasure params Λ) := by
   set μ := freeFieldMeasure params.mass params.mass_pos
   set w : FieldConfig2D → ℝ := fun ω => Real.exp (-(interaction params Λ ω))
@@ -220,6 +223,7 @@ private theorem finiteVolume_product_integrable
     Proof: ω is linear (WeakDual), so the product splits at index i,
     and the integral distributes by linearity. -/
 theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
+    [InteractionIntegrabilityModel params]
     (f g : Fin n → TestFun2D) (c : ℝ) (i : Fin n) :
     schwingerN params Λ n (Function.update f i (c • f i + g i)) =
       c * schwingerN params Λ n f +
@@ -264,13 +268,29 @@ theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
     finiteVolume_product_integrable params Λ n (Function.update f i (g i))
   rw [integral_add h_int1 h_int2, integral_const_mul]
 
+/-! ## Finite-volume comparison interface -/
+
+/-- Comparison input controlling interacting two-point functions by the free Gaussian
+    two-point function. This packages the nontrivial domination estimate proved via
+    correlation-inequality/random-walk methods (e.g. Gaussian upper bounds in the
+    even φ⁴ setting) as an explicit assumption for downstream development. -/
+class FiniteVolumeComparisonModel (params : Phi4Params) where
+  schwingerTwo_le_free : ∀ (Λ : Rectangle)
+      (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      schwingerTwo params Λ f g ≤
+        ∫ ω, ω f * ω g ∂(freeFieldMeasure params.mass params.mass_pos)
+
 /-- The 2-point function is bounded by the free field 2-point function
     (for the φ⁴ interaction with λ > 0). This is a consequence of the
-    Lebowitz inequality. -/
+    Gaussian-domination / comparison inequalities for even φ⁴ models
+    (e.g. GJ 21.5, Proposition 21.5.1 and related bounds). -/
 theorem schwingerTwo_le_free (params : Phi4Params) (Λ : Rectangle)
+    [FiniteVolumeComparisonModel params]
     (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
     schwingerTwo params Λ f g ≤
       ∫ ω, ω f * ω g ∂(freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  exact FiniteVolumeComparisonModel.schwingerTwo_le_free
+    (params := params) Λ f g hf hg
 
 end

@@ -66,7 +66,7 @@ negative has exponentially small Gaussian measure. -/
     (Proposition 8.6.3 of Glimm-Jaffe)
 
     The constant C depends only on the mass, not on the field configuration or point. -/
-theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+theorem wick_fourth_semibounded (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
     (hκ : 1 < κ.κ) :
     ∃ C : ℝ, ∀ (ω : FieldConfig2D) (x : Spacetime2D),
       -C * (Real.log κ.κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
@@ -93,11 +93,38 @@ theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
 
 /-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ².
     Proof: completing the square, φ⁴ - 6cφ² + 3c² = (φ² - 3c)² - 6c² ≥ -6c². -/
-theorem wick_fourth_lower_bound_explicit (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+theorem wick_fourth_lower_bound_explicit (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
     (ω : FieldConfig2D) (x : Spacetime2D) :
     -6 * (regularizedPointCovariance mass κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
   simp only [wickPower, wickMonomial_four]
   nlinarith [sq_nonneg (rawFieldEval mass κ ω x ^ 2 - 3 * regularizedPointCovariance mass κ)]
+
+/-! ## Abstract interaction-integrability interface -/
+
+/-- Analytic interaction estimates used by finite-volume construction. This
+    packages the substantial Chapter 8 bounds as explicit assumptions. -/
+class InteractionIntegrabilityModel (params : Phi4Params) where
+  interactionCutoff_in_L2 :
+    ∀ (Λ : Rectangle) (κ : UVCutoff),
+      MemLp (interactionCutoff params Λ κ) 2
+        (freeFieldMeasure params.mass params.mass_pos)
+  interactionCutoff_converges_L2 :
+    ∀ (Λ : Rectangle),
+      Filter.Tendsto
+        (fun (κ : ℝ) => if h : 0 < κ then
+          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+            ∂(freeFieldMeasure params.mass params.mass_pos)
+          else 0)
+        Filter.atTop
+        (nhds 0)
+  interaction_in_L2 :
+    ∀ (Λ : Rectangle),
+      MemLp (interaction params Λ) 2
+        (freeFieldMeasure params.mass params.mass_pos)
+  exp_interaction_Lp :
+    ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+      MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+        p (freeFieldMeasure params.mass params.mass_pos)
 
 /-! ## The interaction is in Lᵖ -/
 
@@ -105,14 +132,18 @@ theorem wick_fourth_lower_bound_explicit (mass : ℝ) (hmass : 0 < mass) (κ : U
     This follows from the localized Feynman graph bounds (Theorem 8.5.3).
     The bound is uniform in κ. -/
 theorem interactionCutoff_in_L2 (params : Phi4Params) (Λ : Rectangle)
+    [InteractionIntegrabilityModel params]
     (κ : UVCutoff) :
     MemLp (interactionCutoff params Λ κ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  exact InteractionIntegrabilityModel.interactionCutoff_in_L2
+    (params := params) Λ κ
 
 /-- Convergence of V_{Λ,κ} → V_Λ in L² as κ → ∞.
     The limit is taken in the L²(dφ_C) norm:
       ‖V_{Λ,κ} - V_Λ‖_{L²(dφ_C)} → 0 as κ → ∞. -/
-theorem interactionCutoff_converges_L2 (params : Phi4Params) (Λ : Rectangle) :
+theorem interactionCutoff_converges_L2 (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
     Filter.Tendsto
       (fun (κ : ℝ) => if h : 0 < κ then
         ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
@@ -120,12 +151,16 @@ theorem interactionCutoff_converges_L2 (params : Phi4Params) (Λ : Rectangle) :
         else 0)
       Filter.atTop
       (nhds 0) := by
-  sorry
+  exact InteractionIntegrabilityModel.interactionCutoff_converges_L2
+    (params := params) Λ
 
 /-- The interaction V_Λ is in L²(dφ_C). -/
-theorem interaction_in_L2 (params : Phi4Params) (Λ : Rectangle) :
+theorem interaction_in_L2 (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
     MemLp (interaction params Λ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  exact InteractionIntegrabilityModel.interaction_in_L2
+    (params := params) Λ
 
 /-! ## The exponential of the interaction is in Lᵖ
 
@@ -145,15 +180,19 @@ The proof has two main steps:
     The proof combines:
     - Semiboundedness of :φ⁴:_κ (Proposition 8.6.3)
     - Gaussian measure of the "bad set" where :φ⁴: is very negative
-    - The fact that this bad set has exponentially small measure -/
+- The fact that this bad set has exponentially small measure -/
 theorem exp_interaction_Lp (params : Phi4Params) (Λ : Rectangle)
+    [InteractionIntegrabilityModel params]
     {p : ℝ≥0∞} (hp : p ≠ ⊤) :
     MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
       p (freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  exact InteractionIntegrabilityModel.exp_interaction_Lp
+    (params := params) Λ hp
 
 /-- Positivity of the partition function: Z_Λ = ∫ e^{-V_Λ} dφ_C > 0. -/
-theorem partition_function_pos (params : Phi4Params) (Λ : Rectangle) :
+theorem partition_function_pos (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
     0 < ∫ ω, Real.exp (-(interaction params Λ ω))
         ∂(freeFieldMeasure params.mass params.mass_pos) := by
   letI : IsProbabilityMeasure (freeFieldMeasure params.mass params.mass_pos) :=
@@ -161,14 +200,16 @@ theorem partition_function_pos (params : Phi4Params) (Λ : Rectangle) :
   have hLp : MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
       (1 : ℝ≥0∞) (freeFieldMeasure params.mass params.mass_pos) :=
     exp_interaction_Lp params Λ (p := (1 : ℝ≥0∞)) (by norm_num)
-  have hInt : Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
+  have hIntExp : Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
       (freeFieldMeasure params.mass params.mass_pos) :=
     (memLp_one_iff_integrable.mp hLp)
   simpa using (integral_exp_pos (μ := freeFieldMeasure params.mass params.mass_pos)
-    (f := fun ω => -(interaction params Λ ω)) hInt)
+    (f := fun ω => -(interaction params Λ ω)) hIntExp)
 
 /-- Finiteness of the partition function: Z_Λ < ∞ (i.e. the exponential is integrable). -/
-theorem partition_function_integrable (params : Phi4Params) (Λ : Rectangle) :
+theorem partition_function_integrable (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
     Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
         (freeFieldMeasure params.mass params.mass_pos) := by
   have hLp : MemLp (fun ω => Real.exp (-(interaction params Λ ω)))

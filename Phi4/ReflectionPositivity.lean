@@ -83,6 +83,38 @@ def testFunTimeReflect (f : TestFun2D) : TestFun2D :=
 def supportedInPositiveTime (f : TestFun2D) : Prop :=
   ∀ x : Spacetime2D, x 0 ≤ 0 → f x = 0
 
+/-! ## Abstract reflection-positivity interfaces -/
+
+/-- Free Gaussian reflection positivity at fixed mass. This packages the analytic
+    RP proof for `freeFieldMeasure` as an explicit assumption interface. -/
+class FreeReflectionPositivityModel (mass : ℝ) (hmass : 0 < mass) where
+  free_covariance_reflection_positive :
+    ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
+      (∀ i, supportedInPositiveTime (f i)) →
+      0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+        ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
+          ∂(freeFieldMeasure mass hmass)).re
+
+/-- Dirichlet covariance reflection positivity on time-symmetric rectangles. -/
+class DirichletReflectionPositivityModel (mass : ℝ) (hmass : 0 < mass) where
+  dirichlet_covariance_reflection_positive :
+    ∀ [BoundaryCovarianceModel mass hmass] (Λ : Rectangle),
+      Λ.IsTimeSymmetric →
+      ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
+      (∀ i, supportedInPositiveTime (f i)) →
+      0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+        ↑(∫ x, ∫ y, (testFunTimeReflect (f i)) x * dirichletCov Λ mass hmass x y * (f j) y)).re
+
+/-- Interacting finite-volume reflection positivity on time-symmetric rectangles. -/
+class InteractingReflectionPositivityModel (params : Phi4Params) where
+  interacting_measure_reflection_positive :
+    ∀ (Λ : Rectangle), Λ.IsTimeSymmetric →
+      ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
+      (∀ i, supportedInPositiveTime (f i)) →
+      0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+        ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
+          ∂(finiteVolumeMeasure params Λ)).re
+
 /-! ## Reflection positivity of the free covariance -/
 
 /-- **Reflection positivity of the free covariance** (Glimm-Jaffe 7.10):
@@ -94,12 +126,14 @@ def supportedInPositiveTime (f : TestFun2D) : Prop :=
     Proof idea: In Fourier space, C(θf, g) = ∫ f̂(-p₀, p⃗)* ĝ(p₀, p⃗) / (p₀² + p⃗² + m²) dp.
     Writing p₀ = iE for the "energy" continuation, this becomes a positive form. -/
 theorem free_covariance_reflection_positive (mass : ℝ) (hmass : 0 < mass)
+    [FreeReflectionPositivityModel mass hmass]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
       ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
         ∂(freeFieldMeasure mass hmass)).re := by
-  sorry
+  exact FreeReflectionPositivityModel.free_covariance_reflection_positive
+    (mass := mass) (hmass := hmass) n f c hf
 
 /-! ## Reflection positivity of the Dirichlet covariance -/
 
@@ -113,11 +147,13 @@ theorem dirichlet_covariance_reflection_positive
     (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
     (mass : ℝ) (hmass : 0 < mass)
     [BoundaryCovarianceModel mass hmass]
+    [DirichletReflectionPositivityModel mass hmass]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
       ↑(∫ x, ∫ y, (testFunTimeReflect (f i)) x * dirichletCov Λ mass hmass x y * (f j) y)).re := by
-  sorry
+  exact DirichletReflectionPositivityModel.dirichlet_covariance_reflection_positive
+    (mass := mass) (hmass := hmass) Λ hΛ n f c hf
 
 /-! ## Reflection positivity of the interacting measure -/
 
@@ -131,12 +167,14 @@ theorem dirichlet_covariance_reflection_positive
     2. Use RP of the free covariance for the Gaussian part
     3. The interaction terms factorize correctly because V is time-local -/
 theorem interacting_measure_reflection_positive (params : Phi4Params)
+    [InteractingReflectionPositivityModel params]
     (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
       ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
         ∂(finiteVolumeMeasure params Λ)).re := by
-  sorry
+  exact InteractingReflectionPositivityModel.interacting_measure_reflection_positive
+    (params := params) Λ hΛ n f c hf
 
 end
