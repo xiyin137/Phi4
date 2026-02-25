@@ -1,5 +1,20 @@
 # Chapter 12: Regularity and Axioms -- OS1
 
+## Status Snapshot (2026-02-25)
+
+- `Regularity.lean` currently has 5 `sorry`s:
+  `wick_powers_infinite_volume`, `euclidean_equation_of_motion`,
+  `generating_functional_bound`, `nonlocal_phi4_bound`,
+  `generating_functional_bound_uniform`.
+- Dependency reality:
+  this chapter depends critically on unresolved Chapter 8/10/11 analytic estimates
+  (notably `exp_interaction_Lp`, chessboard/uniform bounds, and infinite-volume measure construction).
+- Current role:
+  keep theorem statements aligned with GJ Chapter 12 while upstream infrastructure is completed.
+- Note:
+  line-number references below are historical and may drift; theorem names are the
+  stable lookup key.
+
 ## Main Result
 
 **Theorem 12.1.1 (Axioms).** The generating functional S{f} exists (Thm 11.2.1) and satisfies OS0-OS3. Hence it yields a Wightman QFT satisfying W1-W3.

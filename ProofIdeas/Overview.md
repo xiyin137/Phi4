@@ -19,38 +19,39 @@ The construction of the phi^4_2 quantum field theory proceeds through these stag
 10. **Cluster Expansion** (GJ Ch 18): OS4 (ergodicity/clustering) for weak coupling
 11. **Reconstruction** (GJ Ch 19): OS → Wightman via analytic continuation
 
-## Sorry Count by File (as of initial commit; now ~74 after Session 2 progress)
+## Sorry Count by File (current snapshot: 2026-02-25)
 
 | File | Sorries | Primary GJ Chapters |
 |------|---------|---------------------|
-| Defs.lean | 0 | -- |
-| FreeField.lean | 8 | 6.2, 7.1, 7.2, 8.3 |
-| CovarianceOperators.lean | 9 | 7.3-7.6 |
-| WickProduct.lean | 8 | 6.3, 8.3, 8.5, 8.6 |
-| FeynmanGraphs.lean | 6 | 8.2-8.5 |
-| Interaction.lean | 10 | 8.5, 8.6 |
-| FiniteVolumeMeasure.lean | 4 | 8.6, 10.2, 11.2 |
-| CorrelationInequalities.lean | 5 | 4.2-4.4, 10.2, 11.2 |
-| ReflectionPositivity.lean | 4 | 7.10, 10.4 |
-| MultipleReflections.lean | 4 | 10.5, 10.6 |
-| InfiniteVolumeLimit.lean | 7 | 11.2 |
-| Regularity.lean | 7 | 12.1-12.5 |
+| FeynmanGraphs.lean | 4 | 8.2-8.5 |
+| FiniteVolumeMeasure.lean | 1 | 8.6, 10.2, 11.2 |
+| InfiniteVolumeLimit.lean | 5 | 11.2 |
+| Interaction.lean | 4 | 8.5, 8.6 |
+| MultipleReflections.lean | 2 | 10.5, 10.6 |
 | OSAxioms.lean | 6 | 10.4, 12.1 |
-| Reconstruction.lean | 5 | 12.5, 18, 19 |
-| **Total** | **~83** | |
+| Reconstruction.lean | 2 | 12.5, 18, 19 |
+| ReflectionPositivity.lean | 3 | 7.10, 10.4 |
+| Regularity.lean | 5 | 12.1-12.5 |
+| **Total** | **32** | |
+
+## Current Development Constraints (project policy)
+
+1. No `axiom` declarations.
+2. No fake/placeholder definitions to force theorem closure.
+3. For major proofs: prototype in `Phi4/Scratch/` first, compile, then port to working files.
+4. Prioritize mathematically sound statements aligned with the OS/Wightman end goal.
 
 ## Critical Path (highest-priority sorries)
 
-These sorries block the most downstream results:
+These sorries block the most downstream results right now:
 
-1. **freeCovarianceCLM** (FreeField.lean:90) -- GJ 6.2: CLM construction of covariance operator. Blocks all free field infrastructure.
-2. **rawFieldEval** (WickProduct.lean:59) -- GJ 8.3: Point evaluation φ_κ(x). Blocks all Wick products.
-3. **dirichletCov / neumannCov** (CovarianceOperators.lean:40,46) -- GJ 7.3: Green's functions. Blocks all monotonicity arguments.
-4. **exp_interaction_Lp** (Interaction.lean:127) -- GJ 8.6.2: Central L^p estimate. Everything downstream depends on this.
-5. **chessboard_estimate** (MultipleReflections.lean:54) -- GJ 10.5.5: Iterated RP. Needed for uniform bounds.
-6. **infiniteVolumeMeasure** (InfiniteVolumeLimit.lean:114) -- GJ 11.2: Infinite volume limit. Needed for all OS axioms.
-7. **generating_functional_bound** (Regularity.lean:98) -- GJ 12.5.1: OS1 regularity. Most analytically demanding.
-8. **phi4_os4_weak_coupling** (Reconstruction.lean:83) -- GJ Ch 18: Cluster expansion for ergodicity.
+1. **`exp_interaction_Lp`** (Interaction.lean) -- GJ 8.6.2: central L^p estimate, feeds finite-volume construction.
+2. **`chessboard_estimate`** (MultipleReflections.lean) -- GJ 10.5.5: key uniform-bound engine.
+3. **`schwinger_uniform_bound` / `schwinger_uniformly_bounded`** (MultipleReflections + InfiniteVolumeLimit) -- bridge to infinite-volume existence.
+4. **`infiniteVolumeMeasure`** and moment identification (InfiniteVolumeLimit.lean) -- core object for OS axioms.
+5. **`generating_functional_bound`** (Regularity.lean) -- OS1 regularity.
+6. **`phi4_os0/os2/os3` + packaging in `phi4_satisfies_OS`** (OSAxioms.lean) -- OS theorem interface.
+7. **`phi4_os4_weak_coupling`** (Reconstruction.lean) -- clustering / weak-coupling input for full reconstruction.
 
 ## Detailed Notes
 

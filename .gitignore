@@ -4,7 +4,14 @@
 **/.DS_Store
 .vscode/
 CLAUDE.md
+agent.md
 .mcp.json
 /references/
 /test/
 /deprecated/
+
+# Local proof scratch / ad-hoc probes
+/Phi4/Scratch/
+/Phi4/**/Try*.lean
+/Phi4/**/Check*.lean
+/ProofIdeas/*_sorrys.md

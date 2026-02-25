@@ -2,6 +2,18 @@
 
 A Lean 4 formalization of the constructive φ⁴ quantum field theory in two Euclidean spacetime dimensions, following the continuum approach of Glimm and Jaffe.
 
+## Status Snapshot (2026-02-25)
+
+The project is in active development.
+
+- Current `sorry` count: `32` across `9` files.
+- Foundational free-field and Wick infrastructure is largely in place.
+- Covariance/correlation layers are available through explicit model interfaces
+  (`BoundaryCovarianceModel`, `CorrelationInequalityModel`).
+- Remaining blockers are concentrated in deep analytic estimates and final OS packaging:
+  `FeynmanGraphs`, `Interaction`, `MultipleReflections`, `InfiniteVolumeLimit`,
+  `Regularity`, `ReflectionPositivity`, `OSAxioms`, and `Reconstruction`.
+
 ## Overview
 
 This project aims to give a complete, rigorous Lean 4 proof that the φ⁴₂ model satisfies the Osterwalder-Schrader axioms (Euclidean QFT axioms) and, via the OS reconstruction theorem, yields a Wightman quantum field theory. The construction follows Part II of:
@@ -65,7 +77,7 @@ Wightman QFT via OS reconstruction
 
 ## Current status
 
-**Work in progress.** The architecture is complete and all theorem statements are in place. Key items proven so far:
+**Work in progress.** The architecture is in place and major foundational pieces are proven. Key items proven so far:
 
 - Free field eigenvalues, singular values, and their bounds
 - Free covariance CLM via `spectralCLM` (the critical Phase 1A construction)
@@ -74,7 +86,11 @@ Wightman QFT via OS reconstruction
 - Integration by parts for the free field
 - Rectangle geometry (area positivity, time reflection, symmetric rectangles)
 
-Remaining: ~78 sorries across 14 files, covering interaction estimates, correlation inequalities, infinite volume limits, regularity, and OS axioms verification. See [TODO.md](TODO.md) for the detailed development plan.
+Remaining: 32 `sorry`s across 9 files, concentrated in interaction estimates,
+multiple-reflection/infinite-volume infrastructure, regularity bounds, and final
+OS/reconstruction packaging.
+See [TODO.md](TODO.md) for the active queue and [ProofIdeas/Overview.md](ProofIdeas/Overview.md)
+for chapter-aligned progress notes.
 
 ## Building
 
@@ -87,6 +103,12 @@ lake build Phi4
 ## Proof ideas
 
 The `ProofIdeas/` directory contains detailed mathematical notes for each chapter of Glimm-Jaffe, documenting the proof strategies that guide the formalization.
+
+## Documentation Notes
+
+- `TODO.md`: active implementation queue.
+- `ProofIdeas/`: active mathematical planning and chapter notes.
+- `docs/archive/REVIEW-2026-02-23.md`: historical audit snapshot, not the current status source.
 
 ## References
 

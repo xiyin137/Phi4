@@ -1,7 +1,44 @@
 # Development Plan: phi^4_2 QFT Formalization
 
-## Status: 72 sorries across 15 files, ~45 proven theorems/lemmas (as of Session 5)
-## Note: sorry count increased by 2 because BesselK0.lean adds 6 new sorries (infrastructure), offset by 4 definitions resolved
+## Status Snapshot (2026-02-25)
+
+- Current `sorry` count: `32` across `9` files.
+- Current per-file counts:
+  - `Phi4/FeynmanGraphs.lean`: 4
+  - `Phi4/Interaction.lean`: 4
+  - `Phi4/ReflectionPositivity.lean`: 3
+  - `Phi4/MultipleReflections.lean`: 2
+  - `Phi4/InfiniteVolumeLimit.lean`: 5
+  - `Phi4/Regularity.lean`: 5
+  - `Phi4/OSAxioms.lean`: 6
+  - `Phi4/Reconstruction.lean`: 2
+  - `Phi4/FiniteVolumeMeasure.lean`: 1
+- Working rules in force:
+  no `axiom`, no fake placeholders, and scratch-first prototyping before major theorem edits.
+
+## Active Queue (Authoritative)
+
+1. Close Chapter 8 bottlenecks:
+   `localized_graph_bound`, `exp_interaction_Lp`, then `schwingerTwo_le_free`.
+2. Close Chapter 10/11 bottlenecks:
+   `chessboard_estimate`, `schwinger_uniform_bound`,
+   `schwinger_uniformly_bounded`, and infinite-volume measure/moment theorems.
+3. Close reflection positivity bridge:
+   `free_covariance_reflection_positive`,
+   `dirichlet_covariance_reflection_positive`,
+   `interacting_measure_reflection_positive`.
+4. Close Chapter 12 regularity theorems:
+   `wick_powers_infinite_volume`, `euclidean_equation_of_motion`,
+   `nonlocal_phi4_bound`, `generating_functional_bound_uniform`,
+   `generating_functional_bound`.
+5. Final OS/reconstruction packaging:
+   `phi4SchwingerFunctions`, `phi4_os0/2/3`, `phi4_satisfies_OS`,
+   `phi4_linear_growth`, `phi4_os4_weak_coupling`.
+
+## Legacy Detailed Plan (Reference)
+
+The detailed phase-by-phase plan below is retained for reference, but checklist
+items may be stale. Use the status snapshot and active queue above as authoritative.
 
 ## Available Infrastructure
 

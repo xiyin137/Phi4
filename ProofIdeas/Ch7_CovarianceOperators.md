@@ -1,5 +1,21 @@
 # Chapter 7: Covariance Operators
 
+## Status Snapshot (2026-02-25)
+
+- Core covariance inequality layer:
+  `CovarianceOperators.lean` currently has no `sorry`; it is now organized around the
+  `BoundaryCovarianceModel` interface.
+- Correlation inequality layer:
+  `CorrelationInequalities.lean` currently has no `sorry`; results are exposed via the
+  `CorrelationInequalityModel` interface.
+- Remaining chapter-adjacent blocker:
+  `ReflectionPositivity.lean` still has 3 `sorry`s (free, Dirichlet, and interacting RP).
+- Important implementation note:
+  uses of `dirichletCov` now require `[BoundaryCovarianceModel mass hmass]`.
+- Note:
+  line-number references below are historical and may drift; theorem names are the
+  stable lookup key.
+
 ## 1. Free Covariance (Section 7.2)
 
 C = (-Δ + m^2)^{-1} on R^d. In Fourier space: C_hat(p) = (p^2 + m^2)^{-1}.

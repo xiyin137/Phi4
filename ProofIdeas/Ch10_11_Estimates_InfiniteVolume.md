@@ -1,5 +1,22 @@
 # Chapters 10-11: Correlation Inequalities, Multiple Reflections, Infinite Volume
 
+## Status Snapshot (2026-02-25)
+
+- Correlation inequality API:
+  `CorrelationInequalities.lean` currently has no `sorry` (interface-based layer in place).
+- Multiple reflections:
+  `MultipleReflections.lean` has 2 `sorry`s (`chessboard_estimate`,
+  `schwinger_uniform_bound`).
+- Infinite-volume layer:
+  `InfiniteVolumeLimit.lean` has 5 `sorry`s (`schwinger_uniformly_bounded`,
+  `infinite_volume_schwinger_exists`, `infiniteVolumeMeasure`,
+  `infiniteVolumeMeasure_isProbability`, `infiniteVolumeSchwinger_is_moment`).
+- Closed bridge result:
+  `schwingerN_monotone_in_volume` is implemented for the established `k = 2` case.
+- Note:
+  line-number references below are historical and may drift; theorem names are the
+  stable lookup key.
+
 ## 1. Correlation Inequalities (Section 10.2)
 
 Extended from lattice (Chapter 4) to continuum P(φ)_2 via lattice approximation (Chapter 9).

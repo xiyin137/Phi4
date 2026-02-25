@@ -1,5 +1,21 @@
 # Chapter 8: Quantization -- Feynman Graphs, Wick Products, e^{-V} in L^p
 
+## Status Snapshot (2026-02-25)
+
+- `FeynmanGraphs.lean`:
+  4 `sorry`s remain (`num_pairings`, `wicks_theorem_even`,
+  `feynman_graph_expansion`, `localized_graph_bound`).
+- `Interaction.lean`:
+  4 `sorry`s remain (`interactionCutoff_in_L2`, `interactionCutoff_converges_L2`,
+  `interaction_in_L2`, `exp_interaction_Lp`).
+- `FiniteVolumeMeasure.lean`:
+  1 `sorry` remains (`schwingerTwo_le_free`).
+- Closed and stable in this chapter layer:
+  semibounded quartic Wick estimate (`wick_fourth_semibounded`) and its explicit lower bound.
+- Note:
+  line-number references below are historical and may drift; theorem names are the
+  stable lookup key.
+
 ## 1. Feynman Graphs (Section 8.2)
 
 > **Important conceptual point:** Feynman graphs in Glimm-Jaffe are used *non-perturbatively*,

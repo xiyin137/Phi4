@@ -1,5 +1,15 @@
 # The Non-Perturbative Role of Feynman Graphs in phi^4_2
 
+## Status Snapshot (2026-02-25)
+
+- This document remains conceptually accurate and still matches the intended
+  non-perturbative architecture.
+- Current formal blockers directly tied to this note:
+  `localized_graph_bound` (`FeynmanGraphs.lean`) and `exp_interaction_Lp`
+  (`Interaction.lean`) are still open.
+- Use this note as strategy context; current executable progress tracking lives in
+  `ProofIdeas/Overview.md` and the chapter-specific status blocks.
+
 ## Key Conceptual Point
 
 Feynman graphs in the Glimm-Jaffe construction are **not** a perturbative tool (no formal

@@ -1,5 +1,20 @@
 # Chapter 6: Field Theory -- Axioms, Reconstruction, Free Field, Wick Ordering
 
+## Status Snapshot (2026-02-25)
+
+- Scope status:
+  Free-field and Wick infrastructure is largely implemented in code, but OS packaging
+  and reconstruction inputs remain incomplete.
+- Remaining direct blockers:
+  `OSAxioms.lean` has 6 `sorry`s (`phi4SchwingerFunctions`, `phi4_os0`,
+  `phi4_os2_translation`, `phi4_os2_rotation`, `phi4_os3`, `phi4_satisfies_OS`).
+- Reconstruction side:
+  `Reconstruction.lean` has 2 `sorry`s (`phi4_linear_growth`,
+  `phi4_os4_weak_coupling`).
+- Note:
+  line-number references below are historical and may drift; theorem names are the
+  stable lookup key.
+
 ## 1. Osterwalder-Schrader (Euclidean) Axioms
 
 The Euclidean fields are defined by a probability measure dμ on S'(R^d). The generating functional is:
