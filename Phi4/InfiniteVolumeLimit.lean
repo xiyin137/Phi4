@@ -88,6 +88,18 @@ theorem schwinger_monotone_in_volume (params : Phi4Params)
     (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
     f g hf hg hfsupp hgsupp
 
+/-- Monotonicity of the `n = 2` Schwinger function in `schwingerN` form. -/
+theorem schwingerN_monotone_in_volume_two (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
+    (f : Fin 2 → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
+    schwingerN params (exhaustingRectangles n₁ hn₁) 2 f ≤
+      schwingerN params (exhaustingRectangles n₂ hn₂) 2 f := by
+  have hmono := schwinger_monotone_in_volume params n₁ n₂ hn₁ hn₂ h
+    (f 0) (f 1) (hf 0) (hf 1) (hfsupp 0) (hfsupp 1)
+  simpa [schwingerN_two_eq_schwingerTwo] using hmono
+
 /-- Monotonicity for `schwingerN` in the currently established case `k = 2`,
     reduced to `schwinger_monotone_in_volume`. -/
 theorem schwingerN_monotone_in_volume (params : Phi4Params)
@@ -99,9 +111,7 @@ theorem schwingerN_monotone_in_volume (params : Phi4Params)
     schwingerN params (exhaustingRectangles n₁ hn₁) k f ≤
       schwingerN params (exhaustingRectangles n₂ hn₂) k f := by
   subst hk
-  have hmono := schwinger_monotone_in_volume params n₁ n₂ hn₁ hn₂ h
-    (f 0) (f 1) (hf 0) (hf 1) (hfsupp 0) (hfsupp 1)
-  simpa [schwingerN, schwingerTwo, Fin.prod_univ_two] using hmono
+  exact schwingerN_monotone_in_volume_two params n₁ n₂ hn₁ hn₂ h f hf hfsupp
 
 /-! ## Uniform upper bounds -/
 
@@ -171,6 +181,22 @@ def infiniteVolumeSchwinger (params : Phi4Params)
     (f : Fin k → TestFun2D) : ℝ :=
   InfiniteVolumeLimitModel.infiniteVolumeSchwinger (params := params) k f
 
+/-- Connected (truncated) 2-point function in infinite volume:
+    `S₂(f,g) - S₁(f)S₁(g)`. -/
+def connectedTwoPoint (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (f g : TestFun2D) : ℝ :=
+  infiniteVolumeSchwinger params 2 ![f, g] -
+    infiniteVolumeSchwinger params 1 ![f] *
+      infiniteVolumeSchwinger params 1 ![g]
+
+@[simp] theorem connectedTwoPoint_eq (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] (f g : TestFun2D) :
+    connectedTwoPoint params f g =
+      infiniteVolumeSchwinger params 2 ![f, g] -
+        infiniteVolumeSchwinger params 1 ![f] *
+          infiniteVolumeSchwinger params 1 ![g] := rfl
+
 /-- The infinite volume φ⁴₂ probability measure on S'(ℝ²).
     This is the weak limit of dμ_{Λₙ} as Λₙ ↗ ℝ². -/
 def infiniteVolumeMeasure (params : Phi4Params)
@@ -196,5 +222,19 @@ theorem infiniteVolumeSchwinger_is_moment (params : Phi4Params)
   simpa [infiniteVolumeSchwinger, infiniteVolumeMeasure] using
     (InfiniteVolumeLimitModel.infiniteVolumeSchwinger_is_moment
       (params := params) k f)
+
+/-- Zeroth infinite-volume Schwinger function normalization:
+    `S_0 = 1` for any choice of the unique `Fin 0 → TestFun2D`. -/
+theorem infiniteVolumeSchwinger_zero (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (f : Fin 0 → TestFun2D) :
+    infiniteVolumeSchwinger params 0 f = 1 := by
+  have hprob : IsProbabilityMeasure (infiniteVolumeMeasure params) :=
+    infiniteVolumeMeasure_isProbability params
+  letI : IsProbabilityMeasure (infiniteVolumeMeasure params) := hprob
+  rw [infiniteVolumeSchwinger_is_moment]
+  change ∫ ω : FieldConfig2D, (1 : ℝ) ∂(infiniteVolumeMeasure params) = 1
+  rw [integral_const]
+  simp
 
 end

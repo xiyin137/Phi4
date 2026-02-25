@@ -44,17 +44,17 @@ class BoundaryCovarianceModel (mass : ℝ) (hmass : 0 < mass) where
   periodicKernel : (L₁ L₂ : ℝ) → 0 < L₁ → 0 < L₂ → Spacetime2D → Spacetime2D → ℝ
   /-- Dirichlet ≤ free quadratic form comparison for functions supported in `Λ`. -/
   dirichlet_le_free : ∀ (Λ : Rectangle) (f : TestFun2D)
-      (hf : ∀ x ∉ Λ.toSet, f x = 0),
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
       ∫ x, ∫ y, f x * dirichletKernel Λ x y * f y ≤
         ∫ x, ∫ y, f x * freeCovKernel mass x y * f y
   /-- Free ≤ Neumann quadratic form comparison for functions supported in `Λ`. -/
   free_le_neumann : ∀ (Λ : Rectangle) (f : TestFun2D)
-      (hf : ∀ x ∉ Λ.toSet, f x = 0),
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
       ∫ x, ∫ y, f x * freeCovKernel mass x y * f y ≤
         ∫ x, ∫ y, f x * neumannKernel Λ x y * f y
   /-- Domain monotonicity for Dirichlet kernels. -/
-  dirichlet_monotone : ∀ (Λ₁ Λ₂ : Rectangle) (h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : TestFun2D) (hf : ∀ x ∉ Λ₁.toSet, f x = 0),
+  dirichlet_monotone : ∀ (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : TestFun2D) (_hf : ∀ x ∉ Λ₁.toSet, f x = 0),
       ∫ x, ∫ y, f x * dirichletKernel Λ₁ x y * f y ≤
         ∫ x, ∫ y, f x * dirichletKernel Λ₂ x y * f y
   /-- Pointwise bound on covariance change along the diagonal in `Λ`. -/

@@ -109,6 +109,29 @@ def schwingerN (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
     (f : Fin n → TestFun2D) : ℝ :=
   ∫ ω, (∏ i, ω (f i)) ∂(finiteVolumeMeasure params Λ)
 
+/-- Zeroth Schwinger function normalization in finite volume:
+    `S_0^Λ = 1` for any choice of the unique `Fin 0 → TestFun2D`. -/
+theorem schwingerN_zero (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f : Fin 0 → TestFun2D) :
+    schwingerN params Λ 0 f = 1 := by
+  have hprob : IsProbabilityMeasure (finiteVolumeMeasure params Λ) :=
+    finiteVolumeMeasure_isProbability params Λ
+  letI : IsProbabilityMeasure (finiteVolumeMeasure params Λ) := hprob
+  calc
+    schwingerN params Λ 0 f
+        = ∫ ω : FieldConfig2D, (1 : ℝ) ∂(finiteVolumeMeasure params Λ) := by
+          simp [schwingerN]
+    _ = 1 := by
+          rw [integral_const]
+          simp
+
+/-- The 2-point Schwinger function as the `n = 2` case of `schwingerN`. -/
+theorem schwingerN_two_eq_schwingerTwo (params : Phi4Params) (Λ : Rectangle)
+    (f : Fin 2 → TestFun2D) :
+    schwingerN params Λ 2 f = schwingerTwo params Λ (f 0) (f 1) := by
+  simp [schwingerN, schwingerTwo, Fin.prod_univ_two]
+
 /-- The generating functional (Laplace transform) in finite volume:
     S_Λ{g} = ∫ exp(⟨ω, g⟩) dμ_Λ(ω) for real test functions g. -/
 def generatingFunctional (params : Phi4Params) (Λ : Rectangle)
@@ -212,7 +235,7 @@ private theorem finiteVolume_product_integrable
   have hZpos : 0 < partitionFunction params Λ := by
     simpa [partitionFunction] using partition_function_pos params Λ
   have hscale_ne_top : ENNReal.ofReal (partitionFunction params Λ)⁻¹ ≠ ⊤ := by
-    simpa [ENNReal.inv_ne_top] using (ENNReal.ofReal_ne_zero.2 hZpos)
+    simp [hZpos]
 
   have hscaled : Integrable (fun ω : FieldConfig2D => ∏ i, ω (f i))
       (ENNReal.ofReal (partitionFunction params Λ)⁻¹ • (μ.withDensity d)) :=

@@ -86,9 +86,7 @@ class ReconstructionInputModel (params : Phi4Params)
           ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
             ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
               let g_shifted : TestFun2D := translateTestFun a g
-              |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
-                infiniteVolumeSchwinger p 1 ![f] *
-                  infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
+              |connectedTwoPoint p f g_shifted| ≤
                 C * Real.exp (-m_gap * ‖a‖)
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
@@ -142,13 +140,35 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
           ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
             ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
               let g_shifted : TestFun2D := translateTestFun a g
+              |connectedTwoPoint p f g_shifted| ≤
+                C * Real.exp (-m_gap * ‖a‖) := by
+  intro hlim hos hrec
+  exact ReconstructionInputModel.phi4_os4_weak_coupling
+    (params := params)
+
+/-- Backward-compatible OS4 weak-coupling form written with explicit Schwinger moments. -/
+theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+        p.coupling < coupling_bound →
+          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+              let g_shifted : TestFun2D := translateTestFun a g
               |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
                 infiniteVolumeSchwinger p 1 ![f] *
                   infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
                 C * Real.exp (-m_gap * ‖a‖) := by
   intro hlim hos hrec
-  exact ReconstructionInputModel.phi4_os4_weak_coupling
-    (params := params)
+  rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hdecay⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro p hpInst hsmall
+  rcases hdecay p hsmall with ⟨m_gap, C, hm_gap, hbound⟩
+  refine ⟨m_gap, C, hm_gap, ?_⟩
+  intro f g a
+  simpa [connectedTwoPoint] using hbound f g a
 
 /-! ## Wightman reconstruction -/
 

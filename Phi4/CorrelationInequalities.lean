@@ -39,37 +39,37 @@ open MeasureTheory
 class CorrelationInequalityModel (params : Phi4Params) where
   /-- GKS-I positivity of the 2-point function for nonnegative test functions. -/
   griffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
-      (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x),
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
       0 ≤ schwingerTwo params Λ f g
   /-- GKS-II lower bound in the `(12)(34)` pairing channel. -/
   griffiths_second : ∀ (Λ : Rectangle)
       (f₁ f₂ f₃ f₄ : TestFun2D)
-      (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-      (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x),
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
       schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
         schwingerN params Λ 4 ![f₁, f₂, f₃, f₄]
   /-- FKG positive-correlation inequality for monotone observables. -/
   fkg_inequality : ∀ (Λ : Rectangle)
       (F G : FieldConfig2D → ℝ)
-      (hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
       (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
   /-- Lebowitz 4-point upper bound. -/
   lebowitz_inequality : ∀ (Λ : Rectangle)
       (f₁ f₂ f₃ f₄ : TestFun2D)
-      (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-      (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x),
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
       schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
         schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
         schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
         schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃
   /-- Monotonicity of the finite-volume 2-point function under domain inclusion. -/
   schwinger_two_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
-      (h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-      (hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
       schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g
 
 /-! ## Griffiths' First Inequality (GKS-I) -/
@@ -107,6 +107,13 @@ theorem griffiths_second (params : Phi4Params) (Λ : Rectangle)
 
 /-! ## Pairing-subtracted 4-point bounds -/
 
+/-- The `(12)(34)` pairing-subtracted 4-point quantity
+    `S₄ - S₂(12)S₂(34)`. -/
+def truncatedFourPoint12 (params : Phi4Params) (Λ : Rectangle)
+    (f₁ f₂ f₃ f₄ : TestFun2D) : ℝ :=
+  schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] -
+    schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄
+
 /-- Nonnegativity of the `(12)(34)` pairing-subtracted 4-point expression:
     `S₄ - S₂(12)S₂(34) ≥ 0`. -/
 theorem pairing_subtracted_four_point_nonneg (params : Phi4Params) (Λ : Rectangle)
@@ -114,10 +121,9 @@ theorem pairing_subtracted_four_point_nonneg (params : Phi4Params) (Λ : Rectang
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    0 ≤
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] -
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ := by
+    0 ≤ truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ := by
   have h := griffiths_second params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  unfold truncatedFourPoint12
   linarith
 
 /-! ## FKG Inequality -/
@@ -172,11 +178,11 @@ theorem pairing_subtracted_four_point_upper_bound
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] -
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+    truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ ≤
       schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
       schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
   have h := lebowitz_inequality params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  unfold truncatedFourPoint12
   linarith
 
 /-- Two-sided estimate for the `(12)(34)` pairing-subtracted 4-point expression. -/
@@ -186,10 +192,8 @@ theorem pairing_subtracted_four_point_bounds
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    0 ≤ schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] -
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ∧
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] -
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+    0 ≤ truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ ∧
+      truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ ≤
       schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
       schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
   constructor
@@ -197,6 +201,23 @@ theorem pairing_subtracted_four_point_bounds
       params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   · exact pairing_subtracted_four_point_upper_bound
       params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Absolute-value control of the `(12)(34)` pairing-subtracted 4-point expression:
+    `|S₄ - S₂(12)S₂(34)| ≤ S₂(13)S₂(24) + S₂(14)S₂(23)`. -/
+theorem pairing_subtracted_four_point_abs_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    [CorrelationInequalityModel params]
+    (f₁ f₂ f₃ f₄ : TestFun2D)
+    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
+    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
+    |truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄| ≤
+      schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+      schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
+  have hnonneg := pairing_subtracted_four_point_nonneg
+    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  have hupper := pairing_subtracted_four_point_upper_bound
+    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  simpa [abs_of_nonneg hnonneg] using hupper
 
 /-! ## Monotonicity of Schwinger functions in volume
 
