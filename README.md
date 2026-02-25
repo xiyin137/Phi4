@@ -1,124 +1,158 @@
 # Phi4: Formal Construction of the φ⁴₂ Quantum Field Theory
 
-A Lean 4 formalization of the constructive φ⁴ quantum field theory in two Euclidean spacetime dimensions, following the continuum approach of Glimm and Jaffe.
+A Lean 4 formalization of constructive 2D φ⁴ Euclidean QFT, with the end goal:
+
+1. prove Osterwalder-Schrader (OS) axioms for the infinite-volume theory, and
+2. obtain the corresponding Wightman QFT.
+
+Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of View* (2nd ed.).
 
 ## Status Snapshot (2026-02-25)
 
-The project is in active development.
+- `Phi4/*.lean` `sorry` count: `0`.
+- `Phi4/*.lean` `axiom` declarations: `0`.
+- Build status: `lake build Phi4` succeeds.
+- Several deep analytic/reconstruction steps are currently represented via explicit assumption interfaces (`...Model` classes), not placeholders.
+- Upstream `OSReconstruction` currently emits `sorry` warnings in some modules; this project treats reconstruction as an explicit input assumption at the final handoff point.
 
-- Current `sorry` count: `32` across `9` files.
-- Foundational free-field and Wick infrastructure is largely in place.
-- Covariance/correlation layers are available through explicit model interfaces
-  (`BoundaryCovarianceModel`, `CorrelationInequalityModel`).
-- Remaining blockers are concentrated in deep analytic estimates and final OS packaging:
-  `FeynmanGraphs`, `Interaction`, `MultipleReflections`, `InfiniteVolumeLimit`,
-  `Regularity`, `ReflectionPositivity`, `OSAxioms`, and `Reconstruction`.
+## Project Objective
 
-## Overview
+Formalize a mathematically sound pipeline for φ⁴₂:
 
-This project aims to give a complete, rigorous Lean 4 proof that the φ⁴₂ model satisfies the Osterwalder-Schrader axioms (Euclidean QFT axioms) and, via the OS reconstruction theorem, yields a Wightman quantum field theory. The construction follows Part II of:
+1. finite-volume construction,
+2. infinite-volume limit,
+3. OS axiom verification,
+4. reconstruction to Wightman theory.
 
-> J. Glimm and A. Jaffe, *Quantum Physics: A Functional Integral Point of View*, 2nd edition, Springer 1987.
+## Comprehensive Lean Module Dependency Graph
 
-The mathematical content includes:
-- Construction of the free Euclidean field as a Gaussian measure on S'(R²)
-- Wick products and the interaction V = λ∫ :φ⁴: dx
-- Nelson's estimate: e^{-V} ∈ L^p for all p < ∞ (d=2)
-- Correlation inequalities (GKS, FKG, Lebowitz)
-- Reflection positivity and multiple reflections (chessboard estimates)
-- Monotone infinite volume limit via operator inequalities
-- Regularity (OS1 axiom) via integration by parts
-- Cluster expansion for the mass gap (OS4 axiom)
-- Osterwalder-Schrader reconstruction to Wightman QFT
+```mermaid
+flowchart TD
+  Defs[Phi4.Defs]
+  FreeField[Phi4.FreeField]
+  BesselK1[Phi4.Bessel.BesselK1]
+  BesselK0[Phi4.Bessel.BesselK0]
+  CovOps[Phi4.CovarianceOperators]
+  Wick[Phi4.WickProduct]
+  Graphs[Phi4.FeynmanGraphs]
+  Interaction[Phi4.Interaction]
+  FVM[Phi4.FiniteVolumeMeasure]
+  Corr[Phi4.CorrelationInequalities]
+  RP[Phi4.ReflectionPositivity]
+  MultiRef[Phi4.MultipleReflections]
+  InfVol[Phi4.InfiniteVolumeLimit]
+  Reg[Phi4.Regularity]
+  OSAx[Phi4.OSAxioms]
+  Recon[Phi4.Reconstruction]
+  Bundle[Phi4.ModelBundle]
 
-## Architecture
+  GaussianField[GaussianField]
+  HeatKernel[HeatKernel]
+  OSRec[OSReconstruction]
 
-The formalization uses a **continuum approach** with UV regularization:
+  Defs --> FreeField
+  BesselK1 --> BesselK0 --> CovOps
+  FreeField --> CovOps --> Wick
+  Wick --> Graphs
+  Wick --> Interaction --> FVM
+  FVM --> Corr
+  FVM --> RP --> MultiRef --> InfVol
+  Corr --> InfVol
+  InfVol --> Reg --> OSAx --> Recon --> Bundle
 
+  GaussianField --> Defs
+  GaussianField --> FreeField
+  HeatKernel --> FreeField
+  OSRec --> OSAx
+  OSRec --> Recon
 ```
-Free Gaussian measure dφ_C on S'(R²)
-         ↓
-Wick-ordered interaction V_Λ = λ ∫_Λ :φ⁴:_C dx
-         ↓
-Finite volume measure dν_Λ = Z_Λ⁻¹ e^{-V_Λ} dφ_C
-         ↓
-Correlation inequalities → Monotone convergence
-         ↓
-Infinite volume limit ν = lim ν_Λ
-         ↓
-OS axioms verification (OS0-OS4)
-         ↓
-Wightman QFT via OS reconstruction
+
+## End-to-End Proof Flowchart (Mathematical)
+
+```mermaid
+flowchart LR
+  A[Free Gaussian field dφ_C on S'(R²)] --> B[Wick ordering and φ⁴ interaction V_Λ]
+  B --> C[Finite-volume measure dμ_Λ = Z_Λ^{-1} e^{-V_Λ} dφ_C]
+  C --> D[Correlation inequalities: GKS/FKG/Lebowitz]
+  C --> E[Reflection positivity in finite volume]
+  E --> F[Multiple reflections / chessboard bounds]
+  D --> G[Monotonicity in Λ]
+  F --> H[Uniform bounds in Λ]
+  G --> I[Infinite-volume Schwinger limit]
+  H --> I
+  I --> J[Regularity / generating-functional bounds (OS1)]
+  I --> K[OS0/OS2/OS3 packaging]
+  J --> K
+  K --> L[OS axioms package]
+  L --> M[Wightman reconstruction input]
 ```
 
-### File structure
+## Assumption Interface Layer (Current)
 
-| File | Content |
+Some high-complexity components are intentionally exposed as structured assumptions to keep downstream development rigorous and explicit:
+
+- `InteractionIntegrabilityModel`
+- `FiniteVolumeComparisonModel`
+- `CorrelationInequalityModel`
+- `FreeReflectionPositivityModel`
+- `DirichletReflectionPositivityModel`
+- `InteractingReflectionPositivityModel`
+- `MultipleReflectionModel`
+- `InfiniteVolumeLimitModel`
+- `WickPowersModel`
+- `RegularityModel`
+- `OSAxiomModel`
+- `ReconstructionInputModel`
+
+`Phi4.ModelBundle` collects these interfaces into one bundled entrypoint.
+
+## File Map (Purpose)
+
+| File | Purpose |
 |------|---------|
-| `Defs.lean` | Core types: Spacetime2D, TestFun2D, FieldConfig2D, Rectangle, UVCutoff |
-| `FreeField.lean` | Free Gaussian measure via spectral CLM construction |
-| `CovarianceOperators.lean` | Dirichlet/Neumann/periodic covariances, operator inequalities |
-| `WickProduct.lean` | Wick products :φⁿ: via recursive Hermite polynomials |
-| `FeynmanGraphs.lean` | Localized graph bounds for interaction estimates |
-| `Interaction.lean` | Interaction V_Λ, finite volume measures, Nelson's e^{-V} ∈ L^p |
-| `CorrelationInequalities.lean` | GKS-I/II, FKG, Lebowitz inequalities |
-| `ReflectionPositivity.lean` | Reflection positivity for free and interacting measures |
-| `MultipleReflections.lean` | Chessboard/iterated Schwarz estimates |
-| `InfiniteVolumeLimit.lean` | Monotone convergence to infinite volume |
-| `Regularity.lean` | OS1 axiom via integration by parts |
-| `OSAxioms.lean` | Verification of OS0-OS4 |
-| `Reconstruction.lean` | Wightman QFT from OS axioms |
+| `Phi4/Defs.lean` | Core types and geometric/setup data |
+| `Phi4/FreeField.lean` | Free Gaussian field and covariance CLM infrastructure |
+| `Phi4/Bessel/BesselK1.lean` | Bessel K1 technical lemmas |
+| `Phi4/Bessel/BesselK0.lean` | Bessel K0 definitions and bridge lemmas |
+| `Phi4/CovarianceOperators.lean` | Covariance operators and comparison skeleton |
+| `Phi4/WickProduct.lean` | Wick monomials and rewick identities |
+| `Phi4/FeynmanGraphs.lean` | Graph-expansion interface layer |
+| `Phi4/Interaction.lean` | Interaction and integrability interface |
+| `Phi4/FiniteVolumeMeasure.lean` | Finite-volume measure and Schwinger moments |
+| `Phi4/CorrelationInequalities.lean` | GKS/FKG/Lebowitz interfaces and derived bounds |
+| `Phi4/ReflectionPositivity.lean` | Time reflection and RP interfaces |
+| `Phi4/MultipleReflections.lean` | Chessboard and determinant-style bounds |
+| `Phi4/InfiniteVolumeLimit.lean` | Exhaustion, monotonicity, infinite-volume model interface |
+| `Phi4/Regularity.lean` | Regularity / OS1 interface |
+| `Phi4/OSAxioms.lean` | OS axiom packaging for φ⁴₂ Schwinger functions |
+| `Phi4/Reconstruction.lean` | Wightman existence via explicit reconstruction input |
+| `Phi4/ModelBundle.lean` | Bundled model assumptions for end-to-end use |
 
-## Dependencies
+## Build
 
-- [Mathlib](https://github.com/leanprover-community/mathlib4) — Lean 4 mathematics library
-- [GaussianField](https://github.com/mrdouglasny/gaussian-field) — Gaussian probability measures on nuclear Fréchet spaces (provides `DyninMityaginSpace`, `spectralCLM`, Gaussian measure construction, Wick's theorem, Fernique bounds)
-- [OSReconstruction](https://github.com/mrdouglasny/OSreconstruction) — Osterwalder-Schrader axiom structures and the reconstruction theorem to Wightman QFT
-
-## Current status
-
-**Work in progress.** The architecture is in place and major foundational pieces are proven. Key items proven so far:
-
-- Free field eigenvalues, singular values, and their bounds
-- Free covariance CLM via `spectralCLM` (the critical Phase 1A construction)
-- Free Gaussian measure and its properties (probability measure, centered, two-point function, L^p integrability) — via GaussianField API
-- Wick monomials via recursive definition with explicit formulas for n = 0,...,4
-- Integration by parts for the free field
-- Rectangle geometry (area positivity, time reflection, symmetric rectangles)
-
-Remaining: 32 `sorry`s across 9 files, concentrated in interaction estimates,
-multiple-reflection/infinite-volume infrastructure, regularity bounds, and final
-OS/reconstruction packaging.
-See [TODO.md](TODO.md) for the active queue and [ProofIdeas/Overview.md](ProofIdeas/Overview.md)
-for chapter-aligned progress notes.
-
-## Building
-
-Requires Lean 4 v4.28.0. To build:
+Requires Lean `v4.28.0`.
 
 ```bash
 lake build Phi4
 ```
 
-## Proof ideas
+## Trust / Audit Commands
 
-The `ProofIdeas/` directory contains detailed mathematical notes for each chapter of Glimm-Jaffe, documenting the proof strategies that guide the formalization.
+```bash
+rg -n "\\bsorry\\b|\\bsorryAx\\b|^axiom" Phi4 --glob '*.lean'
+lake build Phi4
+```
 
-## Documentation Notes
+## Planning Docs
 
-- `TODO.md`: active implementation queue.
-- `ProofIdeas/`: active mathematical planning and chapter notes.
-- `docs/archive/REVIEW-2026-02-23.md`: historical audit snapshot, not the current status source.
+- `TODO.md` — active engineering queue and dependency-aware plan.
+- `ProofIdeas/` — chapter-wise mathematical planning notes.
 
 ## References
 
-- J. Glimm and A. Jaffe, *Quantum Physics: A Functional Integral Point of View*, 2nd ed., Springer 1987
-- B. Simon, *The P(φ)₂ Euclidean (Quantum) Field Theory*, Princeton 1974
-- V. Rivasseau, *From Perturbative to Constructive Renormalization*, Princeton 1991
-
-## Related work
-
-- [pphi2](https://github.com/mrdouglasny/pphi2) by M. Douglas — A complementary approach to the same theorem using lattice discretization and transfer matrix methods
+- J. Glimm, A. Jaffe, *Quantum Physics: A Functional Integral Point of View*, 2nd ed.
+- B. Simon, *The P(φ)₂ Euclidean (Quantum) Field Theory*
+- V. Rivasseau, *From Perturbative to Constructive Renormalization*
 
 ## License
 

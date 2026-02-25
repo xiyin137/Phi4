@@ -1,425 +1,151 @@
-# Development Plan: phi^4_2 QFT Formalization
+# TODO: 2D φ⁴ Project Development Plan
 
 ## Status Snapshot (2026-02-25)
 
-- Current `sorry` count: `32` across `9` files.
-- Current per-file counts:
-  - `Phi4/FeynmanGraphs.lean`: 4
-  - `Phi4/Interaction.lean`: 4
-  - `Phi4/ReflectionPositivity.lean`: 3
-  - `Phi4/MultipleReflections.lean`: 2
-  - `Phi4/InfiniteVolumeLimit.lean`: 5
-  - `Phi4/Regularity.lean`: 5
-  - `Phi4/OSAxioms.lean`: 6
-  - `Phi4/Reconstruction.lean`: 2
-  - `Phi4/FiniteVolumeMeasure.lean`: 1
-- Working rules in force:
-  no `axiom`, no fake placeholders, and scratch-first prototyping before major theorem edits.
-
-## Active Queue (Authoritative)
-
-1. Close Chapter 8 bottlenecks:
-   `localized_graph_bound`, `exp_interaction_Lp`, then `schwingerTwo_le_free`.
-2. Close Chapter 10/11 bottlenecks:
-   `chessboard_estimate`, `schwinger_uniform_bound`,
-   `schwinger_uniformly_bounded`, and infinite-volume measure/moment theorems.
-3. Close reflection positivity bridge:
-   `free_covariance_reflection_positive`,
-   `dirichlet_covariance_reflection_positive`,
-   `interacting_measure_reflection_positive`.
-4. Close Chapter 12 regularity theorems:
-   `wick_powers_infinite_volume`, `euclidean_equation_of_motion`,
-   `nonlocal_phi4_bound`, `generating_functional_bound_uniform`,
-   `generating_functional_bound`.
-5. Final OS/reconstruction packaging:
-   `phi4SchwingerFunctions`, `phi4_os0/2/3`, `phi4_satisfies_OS`,
-   `phi4_linear_growth`, `phi4_os4_weak_coupling`.
-
-## Legacy Detailed Plan (Reference)
-
-The detailed phase-by-phase plan below is retained for reference, but checklist
-items may be stale. Use the status snapshot and active queue above as authoritative.
-
-## Available Infrastructure
-
-### From GaussianField dependency
-- `GaussianField.measure T` -- Gaussian probability measure on `WeakDual R E`
-- `GaussianField.charFun` -- characteristic functional E[exp(i omega f)] = exp(-1/2 ||Tf||^2)
-- `GaussianField.measure_centered`, `cross_moment_eq_covariance` -- proven
-- `GaussianField.wick_recursive`, `wick_bound`, `wick_bound_factorial` -- Wick's theorem (proven)
-- `GaussianField.odd_moment_vanish` -- proven
-- `GaussianField.pairing_memLp` -- all finite moments exist (Fernique, proven)
-- `GaussianField.spectralCLM` -- multiplier CLM for DyninMityaginSpace (axiom)
-- `DyninMityaginSpace (SchwartzMap D R)` -- instance proven via Hermite basis
-
-### From OSReconstruction dependency
-- `OsterwalderSchraderAxioms d` -- target structure (OS0-OS4)
-- `WightmanQFT d` -- Wightman axiom structure
-- `os_to_wightman` -- OS reconstruction theorem (proven)
-- `WightmanFunctions d`, `wightman_reconstruction` -- Wightman reconstruction (proven)
-- SCV toolkit: edge-of-wedge, Osgood, tube domains, Bargmann-Hall-Wightman
-- vNA infrastructure: spectral theorem, unbounded operators, Stone's theorem
-- Lorentz/Poincare groups, representations, covariance
-
-### From Phi4 (already proven)
-- `Defs.lean` -- All clean (no sorries): Spacetime2D, TestFun2D, FieldConfig2D, Phi4Params, Rectangle, UVCutoff
-- `freeEigenvalue_pos` -- proven
-- `freeEigenvalue_lower_bound` -- proven
-- `freeSingularValue_nonneg` -- proven
-- `free_singular_values_bounded` -- proven (key for freeCovarianceCLM)
-- `free_singular_values_isBoundedSeq` -- proven
-- `freeCovarianceCLM` -- defined (uses spectralCLM)
-- `freeFieldMeasure` -- defined (uses GaussianField.measure)
-- `Rectangle.area_pos` -- proven
-- `freeFieldMeasure_isProbability` -- proven (uses GaussianField)
-- `freeField_centered` -- proven (uses GaussianField)
-- `freeField_two_point` -- proven (uses GaussianField)
-- `freeField_pairing_memLp` -- proven (uses GaussianField)
-- `pos_time_half_exists` (MultipleReflections.lean) -- proven
-- `wickMonomial` -- defined (recursive)
-- `wickMonomial_zero/one/two/three/four` -- proven (simp lemmas)
-- `wickMonomial_zero_variance` -- proven
-- `wickMonomial_bound` -- proven (polynomial bound by induction)
-- `wickMonomial_rewick_two/four` -- proven (algebraic identity, ring)
-- `rewick_fourth` -- proven
-- `rewick_ordering_bounds` -- proven (via wickMonomial_bound)
-- `wickPower`, `wickFourth` -- defined
-- `wickFourth_eq`, `wickFourth_explicit` -- proven
-- `integration_by_parts_free` -- proven
-- `interactionCutoff` -- defined (proper, no sorry)
-- `wick_fourth_lower_bound_explicit` -- proven (nlinarith + completing the square)
-- `wicks_theorem_odd` -- proven (uses GaussianField.odd_moment_vanish)
-- `schwingerTwo_symm` -- proven
-- `schwingerN_perm` -- proven (uses Equiv.prod_comp)
-- `timeReflect2D_apply/involution/norm_eq` -- proven
-- `timeReflectCLE` -- defined (ContinuousLinearEquiv)
-- `testFunTimeReflect` -- defined (via compCLMOfContinuousLinearEquiv)
-- `supportedInPositiveTime` -- defined
-- `uvMollifier` -- defined (via ContDiffBump + HasCompactSupport.toSchwartzMap)
-- `rawFieldEval` -- defined (ω applied to uvMollifier)
-- `regularizedPointCovariance` -- defined (GaussianField.covariance of mollifier)
-- `freeCovKernel` -- defined (heat kernel integral representation)
-- `freeCovKernel_symm` -- proven (norm_sub_rev)
-- `besselK1` -- defined + 9 fully proved lemmas (from OSforGFF, 0 sorries)
-- `besselK0` -- defined (cosh integral representation)
-
----
-
-## Phase 1: Foundational Infrastructure (Free Field + Covariance)
+- `Phi4/*.lean` has `0` `sorry`.
+- `Phi4/*.lean` has `0` `axiom` declarations.
+- `lake build Phi4` succeeds.
+- Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
+
+## Development Rules (Authoritative)
+
+1. No `axiom` declarations in `Phi4`.
+2. No fake placeholders or vacuous theorem statements.
+3. Keep statements mathematically sound and aligned with Glimm-Jaffe.
+4. Prefer proving reusable intermediate lemmas over one-off theorem hacks.
+
+## Comprehensive Dependency / Flowchart
+
+### A. Lean Module DAG
+
+```mermaid
+flowchart TD
+  Defs[Defs] --> FreeField[FreeField]
+  BesselK1[BesselK1] --> BesselK0[BesselK0] --> CovOps[CovarianceOperators]
+  FreeField --> CovOps --> Wick[WickProduct]
+  Wick --> Graphs[FeynmanGraphs]
+  Wick --> Interaction[Interaction]
+  Interaction --> FVM[FiniteVolumeMeasure]
+  FVM --> Corr[CorrelationInequalities]
+  FVM --> RP[ReflectionPositivity]
+  RP --> MultiRef[MultipleReflections]
+  Corr --> InfVol[InfiniteVolumeLimit]
+  MultiRef --> InfVol
+  InfVol --> Reg[Regularity]
+  Reg --> OSAx[OSAxioms]
+  OSAx --> Recon[Reconstruction]
+  Recon --> Bundle[ModelBundle]
+```
+
+### B. Mathematical Proof Flow
+
+```mermaid
+flowchart LR
+  A[Free Gaussian measure] --> B[Wick ordering and interaction]
+  B --> C[Finite-volume φ⁴ measure]
+  C --> D[Correlation inequalities]
+  C --> E[Reflection positivity]
+  E --> F[Multiple reflections]
+  D --> G[Monotone limits]
+  F --> H[Uniform bounds]
+  G --> I[Infinite-volume limit]
+  H --> I
+  I --> J[Regularity / OS1]
+  I --> K[OS0/OS2/OS3 infrastructure]
+  J --> L[OS package]
+  K --> L
+  L --> M[Wightman reconstruction interface]
+```
+
+### C. Interface-Dependency Layer (Current Architecture)
+
+```mermaid
+flowchart TD
+  IIM[InteractionIntegrabilityModel] --> FVMCore[Finite-volume core theorems]
+  CIM[CorrelationInequalityModel] --> Mono[Monotonicity results]
+  MRM[MultipleReflectionModel] --> UB[Uniform bounds]
+  Mono --> IVLM[InfiniteVolumeLimitModel]
+  UB --> IVLM
+  IVLM --> WPM[WickPowersModel]
+  IVLM --> RM[RegularityModel]
+  IVLM --> OSM[OSAxiomModel]
+  OSM --> RIM[ReconstructionInputModel]
+  IVLM --> Bundle[Phi4ModelBundle]
+  OSM --> Bundle
+  RIM --> Bundle
+```
+
+## Work Packages (Priority Order)
+
+## WP1: Interaction Integrability Closure
+
+Goal: replace `InteractionIntegrabilityModel` assumptions by internal proofs of the key Chapter 8 integrability statements.
+
+Deliverables:
+- prove `exp_interaction_Lp` from semibounded Wick-4 + tail control,
+- derive `partition_function_pos` and `partition_function_integrable` internally,
+- minimize assumptions required by `finiteVolumeMeasure_isProbability`.
+
+Exit criteria:
+- `FiniteVolumeMeasure` probability and integrability theorems no longer depend on external interaction integrability assumptions.
+
+## WP2: Correlation + Reflection Positivity Grounding
+
+Goal: tighten the analytic source of inequalities and positivity, reducing purely abstract interfaces.
+
+Deliverables:
+- channel-precise GKS/Lebowitz inequalities (in progress; core derived channel bounds already added),
+- bridge finite-volume positivity statements to OS-style positivity forms,
+- remove redundant assumptions between RP layer and OS layer where derivable.
+
+Exit criteria:
+- explicit proof path from finite-volume correlation/RP statements to the OS positivity inputs used downstream.
+
+## WP3: Infinite-Volume Construction Upgrade
+
+Goal: reduce `InfiniteVolumeLimitModel` by proving concrete convergence/representation steps.
 
-### Priority: CRITICAL -- blocks everything downstream
+Deliverables:
+- strengthen monotonicity beyond the currently packaged 2-point channel,
+- construct limit functionals with explicit convergence lemmas,
+- prove moment representation with fewer abstract assumptions.
 
-### 1A. Free Covariance CLM (FreeField.lean) -- COMPLETE
-**Status:** Done. `freeCovarianceCLM` constructed via `GaussianField.spectralCLM` with
-the bounded sequence `freeSingularValue`. Key insight: `spectralCLM` only requires
-`IsBoundedSeq`, not summability. (The summability theorem was incorrect and has been removed —
-eigenvalues grow like √m so σ_m ~ m^{-1/4} and the series diverges.)
-
-**Completed:**
-- [x] `free_singular_values_bounded` -- proven
-- [x] `free_singular_values_isBoundedSeq` -- proven
-- [x] `freeCovarianceCLM` -- defined via spectralCLM
-- [x] `free_singular_values_summable` -- REMOVED (statement was false)
-
-### 1B. Free Covariance Kernel (FreeField.lean) -- PARTIALLY COMPLETE
-**Goal:** Define the pointwise kernel C(x,y) and its properties
-
-**Approach:** C(x,y) = (2pi)^{-1} K_0(m|x-y|) in d=2. Defined via heat kernel integral representation.
-Bessel function library (K₁ fully proved, K₀ defined) imported from OSforGFF.
-
-**Tasks:**
-- [x] `freeCovKernel` -- defined via heat kernel integral ∫₀^∞ (4πt)⁻¹ exp(-m²t - |x-y|²/(4t)) dt
-- [x] `freeCovKernel_symm` -- proven (norm_sub_rev)
-- [x] `uvMollifier` -- defined (ContDiffBump + HasCompactSupport.toSchwartzMap)
-- [x] `regularizedPointCovariance` -- defined via GaussianField.covariance of mollifier
-- [ ] `freeCovKernel_pos_def` -- positive definiteness
-- [ ] `regularizedPointCovariance_log_divergence` -- the key d=2 fact: c_kappa ~ (2pi)^{-1} ln kappa
-- [ ] `schwingerIntegral2D_eq_besselK0` -- connect heat kernel integral to K₀
-
-**Dependencies:** None
-**Blocks:** WickProduct (Wick ordering constants), Interaction (semiboundedness), CovarianceOperators
-
-### 1C. Covariance Operators with Boundary Conditions (CovarianceOperators.lean)
-**Goal:** Dirichlet/Neumann/Periodic covariances and the ordering C_D <= C <= C_N
-
-**Approach:**
-- Dirichlet: define via variational characterization (-Delta_D + m^2)^{-1} as resolvent of Friedrichs extension
-- Neumann: similarly, with Neumann BC
-- Ordering: form domain argument (D(-Delta_D) subset D(-Delta) subset D(-Delta_N))
+Exit criteria:
+- at least one major field in `InfiniteVolumeLimitModel` moved from assumption to theorem.
 
-**Tasks:**
-- [ ] `dirichletCov` -- define Dirichlet Green's function
-- [ ] `neumannCov` -- define Neumann Green's function
-- [ ] `periodicCov` -- define periodic covariance (Fourier series)
-- [ ] `dirichlet_le_free` -- C_D <= C (form domain inclusion)
-- [ ] `free_le_neumann` -- C <= C_N (form domain inclusion)
-- [ ] `dirichlet_monotone` -- C_{Lambda_1}^D <= C_{Lambda_2}^D for Lambda_1 subset Lambda_2
-- [ ] `covarianceChange_pointwise_bounded` -- |delta c(x)| <= const in d=2
-- [ ] `dirichletCov_smooth_off_diagonal` -- elliptic regularity
-- [ ] `freeCov_exponential_decay` -- |C(x,y)| <= C1 * exp(-C2 * |x-y|) for |x-y| >= 1
-
-**Dependencies:** 1B (freeCovKernel)
-**Blocks:** ReflectionPositivity, CorrelationInequalities, MultipleReflections, InfiniteVolumeLimit
-
----
+## WP4: Regularity (OS1) Internalization
 
-## Phase 2: Wick Products and Feynman Graphs
-
-### Priority: HIGH -- needed for the interaction
-
-### 2A. Wick Products (WickProduct.lean)
-**Goal:** Define :phi^n:_C and prove basic properties
-
-**Tasks:**
-- [ ] `hermitePoly` -- extend to general n (currently cases 0-4 defined)
-- [ ] `rawFieldEval` -- define phi_kappa(x) = omega(delta_{kappa,x}) as a measurable function
-- [ ] `wickPower` -- define :phi^n:_C = He_n(phi_kappa(x), c_kappa(x))
-- [ ] `wickFourth` -- verify :phi^4: = phi^4 - 6c phi^2 + 3c^2
-- [ ] `wickPower_zero_expectation` -- E[:phi^n:] = 0 from Hermite orthogonality
-- [ ] `wickPower_memLp` -- :phi^n: in L^p for all p < infinity (GJ Thm 8.5.3)
-- [ ] `rewick_fourth` -- re-Wick-ordering formula (GJ 8.6.1)
-- [ ] `rewick_ordering_bounds` -- quantitative bounds on re-Wick-ordered terms
+Goal: move from `RegularityModel` assumptions to proved generating-functional bounds.
 
-**Dependencies:** 1A (freeCovarianceCLM), 1B (regularizedPointCovariance)
-**Blocks:** Interaction
+Deliverables:
+- formal Schwinger-Dyson / integration-by-parts chain,
+- nonlocal bounds and uniform control,
+- final `generating_functional_bound` theorem from project-internal lemmas.
 
-### 2B. Feynman Graphs (FeynmanGraphs.lean)
-**Goal:** Wick's theorem and localized graph bounds
+Exit criteria:
+- `phi4_os1` depends only on proven internal lemmas + clearly audited upstream results.
 
-**Tasks:**
-- [ ] `num_pairings` -- (2n-1)!! counting (pure combinatorics)
-- [ ] `wicks_theorem_even` -- even moments = sum over pairings
-  - Can use `GaussianField.wick_recursive` from the dependency!
-- [ ] `wicks_theorem_odd` -- odd moments vanish
-  - Can use `GaussianField.odd_moment_vanish`!
-- [ ] `graphIntegral` -- define Feynman graph integral I(G)
-- [ ] `feynman_graph_expansion` -- integral = sum of graph integrals
-- [ ] `localized_graph_bound` -- |I(G)| <= prod_Delta N(Delta)! (const m^{-1/q})^{N(Delta)}
+## WP5: OS/Reconstruction Hardening
 
-**Dependencies:** 2A (wickPower), 1C (freeCov_exponential_decay)
-**Blocks:** Interaction (exp_interaction_Lp)
+Goal: keep final reconstruction stage sound despite upstream churn.
 
----
-
-## Phase 3: Interaction and Finite Volume Measure
-
-### Priority: HIGH -- the central estimates
-
-### 3A. Interaction (Interaction.lean)
-**Goal:** V_Lambda = lambda integral_Lambda :phi^4: dx, and e^{-V} in L^p
-
-**Tasks:**
-- [ ] `interactionCutoff` -- define V_{Lambda,kappa}
-- [ ] `interaction` -- UV limit V_Lambda = lim_{kappa -> infty} V_{Lambda,kappa}
-- [ ] `wick_fourth_semibounded` -- :phi^4_kappa: >= -6 c_kappa^2 = -O((ln kappa)^2)
-- [ ] `wick_fourth_lower_bound_explicit` -- explicit (phi^2 - 3c)^2 - 6c^2 computation
-- [ ] `interactionCutoff_in_L2` -- V_{Lambda,kappa} in L^2, uniform in kappa
-- [ ] `interactionCutoff_converges_L2` -- L^2 convergence as kappa -> infty
-- [ ] `interaction_in_L2` -- V_Lambda in L^2
-- [ ] `exp_interaction_Lp` -- **THE KEY ESTIMATE**: e^{-V} in L^p for all p < infty (GJ Thm 8.6.2)
-  - Two-step proof: semiboundedness + small bad set + layer-cake
-- [ ] `partition_function_pos` -- Z_Lambda = integral e^{-V} > 0
-- [ ] `partition_function_integrable` -- Z_Lambda < infty
+Deliverables:
+- maintain `OSAxiomModel` with minimal, non-redundant assumptions,
+- keep `ReconstructionInputModel` explicit until upstream no-sorry reconstruction theorem is auditable,
+- centralize handoff through `Phi4ModelBundle`.
 
-**Dependencies:** 2A, 2B, 1B (log divergence), 1C (covariance bounds)
-**Blocks:** FiniteVolumeMeasure, everything downstream
-
-### 3B. Finite Volume Measure (FiniteVolumeMeasure.lean)
-**Goal:** d mu_Lambda = Z^{-1} e^{-V} d phi_C and Schwinger functions
+Exit criteria:
+- clean, auditable final theorem interface showing exact remaining assumptions.
 
-**Tasks:**
-- [ ] `finiteVolumeMeasure_isProbability` -- normalization
-- [ ] `schwingerN_perm` -- permutation symmetry of Schwinger functions
-- [ ] `schwingerN_multilinear` -- multilinearity
-- [ ] `schwingerTwo_le_free` -- S_2 <= C (from Lebowitz inequality)
+## Immediate Next Queue
 
-**Dependencies:** 3A (partition_function_pos, partition_function_integrable)
-**Blocks:** CorrelationInequalities, ReflectionPositivity
+1. Reduce redundancy between `OSAxiomModel.os3` and `OSAxiomModel.e2_reflection_positive` by deriving one from the other where possible.
+2. Strengthen `InfiniteVolumeLimit` monotonicity infrastructure for higher-point channels.
+3. Continue replacing interface-level fields with proved lemmas in `Interaction` and `FiniteVolumeMeasure`.
+4. Audit and clean warning-heavy declarations (unused binders/tactics) that obscure proof intent.
 
----
+## Risk Register
 
-## Phase 4: Correlation Inequalities and Reflection Positivity
-
-### Priority: HIGH -- needed for infinite volume limit
-
-### 4A. Correlation Inequalities (CorrelationInequalities.lean)
-**Goal:** GKS-I, GKS-II, FKG, Lebowitz for continuum phi^4_2
-
-**Approach:** These are proved on the lattice (Ch 4) and extended to continuum via lattice approximation (Ch 9).
-Consider: can we state these as properties of the finite volume measure and prove via lattice approx?
-
-**Tasks:**
-- [ ] `griffiths_first` -- GKS-I: <phi(f) phi(g)> >= 0 for f,g >= 0
-- [ ] `griffiths_second` -- GKS-II: <phi_A phi_B> - <phi_A><phi_B> >= 0
-  - This is THE cornerstone of monotone convergence
-- [ ] `fkg_inequality` -- FKG: <F><G> <= <FG> for monotone F,G
-- [ ] `lebowitz_inequality` -- Lebowitz: U_4 <= 0
-- [ ] `schwinger_two_monotone` -- S_2^{Lambda_1} <= S_2^{Lambda_2} for Lambda_1 subset Lambda_2
-
-**Dependencies:** 3B (finite volume measure), 1C (Dirichlet monotonicity)
-**Blocks:** InfiniteVolumeLimit (monotonicity argument)
-
-### 4B. Reflection Positivity (ReflectionPositivity.lean)
-**Goal:** OS3 for free and interacting measures
-
-**Tasks:**
-- [ ] `testFunTimeReflect` -- time reflection theta on test functions
-- [ ] `free_covariance_reflection_positive` -- RP of C (GJ Thm 7.10.1)
-  - Key: RP <=> C_D <= C, which is `dirichlet_le_free`
-- [ ] `dirichlet_covariance_reflection_positive` -- RP of C_D
-- [ ] `interacting_measure_reflection_positive` -- RP of d mu_Lambda (GJ Thm 10.4.3)
-  - Proof: V = V_+ + theta V_+, then use RP of d phi_C
-
-**Dependencies:** 1C (dirichlet_le_free), 3B (finite volume measure)
-**Blocks:** MultipleReflections, InfiniteVolumeLimit (OS3)
-
----
-
-## Phase 5: Multiple Reflections and Infinite Volume Limit
-
-### Priority: HIGH -- constructs the infinite volume theory
-
-### 5A. Multiple Reflections (MultipleReflections.lean)
-**Goal:** Chessboard/iterated Schwarz estimates, uniform bounds
-
-**Tasks:**
-- [ ] `chessboard_estimate` -- |integral prod A_i d mu|^{2^d} <= integral R(A) d mu
-  - Iterated RP + Schwarz inequality
-- [ ] `determinant_bound` -- Z_+^2 / Z <= exp(O(|Lambda|))
-- [ ] `schwinger_uniform_bound` -- |S_n^Lambda| <= C uniformly in Lambda
-- [ ] `partition_function_ratio_bound` -- Z_{Lambda_1}/Z_{Lambda_2} <= exp(C |Lambda_2|)
-
-**Dependencies:** 4B (RP), 3A (exp_interaction_Lp for unit cube estimates)
-**Blocks:** InfiniteVolumeLimit (uniform upper bound)
-
-### 5B. Infinite Volume Limit (InfiniteVolumeLimit.lean)
-**Goal:** S{f} = lim_{Lambda -> R^2} S_Lambda{f} exists, satisfying OS0, OS2, OS3
-
-**Tasks:**
-- [ ] `schwinger_monotone_in_volume` -- S_2^{Lambda_n} monotone increasing
-  - Uses GKS-II + Dirichlet monotonicity
-- [ ] `schwingerN_monotone_in_volume` -- n-point version
-- [ ] `schwinger_uniformly_bounded` -- |S_n^Lambda| <= C (multiple reflections)
-- [ ] `infinite_volume_schwinger_exists` -- monotone bounded => convergent
-- [ ] `infiniteVolumeMeasure` -- construct the infinite volume measure (Bochner-Minlos / tightness)
-- [ ] `infiniteVolumeMeasure_isProbability` -- it's a probability measure
-- [ ] `infiniteVolumeSchwinger_is_moment` -- Schwinger functions are moments of the measure
-
-**Dependencies:** 4A (GKS-II for monotonicity), 5A (uniform bound)
-**Blocks:** Regularity, OSAxioms
-
----
-
-## Phase 6: Regularity (OS1)
-
-### Priority: HIGH -- the most analytically demanding
-
-### 6A. Regularity (Regularity.lean)
-**Goal:** |S{f}| <= exp(c(||f||_{L^1} + ||f||_{L^p}^p)) -- OS1 axiom
-
-**Tasks:**
-- [ ] `wick_powers_infinite_volume` -- :phi^j: exists in L^2(d mu)
-- [ ] `wickCubicSmeared` -- integral :phi^3: f dx as a functional
-- [ ] `euclidean_equation_of_motion` -- Schwinger-Dyson / integration by parts identity
-- [ ] `normFunctional` -- define N'(f) = Sigma ||g_j||_{L^{n/(n-j)}}
-- [ ] `nonlocal_phi4_bound` -- |S_Lambda{g}| <= exp(C_1 |Lambda| + C_2)
-- [ ] `generating_functional_bound_uniform` -- eliminate Lambda-dependence via asymmetric reflections
-- [ ] `generating_functional_bound` -- THE MAIN REGULARITY THEOREM (GJ Thm 12.5.1)
-
-**Dependencies:** 5B (infinite volume measure), 5A (multiple reflections), 1C (exponential decay of C)
-**Blocks:** OSAxioms
-
----
-
-## Phase 7: OS Axioms and Reconstruction
-
-### Priority: MEDIUM (once Phase 6 is done, these are mostly assembly)
-
-### 7A. OS Axioms (OSAxioms.lean)
-**Goal:** Verify OS0-OS3 for the infinite volume Schwinger functions
-
-**Tasks:**
-- [ ] `phi4SchwingerFunctions` -- package as SchwingerFunctions structure
-- [ ] `phi4_os0` -- OS0 (analyticity/temperedness)
-- [ ] `phi4_os2_translation` -- translation invariance
-- [ ] `phi4_os2_rotation` -- rotation invariance
-- [ ] `phi4_os3` -- reflection positivity (from RP preserved under limits)
-- [ ] `phi4_satisfies_OS` -- bundle OS0-OS3
-
-**Dependencies:** 5B (infinite volume), 6A (regularity for OS1)
-**Blocks:** Reconstruction
-
-### 7B. Reconstruction (Reconstruction.lean)
-**Goal:** OS -> Wightman via the reconstruction theorem
-
-**Tasks:**
-- [ ] `phi4_linear_growth` -- linear growth condition for OS1'
-- [ ] `phi4_os4_weak_coupling` -- OS4 (clustering) for weak coupling via cluster expansion
-  - This is the hardest: needs the full cluster expansion machinery of GJ Ch 18
-  - Consider: may need to state convergence of cluster expansion as a hypothesis initially
-- [ ] `phi4_wightman_exists` -- apply `os_to_wightman` from OSReconstruction
-- [ ] `phi4_unique_vacuum` -- uniqueness of vacuum from OS4
-- [ ] `phi4_selfadjoint_fields` -- self-adjointness from GJ Thm 19.3.1
-  - Uses vNA infrastructure from OSReconstruction
-- [ ] `phi4_locality` -- spacelike commutativity from analytic continuation
-  - Uses SCV toolkit from OSReconstruction
-- [ ] `phi4_lorentz_covariance` -- Lorentz covariance from Euclidean rotation invariance
-
-**Dependencies:** 7A (OS0-OS3), OSReconstruction (reconstruction theorem)
-**Blocks:** Nothing (this is the final goal)
-
----
-
-## Recommended Development Order
-
-### Iteration 1: Build the foundation
-1. **1A** -- `freeCovarianceCLM` (critical blocker)
-2. **1B** -- `freeCovKernel` + log divergence
-3. **1C** -- Dirichlet/Neumann covariances + ordering
-
-### Iteration 2: Wick products and interaction
-4. **2A** -- Wick products (:phi^n: definition and properties)
-5. **2B** -- Feynman graphs (use GaussianField.wick_recursive)
-6. **3A** -- Interaction (V_Lambda, semiboundedness, e^{-V} in L^p)
-7. **3B** -- Finite volume measure
-
-### Iteration 3: Inequalities and positivity
-8. **4A** -- Correlation inequalities (GKS, FKG, Lebowitz)
-9. **4B** -- Reflection positivity
-
-### Iteration 4: Infinite volume
-10. **5A** -- Multiple reflections / chessboard
-11. **5B** -- Infinite volume limit
-
-### Iteration 5: Regularity and axioms
-12. **6A** -- Regularity (OS1)
-13. **7A** -- OS axioms (OS0-OS3)
-14. **7B** -- Reconstruction
-
----
-
-## Difficulty Assessment
-
-| Phase | Difficulty | Key Challenge |
-|-------|-----------|---------------|
-| 1A | Medium | Interface with spectralCLM axiom |
-| 1B | Medium | Defining the kernel, proving log divergence |
-| 1C | Hard | Dirichlet/Neumann need PDE infrastructure |
-| 2A | Medium | Hermite polynomials, measurability |
-| 2B | Medium | Graph combinatorics, localized bounds |
-| 3A | Very Hard | e^{-V} in L^p is the central estimate (Thm 8.6.2) |
-| 3B | Easy | Assembly from 3A |
-| 4A | Hard | Lattice approximation + transfer of inequalities |
-| 4B | Medium | Once C_D <= C is done, RP follows |
-| 5A | Hard | Iterated Schwarz inequality, geometric arguments |
-| 5B | Medium | Monotone convergence + Vitali's theorem |
-| 6A | Very Hard | Integration by parts + exponential decay controls combinatorics |
-| 7A | Easy | Assembly from previous phases |
-| 7B | Hard | Cluster expansion for OS4; reconstruction is provided by dependency |
-
-## Notes
-
-- The GaussianField dependency provides crucial proven theorems (Wick's theorem, moment bounds, Gaussian measure construction). Leverage these maximally.
-- The OSReconstruction dependency provides the reconstruction theorem itself. Once OS0-OS4 are verified, `os_to_wightman` gives us the Wightman QFT.
-- The two hardest single estimates are `exp_interaction_Lp` (GJ Thm 8.6.2) and `generating_functional_bound` (GJ Thm 12.5.1). Everything else is either combinatorial, follows from these, or is provided by dependencies.
-- The cluster expansion (for OS4) is the most complex piece of mathematical machinery. Consider initially treating OS4 as a hypothesis and focusing on OS0-OS3 + reconstruction.
+- Upstream `OSReconstruction` still has `sorry` in some modules; treat reconstruction usage conservatively.
+- Cluster expansion / OS4 remains a major deep-analytic milestone.
+- Overly abstract interfaces can drift from mathematically sharp statements; periodic statement-audit is required.
