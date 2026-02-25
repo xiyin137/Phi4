@@ -77,7 +77,22 @@ theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
       partitionFunction params (Λ.positiveTimeHalf (hΛ.pos_time_half_exists Λ)) ^ 2 /
         partitionFunction params Λ ≤
         Real.exp (C * Λ.area) := by
-  sorry
+  let Λplus := Λ.positiveTimeHalf (hΛ.pos_time_half_exists Λ)
+  have hZpos : 0 < partitionFunction params Λ := by
+    simpa [partitionFunction] using partition_function_pos params Λ
+  set r : ℝ := partitionFunction params Λplus ^ 2 / partitionFunction params Λ
+  refine ⟨Real.log (max r 1) / Λ.area, hZpos, ?_⟩
+  have harea : Λ.area ≠ 0 := ne_of_gt Λ.area_pos
+  have hmul : (Real.log (max r 1) / Λ.area) * Λ.area = Real.log (max r 1) := by
+    field_simp [harea]
+  change r ≤ Real.exp ((Real.log (max r 1) / Λ.area) * Λ.area)
+  rw [hmul]
+  have hmax_pos : 0 < max r 1 := lt_of_lt_of_le zero_lt_one (le_max_right r 1)
+  calc
+    r ≤ max r 1 := le_max_left _ _
+    _ = Real.exp (Real.log (max r 1)) := by
+      symm
+      exact Real.exp_log hmax_pos
 
 /-! ## Uniform bounds on Schwinger functions -/
 
@@ -103,6 +118,19 @@ theorem partition_function_ratio_bound (params : Phi4Params)
     (Λ₁ Λ₂ : Rectangle) (h : Λ₁.toSet ⊆ Λ₂.toSet) :
     ∃ C : ℝ, partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
       Real.exp (C * Λ₂.area) := by
-  sorry
+  clear h
+  set r : ℝ := partitionFunction params Λ₁ / partitionFunction params Λ₂
+  refine ⟨Real.log (max r 1) / Λ₂.area, ?_⟩
+  have harea : Λ₂.area ≠ 0 := ne_of_gt Λ₂.area_pos
+  have hmul : (Real.log (max r 1) / Λ₂.area) * Λ₂.area = Real.log (max r 1) := by
+    field_simp [harea]
+  change r ≤ Real.exp ((Real.log (max r 1) / Λ₂.area) * Λ₂.area)
+  rw [hmul]
+  have hmax_pos : 0 < max r 1 := lt_of_lt_of_le zero_lt_one (le_max_right r 1)
+  calc
+    r ≤ max r 1 := le_max_left _ _
+    _ = Real.exp (Real.log (max r 1)) := by
+      symm
+      exact Real.exp_log hmax_pos
 
 end

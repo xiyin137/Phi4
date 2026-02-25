@@ -97,8 +97,8 @@ def FeynmanGraph.isInteractionLine {r : ℕ} (G : FeynmanGraph r)
 
 /-- The integral I(G) assigned to a Feynman graph G.
     I(G) = ∫ (Π_{vertices i} wᵢ(xᵢ)) (Π_{lines l} C(x_{l.1}, x_{l.2})) dx₁⋯dxᵣ -/
-def graphIntegral {r : ℕ} (G : FeynmanGraph r) (mass : ℝ) : ℝ := by
-  sorry
+def graphIntegral {r : ℕ} (G : FeynmanGraph r) (mass : ℝ) : ℝ :=
+  ∫ x : Fin r → Spacetime2D, ∏ l ∈ G.lines, freeCovKernel mass (x l.1.1) (x l.2.1)
 
 /-- **Proposition 8.3.1**: The Gaussian integral of a product of Wick monomials
     equals the sum of Feynman graph integrals:

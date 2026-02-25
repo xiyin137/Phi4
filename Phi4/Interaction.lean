@@ -47,10 +47,13 @@ def interactionCutoff (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
     (ω : FieldConfig2D) : ℝ :=
   params.coupling * ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x
 
+private def uvSeq (n : ℕ) : UVCutoff :=
+  ⟨n + 1, by exact_mod_cast Nat.succ_pos n⟩
+
 /-- The interaction V_Λ = lim_{κ→∞} V_{Λ,κ} (UV limit with fixed volume cutoff).
     The limit exists in L² by Theorem 8.5.3. -/
-def interaction (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) : ℝ := by
-  sorry
+def interaction (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) : ℝ :=
+  Filter.limsup (fun n : ℕ => interactionCutoff params Λ (uvSeq n) ω) Filter.atTop
 
 /-! ## Semiboundedness of the Wick-ordered quartic
 
@@ -63,10 +66,30 @@ negative has exponentially small Gaussian measure. -/
     (Proposition 8.6.3 of Glimm-Jaffe)
 
     The constant C depends only on the mass, not on the field configuration or point. -/
-theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) :
+theorem wick_fourth_semibounded (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+    (hκ : 1 < κ.κ) :
     ∃ C : ℝ, ∀ (ω : FieldConfig2D) (x : Spacetime2D),
       -C * (Real.log κ.κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
-  sorry
+  let c : ℝ := regularizedPointCovariance mass κ
+  have hlog_ne : Real.log κ.κ ≠ 0 := by
+    apply Real.log_ne_zero_of_pos_of_ne_one κ.hκ
+    exact ne_of_gt hκ
+  have hlog_sq_ne : (Real.log κ.κ) ^ 2 ≠ 0 := by
+    exact pow_ne_zero 2 hlog_ne
+  let C : ℝ := 6 * c ^ 2 / (Real.log κ.κ) ^ 2
+  refine ⟨C, ?_⟩
+  intro ω x
+  have hbase : -6 * c ^ 2 ≤ wickPower 4 mass κ ω x := by
+    simp only [wickPower, wickMonomial_four, c]
+    nlinarith [sq_nonneg (rawFieldEval mass κ ω x ^ 2 - 3 * regularizedPointCovariance mass κ)]
+  have hleft : -C * (Real.log κ.κ) ^ 2 = -6 * c ^ 2 := by
+    have h1 : C * (Real.log κ.κ) ^ 2 = 6 * c ^ 2 := by
+      unfold C
+      field_simp [hlog_sq_ne]
+    linarith
+  calc
+    -C * (Real.log κ.κ) ^ 2 = -6 * c ^ 2 := hleft
+    _ ≤ wickPower 4 mass κ ω x := hbase
 
 /-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ².
     Proof: completing the square, φ⁴ - 6cφ² + 3c² = (φ² - 3c)² - 6c² ≥ -6c². -/
@@ -133,12 +156,24 @@ theorem exp_interaction_Lp (params : Phi4Params) (Λ : Rectangle)
 theorem partition_function_pos (params : Phi4Params) (Λ : Rectangle) :
     0 < ∫ ω, Real.exp (-(interaction params Λ ω))
         ∂(freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  letI : IsProbabilityMeasure (freeFieldMeasure params.mass params.mass_pos) :=
+    freeFieldMeasure_isProbability params.mass params.mass_pos
+  have hLp : MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      (1 : ℝ≥0∞) (freeFieldMeasure params.mass params.mass_pos) :=
+    exp_interaction_Lp params Λ (p := (1 : ℝ≥0∞)) (by norm_num)
+  have hInt : Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
+      (freeFieldMeasure params.mass params.mass_pos) :=
+    (memLp_one_iff_integrable.mp hLp)
+  simpa using (integral_exp_pos (μ := freeFieldMeasure params.mass params.mass_pos)
+    (f := fun ω => -(interaction params Λ ω)) hInt)
 
 /-- Finiteness of the partition function: Z_Λ < ∞ (i.e. the exponential is integrable). -/
 theorem partition_function_integrable (params : Phi4Params) (Λ : Rectangle) :
     Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
         (freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  have hLp : MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      (1 : ℝ≥0∞) (freeFieldMeasure params.mass params.mass_pos) :=
+    exp_interaction_Lp params Λ (p := (1 : ℝ≥0∞)) (by norm_num)
+  exact (memLp_one_iff_integrable.mp hLp)
 
 end

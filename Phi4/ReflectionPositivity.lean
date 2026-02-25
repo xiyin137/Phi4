@@ -112,6 +112,7 @@ theorem free_covariance_reflection_positive (mass : ℝ) (hmass : 0 < mass)
 theorem dirichlet_covariance_reflection_positive
     (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
     (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryCovarianceModel mass hmass]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *

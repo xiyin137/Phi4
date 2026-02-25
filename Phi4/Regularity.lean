@@ -47,12 +47,17 @@ theorem wick_powers_infinite_volume (params : Phi4Params) (j : ℕ)
 
 /-! ## Integration by parts in infinite volume -/
 
+private def uvSeq (n : ℕ) : UVCutoff :=
+  ⟨n + 1, by exact_mod_cast Nat.succ_pos n⟩
+
 /-- The Wick cubic smeared against a test function: ∫ :φ(x)³: f(x) dx
     evaluated in the infinite-volume measure.
     This arises from the functional derivative of V = λ∫:φ⁴:dx. -/
 def wickCubicSmeared (params : Phi4Params) (f : TestFun2D)
-    (ω : FieldConfig2D) : ℝ := by
-  sorry -- ∫_x :φ(x)³: f(x) dx for the field configuration ω
+    (ω : FieldConfig2D) : ℝ :=
+  Filter.limsup
+    (fun n : ℕ => ∫ x, wickPower 3 params.mass (uvSeq n) ω x * f x)
+    Filter.atTop
 
 /-- **Euclidean equation of motion** (Glimm-Jaffe 12.1.1):
     For the infinite volume φ⁴₂ theory,
@@ -76,8 +81,8 @@ theorem euclidean_equation_of_motion (params : Phi4Params)
 
 /-- Norm functional for the generating functional bound.
     N'(g) = Σⱼ ‖gⱼ‖_{Lⁿ/(ⁿ⁻ʲ)} where n = deg P = 4. -/
-def normFunctional (g : TestFun2D) : ℝ := by
-  sorry
+def normFunctional (g : TestFun2D) : ℝ :=
+  SchwartzMap.seminorm ℝ 2 2 g
 
 /-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
     |S{f}| ≤ exp(c · N'(f))

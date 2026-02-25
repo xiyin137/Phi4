@@ -38,6 +38,33 @@ noncomputable section
 
 open MeasureTheory Reconstruction
 
+private def toSpacetime2D (a : Fin 2 → ℝ) : Spacetime2D :=
+  (EuclideanSpace.equiv (Fin 2) ℝ).symm a
+
+private def translateMap (a : Spacetime2D) : Spacetime2D → Spacetime2D :=
+  fun x => x + a
+
+private lemma translateMap_hasTemperateGrowth (a : Spacetime2D) :
+    (translateMap a).HasTemperateGrowth := by
+  simpa [translateMap] using
+    (Function.HasTemperateGrowth.add
+      (show Function.HasTemperateGrowth (fun x : Spacetime2D => x) from
+        (ContinuousLinearMap.id ℝ Spacetime2D).hasTemperateGrowth)
+      (Function.HasTemperateGrowth.const a))
+
+private lemma translateMap_antilipschitz (a : Spacetime2D) :
+    AntilipschitzWith 1 (translateMap a) := by
+  refine AntilipschitzWith.of_le_mul_dist ?_
+  intro x y
+  simpa [translateMap, one_mul] using (dist_add_right x y a).ge
+
+/-- Translation of a Schwartz test function by `a`: x ↦ g(x + a). -/
+private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
+  SchwartzMap.compCLMOfAntilipschitz ℝ
+    (translateMap_hasTemperateGrowth (toSpacetime2D a))
+    (translateMap_antilipschitz (toSpacetime2D a))
+    g
+
 /-! ## Linear growth condition (E0') -/
 
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
@@ -75,7 +102,7 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧ params.coupling < coupling_bound →
     ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
       ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-        let g_shifted : TestFun2D := sorry -- g translated by a
+        let g_shifted : TestFun2D := translateTestFun a g
         |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
           infiniteVolumeSchwinger params 1 ![f] *
             infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
@@ -100,11 +127,11 @@ theorem phi4_wightman_exists (params : Phi4Params) :
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  -- Step 1: Establish OS axioms
   obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
-  -- Step 2: Apply OS reconstruction theorem
-  -- exact os_to_wightman OS hOS_lg.2
-  sorry
+  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
+  rcases hlg_nonempty with ⟨hlg⟩
+  obtain ⟨Wfn, hWR⟩ := os_to_wightman (d := 1) OS hlg
+  exact ⟨Wfn, OS, hS, hWR⟩
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
     W_n(f̃) = conj(W_n(f)) where f̃(x₁,...,xₙ) = conj(f(xₙ,...,x₁)).
@@ -154,6 +181,7 @@ theorem phi4_unique_vacuum (params : Phi4Params) :
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  sorry
+  obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
+  exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
 end

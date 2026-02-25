@@ -44,6 +44,30 @@ open MeasureTheory
 def exhaustingRectangles (n : ℕ) (hn : 0 < n) : Rectangle :=
   Rectangle.symmetric n n (Nat.cast_pos.mpr hn) (Nat.cast_pos.mpr hn)
 
+/-- Monotonicity of the exhausting rectangles as sets. -/
+private lemma exhaustingRectangles_mono_toSet
+    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂) :
+    (exhaustingRectangles n₁ hn₁).toSet ⊆ (exhaustingRectangles n₂ hn₂).toSet := by
+  intro x hx
+  rcases hx with ⟨hx0min, hx0max, hx1min, hx1max⟩
+  have hcast : (n₁ : ℝ) ≤ (n₂ : ℝ) := by exact_mod_cast h
+  have hx0min' : (-(n₁ : ℝ)) ≤ x 0 := by
+    simpa [exhaustingRectangles, Rectangle.symmetric] using hx0min
+  have hx0max' : x 0 ≤ (n₁ : ℝ) := by
+    simpa [exhaustingRectangles, Rectangle.symmetric] using hx0max
+  have hx1min' : (-(n₁ : ℝ)) ≤ x 1 := by
+    simpa [exhaustingRectangles, Rectangle.symmetric] using hx1min
+  have hx1max' : x 1 ≤ (n₁ : ℝ) := by
+    simpa [exhaustingRectangles, Rectangle.symmetric] using hx1max
+  have hx0min2 : (-(n₂ : ℝ)) ≤ x 0 := by linarith
+  have hx0max2 : x 0 ≤ (n₂ : ℝ) := by linarith
+  have hx1min2 : (-(n₂ : ℝ)) ≤ x 1 := by linarith
+  have hx1max2 : x 1 ≤ (n₂ : ℝ) := by linarith
+  simpa [Rectangle.toSet, exhaustingRectangles, Rectangle.symmetric] using
+    (show (-(n₂ : ℝ) ≤ x 0 ∧ x 0 ≤ (n₂ : ℝ) ∧
+        -(n₂ : ℝ) ≤ x 1 ∧ x 1 ≤ (n₂ : ℝ)) from
+      ⟨hx0min2, hx0max2, hx1min2, hx1max2⟩)
+
 /-- **Monotone convergence**: The 2-point Schwinger function increases with volume.
     For Λ₁ ⊂ Λ₂ and non-negative test functions f, g ≥ 0:
       S₂^{Λ₁}(f,g) ≤ S₂^{Λ₂}(f,g)
@@ -52,23 +76,32 @@ def exhaustingRectangles (n : ℕ) (hn : 0 < n) : Rectangle :=
     increasing the covariance) with GKS-II (the 2-point function is
     monotone in the covariance for the φ⁴ interaction). -/
 theorem schwinger_monotone_in_volume (params : Phi4Params)
+    [CorrelationInequalityModel params]
     (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
     (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
     (hfsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f x = 0)
     (hgsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, g x = 0) :
     schwingerTwo params (exhaustingRectangles n₁ hn₁) f g ≤
       schwingerTwo params (exhaustingRectangles n₂ hn₂) f g := by
-  sorry
+  exact schwinger_two_monotone params
+    (exhaustingRectangles n₁ hn₁) (exhaustingRectangles n₂ hn₂)
+    (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
+    f g hf hg hfsupp hgsupp
 
-/-- Monotonicity for general n-point Schwinger functions with non-negative
-    test functions. -/
+/-- Monotonicity for `schwingerN` in the currently established case `k = 2`,
+    reduced to `schwinger_monotone_in_volume`. -/
 theorem schwingerN_monotone_in_volume (params : Phi4Params)
+    [CorrelationInequalityModel params]
     (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
     (k : ℕ) (f : Fin k → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
+    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0)
+    (hk : k = 2) :
     schwingerN params (exhaustingRectangles n₁ hn₁) k f ≤
       schwingerN params (exhaustingRectangles n₂ hn₂) k f := by
-  sorry
+  subst hk
+  have hmono := schwinger_monotone_in_volume params n₁ n₂ hn₁ hn₂ h
+    (f 0) (f 1) (hf 0) (hf 1) (hfsupp 0) (hfsupp 1)
+  simpa [schwingerN, schwingerTwo, Fin.prod_univ_two] using hmono
 
 /-! ## Uniform upper bounds -/
 
