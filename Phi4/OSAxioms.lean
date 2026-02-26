@@ -32,11 +32,11 @@ noncomputable section
 
 open MeasureTheory Reconstruction
 
-/-! ## Abstract OS-axiom interface -/
+/-! ## Abstract OS-axiom interfaces -/
 
-/-- Inputs required to package φ⁴₂ Schwinger functions and verify OS0/OS2/OS3,
-    together with an E4 cluster statement under weak coupling. -/
-class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
+/-- Core OS input: Schwinger packaging together with OS0/OS2/E3 data.
+    Weak-coupling E4 clustering is separated into `OSE4ClusterModel`. -/
+class OSAxiomCoreModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
   schwingerFunctions : SchwingerFunctions 1
   os0 :
     ∀ n, Continuous (schwingerFunctions n)
@@ -54,6 +54,10 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
     ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
       schwingerFunctions n f = schwingerFunctions n g
+
+/-- Weak-coupling E4 cluster input, parameterized over a core OS model. -/
+class OSE4ClusterModel (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] [OSAxiomCoreModel params] where
   /-- A model-specific weak-coupling threshold below which clustering is available. -/
   weak_coupling_threshold : ℝ
   weak_coupling_threshold_pos : 0 < weak_coupling_threshold
@@ -64,11 +68,12 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
           ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
             ∀ (g_a : SchwartzNPoint 1 m),
               (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
-              ‖schwingerFunctions (n + m) (f.tensorProduct g_a) -
-                schwingerFunctions n f * schwingerFunctions m g‖ < ε
+              ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
+                OSAxiomCoreModel.schwingerFunctions (params := params) n f *
+                  OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε
 
 /-- Measure-level reflection positivity for linear observables against
-    `infiniteVolumeMeasure`, kept separate from `OSAxiomModel` so the
+    `infiniteVolumeMeasure`, kept separate from core Schwinger packaging so the
     distributional OS interface does not silently bundle an independent
     concrete positivity API. -/
 class MeasureOS3Model (params : Phi4Params) [InfiniteVolumeLimitModel params] where
@@ -80,15 +85,15 @@ class MeasureOS3Model (params : Phi4Params) [InfiniteVolumeLimitModel params] wh
             ∂(infiniteVolumeMeasure params)).re
 
 /-- Distributional E2 reflection positivity interface for the OS reconstruction API.
-    Kept separate from `OSAxiomModel` so Schwinger-function packaging and E2
+    Kept separate from core OS packaging so Schwinger-function data and E2
     positivity are explicitly decoupled assumptions. -/
 class OSDistributionE2Model (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] [OSAxiomModel params] where
+    [InfiniteVolumeLimitModel params] [OSAxiomCoreModel params] where
   e2_reflection_positive :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
         (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
-      (OSInnerProduct 1 (OSAxiomModel.schwingerFunctions (params := params)) F F).re ≥ 0
+      (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0
 
 /-! ## Schwinger functions as distributions
 
@@ -101,9 +106,9 @@ The infinite volume Schwinger functions define tempered distributions on S(ℝ^{
       S_n(f) = ∫ φ(x₁)⋯φ(xₙ) f(x₁,...,xₙ) dx₁⋯dxₙ dμ(φ) -/
 def phi4SchwingerFunctions (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] :
+    [OSAxiomCoreModel params] :
     SchwingerFunctions 1 :=
-  OSAxiomModel.schwingerFunctions (params := params)
+  OSAxiomCoreModel.schwingerFunctions (params := params)
 
 /-! ## OS0: Temperedness -/
 
@@ -115,10 +120,10 @@ def phi4SchwingerFunctions (params : Phi4Params)
     test functions in the Schwartz topology. -/
 theorem phi4_os0 (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] :
+    [OSAxiomCoreModel params] :
     ∀ n, Continuous (phi4SchwingerFunctions params n) := by
   simpa [phi4SchwingerFunctions] using
-    (OSAxiomModel.os0 (params := params))
+    (OSAxiomCoreModel.os0 (params := params))
 
 /-! ## OS1: Regularity (Linear Growth) -/
 
@@ -146,13 +151,13 @@ theorem phi4_os1 (params : Phi4Params)
     infinite volume limit preserves this symmetry). -/
 theorem phi4_os2_translation (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] :
+    [OSAxiomCoreModel params] :
     ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
       phi4SchwingerFunctions params n f = phi4SchwingerFunctions params n g := by
   intro n a f g hfg
   simpa [phi4SchwingerFunctions] using
-    (OSAxiomModel.os2_translation (params := params) n a f g hfg)
+    (OSAxiomCoreModel.os2_translation (params := params) n a f g hfg)
 
 /-- **OS2b (Rotation invariance)**: The Schwinger functions are invariant
     under SO(2) rotations:
@@ -163,7 +168,7 @@ theorem phi4_os2_translation (params : Phi4Params)
     invariance of the interaction ∫ :φ⁴: dx. -/
 theorem phi4_os2_rotation (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] :
+    [OSAxiomCoreModel params] :
     ∀ (n : ℕ) (R : Matrix (Fin 2) (Fin 2) ℝ),
       R.transpose * R = 1 → R.det = 1 →
       ∀ (f g : SchwartzNPoint 1 n),
@@ -171,7 +176,7 @@ theorem phi4_os2_rotation (params : Phi4Params)
         phi4SchwingerFunctions params n f = phi4SchwingerFunctions params n g := by
   intro n R horth hdet f g hfg
   simpa [phi4SchwingerFunctions] using
-    (OSAxiomModel.os2_rotation (params := params) n R horth hdet f g hfg)
+    (OSAxiomCoreModel.os2_rotation (params := params) n R horth hdet f g hfg)
 
 /-! ## OS3: Reflection Positivity -/
 
@@ -196,7 +201,7 @@ theorem phi4_os3 (params : Phi4Params)
 /-- Distributional E2 reflection positivity for the packaged φ⁴₂ Schwinger functions. -/
 theorem phi4_e2_distributional (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [OSAxiomCoreModel params]
     [OSDistributionE2Model params] :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
@@ -208,24 +213,27 @@ theorem phi4_e2_distributional (params : Phi4Params)
 
 /-! ## Main theorem: OS axioms hold -/
 
-/-- Canonical weak-coupling threshold carried by `OSAxiomModel`. -/
+/-- Canonical weak-coupling threshold carried by `OSE4ClusterModel`. -/
 def os4WeakCouplingThreshold (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] : ℝ :=
-  OSAxiomModel.weak_coupling_threshold (params := params)
+    [OSAxiomCoreModel params]
+    [OSE4ClusterModel params] : ℝ :=
+  OSE4ClusterModel.weak_coupling_threshold (params := params)
 
 /-- Positivity of the canonical weak-coupling threshold. -/
 theorem os4WeakCouplingThreshold_pos (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] :
+    [OSAxiomCoreModel params]
+    [OSE4ClusterModel params] :
     0 < os4WeakCouplingThreshold params := by
   simpa [os4WeakCouplingThreshold] using
-    OSAxiomModel.weak_coupling_threshold_pos (params := params)
+    OSE4ClusterModel.weak_coupling_threshold_pos (params := params)
 
-/-- E4 cluster property extracted from `OSAxiomModel` under weak coupling. -/
+/-- E4 cluster property extracted from `OSE4ClusterModel` under weak coupling. -/
 theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [OSAxiomCoreModel params]
+    [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
       ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
@@ -235,7 +243,7 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
             ‖phi4SchwingerFunctions params (n + m) (f.tensorProduct g_a) -
               phi4SchwingerFunctions params n f * phi4SchwingerFunctions params m g‖ < ε := by
   simpa [phi4SchwingerFunctions, os4WeakCouplingThreshold] using
-    OSAxiomModel.e4_cluster_of_weak_coupling (params := params) hsmall
+    OSE4ClusterModel.e4_cluster_of_weak_coupling (params := params) hsmall
 
 /-- **Theorem 12.1.1 (Glimm-Jaffe)**: Under weak coupling, the φ⁴₂ generating
     functional S{f} satisfies the Euclidean axioms OS0-OS4.
@@ -257,8 +265,9 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
     defines a Wightman quantum field theory satisfying axioms W1-W3. -/
 theorem phi4_satisfies_OS (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
@@ -268,7 +277,7 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     E1_translation_invariant := phi4_os2_translation params
     E1_rotation_invariant := phi4_os2_rotation params
     E2_reflection_positive := phi4_e2_distributional params
-    E3_symmetric := OSAxiomModel.e3_symmetric (params := params)
+    E3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params)
     E4_cluster := phi4_e4_cluster_of_weak_coupling params hsmall
   }, rfl⟩
 

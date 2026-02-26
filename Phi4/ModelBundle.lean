@@ -32,7 +32,8 @@ class Phi4ModelBundle (params : Phi4Params) where
   wickPowers : @WickPowersModel params infiniteVolume
   regularity : @RegularityModel params infiniteVolume
   measureOS3 : @MeasureOS3Model params infiniteVolume
-  osAxiom : @OSAxiomModel params infiniteVolume
+  osAxiom : @OSAxiomCoreModel params infiniteVolume
+  osE4 : @OSE4ClusterModel params infiniteVolume osAxiom
   osE2 : @OSDistributionE2Model params infiniteVolume osAxiom
   reconstructionInput : @ReconstructionInputModel params infiniteVolume osAxiom
   wightmanReconstruction : @WightmanReconstructionModel params infiniteVolume osAxiom
@@ -98,26 +99,32 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   exact h.measureOS3
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    OSAxiomModel params := by
+    OSAxiomCoreModel params := by
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   exact h.osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    OSE4ClusterModel params := by
+  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : OSAxiomCoreModel params := h.osAxiom
+  exact h.osE4
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSDistributionE2Model params := by
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
-  letI : OSAxiomModel params := h.osAxiom
+  letI : OSAxiomCoreModel params := h.osAxiom
   exact h.osE2
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
-  letI : OSAxiomModel params := h.osAxiom
+  letI : OSAxiomCoreModel params := h.osAxiom
   exact h.reconstructionInput
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WightmanReconstructionModel params := by
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
-  letI : OSAxiomModel params := h.osAxiom
+  letI : OSAxiomCoreModel params := h.osAxiom
   exact h.wightmanReconstruction
 
 /-- Convenience wrapper: a bundled model gives the Wightman reconstruction result. -/

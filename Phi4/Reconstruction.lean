@@ -98,7 +98,7 @@ class UniformWeakCouplingDecayModel (params : Phi4Params)
     interface rather than calling a specific external theorem directly. -/
 class ReconstructionInputModel (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params] where
+    [OSAxiomCoreModel params] where
   phi4_linear_growth :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -114,7 +114,7 @@ class ReconstructionInputModel (params : Phi4Params)
     Kept separate from `ReconstructionInputModel` so fixed-`params`
     analytic assumptions and reconstruction machinery are not bundled together. -/
 class WightmanReconstructionModel (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] [OSAxiomModel params] where
+    [InfiniteVolumeLimitModel params] [OSAxiomCoreModel params] where
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -124,7 +124,7 @@ class WightmanReconstructionModel (params : Phi4Params)
 /-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
 abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [OSAxiomCoreModel params]
     [ReconstructionInputModel params] : Prop :=
   ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
     (params.coupling < coupling_bound →
@@ -144,7 +144,7 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [OSAxiomCoreModel params]
     [ReconstructionInputModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -168,7 +168,7 @@ theorem phi4_linear_growth (params : Phi4Params)
     and may fail at the critical point. -/
 theorem phi4_os4_weak_coupling (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
@@ -181,7 +181,7 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
 /-- Backward-compatible OS4 weak-coupling form written with explicit Schwinger moments. -/
 theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
@@ -206,7 +206,7 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
 theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     ConnectedTwoPointDecayThreshold params := by
   intro hlim hos hrec
@@ -220,7 +220,7 @@ theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
     `phi4_connectedTwoPoint_decay_threshold`. -/
 def phi4WeakCouplingThreshold (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     ℝ := by
   intro hlim hos hrec
@@ -229,7 +229,7 @@ def phi4WeakCouplingThreshold (params : Phi4Params) :
 /-- Positivity of the selected weak-coupling threshold. -/
 theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     0 < phi4WeakCouplingThreshold params := by
   intro hlim hos hrec
@@ -240,7 +240,7 @@ theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
     `params.coupling` is below the selected weak-coupling threshold. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ConnectedTwoPointDecayAtParams params := by
@@ -251,7 +251,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
 /-- Explicit-Schwinger version of `phi4_connectedTwoPoint_decay_below_threshold`. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
@@ -282,7 +282,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
     - W3: Locality (spacelike commutativity) -/
 theorem phi4_wightman_exists (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -305,7 +305,7 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -324,7 +324,7 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     the φ⁴₂ Schwinger functions. -/
 theorem phi4_locality (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -339,7 +339,7 @@ theorem phi4_locality (params : Phi4Params) :
     (Glimm-Jaffe Section 19.5) -/
 theorem phi4_lorentz_covariance (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -358,7 +358,7 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     phase transitions (or selecting a pure phase). -/
 theorem phi4_unique_vacuum (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [OSAxiomModel params] →
+    [OSAxiomCoreModel params] →
     [ReconstructionInputModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
