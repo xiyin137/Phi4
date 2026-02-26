@@ -181,6 +181,51 @@ theorem schwinger_two_monotone_from_lattice
     LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ₂ L₂ f g,
     hmon, hclose₁, hclose₂⟩
 
+/-- Core correlation-inequality inputs not yet derived from the current
+    lattice bridge layer. This isolates the remaining analytic assumptions
+    while allowing GKS-I and two-point monotonicity to be sourced from
+    lattice approximation results. -/
+class CorrelationInequalityCoreModel (params : Phi4Params) where
+  /-- GKS-II lower bound in the `(12)(34)` channel. -/
+  griffiths_second : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄]
+  /-- FKG positive-correlation inequality. -/
+  fkg_inequality : ∀ (Λ : Rectangle)
+      (F G : FieldConfig2D → ℝ)
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
+        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
+      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
+  /-- Lebowitz 4-point upper bound. -/
+  lebowitz_inequality : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
+        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
+        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃
+
+/-- Build the full `CorrelationInequalityModel` from:
+    1. lattice bridge inputs for GKS-I and 2-point monotonicity, and
+    2. remaining core assumptions (GKS-II, FKG, Lebowitz). -/
+def correlationInequalityModelOfLattice
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationInequalityCoreModel params] :
+    CorrelationInequalityModel params where
+  griffiths_first := griffiths_first_from_lattice (params := params)
+  griffiths_second := CorrelationInequalityCoreModel.griffiths_second (params := params)
+  fkg_inequality := CorrelationInequalityCoreModel.fkg_inequality (params := params)
+  lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
+  schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
+
 /-! ## Griffiths' First Inequality (GKS-I) -/
 
 /-- **GKS-I**: For the φ⁴₂ measure dμ_Λ with P = even + linear,
