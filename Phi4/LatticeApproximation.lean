@@ -396,6 +396,40 @@ theorem riemannSumCellAverage_mono
     (L.discretizeByCellAverage_mono f g hfg i j)
     (le_of_lt (L.cell_area_pos i j))
 
+/-- Total cell integral: sum of exact integrals over all mesh cells. -/
+def totalCellIntegral (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
+  ∑ i : Fin L.Nt, ∑ j : Fin L.Nx, L.cellIntegral f i j
+
+/-- Total cell integral equals the cell-average Riemann sum. -/
+theorem totalCellIntegral_eq_riemannSumCellAverage
+    (L : RectLattice Λ) (f : TestFun2D) :
+    L.totalCellIntegral f = L.riemannSumCellAverage f := by
+  unfold totalCellIntegral
+  symm
+  exact L.riemannSumCellAverage_eq_sum_cellIntegrals f
+
+/-- Nonnegativity of total cell integrals for nonnegative test functions. -/
+theorem totalCellIntegral_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
+    0 ≤ L.totalCellIntegral f := by
+  unfold totalCellIntegral
+  refine Finset.sum_nonneg ?_
+  intro i _
+  refine Finset.sum_nonneg ?_
+  intro j _
+  exact L.cellIntegral_nonneg f i j hf
+
+/-- Monotonicity of total cell integrals under pointwise comparison. -/
+theorem totalCellIntegral_mono
+    (L : RectLattice Λ) (f g : TestFun2D) (hfg : ∀ x, f x ≤ g x) :
+    L.totalCellIntegral f ≤ L.totalCellIntegral g := by
+  unfold totalCellIntegral
+  refine Finset.sum_le_sum ?_
+  intro i _
+  refine Finset.sum_le_sum ?_
+  intro j _
+  exact L.cellIntegral_mono f g i j hfg
+
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     (L.cell i j).toSet ⊆ Λ.toSet := by
