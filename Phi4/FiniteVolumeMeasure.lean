@@ -566,6 +566,51 @@ theorem connectedSchwingerTwoBilinear_self_nonneg (params : Phi4Params)
   simpa [connectedSchwingerTwoBilinear] using
     connectedSchwingerTwo_self_nonneg params Λ f
 
+/-- Positive-semidefinite quadratic form statement for finite families:
+    the connected two-point kernel is nonnegative on real finite linear combinations. -/
+theorem connectedSchwingerTwo_quadratic_nonneg
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle)
+    {ι : Type*} (s : Finset ι)
+    (f : ι → TestFun2D) (c : ι → ℝ) :
+    0 ≤ Finset.sum s (fun i =>
+      c i * Finset.sum s (fun j => c j * connectedSchwingerTwo params Λ (f j) (f i))) := by
+  let B := connectedSchwingerTwoBilinear params Λ
+  let v : TestFun2D := Finset.sum s (fun i => c i • f i)
+  have hvv :
+      B v v =
+        Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * B (f j) (f i))) := by
+    simp [B, v, Finset.sum_apply]
+  have hnonneg : 0 ≤ B v v :=
+    connectedSchwingerTwoBilinear_self_nonneg params Λ v
+  rw [hvv] at hnonneg
+  simpa [B] using hnonneg
+
+/-- Standard-index-order version of `connectedSchwingerTwo_quadratic_nonneg`. -/
+theorem connectedSchwingerTwo_quadratic_nonneg_standard
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle)
+    {ι : Type*} (s : Finset ι)
+    (f : ι → TestFun2D) (c : ι → ℝ) :
+    0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
+      c i * c j * connectedSchwingerTwo params Λ (f i) (f j))) := by
+  have hbase := connectedSchwingerTwo_quadratic_nonneg params Λ s f c
+  have hEq :
+      Finset.sum s (fun i =>
+        c i * Finset.sum s (fun j => c j * connectedSchwingerTwo params Λ (f j) (f i)))
+      =
+      Finset.sum s (fun i => Finset.sum s (fun j =>
+        c i * c j * connectedSchwingerTwo params Λ (f i) (f j))) := by
+    refine Finset.sum_congr rfl (fun i hi => ?_)
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun j hj => ?_)
+    rw [connectedSchwingerTwo_symm params Λ (f j) (f i)]
+    ring
+  rw [hEq] at hbase
+  exact hbase
+
 /-! ## Finite-volume comparison interface -/
 
 /-- Comparison input controlling interacting two-point functions by the free Gaussian
