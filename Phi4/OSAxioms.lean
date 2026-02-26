@@ -127,6 +127,17 @@ theorem phi4_os0 (params : Phi4Params)
 
 /-! ## OS1: Regularity (Linear Growth) -/
 
+/-- **OS1 (Regularity), trusted interface path**:
+    when `RegularityModel` is available, the generating-functional bound is
+    obtained directly from interface data (without frontier-gap wrappers). -/
+theorem phi4_os1_of_interface (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [RegularityModel params] :
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  exact generating_functional_bound_of_interface params
+
 /-- **OS1 (Regularity)**: The generating functional satisfies the linear growth bound
     |S{f}| ≤ exp(c · N'(f)).
 

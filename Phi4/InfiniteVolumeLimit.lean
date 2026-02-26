@@ -295,6 +295,267 @@ theorem schwingerTwo_limit_exists_of_models
   exact schwingerTwo_tendsto_iSup_of_models
     params n0 f g hf hg hfsupp0 hgsupp0
 
+/-- Convergence of the interface-shaped exhausting sequence
+    `if h : 0 < n then S₂^{Λₙ}(f,g) else 0`, with monotonicity from
+    `CorrelationTwoPointModel` and absolute bounds from `MultipleReflectionModel`. -/
+theorem schwingerTwo_tendsto_if_exhaustion_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
+      Filter.atTop
+      (nhds (⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)) := by
+  let a : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
+  have hmono : Monotone a := by
+    intro n m hnm
+    by_cases hn : 0 < n
+    · have hm : 0 < m := lt_of_lt_of_le hn hnm
+      have hsub :
+          (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet ⊆
+            (exhaustingRectangles n hn).toSet :=
+        exhaustingRectangles_mono_toSet 1 n (Nat.succ_pos 0) hn hn
+      have hfsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, f x = 0 :=
+        support_zero_outside_of_subset f hsub hfsupp
+      have hgsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, g x = 0 :=
+        support_zero_outside_of_subset g hsub hgsupp
+      have hmono_nm := schwinger_monotone_in_volume params n m hn hm hnm f g hf hg hfsuppn hgsuppn
+      simpa [a, hn, hm] using hmono_nm
+    · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
+      by_cases hm : 0 < m
+      · have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g :=
+          griffiths_first params (exhaustingRectangles m hm) f g hf hg
+        simpa [a, hn0, hm] using hnonneg
+      · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
+        subst hn0
+        subst hm0
+        simp [a]
+  rcases schwingerTwo_uniformly_bounded_on_exhaustion
+      params 0 f g hfsupp hgsupp with ⟨C, hC⟩
+  let Cmax : ℝ := max C 0
+  have hbound : ∀ n : ℕ, |a n| ≤ Cmax := by
+    intro n
+    by_cases hn : 0 < n
+    · rcases Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hn) with ⟨k, rfl⟩
+      have hk : |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := hC k
+      have hk' : |a (k + 1)| ≤ C := by simpa [a] using hk
+      exact le_trans hk' (le_max_left _ _)
+    · have hzero : a n = 0 := by simp [a, hn]
+      rw [hzero]
+      have hCmax_nonneg : 0 ≤ Cmax := le_trans (le_refl 0) (le_max_right C 0)
+      simpa [abs_of_nonneg hCmax_nonneg]
+  have hbdd : BddAbove (Set.range a) := by
+    refine ⟨Cmax, ?_⟩
+    rintro y ⟨n, rfl⟩
+    exact le_trans (le_abs_self _) (hbound n)
+  exact tendsto_atTop_ciSup hmono hbdd
+
+/-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
+theorem schwingerTwo_limit_exists_if_exhaustion_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0, ?_⟩
+  exact schwingerTwo_tendsto_if_exhaustion_of_models params f g hf hg hfsupp hgsupp
+
+/-- Lattice-bridge version of `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
+theorem schwingerTwo_tendsto_if_exhaustion_of_lattice_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
+      Filter.atTop
+      (nhds (⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)) := by
+  let a : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
+  have hmono : Monotone a := by
+    intro n m hnm
+    by_cases hn : 0 < n
+    · have hm : 0 < m := lt_of_lt_of_le hn hnm
+      have hsub :
+          (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet ⊆
+            (exhaustingRectangles n hn).toSet :=
+        exhaustingRectangles_mono_toSet 1 n (Nat.succ_pos 0) hn hn
+      have hfsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, f x = 0 :=
+        support_zero_outside_of_subset f hsub hfsupp
+      have hgsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, g x = 0 :=
+        support_zero_outside_of_subset g hsub hgsupp
+      have hmono_nm := schwinger_monotone_in_volume_from_lattice
+        params n m hn hm hnm f g hf hg hfsuppn hgsuppn
+      simpa [a, hn, hm] using hmono_nm
+    · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
+      by_cases hm : 0 < m
+      · have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g :=
+          griffiths_first_from_lattice params (exhaustingRectangles m hm) f g hf hg
+        simpa [a, hn0, hm] using hnonneg
+      · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
+        subst hn0
+        subst hm0
+        simp [a]
+  rcases schwingerTwo_uniformly_bounded_on_exhaustion
+      params 0 f g hfsupp hgsupp with ⟨C, hC⟩
+  let Cmax : ℝ := max C 0
+  have hbound : ∀ n : ℕ, |a n| ≤ Cmax := by
+    intro n
+    by_cases hn : 0 < n
+    · rcases Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hn) with ⟨k, rfl⟩
+      have hk : |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := hC k
+      have hk' : |a (k + 1)| ≤ C := by simpa [a] using hk
+      exact le_trans hk' (le_max_left _ _)
+    · have hzero : a n = 0 := by simp [a, hn]
+      rw [hzero]
+      have hCmax_nonneg : 0 ≤ Cmax := le_trans (le_refl 0) (le_max_right C 0)
+      simpa [abs_of_nonneg hCmax_nonneg]
+  have hbdd : BddAbove (Set.range a) := by
+    refine ⟨Cmax, ?_⟩
+    rintro y ⟨n, rfl⟩
+    exact le_trans (le_abs_self _) (hbound n)
+  exact tendsto_atTop_ciSup hmono hbdd
+
+/-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`. -/
+theorem schwingerTwo_limit_exists_if_exhaustion_of_lattice_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0, ?_⟩
+  exact schwingerTwo_tendsto_if_exhaustion_of_lattice_models params f g hf hg hfsupp hgsupp
+
+/-- `schwingerN` (`k = 2`) form of
+    `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
+theorem schwingerN_two_tendsto_if_exhaustion_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)) := by
+  let a : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
+  let b : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+      (![f, g] : Fin 2 → TestFun2D) else 0
+  have hab : a = b := by
+    funext n
+    by_cases h : 0 < n
+    · simp [a, b, h, schwingerN_two_eq_schwingerTwo]
+    · simp [a, b, h]
+  have hlimA := schwingerTwo_tendsto_if_exhaustion_of_models
+    params f g hf hg hfsupp hgsupp
+  simpa [a, b, hab] using hlimA
+
+/-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_models`. -/
+theorem schwingerN_two_limit_exists_if_exhaustion_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+            (![f, g] : Fin 2 → TestFun2D) else 0)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ,
+    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+      (![f, g] : Fin 2 → TestFun2D) else 0, ?_⟩
+  exact schwingerN_two_tendsto_if_exhaustion_of_models
+    params f g hf hg hfsupp hgsupp
+
+/-- Lattice-bridge `schwingerN` (`k = 2`) form of
+    `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`. -/
+theorem schwingerN_two_tendsto_if_exhaustion_of_lattice_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)) := by
+  let a : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
+  let b : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+      (![f, g] : Fin 2 → TestFun2D) else 0
+  have hab : a = b := by
+    funext n
+    by_cases h : 0 < n
+    · simp [a, b, h, schwingerN_two_eq_schwingerTwo]
+    · simp [a, b, h]
+  have hlimA := schwingerTwo_tendsto_if_exhaustion_of_lattice_models
+    params f g hf hg hfsupp hgsupp
+  simpa [a, b, hab] using hlimA
+
+/-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`. -/
+theorem schwingerN_two_limit_exists_if_exhaustion_of_lattice_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+            (![f, g] : Fin 2 → TestFun2D) else 0)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ,
+    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+      (![f, g] : Fin 2 → TestFun2D) else 0, ?_⟩
+  exact schwingerN_two_tendsto_if_exhaustion_of_lattice_models
+    params f g hf hg hfsupp hgsupp
+
 /-- Lattice-bridge variant of monotone-bounded convergence for the finite-volume
     two-point sequence. -/
 theorem schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
@@ -694,6 +955,41 @@ theorem infinite_volume_schwinger_exists (params : Phi4Params)
   letI : InfiniteVolumeSchwingerModel params := hiv
   exact infinite_volume_schwinger_exists_of_interface params k f
 
+/-- Constructive `k = 2` infinite-volume Schwinger existence in the
+    interface sequence form `if h : 0 < n then ... else 0`, under explicit
+    two-point monotonicity and multiple-reflection bounds. -/
+theorem infinite_volume_schwinger_exists_two_of_models (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  exact schwingerN_two_limit_exists_if_exhaustion_of_models
+    params f g hf hg hfsupp hgsupp
+
+/-- Lattice-bridge counterpart of `infinite_volume_schwinger_exists_two_of_models`. -/
+theorem infinite_volume_schwinger_exists_two_of_lattice_models (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  exact schwingerN_two_limit_exists_if_exhaustion_of_lattice_models
+    params f g hf hg hfsupp hgsupp
+
 /-- The infinite volume Schwinger function. -/
 def infiniteVolumeSchwinger (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
@@ -717,6 +1013,33 @@ def connectedTwoPoint (params : Phi4Params)
         infiniteVolumeSchwinger params 1 ![f] *
           infiniteVolumeSchwinger params 1 ![g] := rfl
 
+/-- Permutation symmetry of infinite-volume Schwinger functions, inherited from
+    finite-volume permutation symmetry along the standard exhaustion. -/
+theorem infiniteVolumeSchwinger_perm (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    (n : ℕ) (f : Fin n → TestFun2D) (σ : Equiv.Perm (Fin n)) :
+    infiniteVolumeSchwinger params n (f ∘ σ) =
+      infiniteVolumeSchwinger params n f := by
+  let a : ℕ → ℝ := fun m =>
+    if h : 0 < m then schwingerN params (exhaustingRectangles m h) n (f ∘ σ) else 0
+  let b : ℕ → ℝ := fun m =>
+    if h : 0 < m then schwingerN params (exhaustingRectangles m h) n f else 0
+  have ha : Filter.Tendsto a Filter.atTop (nhds (infiniteVolumeSchwinger params n (f ∘ σ))) := by
+    simpa [a] using
+      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+        (params := params) n (f ∘ σ))
+  have hb : Filter.Tendsto b Filter.atTop (nhds (infiniteVolumeSchwinger params n f)) := by
+    simpa [b] using
+      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+        (params := params) n f)
+  have hab : a = b := by
+    funext m
+    by_cases hm : 0 < m
+    · simp [a, b, hm, schwingerN_perm]
+    · simp [a, b, hm]
+  rw [hab] at ha
+  exact tendsto_nhds_unique ha hb
+
 /-- Symmetry of the infinite-volume 2-point Schwinger function from the
     finite-volume symmetry and convergence along the exhausting rectangles. -/
 theorem infiniteVolumeSchwinger_two_symm (params : Phi4Params)
@@ -724,33 +1047,17 @@ theorem infiniteVolumeSchwinger_two_symm (params : Phi4Params)
     (f g : TestFun2D) :
     infiniteVolumeSchwinger params 2 ![f, g] =
       infiniteVolumeSchwinger params 2 ![g, f] := by
-  let A : ℕ → ℝ := fun n =>
-    if h : 0 < n then
-      schwingerN params (exhaustingRectangles n h) 2 (![f, g] : Fin 2 → TestFun2D)
-    else 0
-  let B : ℕ → ℝ := fun n =>
-    if h : 0 < n then
-      schwingerN params (exhaustingRectangles n h) 2 (![g, f] : Fin 2 → TestFun2D)
-    else 0
-  have hA : Filter.Tendsto A Filter.atTop
-      (nhds (infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D))) := by
-    simpa [A, infiniteVolumeSchwinger] using
-      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto (params := params)
-        2 (![f, g] : Fin 2 → TestFun2D))
-  have hB : Filter.Tendsto B Filter.atTop
-      (nhds (infiniteVolumeSchwinger params 2 (![g, f] : Fin 2 → TestFun2D))) := by
-    simpa [B, infiniteVolumeSchwinger] using
-      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto (params := params)
-        2 (![g, f] : Fin 2 → TestFun2D))
-  have hAB : A = B := by
-    funext n
-    by_cases h : 0 < n
-    · simp [A, B, h, schwingerN_two_eq_schwingerTwo, schwingerTwo_symm]
-    · simp [A, B, h]
-  have hA' : Filter.Tendsto B Filter.atTop
-      (nhds (infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D))) := by
-    simpa [hAB] using hA
-  exact tendsto_nhds_unique hA' hB
+  let σ : Equiv.Perm (Fin 2) := Equiv.swap 0 1
+  have hperm := infiniteVolumeSchwinger_perm
+    (params := params) 2 (![f, g] : Fin 2 → TestFun2D) σ
+  have hswap : (![f, g] : Fin 2 → TestFun2D) ∘ σ = (![g, f] : Fin 2 → TestFun2D) := by
+    funext i
+    fin_cases i <;> simp [σ]
+  calc
+    infiniteVolumeSchwinger params 2 ![f, g]
+        = infiniteVolumeSchwinger params 2 ((![f, g] : Fin 2 → TestFun2D) ∘ σ) := by
+            simpa using hperm.symm
+    _ = infiniteVolumeSchwinger params 2 (![g, f] : Fin 2 → TestFun2D) := by rw [hswap]
 
 /-- Symmetry of the infinite-volume connected 2-point function. -/
 theorem connectedTwoPoint_symm (params : Phi4Params)
@@ -1558,6 +1865,155 @@ theorem connectedSchwingerTwo_tendsto_infinite
   rw [hEqFun, hEqLim]
   exact hsub
 
+private theorem connectedSchwingerTwo_add_left
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (f₁ f₂ g : TestFun2D) :
+    connectedSchwingerTwo params Λ (f₁ + f₂) g =
+      connectedSchwingerTwo params Λ f₁ g +
+        connectedSchwingerTwo params Λ f₂ g := by
+  unfold connectedSchwingerTwo
+  rw [schwingerTwo_add_left, schwingerOne_add]
+  ring
+
+private theorem connectedSchwingerTwo_smul_left
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (c : ℝ) (f g : TestFun2D) :
+    connectedSchwingerTwo params Λ (c • f) g =
+      c * connectedSchwingerTwo params Λ f g := by
+  unfold connectedSchwingerTwo
+  rw [schwingerTwo_smul_left, schwingerOne_smul]
+  ring
+
+/-- Additivity in the first argument of the infinite-volume connected two-point
+    function, transferred from finite volume by convergence along the exhaustion. -/
+theorem connectedTwoPoint_add_left
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (f₁ f₂ g : TestFun2D) :
+    connectedTwoPoint params (f₁ + f₂) g =
+      connectedTwoPoint params f₁ g + connectedTwoPoint params f₂ g := by
+  let A : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) (f₁ + f₂) g else 0
+  let B : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) f₁ g else 0
+  let C : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) f₂ g else 0
+  have hA : Filter.Tendsto A Filter.atTop (nhds (connectedTwoPoint params (f₁ + f₂) g)) := by
+    simpa [A] using connectedSchwingerTwo_tendsto_infinite params (f₁ + f₂) g
+  have hB : Filter.Tendsto B Filter.atTop (nhds (connectedTwoPoint params f₁ g)) := by
+    simpa [B] using connectedSchwingerTwo_tendsto_infinite params f₁ g
+  have hC : Filter.Tendsto C Filter.atTop (nhds (connectedTwoPoint params f₂ g)) := by
+    simpa [C] using connectedSchwingerTwo_tendsto_infinite params f₂ g
+  have hBC : Filter.Tendsto (fun n => B n + C n) Filter.atTop
+      (nhds (connectedTwoPoint params f₁ g + connectedTwoPoint params f₂ g)) :=
+    hB.add hC
+  have hEq : A = fun n => B n + C n := by
+    funext n
+    by_cases hn : 0 < n
+    · have hconn :
+        connectedSchwingerTwo params (exhaustingRectangles n hn) (f₁ + f₂) g =
+          connectedSchwingerTwo params (exhaustingRectangles n hn) f₁ g +
+            connectedSchwingerTwo params (exhaustingRectangles n hn) f₂ g :=
+        connectedSchwingerTwo_add_left params (exhaustingRectangles n hn) f₁ f₂ g
+      simpa [A, B, C, hn] using hconn
+    · simp [A, B, C, hn]
+  rw [hEq] at hA
+  exact tendsto_nhds_unique hA hBC
+
+/-- Scalar linearity in the first argument of the infinite-volume connected
+    two-point function, transferred from finite volume by convergence. -/
+theorem connectedTwoPoint_smul_left
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (c : ℝ) (f g : TestFun2D) :
+    connectedTwoPoint params (c • f) g = c * connectedTwoPoint params f g := by
+  let A : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) (c • f) g else 0
+  let B : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) f g else 0
+  have hA : Filter.Tendsto A Filter.atTop (nhds (connectedTwoPoint params (c • f) g)) := by
+    simpa [A] using connectedSchwingerTwo_tendsto_infinite params (c • f) g
+  have hB : Filter.Tendsto B Filter.atTop (nhds (connectedTwoPoint params f g)) := by
+    simpa [B] using connectedSchwingerTwo_tendsto_infinite params f g
+  have hcB : Filter.Tendsto (fun n => c * B n) Filter.atTop (nhds (c * connectedTwoPoint params f g)) :=
+    hB.const_mul c
+  have hEq : A = fun n => c * B n := by
+    funext n
+    by_cases hn : 0 < n
+    · have hconn :
+        connectedSchwingerTwo params (exhaustingRectangles n hn) (c • f) g =
+          c * connectedSchwingerTwo params (exhaustingRectangles n hn) f g :=
+        connectedSchwingerTwo_smul_left params (exhaustingRectangles n hn) c f g
+      simpa [A, B, hn] using hconn
+    · simp [A, B, hn]
+  rw [hEq] at hA
+  exact tendsto_nhds_unique hA hcB
+
+/-- Additivity in the second argument of the infinite-volume connected two-point
+    function. -/
+theorem connectedTwoPoint_add_right
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (f g₁ g₂ : TestFun2D) :
+    connectedTwoPoint params f (g₁ + g₂) =
+      connectedTwoPoint params f g₁ + connectedTwoPoint params f g₂ := by
+  calc
+    connectedTwoPoint params f (g₁ + g₂)
+        = connectedTwoPoint params (g₁ + g₂) f := connectedTwoPoint_symm params f (g₁ + g₂)
+    _ = connectedTwoPoint params g₁ f + connectedTwoPoint params g₂ f :=
+          connectedTwoPoint_add_left params g₁ g₂ f
+    _ = connectedTwoPoint params f g₁ + connectedTwoPoint params f g₂ := by
+          rw [connectedTwoPoint_symm params g₁ f, connectedTwoPoint_symm params g₂ f]
+
+/-- Scalar linearity in the second argument of the infinite-volume connected
+    two-point function. -/
+theorem connectedTwoPoint_smul_right
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (c : ℝ) (f g : TestFun2D) :
+    connectedTwoPoint params f (c • g) = c * connectedTwoPoint params f g := by
+  calc
+    connectedTwoPoint params f (c • g)
+        = connectedTwoPoint params (c • g) f := connectedTwoPoint_symm params f (c • g)
+    _ = c * connectedTwoPoint params g f := connectedTwoPoint_smul_left params c g f
+    _ = c * connectedTwoPoint params f g := by rw [connectedTwoPoint_symm params g f]
+
+/-- Infinite-volume connected two-point function as a bilinear map. -/
+def connectedTwoPointBilinear (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params] :
+    TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ where
+  toFun f :=
+    { toFun := fun g => connectedTwoPoint params f g
+      map_add' := by
+        intro g₁ g₂
+        exact connectedTwoPoint_add_right params f g₁ g₂
+      map_smul' := by
+        intro c g
+        exact connectedTwoPoint_smul_right params c f g }
+  map_add' := by
+    intro f₁ f₂
+    ext g
+    exact connectedTwoPoint_add_left params f₁ f₂ g
+  map_smul' := by
+    intro c f
+    ext g
+    exact connectedTwoPoint_smul_left params c f g
+
+/-- Symmetry of the infinite-volume connected two-point bilinear form. -/
+theorem connectedTwoPointBilinear_symm (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (f g : TestFun2D) :
+    connectedTwoPointBilinear params f g =
+      connectedTwoPointBilinear params g f := by
+  simpa [connectedTwoPointBilinear] using
+    connectedTwoPoint_symm params f g
+
 /-- Diagonal connected two-point nonnegativity in infinite volume, obtained from
     finite-volume variance positivity and convergence along the exhaustion. -/
 theorem connectedTwoPoint_self_nonneg
@@ -1579,6 +2035,16 @@ theorem connectedTwoPoint_self_nonneg
       simpa [h] using hConn
     · simp [h]
   exact ge_of_tendsto' hlim hnonneg
+
+/-- Diagonal nonnegativity of the infinite-volume connected two-point bilinear
+    form. -/
+theorem connectedTwoPointBilinear_self_nonneg (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (f : TestFun2D) :
+    0 ≤ connectedTwoPointBilinear params f f := by
+  simpa [connectedTwoPointBilinear] using
+    connectedTwoPoint_self_nonneg params f
 
 /-- Diagonal connected two-point nonnegativity in infinite volume, obtained
     directly from finite-volume FKG positivity for nonnegative test functions. -/
@@ -1650,46 +2116,16 @@ theorem connectedTwoPoint_quadratic_nonneg
     (f : ι → TestFun2D) (c : ι → ℝ) :
     0 ≤ Finset.sum s (fun i =>
       c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))) := by
-  let A : ℕ → ι → ι → ℝ := fun n j i =>
-    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) (f j) (f i) else 0
-  let q : ℕ → ℝ := fun n =>
-    Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * A n j i))
-  have hA_tendsto : ∀ j i,
-      Filter.Tendsto (fun n : ℕ => A n j i) Filter.atTop
-        (nhds (connectedTwoPoint params (f j) (f i))) := by
-    intro j i
-    simpa [A] using connectedSchwingerTwo_tendsto_infinite params (f j) (f i)
-  have hq_tendsto :
-      Filter.Tendsto q Filter.atTop
-        (nhds (Finset.sum s (fun i =>
-          c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))))) := by
-    have hinner : ∀ i,
-        Filter.Tendsto (fun n : ℕ => Finset.sum s (fun j => c j * A n j i))
-          Filter.atTop
-          (nhds (Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i)))) := by
-      intro i
-      refine tendsto_finset_sum _ ?_
-      intro j hj
-      exact (hA_tendsto j i).const_mul (c j)
-    have houter :
-        Filter.Tendsto (fun n : ℕ => Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * A n j i)))
-          Filter.atTop
-          (nhds (Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))))) := by
-      refine tendsto_finset_sum _ ?_
-      intro i hi
-      exact (hinner i).const_mul (c i)
-    simpa [q] using houter
-  have hq_nonneg : ∀ n : ℕ, 0 ≤ q n := by
-    intro n
-    by_cases h : 0 < n
-    · have hfin :
-          0 ≤ Finset.sum s (fun i =>
-            c i * Finset.sum s (fun j => c j *
-              connectedSchwingerTwo params (exhaustingRectangles n h) (f j) (f i))) :=
-        connectedSchwingerTwo_quadratic_nonneg params (exhaustingRectangles n h) s f c
-      simpa [q, A, h] using hfin
-    · simp [q, A, h]
-  exact ge_of_tendsto' hq_tendsto hq_nonneg
+  let B := connectedTwoPointBilinear params
+  let v : TestFun2D := Finset.sum s (fun i => c i • f i)
+  have hvv :
+      B v v =
+        Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * B (f j) (f i))) := by
+    simp [B, v, Finset.sum_apply]
+  have hnonneg : 0 ≤ B v v :=
+    connectedTwoPointBilinear_self_nonneg params v
+  rw [hvv] at hnonneg
+  simpa [B] using hnonneg
 
 /-- Standard-index-order form of `connectedTwoPoint_quadratic_nonneg`. -/
 theorem connectedTwoPoint_quadratic_nonneg_standard

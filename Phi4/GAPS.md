@@ -41,15 +41,58 @@ These are the key endpoint theorems and their remaining assumptions:
      - `InfiniteVolumeSchwingerModel params`
      - `OSAxiomCoreModel params`
      - theorem-level gaps:
-       - `phi4_linear_growth`
-       - `phi4_wightman_reconstruction_step`
+       - `gap_phi4_linear_growth`
+       - `gap_phi4_wightman_reconstruction_step`
    - Meaning: Wightman reconstruction endpoint is explicit, with remaining linear-growth and reconstruction steps marked honestly as theorem gaps.
+   - Weak-coupling decay soundness note:
+     - `ConnectedTwoPointDecayAtParams` now uses one uniform positive mass gap
+       with pair-dependent amplitudes (`C_{f,g}`), avoiding an over-strong
+       single global amplitude constant.
+   - Derived consequence already formalized:
+     - `connectedTwoPoint_decay_eventually_small` gives `ε`-`R` clustering for
+       fixed test-function pairs from the exponential-decay interface.
+     - `phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit`
+       exposes the same `ε`-`R` control directly in Schwinger-moment form.
+     - `phi4_os4_weak_coupling_eventually_small` and
+       `phi4_os4_weak_coupling_eventually_small_explicit` provide global
+       weak-coupling `ε`-`R` forms (uniform in parameter choices below a common
+       coupling threshold).
+     - `ModelBundle.lean` exports bundled wrappers for both base global OS4
+       decay forms and these global `ε`-`R` forms.
+   - Trusted interface alternative:
+     - `phi4_wightman_exists_of_interfaces` requires
+       `ReconstructionLinearGrowthModel params` and
+       `WightmanReconstructionModel params` explicitly; this is the path used by
+       `phi4_wightman_exists_of_bundle`.
+   - Downstream trusted corollaries:
+     - interface-level:
+       `phi4_selfadjoint_fields_of_interfaces`,
+       `phi4_locality_of_interfaces`,
+       `phi4_lorentz_covariance_of_interfaces`,
+       `phi4_unique_vacuum_of_interfaces`
+     - bundle-level:
+       `phi4_selfadjoint_fields_of_bundle`,
+       `phi4_locality_of_bundle`,
+       `phi4_lorentz_covariance_of_bundle`,
+       `phi4_unique_vacuum_of_bundle`.
 
 3. `phi4_os1` in `Phi4/OSAxioms.lean`
    - Assumptions:
      - `InfiniteVolumeLimitModel params`
      - theorem-level gap `gap_generating_functional_bound`
    - Meaning: OS1 endpoint is present, but the Chapter 12.5 generating-functional estimate is still an explicit theorem frontier.
+   - Trusted interface/bundle alternatives:
+     - `phi4_os1_of_interface` (in `OSAxioms.lean`)
+     - `generating_functional_bound_of_interface` (in `Regularity.lean`)
+     - `phi4_os1_of_bundle` (in `ModelBundle.lean`)
+     - `generating_functional_bound_of_bundle` (in `ModelBundle.lean`)
+
+4. `phi4_satisfies_OS` in `Phi4/OSAxioms.lean` vs trusted bundle path
+   - Frontier theorem `phi4_satisfies_OS` still traverses theorem-level gaps
+     (`gap_osDistributionE2_nonempty`, `gap_osE4Cluster_nonempty`).
+   - Trusted bundle alternative:
+     - `phi4_satisfies_OS_of_bundle`, routed through
+       `phi4_satisfies_OS_of_interfaces` with explicit weak-coupling smallness.
 
 ## 3. Interface Inventory (Current Assumption Surface)
 
@@ -134,10 +177,19 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `schwingerTwo_tendsto_iSup_of_models`
    - `schwingerTwo_limit_exists_of_models`
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
+   - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
+   - infinite-volume permutation symmetry transfer:
+     `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)
+   - infinite-volume connected-two-point linearity/bilinearity transfer:
+     `connectedTwoPoint_add_left`, `connectedTwoPoint_smul_left`,
+     `connectedTwoPoint_add_right`, `connectedTwoPoint_smul_right`,
+     `connectedTwoPointBilinear`, `connectedTwoPointBilinear_symm`,
+     `connectedTwoPointBilinear_self_nonneg`
    - in `Phi4/InfiniteVolumeLimit.lean`
 
 5. Reconstruction split/recombine
    - `reconstructionInputModel_of_submodels`
+   - `reconstructionWeakCouplingModel_of_uniform`
    - in `Phi4/Reconstruction.lean`
 
 ## 5. What Current `sorry` Means Here
@@ -161,6 +213,9 @@ remaining debt to close for a full formal Glimm-Jaffe construction.
    - Current check: `os_to_wightman` / `os_to_wightman_full` in OSReconstruction depend on `sorryAx`, so they are not admissible closure tools under project policy.
 
 ## 7. Audit Commands
+
+`scripts/check_phi4_trust.sh` includes a theorem-axiom dependency audit for
+selected trusted endpoints and fails on `sorryAx`.
 
 ```bash
 scripts/check_phi4_trust.sh

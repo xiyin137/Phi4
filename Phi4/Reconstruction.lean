@@ -61,7 +61,7 @@ private lemma translateMap_antilipschitz (a : Spacetime2D) :
     _ = 1 * dist (translateMap a x) (translateMap a y) := by simp [translateMap]
 
 /-- Translation of a Schwartz test function by `a`: x ↦ g(x + a). -/
-private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
+def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
   SchwartzMap.compCLMOfAntilipschitz ℝ
     (translateMap_hasTemperateGrowth (toSpacetime2D a))
     (translateMap_antilipschitz (toSpacetime2D a))
@@ -69,14 +69,16 @@ private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
 
 /-! ## Weak-coupling decay shape -/
 
-/-- Connected 2-point exponential decay at fixed parameters. -/
+/-- Connected 2-point exponential decay at fixed parameters:
+    one uniform mass gap with pair-dependent amplitudes. -/
 abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params] : Prop :=
-  ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-    ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-      let g_shifted : TestFun2D := translateTestFun a g
-      |connectedTwoPoint params f g_shifted| ≤
-        C * Real.exp (-m_gap * ‖a‖)
+  ∃ m_gap : ℝ, 0 < m_gap ∧
+    ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
+      ∀ (a : Fin 2 → ℝ),
+        let g_shifted : TestFun2D := translateTestFun a g
+        |connectedTwoPoint params f g_shifted| ≤
+          Cfg * Real.exp (-m_gap * ‖a‖)
 
 /-! ## Uniform weak-coupling decay interface -/
 
@@ -112,6 +114,23 @@ class ReconstructionWeakCouplingModel (params : Phi4Params)
   connectedTwoPoint_decay_of_weak_coupling :
     params.coupling < weak_coupling_threshold →
       ConnectedTwoPointDecayAtParams params
+
+/-- A global uniform weak-coupling decay model induces a fixed-parameter
+    weak-coupling threshold model by specialization to `params`. -/
+instance (priority := 90) reconstructionWeakCouplingModel_of_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [UniformWeakCouplingDecayModel params] :
+    ReconstructionWeakCouplingModel params where
+  weak_coupling_threshold :=
+    (UniformWeakCouplingDecayModel.phi4_os4_weak_coupling (params := params)).choose
+  weak_coupling_threshold_pos :=
+    (UniformWeakCouplingDecayModel.phi4_os4_weak_coupling (params := params)).choose_spec.1
+  connectedTwoPoint_decay_of_weak_coupling := by
+    intro hsmall
+    exact
+      (UniformWeakCouplingDecayModel.phi4_os4_weak_coupling (params := params)).choose_spec.2
+        params hsmall
 
 /-- Backward-compatible aggregate reconstruction input model. -/
 class ReconstructionInputModel (params : Phi4Params)
@@ -149,6 +168,30 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     (params.coupling < coupling_bound →
       ConnectedTwoPointDecayAtParams params)
 
+/-! ## Interface-level reconstruction wrappers -/
+
+/-- Linear-growth input extracted from `ReconstructionLinearGrowthModel`. -/
+theorem phi4_linear_growth_of_interface (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params] :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
+
+/-- Wightman-reconstruction input extracted from `WightmanReconstructionModel`. -/
+theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    [WightmanReconstructionModel params] :
+    ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W := by
+  intro OS hlg
+  exact WightmanReconstructionModel.wightman_reconstruction
+    (params := params) OS hlg
+
 /-! ## Linear growth condition (E0') -/
 
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
@@ -161,7 +204,7 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
 
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
-theorem phi4_linear_growth (params : Phi4Params)
+theorem gap_phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
@@ -169,9 +212,17 @@ theorem phi4_linear_growth (params : Phi4Params)
       Nonempty (OSLinearGrowthCondition 1 OS) := by
   sorry
 
-/-- Explicit reconstruction step from OS + linear growth to Wightman data.
-    This is a currently open frontier and is intentionally recorded as `sorry`. -/
-theorem phi4_wightman_reconstruction_step (params : Phi4Params)
+/-- Public linear-growth endpoint via explicit theorem-level frontier gap. -/
+theorem phi4_linear_growth (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params] :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  exact gap_phi4_linear_growth params
+
+/-- Honest frontier: reconstruction step from OS + linear growth to Wightman data. -/
+theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
     [OSAxiomCoreModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -179,13 +230,23 @@ theorem phi4_wightman_reconstruction_step (params : Phi4Params)
           IsWickRotationPair OS.S Wfn.W := by
   sorry
 
+/-- Explicit reconstruction step from OS + linear growth to Wightman data,
+    via the frontier theorem `gap_phi4_wightman_reconstruction_step`. -/
+theorem phi4_wightman_reconstruction_step (params : Phi4Params)
+    [OSAxiomCoreModel params] :
+    ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W := by
+  exact gap_phi4_wightman_reconstruction_step params
+
 /-! ## OS4: Clustering (for weak coupling) -/
 
 /-- **OS4 (Clustering)** for weak coupling:
     There exists a coupling threshold λ₀ > 0 such that for λ < λ₀,
     the truncated two-point function decays exponentially with the
     spatial separation of the test function supports:
-      |⟨φ(f)φ(g)⟩ - ⟨φ(f)⟩⟨φ(g)⟩| ≤ C · e^{-m·dist(supp f, supp g)}
+      |⟨φ(f)φ(g)⟩ - ⟨φ(f)⟩⟨φ(g)⟩| ≤ C_{f,g} · e^{-m·dist(supp f, supp g)}
     where m > 0 is the mass gap.
 
     The proof uses the cluster expansion (Glimm-Jaffe Chapter 18):
@@ -212,21 +273,25 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
         p.coupling < coupling_bound →
-          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-              let g_shifted : TestFun2D := translateTestFun a g
-              |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
-                infiniteVolumeSchwinger p 1 ![f] *
-                  infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
-                C * Real.exp (-m_gap * ‖a‖) := by
+          ∃ m_gap : ℝ, 0 < m_gap ∧
+            ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
+              ∀ (a : Fin 2 → ℝ),
+                let g_shifted : TestFun2D := translateTestFun a g
+                |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
+                  infiniteVolumeSchwinger p 1 ![f] *
+                    infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
+                  Cfg * Real.exp (-m_gap * ‖a‖) := by
   intro hlim hrec
   rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hdecay⟩
   refine ⟨coupling_bound, hcb_pos, ?_⟩
   intro p hpInst hsmall
-  rcases hdecay p hsmall with ⟨m_gap, C, hm_gap, hbound⟩
-  refine ⟨m_gap, C, hm_gap, ?_⟩
-  intro f g a
-  simpa [connectedTwoPoint] using hbound f g a
+  rcases hdecay p hsmall with ⟨m_gap, hm_gap, hbound⟩
+  refine ⟨m_gap, hm_gap, ?_⟩
+  intro f g
+  rcases hbound f g with ⟨Cfg, hCfg_nonneg, hfg⟩
+  refine ⟨Cfg, hCfg_nonneg, ?_⟩
+  intro a
+  simpa [connectedTwoPoint] using hfg a
 
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
@@ -275,18 +340,151 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
     [InfiniteVolumeSchwingerModel params] →
     [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
-    ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-      ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+    ∃ m_gap : ℝ, 0 < m_gap ∧
+      ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
+        ∀ (a : Fin 2 → ℝ),
+          let g_shifted : TestFun2D := translateTestFun a g
+          |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
+            infiniteVolumeSchwinger params 1 ![f] *
+              infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
+            Cfg * Real.exp (-m_gap * ‖a‖) := by
+  intro hlim hrec hsmall
+  rcases phi4_connectedTwoPoint_decay_below_threshold params hsmall with ⟨m_gap, hm_gap, hdecay⟩
+  refine ⟨m_gap, hm_gap, ?_⟩
+  intro f g
+  rcases hdecay f g with ⟨Cfg, hCfg_nonneg, hfg⟩
+  refine ⟨Cfg, hCfg_nonneg, ?_⟩
+  intro a
+  simpa [connectedTwoPoint] using hfg a
+
+/-! ## ε-R form of connected two-point decay -/
+
+/-- Exponential connected two-point decay implies an `ε`-`R` clustering form
+    for each fixed pair of test functions. -/
+theorem connectedTwoPoint_decay_eventually_small
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    (hdecay : ConnectedTwoPointDecayAtParams params)
+    (f g : TestFun2D) :
+    ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
+      ∀ a : Fin 2 → ℝ, R < ‖a‖ →
+        let g_shifted : TestFun2D := translateTestFun a g
+        |connectedTwoPoint params f g_shifted| < ε := by
+  intro ε hε
+  rcases hdecay with ⟨m_gap, hm_gap, hdecay_fg⟩
+  rcases hdecay_fg f g with ⟨Cfg, hCfg_nonneg, hbound⟩
+  by_cases hCfg_zero : Cfg = 0
+  · refine ⟨1, zero_lt_one, ?_⟩
+    intro a ha
+    have hle : (let g_shifted : TestFun2D := translateTestFun a g;
+      |connectedTwoPoint params f g_shifted|) ≤ 0 := by
+      simpa [hCfg_zero] using hbound a
+    exact lt_of_le_of_lt hle hε
+  · have hCfg_pos : 0 < Cfg := lt_of_le_of_ne hCfg_nonneg (Ne.symm hCfg_zero)
+    let R0 : ℝ := Real.log (Cfg / ε) / m_gap
+    let R : ℝ := max 1 R0
+    refine ⟨R, lt_of_lt_of_le zero_lt_one (le_max_left 1 R0), ?_⟩
+    intro a ha
+    have hR0 : R0 < ‖a‖ := lt_of_le_of_lt (le_max_right 1 R0) ha
+    have hlog_lt : Real.log (Cfg / ε) < ‖a‖ * m_gap := by
+      exact (div_lt_iff₀ hm_gap).1 (by simpa [R0] using hR0)
+    have hneg_lt : -m_gap * ‖a‖ < -Real.log (Cfg / ε) := by
+      linarith [hlog_lt]
+    have hexp_lt :
+        Real.exp (-m_gap * ‖a‖) < Real.exp (-Real.log (Cfg / ε)) := by
+      exact (Real.exp_lt_exp).2 hneg_lt
+    have hratio_pos : 0 < Cfg / ε := div_pos hCfg_pos hε
+    have hexp_lt' : Real.exp (-m_gap * ‖a‖) < ε / Cfg := by
+      calc
+        Real.exp (-m_gap * ‖a‖) < Real.exp (-Real.log (Cfg / ε)) := hexp_lt
+        _ = (Cfg / ε)⁻¹ := by rw [Real.exp_neg, Real.exp_log hratio_pos]
+        _ = ε / Cfg := by field_simp [hCfg_pos.ne', hε.ne']
+    have hmul_lt : Cfg * Real.exp (-m_gap * ‖a‖) < ε := by
+      have hmul :
+          Cfg * Real.exp (-m_gap * ‖a‖) < Cfg * (ε / Cfg) :=
+        mul_lt_mul_of_pos_left hexp_lt' hCfg_pos
+      calc
+        Cfg * Real.exp (-m_gap * ‖a‖) < Cfg * (ε / Cfg) := hmul
+        _ = ε := by field_simp [hCfg_pos.ne']
+    have hle :
+        (let g_shifted : TestFun2D := translateTestFun a g;
+          |connectedTwoPoint params f g_shifted|) ≤ Cfg * Real.exp (-m_gap * ‖a‖) := by
+      simpa using hbound a
+    exact lt_of_le_of_lt hle hmul_lt
+
+/-- `ε`-`R` clustering form under the selected weak-coupling threshold. -/
+theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small
+    (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
+    params.coupling < phi4WeakCouplingThreshold params →
+    ∀ (f g : TestFun2D), ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
+      ∀ a : Fin 2 → ℝ, R < ‖a‖ →
+        let g_shifted : TestFun2D := translateTestFun a g
+        |connectedTwoPoint params f g_shifted| < ε := by
+  intro hlim hrec hsmall f g ε hε
+  exact connectedTwoPoint_decay_eventually_small params
+    (phi4_connectedTwoPoint_decay_below_threshold params hsmall) f g ε hε
+
+/-- Explicit-Schwinger `ε`-`R` clustering form under the selected
+    weak-coupling threshold. -/
+theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit
+    (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
+    params.coupling < phi4WeakCouplingThreshold params →
+    ∀ (f g : TestFun2D), ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
+      ∀ a : Fin 2 → ℝ, R < ‖a‖ →
         let g_shifted : TestFun2D := translateTestFun a g
         |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
           infiniteVolumeSchwinger params 1 ![f] *
-            infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
-          C * Real.exp (-m_gap * ‖a‖) := by
-  intro hlim hrec hsmall
-  rcases phi4_connectedTwoPoint_decay_below_threshold params hsmall with ⟨m_gap, C, hm_gap, hdecay⟩
-  refine ⟨m_gap, C, hm_gap, ?_⟩
-  intro f g a
-  simpa [connectedTwoPoint] using hdecay f g a
+            infiniteVolumeSchwinger params 1 ![g_shifted]| < ε := by
+  intro hlim hrec hsmall f g ε hε
+  rcases phi4_connectedTwoPoint_decay_below_threshold_eventually_small
+      (params := params) hsmall f g ε hε with ⟨R, hRpos, hR⟩
+  refine ⟨R, hRpos, ?_⟩
+  intro a ha
+  simpa [connectedTwoPoint] using hR a ha
+
+/-- Global weak-coupling `ε`-`R` clustering form for connected 2-point functions. -/
+theorem phi4_os4_weak_coupling_eventually_small (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [UniformWeakCouplingDecayModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+        p.coupling < coupling_bound →
+          ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
+            ∀ a : Fin 2 → ℝ, R < ‖a‖ →
+              let g_shifted : TestFun2D := translateTestFun a g
+              |connectedTwoPoint p f g_shifted| < ε := by
+  intro hlim hdecay
+  rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hglobal⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro p hpInst hsmall f g ε hε
+  exact connectedTwoPoint_decay_eventually_small p (hglobal p hsmall) f g ε hε
+
+/-- Explicit-Schwinger global weak-coupling `ε`-`R` clustering form. -/
+theorem phi4_os4_weak_coupling_eventually_small_explicit (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [UniformWeakCouplingDecayModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+        p.coupling < coupling_bound →
+          ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
+            ∀ a : Fin 2 → ℝ, R < ‖a‖ →
+              let g_shifted : TestFun2D := translateTestFun a g
+              |infiniteVolumeSchwinger p 2 ![f, g_shifted] -
+                infiniteVolumeSchwinger p 1 ![f] *
+                  infiniteVolumeSchwinger p 1 ![g_shifted]| < ε := by
+  intro hlim hdecay
+  rcases phi4_os4_weak_coupling_eventually_small params with
+      ⟨coupling_bound, hcb_pos, hglobal⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro p hpInst hsmall f g ε hε
+  rcases hglobal p hsmall f g ε hε with ⟨R, hRpos, hR⟩
+  refine ⟨R, hRpos, ?_⟩
+  intro a ha
+  simpa [connectedTwoPoint] using hR a ha
 
 /-- Infinite-volume connected two-point nonnegativity for nonnegative test
     functions, inherited from finite-volume FKG positivity. -/
@@ -306,6 +504,84 @@ theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
     ∀ (f : TestFun2D), (∀ x, 0 ≤ f x) → 0 ≤ connectedTwoPoint params f f := by
   intro hlim hcorr f hf
   exact connectedTwoPoint_self_nonneg_of_fkg params f hf
+
+/-- Infinite-volume diagonal connected two-point nonnegativity (variance form),
+    without sign restrictions on test functions. -/
+theorem phi4_connectedTwoPoint_self_nonneg_variance (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f := by
+  intro hlim hint f
+  exact connectedTwoPoint_self_nonneg params f
+
+/-- Additivity in the first argument of the infinite-volume connected two-point
+    function. -/
+theorem phi4_connectedTwoPoint_add_left (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (f₁ f₂ g : TestFun2D),
+      connectedTwoPoint params (f₁ + f₂) g =
+        connectedTwoPoint params f₁ g + connectedTwoPoint params f₂ g := by
+  intro hlim hint f₁ f₂ g
+  exact connectedTwoPoint_add_left params f₁ f₂ g
+
+/-- Scalar linearity in the first argument of the infinite-volume connected
+    two-point function. -/
+theorem phi4_connectedTwoPoint_smul_left (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (c : ℝ) (f g : TestFun2D),
+      connectedTwoPoint params (c • f) g = c * connectedTwoPoint params f g := by
+  intro hlim hint c f g
+  exact connectedTwoPoint_smul_left params c f g
+
+/-- Additivity in the second argument of the infinite-volume connected two-point
+    function. -/
+theorem phi4_connectedTwoPoint_add_right (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (f g₁ g₂ : TestFun2D),
+      connectedTwoPoint params f (g₁ + g₂) =
+        connectedTwoPoint params f g₁ + connectedTwoPoint params f g₂ := by
+  intro hlim hint f g₁ g₂
+  exact connectedTwoPoint_add_right params f g₁ g₂
+
+/-- Scalar linearity in the second argument of the infinite-volume connected
+    two-point function. -/
+theorem phi4_connectedTwoPoint_smul_right (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (c : ℝ) (f g : TestFun2D),
+      connectedTwoPoint params f (c • g) = c * connectedTwoPoint params f g := by
+  intro hlim hint c f g
+  exact connectedTwoPoint_smul_right params c f g
+
+/-- Infinite-volume connected two-point function as a bilinear map. -/
+def phi4_connectedTwoPoint_bilinear (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ := by
+  intro hlim hint
+  exact connectedTwoPointBilinear params
+
+/-- Symmetry of the infinite-volume connected two-point bilinear form. -/
+theorem phi4_connectedTwoPoint_bilinear_symm (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (f g : TestFun2D),
+      connectedTwoPointBilinear params f g =
+        connectedTwoPointBilinear params g f := by
+  intro hlim hint f g
+  exact connectedTwoPointBilinear_symm params f g
+
+/-- Diagonal nonnegativity of the infinite-volume connected two-point bilinear
+    form. -/
+theorem phi4_connectedTwoPoint_bilinear_self_nonneg (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
+    ∀ (f : TestFun2D), 0 ≤ connectedTwoPointBilinear params f f := by
+  intro hlim hint f
+  exact connectedTwoPointBilinear_self_nonneg params f
 
 /-- Infinite-volume connected two-point Cauchy-Schwarz inequality. -/
 theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
@@ -684,6 +960,83 @@ theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
   exact connectedTwoPoint_symm params f g
 
 /-! ## Wightman reconstruction -/
+
+/-- Interface-level Wightman existence from linear-growth and reconstruction
+    backends, without using frontier-gap theorems. -/
+theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [ReconstructionLinearGrowthModel params] →
+    [WightmanReconstructionModel params] →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS : OsterwalderSchraderAxioms 1),
+        OS.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS.S Wfn.W := by
+  intro hlim hos hlg hw
+  obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth_of_interface params
+  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
+  rcases hlg_nonempty with ⟨hlg_inst⟩
+  obtain ⟨Wfn, hWR⟩ :=
+    phi4_wightman_reconstruction_step_of_interface (params := params) OS hlg_inst
+  exact ⟨Wfn, OS, hS, hWR⟩
+
+/-- Interface-level self-adjointness corollary obtained from
+    `phi4_wightman_exists_of_interfaces`. -/
+theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [ReconstructionLinearGrowthModel params] →
+    [WightmanReconstructionModel params] →
+    ∃ (Wfn : WightmanFunctions 1),
+      IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
+      (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
+        Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
+  intro hlim hos hlin hw
+  obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
+  exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
+
+/-- Interface-level locality corollary obtained from
+    `phi4_wightman_exists_of_interfaces`. -/
+theorem phi4_locality_of_interfaces (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [ReconstructionLinearGrowthModel params] →
+    [WightmanReconstructionModel params] →
+    ∃ (Wfn : WightmanFunctions 1),
+      IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
+      IsLocallyCommutativeWeak 1 Wfn.W := by
+  intro hlim hos hlin hw
+  obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
+  exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
+
+/-- Interface-level Lorentz-covariance corollary obtained from
+    `phi4_wightman_exists_of_interfaces`. -/
+theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [ReconstructionLinearGrowthModel params] →
+    [WightmanReconstructionModel params] →
+    ∃ (Wfn : WightmanFunctions 1),
+      IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
+      IsLorentzCovariantWeak 1 Wfn.W := by
+  intro hlim hos hlin hw
+  obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
+  exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
+
+/-- Interface-level positive-definite/vacuum corollary obtained from
+    `phi4_wightman_exists_of_interfaces`. -/
+theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [ReconstructionLinearGrowthModel params] →
+    [WightmanReconstructionModel params] →
+    ∃ (Wfn : WightmanFunctions 1),
+      IsPositiveDefinite 1 Wfn.W ∧
+      IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
+  intro hlim hos hlin hw
+  obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
+  exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
 /-- **Main Theorem**: The φ⁴₂ theory defines a Wightman quantum field theory.
 

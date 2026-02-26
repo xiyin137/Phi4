@@ -35,8 +35,8 @@ Policy basis (from `agent.md`):
   - `gap_osDistributionE2_nonempty`
   - `gap_osE4Cluster_nonempty`
 - `Phi4/Reconstruction.lean`
-  - `phi4_linear_growth`
-  - `phi4_wightman_reconstruction_step`
+  - `gap_phi4_linear_growth`
+  - `gap_phi4_wightman_reconstruction_step`
 
 `Phi4/HonestGaps.lean` now forwards to these core frontier theorems and has no
 local `sorry`.
@@ -50,9 +50,60 @@ local `sorry`.
 ### Medium
 
 1. FKG monotonicity statements were tightened in this audit pass: connected two-point nonnegativity now explicitly requires nonnegative test functions (`f, g ≥ 0`), removing an over-strong earlier statement.
-2. The monotonicity order used in FKG interfaces is still abstract and not yet identified with a fully internalized lattice/field order construction; this remains a closure task.
-3. Upstream OS reconstruction bridge theorem `os_to_wightman` (OSReconstruction) currently depends on `sorryAx`; by project policy it cannot be used to discharge `phi4_wightman_reconstruction_step` yet.
-4. New constructive infrastructure was added in `InfiniteVolumeLimit.lean` for exhausting-sequence convergence in the two-point channel (including lattice and `k = 2` `schwingerN` variants), removing a previously external boundedness hypothesis in that local convergence path.
+2. `ConnectedTwoPointDecayAtParams` was strengthened for soundness: decay now has a uniform positive mass gap with pair-dependent amplitudes (`C_{f,g}`), avoiding an unrealistically strong single global amplitude constant across all test-function pairs.
+3. The monotonicity order used in FKG interfaces is still abstract and not yet identified with a fully internalized lattice/field order construction; this remains a closure task.
+4. Upstream OS reconstruction bridge theorem `os_to_wightman` (OSReconstruction) currently depends on `sorryAx`; by project policy it cannot be used to discharge `phi4_wightman_reconstruction_step` yet.
+5. New constructive infrastructure was added in `InfiniteVolumeLimit.lean` for exhausting-sequence convergence in the two-point channel (including lattice and `k = 2` `schwingerN` variants, plus interface-style `if h : 0 < n then ... else 0` endpoints), removing a previously external boundedness hypothesis in that local convergence path.
+6. `Reconstruction.lean` now exposes a trusted interface-level endpoint
+   `phi4_wightman_exists_of_interfaces`; bundled reconstruction
+   (`phi4_wightman_exists_of_bundle`) now uses that endpoint instead of the
+   frontier-gap theorem `phi4_wightman_exists`.
+7. `ModelBundle.lean` now exposes trusted bundle-level regularity/OS wrappers
+   (`generating_functional_bound_of_bundle`,
+   `nonlocal_phi4_bound_of_bundle`,
+   `generating_functional_bound_uniform_of_bundle`,
+   `phi4_satisfies_OS_of_bundle`) that route through interface proofs rather
+   than frontier-gap wrapper theorems.
+8. `Reconstruction.lean` now includes interface-level corollaries
+   (`phi4_selfadjoint_fields_of_interfaces`,
+   `phi4_locality_of_interfaces`,
+   `phi4_lorentz_covariance_of_interfaces`,
+   `phi4_unique_vacuum_of_interfaces`), with matching trusted bundle wrappers
+   in `ModelBundle.lean`.
+9. `InfiniteVolumeLimit.lean` now has a general permutation-transfer lemma
+   `infiniteVolumeSchwinger_perm` from finite-volume `schwingerN_perm`; the
+   two-point symmetry theorem is now derived from this reusable result.
+10. `OSAxioms.lean` now includes a trusted OS1 interface theorem
+   `phi4_os1_of_interface`; `ModelBundle.lean` exposes
+   `phi4_os1_of_bundle` through this interface path.
+11. `InfiniteVolumeLimit.lean` now includes reusable infinite-volume connected
+    two-point linearity/bilinearity transfer lemmas
+    (`connectedTwoPoint_add_left`, `connectedTwoPoint_smul_left`,
+    `connectedTwoPoint_add_right`, `connectedTwoPoint_smul_right`,
+    `connectedTwoPointBilinear`, `connectedTwoPointBilinear_symm`,
+    `connectedTwoPointBilinear_self_nonneg`) derived via exhaustion-limit
+    transfer; `connectedTwoPoint_quadratic_nonneg` now uses this bilinear
+    infrastructure directly.
+12. `Reconstruction.lean` now proves an `ε`-`R` clustering consequence from
+    exponential connected two-point decay
+    (`connectedTwoPoint_decay_eventually_small`) and a threshold-specialized
+    version (`phi4_connectedTwoPoint_decay_below_threshold_eventually_small`),
+    plus an explicit-Schwinger variant
+    (`phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit`),
+    with bundled exposure in `ModelBundle.lean`.
+13. `translateTestFun` is now public in `Reconstruction.lean`, eliminating
+    private-identifier leakage in downstream theorem signatures.
+14. `Reconstruction.lean` now adds global weak-coupling `ε`-`R` clustering
+    forms (`phi4_os4_weak_coupling_eventually_small`,
+    `phi4_os4_weak_coupling_eventually_small_explicit`) derived from
+    `UniformWeakCouplingDecayModel`, with bundled wrappers in
+    `ModelBundle.lean`.
+15. `ModelBundle.lean` now includes bundled wrappers for both base global OS4
+    weak-coupling decay forms and their `ε`-`R` forms.
+16. `Reconstruction.lean` now includes
+    `reconstructionWeakCouplingModel_of_uniform`, deriving the fixed-parameter
+    weak-coupling threshold interface from global uniform weak-coupling decay
+    data without adding assumptions.
 
 ### Low
 
@@ -98,6 +149,10 @@ Columns:
 - theorem-level `sorry`: `16`.
 
 ## Verification Commands
+
+`scripts/check_phi4_trust.sh` now also runs a theorem-dependency check
+(`#print axioms`) and rejects `sorryAx` for selected trusted interface/bundle
+endpoints.
 
 ```bash
 scripts/check_phi4_trust.sh

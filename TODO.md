@@ -7,6 +7,8 @@
 - `Phi4/**/*.lean` has `0` `axiom` declarations.
 - `Phi4/**/*.lean` has `0` `def/abbrev := by sorry`.
 - `lake build Phi4` succeeds.
+- `scripts/check_phi4_trust.sh` now also enforces that selected trusted
+  interface/bundle endpoints are free of `sorryAx` dependencies (`#print axioms` check).
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
 - `Phi4/Combinatorics/PerfectMatchings.lean` now centralizes pairing/perfect-matching
@@ -39,7 +41,21 @@
   `schwingerTwo_uniformly_bounded_on_exhaustion`,
   `schwingerTwo_tendsto_iSup_of_models`,
   `schwingerTwo_limit_exists_of_models`,
-  with lattice and `schwingerN` (`k = 2`) model-driven variants.
+  with lattice and `schwingerN` (`k = 2`) model-driven variants, plus
+  interface-shaped `if h : 0 < n then ... else 0` convergence/existence
+  theorems in the two-point channel (including
+  `infinite_volume_schwinger_exists_two_of_models` and
+  `infinite_volume_schwinger_exists_two_of_lattice_models`).
+- `Phi4/InfiniteVolumeLimit.lean` now has a reusable permutation-transfer
+  lemma `infiniteVolumeSchwinger_perm`, with
+  `infiniteVolumeSchwinger_two_symm` now proved from it.
+- `Phi4/InfiniteVolumeLimit.lean` now has reusable infinite-volume connected
+  two-point linearity/bilinearity infrastructure:
+  `connectedTwoPoint_add_left`, `connectedTwoPoint_smul_left`,
+  `connectedTwoPoint_add_right`, `connectedTwoPoint_smul_right`,
+  `connectedTwoPointBilinear`, `connectedTwoPointBilinear_symm`,
+  `connectedTwoPointBilinear_self_nonneg`; and
+  `connectedTwoPoint_quadratic_nonneg` now uses this bilinear route.
 - `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure
   submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
@@ -51,11 +67,46 @@
   `ConnectedTwoPointDecayAtParams`, `UniformWeakCouplingDecayModel`,
   `ReconstructionInputModel`, and `WightmanReconstructionModel` on
   `InfiniteVolumeSchwingerModel` rather than `InfiniteVolumeLimitModel`.
+- `ConnectedTwoPointDecayAtParams` now uses a physically sound statement:
+  uniform positive mass gap with test-function-pair-dependent amplitudes,
+  avoiding an over-strong single global amplitude constant.
 - `ReconstructionInputModel` is now split into
   `ReconstructionLinearGrowthModel` + `ReconstructionWeakCouplingModel`,
   with compatibility reconstruction kept for existing APIs.
+- `ReconstructionWeakCouplingModel` is now derivable from
+  `UniformWeakCouplingDecayModel` via
+  `reconstructionWeakCouplingModel_of_uniform`, reducing duplicated
+  fixed-parameter weak-coupling assumptions when uniform decay data is available.
 - `Phi4/ModelBundle.lean` now stores reconstruction linear-growth and
-  weak-coupling submodels directly.
+  global weak-coupling decay inputs directly; fixed-parameter weak-coupling
+  thresholds are reconstructed by instance.
+- `Reconstruction.lean` now provides
+  `phi4_wightman_exists_of_interfaces` as a trusted interface-level
+  endpoint, and `Phi4/ModelBundle.lean` now uses this theorem in
+  `phi4_wightman_exists_of_bundle` (bypassing frontier-gap wrappers).
+- `Reconstruction.lean` now includes trusted interface-level downstream
+  corollaries (`phi4_selfadjoint_fields_of_interfaces`,
+  `phi4_locality_of_interfaces`, `phi4_lorentz_covariance_of_interfaces`,
+  `phi4_unique_vacuum_of_interfaces`) with matching bundle wrappers.
+- `Reconstruction.lean` now includes an `ε`-`R` clustering consequence of
+  connected two-point exponential decay
+  (`connectedTwoPoint_decay_eventually_small`) and its weak-coupling-threshold
+  specialization
+  (`phi4_connectedTwoPoint_decay_below_threshold_eventually_small`), plus an
+  explicit-Schwinger `ε`-`R` variant
+  (`phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit`),
+  with bundled wrappers in `ModelBundle.lean`.
+- `Reconstruction.lean` now also includes global weak-coupling `ε`-`R`
+  clustering theorems
+  (`phi4_os4_weak_coupling_eventually_small`,
+  `phi4_os4_weak_coupling_eventually_small_explicit`) from
+  `UniformWeakCouplingDecayModel`, with bundled wrappers.
+- `ModelBundle.lean` now exposes bundled wrappers for both base global OS4
+  weak-coupling decay forms and their `ε`-`R` variants.
+- `translateTestFun` is now a public `Reconstruction.lean` helper so bundled
+  theorem signatures can state translated-test-function clustering directly.
+- `OSAxioms.lean` now includes trusted OS1 theorem
+  `phi4_os1_of_interface`; `ModelBundle.lean` now exposes `phi4_os1_of_bundle`.
 - `Phi4/ModelBundle.lean` now carries correlation submodels directly; full
   `CorrelationInequalityModel` is reconstructed by instance.
 - `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
@@ -194,7 +245,8 @@ Progress:
 - two-point exhaustion convergence now has a constructive route where the
   absolute bound is derived internally from `MultipleReflectionModel` rather
   than passed as a separate theorem argument (both `schwingerTwo` and
-  `schwingerN` for `k = 2`, including lattice-bridge variants).
+  `schwingerN` for `k = 2`, including lattice-bridge variants and
+  interface-style `if h : 0 < n` sequence endpoints).
 
 Deliverables:
 - strengthen monotonicity beyond the currently packaged 2-point channel,
