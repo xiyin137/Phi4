@@ -211,6 +211,26 @@ theorem phi4_linear_growth_of_interface (params : Phi4Params)
       Nonempty (OSLinearGrowthCondition 1 OS) := by
   exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
 
+/-- Explicit linear-growth constants extracted from
+    `ReconstructionLinearGrowthModel`. -/
+theorem phi4_linear_growth_constants_of_interface (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params] :
+    ∃ (sobolev_index : ℕ) (alpha beta gamma : ℝ),
+      0 < alpha ∧ 0 < beta ∧
+      ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+        ‖phi4SchwingerFunctions params n f‖ ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ sobolev_index sobolev_index f := by
+  let OS := ReconstructionLinearGrowthModel.os_package (params := params)
+  let hS := ReconstructionLinearGrowthModel.os_package_eq (params := params)
+  let hlg := ReconstructionLinearGrowthModel.linear_growth (params := params)
+  refine ⟨hlg.sobolev_index, hlg.alpha, hlg.beta, hlg.gamma,
+    hlg.alpha_pos, hlg.beta_pos, ?_⟩
+  intro n f
+  simpa [OS, hS] using hlg.growth_estimate n f
+
 /-- Canonical Wightman-reconstruction step extracted from upstream
     `os_to_wightman_full`. -/
 theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
@@ -1225,9 +1245,12 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   intro hlim hos hlg
-  exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
-    (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
+  let OS := ReconstructionLinearGrowthModel.os_package (params := params)
+  let hS := ReconstructionLinearGrowthModel.os_package_eq (params := params)
+  rcases phi4_linear_growth_constants_of_interface params with
+      ⟨sobolev_index, alpha, beta, gamma, halpha, hbeta, hgrowth⟩
+  exact phi4_wightman_exists_of_explicit_linear_growth_bound params
+    OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
 
 /-- Interface-level self-adjointness corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
