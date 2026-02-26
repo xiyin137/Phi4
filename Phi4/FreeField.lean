@@ -154,6 +154,26 @@ theorem freeField_pairing_memLp (mass : ℝ) (hmass : 0 < mass)
     MemLp (fun ω : FieldConfig2D => ω f) p (freeFieldMeasure mass hmass) :=
   GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) f p
 
+/-- Exponential moments of linear pairings under the free field measure. -/
+theorem freeField_pairing_exp_integrable (mass : ℝ) (hmass : 0 < mass)
+    (f : TestFun2D) (t : ℝ) :
+    Integrable (fun ω : FieldConfig2D => Real.exp (t * ω f))
+      (freeFieldMeasure mass hmass) := by
+  let T := freeCovarianceCLM mass hmass
+  have hgauss := GaussianField.pairing_is_gaussian T f
+  have hgaussInt :
+      Integrable (fun x : ℝ => Real.exp (t * x))
+        (ProbabilityTheory.gaussianReal 0
+          ((@inner ℝ GaussianField.ell2' _ (T f) (T f) : ℝ).toNNReal)) :=
+    ProbabilityTheory.integrable_exp_mul_gaussianReal (μ := 0)
+      (v := ((@inner ℝ GaussianField.ell2' _ (T f) (T f) : ℝ).toNNReal)) t
+  have hmapInt :
+      Integrable (fun x : ℝ => Real.exp (t * x))
+        ((freeFieldMeasure mass hmass).map (fun ω : FieldConfig2D => ω f)) := by
+    simpa [freeFieldMeasure, T] using (hgauss.symm ▸ hgaussInt)
+  simpa [Function.comp] using
+    hmapInt.comp_measurable (GaussianField.configuration_eval_measurable f)
+
 /-! ## The free covariance as a kernel
 
 The covariance C(x,y) = (-Δ + m²)⁻¹(x,y) has an explicit integral kernel

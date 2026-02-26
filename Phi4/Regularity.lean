@@ -173,17 +173,13 @@ theorem finiteVolume_diagonal_moment_bound_of_generating_bound
     (c : ℝ)
     (hbound : ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (Λ : Rectangle) (f : TestFun2D) (n : ℕ)
-    (hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params Λ))
-    (hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params Λ)) :
+    (Λ : Rectangle) (f : TestFun2D) (n : ℕ) :
     |schwingerN params Λ n (fun _ => f)| ≤
       (Nat.factorial n : ℝ) *
         (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
   have hmoment :=
     schwingerN_const_abs_le_factorial_mul_generatingFunctional_pair
-      params Λ f n hExp hExpNeg
+      params Λ f n
   have hgf_nonneg : 0 ≤ generatingFunctional params Λ f :=
     generatingFunctional_nonneg params Λ f
   have hgneg_nonneg : 0 ≤ generatingFunctional params Λ (-f) :=
@@ -205,11 +201,7 @@ theorem finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound
     (params : Phi4Params) [InteractionWeightModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (Λ : Rectangle) (f : TestFun2D) (n : ℕ)
-    (hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params Λ))
-    (hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params Λ)) :
+    (Λ : Rectangle) (f : TestFun2D) (n : ℕ) :
     ∃ c : ℝ,
       |schwingerN params Λ n (fun _ => f)| ≤
         (Nat.factorial n : ℝ) *
@@ -217,7 +209,7 @@ theorem finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound
   rcases hglobal with ⟨c, hc⟩
   refine ⟨c, ?_⟩
   exact finiteVolume_diagonal_moment_bound_of_generating_bound
-    params c hc Λ f n hExp hExpNeg
+    params c hc Λ f n
 
 private theorem abs_limit_le_of_abs_bound {u : ℕ → ℝ} {x B : ℝ}
     (hu : Filter.Tendsto u Filter.atTop (nhds x))
@@ -266,13 +258,7 @@ theorem diagonal_moment_bound_on_exhaustion_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (f : TestFun2D) (n : ℕ)
-    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
-    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+    (f : TestFun2D) (n : ℕ) :
     ∃ c : ℝ, ∀ k : ℕ,
       |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f)| ≤
         (Nat.factorial n : ℝ) *
@@ -283,7 +269,7 @@ theorem diagonal_moment_bound_on_exhaustion_of_global_uniform
   exact finiteVolume_diagonal_moment_bound_of_generating_bound
     params c hc
     (exhaustingRectangles (k + 1) (Nat.succ_pos k))
-    f n (hExp k) (hExpNeg k)
+    f n
 
 /-- Transfer the exhaustion diagonal-moment bound to the limit point. -/
 theorem diagonal_moment_limit_bound_of_exhaustion
@@ -294,36 +280,24 @@ theorem diagonal_moment_limit_bound_of_exhaustion
     (hlim : Filter.Tendsto
       (fun k : ℕ =>
         schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f))
-      Filter.atTop (nhds x))
-    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
-    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+      Filter.atTop (nhds x)) :
     ∃ c : ℝ,
       |x| ≤ (Nat.factorial n : ℝ) *
         (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
   rcases diagonal_moment_bound_on_exhaustion_of_global_uniform
-      params hglobal f n hExp hExpNeg with ⟨c, hc⟩
+      params hglobal f n with ⟨c, hc⟩
   refine ⟨c, ?_⟩
   exact abs_limit_le_of_abs_bound hlim (fun k => hc k)
 
 /-- Diagonal infinite-volume Schwinger moments are bounded by the same explicit
-    factorial-exponential expression, provided finite-volume exponential
-    integrability along exhaustion and a global finite-volume OS1-type bound. -/
+    factorial-exponential expression under a global finite-volume OS1-type
+    generating-functional bound. -/
 theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
     [InfiniteVolumeLimitModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (f : TestFun2D) (n : ℕ)
-    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
-    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+    (f : TestFun2D) (n : ℕ) :
     ∃ c : ℝ,
       |infiniteVolumeSchwinger params n (fun _ => f)| ≤
         (Nat.factorial n : ℝ) *
@@ -345,7 +319,7 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
     simpa using hcomp
   exact diagonal_moment_limit_bound_of_exhaustion
-    params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim hExp hExpNeg
+    params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim
 
 /-- If the generating functional along exhaustion converges to the infinite-volume
     generating functional and satisfies a global exponential bound, then OS1 follows. -/

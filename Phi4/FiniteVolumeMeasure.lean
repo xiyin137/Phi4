@@ -269,6 +269,65 @@ private theorem finiteVolume_product_integrable
     hwd.smul_measure hscale_ne_top
   simpa [finiteVolumeMeasure, μ, d] using hscaled
 
+private theorem finiteVolume_pairing_exp_integrable
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (f : TestFun2D) (t : ℝ) :
+    Integrable (fun ω : FieldConfig2D => Real.exp (t * ω f))
+      (finiteVolumeMeasure params Λ) := by
+  set μ := freeFieldMeasure params.mass params.mass_pos
+  set w : FieldConfig2D → ℝ := fun ω => Real.exp (-(interaction params Λ ω))
+  set d : FieldConfig2D → ℝ≥0∞ := fun ω => ENNReal.ofReal (w ω)
+  set X : FieldConfig2D → ℝ := fun ω => Real.exp (t * ω f)
+
+  have hwInt : Integrable w μ := by
+    simpa [w, μ] using partition_function_integrable params Λ
+  have hwMeas : AEMeasurable w μ := hwInt.aestronglyMeasurable.aemeasurable
+  have hdMeas : AEMeasurable d μ := by
+    simpa [d] using hwMeas.ennreal_ofReal
+  have hdLtTop : ∀ᵐ ω ∂μ, d ω < ⊤ := by
+    filter_upwards with ω
+    simp [d]
+
+  have hXL2 : MemLp X (2 : ℝ≥0∞) μ := by
+    have hXInt : Integrable X μ := by
+      simpa [X, μ] using freeField_pairing_exp_integrable params.mass params.mass_pos f t
+    have hX2Int : Integrable (fun ω : FieldConfig2D => (X ω) ^ 2) μ := by
+      have h2t :
+          Integrable (fun ω : FieldConfig2D => Real.exp ((2 * t) * ω f)) μ := by
+        simpa [μ] using freeField_pairing_exp_integrable params.mass params.mass_pos f (2 * t)
+      refine h2t.congr ?_
+      filter_upwards with ω
+      calc
+        Real.exp ((2 * t) * ω f)
+            = Real.exp (t * ω f + t * ω f) := by ring_nf
+        _ = Real.exp (t * ω f) * Real.exp (t * ω f) := by
+              rw [Real.exp_add]
+        _ = (X ω) ^ 2 := by
+              simp [X, pow_two]
+    exact (memLp_two_iff_integrable_sq hXInt.aestronglyMeasurable).2 hX2Int
+  have hwL2 : MemLp w (2 : ℝ≥0∞) μ := by
+    simpa [w, μ] using (exp_interaction_Lp params Λ (p := (2 : ℝ≥0∞)) (by norm_num))
+
+  have hmulInt : Integrable (fun ω : FieldConfig2D => X ω * w ω) μ :=
+    hXL2.integrable_mul hwL2
+  have hsmulInt : Integrable (fun ω : FieldConfig2D => (d ω).toReal • X ω) μ := by
+    refine hmulInt.congr ?_
+    filter_upwards with ω
+    simp [d, w, X, Real.exp_nonneg, smul_eq_mul, mul_comm]
+
+  have hwd : Integrable X (μ.withDensity d) :=
+    (integrable_withDensity_iff_integrable_smul₀' hdMeas hdLtTop).2 hsmulInt
+
+  have hZpos : 0 < partitionFunction params Λ := by
+    simpa [partitionFunction] using partition_function_pos params Λ
+  have hscale_ne_top : ENNReal.ofReal (partitionFunction params Λ)⁻¹ ≠ ⊤ := by
+    simp [hZpos]
+
+  have hscaled : Integrable X
+      (ENNReal.ofReal (partitionFunction params Λ)⁻¹ • (μ.withDensity d)) :=
+    hwd.smul_measure hscale_ne_top
+  simpa [finiteVolumeMeasure, μ, d, X] using hscaled
+
 private theorem abs_pow_le_factorial_mul_exp_abs (x : ℝ) (n : ℕ) :
     |x| ^ n ≤ (Nat.factorial n : ℝ) * Real.exp |x| := by
   have h0 : 0 ≤ |x| := abs_nonneg x
@@ -295,15 +354,15 @@ private theorem abs_pow_le_factorial_mul_exp_add_exp_neg (x : ℝ) (n : ℕ) :
     under the finite-volume interacting measure. -/
 theorem schwingerN_const_abs_le_factorial_mul_generatingFunctional_pair
     (params : Phi4Params) [InteractionWeightModel params]
-    (Λ : Rectangle) (f : TestFun2D) (n : ℕ)
-    (hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
-      (finiteVolumeMeasure params Λ))
-    (hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
-      (finiteVolumeMeasure params Λ)) :
+    (Λ : Rectangle) (f : TestFun2D) (n : ℕ) :
     |schwingerN params Λ n (fun _ => f)| ≤
       (Nat.factorial n : ℝ) *
         (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
   set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f)) μ := by
+    simpa [μ] using finiteVolume_pairing_exp_integrable params Λ f 1
+  have hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f))) μ := by
+    simpa [μ] using finiteVolume_pairing_exp_integrable params Λ f (-1)
   have hpowInt : Integrable (fun ω : FieldConfig2D => (ω f) ^ n) μ := by
     have hprod := finiteVolume_product_integrable params Λ n (fun _ => f)
     refine hprod.congr ?_
