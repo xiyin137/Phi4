@@ -382,6 +382,71 @@ theorem gap_osE4Cluster_nonempty (params : Phi4Params)
     Nonempty (OSE4ClusterModel params) := by
   exact osE4ClusterModel_nonempty_of_data params threshold hthreshold_pos hcluster
 
+/-- Construct the OS package theorem from explicit Schwinger/positivity/cluster
+    data, via the gap constructors. -/
+theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
+    (S : SchwingerFunctions 1)
+    (hos0 : ∀ n, Continuous (S n))
+    (hos2_translation :
+      ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
+        S n f = S n g)
+    (hos2_rotation :
+      ∀ (n : ℕ) (R : Matrix (Fin 2) (Fin 2) ℝ),
+        R.transpose * R = 1 → R.det = 1 →
+        ∀ (f g : SchwartzNPoint 1 n),
+          (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
+          S n f = S n g)
+    (he3_symmetric :
+      ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
+        S n f = S n g)
+    (he2 :
+      ∀ (F : BorchersSequence 1),
+        (∀ n, ∀ x : NPointDomain 1 n,
+          (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
+        (OSInnerProduct 1 S F F).re ≥ 0)
+    (threshold : ℝ)
+    (hthreshold_pos : 0 < threshold)
+    (hcluster :
+      params.coupling < threshold →
+        ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
+          ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
+            ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
+              ∀ (g_a : SchwartzNPoint 1 m),
+                (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
+                ‖S (n + m) (f.tensorProduct g_a) - S n f * S m g‖ < ε)
+    (hsmall : params.coupling < threshold) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = S := by
+  let core : OSAxiomCoreModel params := {
+    schwingerFunctions := S
+    os0 := hos0
+    os2_translation := hos2_translation
+    os2_rotation := hos2_rotation
+    e3_symmetric := he3_symmetric
+  }
+  letI : OSAxiomCoreModel params := core
+  let e2model : OSDistributionE2Model params := {
+    e2_reflection_positive := by
+      intro F hF
+      simpa [core] using he2 F hF
+  }
+  letI : OSDistributionE2Model params := e2model
+  let e4model : OSE4ClusterModel params := {
+    weak_coupling_threshold := threshold
+    weak_coupling_threshold_pos := hthreshold_pos
+    e4_cluster_of_weak_coupling := by
+      intro hsm n m f g ε hε
+      simpa [core] using hcluster hsm n m f g ε hε
+  }
+  letI : OSE4ClusterModel params := e4model
+  have hsmall' : params.coupling < os4WeakCouplingThreshold params := by
+    simpa [os4WeakCouplingThreshold, e4model] using hsmall
+  rcases phi4_satisfies_OS_of_interfaces params hsmall' with ⟨OS, hOS⟩
+  refine ⟨OS, ?_⟩
+  simpa [phi4SchwingerFunctions, core] using hOS
+
 /-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
 theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
     [OSAxiomCoreModel params]

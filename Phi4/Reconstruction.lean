@@ -997,6 +997,29 @@ theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
 
 /-! ## Wightman reconstruction -/
 
+/-- Construct Wightman existence from explicit linear-growth and reconstruction
+    rule data at fixed `params`. -/
+theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    (hlinear : ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS)) →
+    (hreconstruct : ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS : OsterwalderSchraderAxioms 1),
+        OS.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS.S Wfn.W := by
+  intro hlim hos hlinear hreconstruct
+  rcases hlinear with ⟨OS, hOS_lg⟩
+  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
+  rcases hlg_nonempty with ⟨hlg⟩
+  rcases hreconstruct OS hlg with ⟨Wfn, hWR⟩
+  exact ⟨Wfn, OS, hS, hWR⟩
+
 /-- Interface-level Wightman existence from linear-growth and reconstruction
     backends, without using frontier-gap theorems. -/
 theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
@@ -1009,12 +1032,9 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   intro hlim hos hlg hw
-  obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth_of_interface params
-  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
-  rcases hlg_nonempty with ⟨hlg_inst⟩
-  obtain ⟨Wfn, hWR⟩ :=
-    phi4_wightman_reconstruction_step_of_interface (params := params) OS hlg_inst
-  exact ⟨Wfn, OS, hS, hWR⟩
+  exact phi4_wightman_exists_of_explicit_data params
+    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
+    (hreconstruct := WightmanReconstructionModel.wightman_reconstruction (params := params))
 
 /-- Interface-level self-adjointness corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
@@ -1095,11 +1115,11 @@ theorem phi4_wightman_exists (params : Phi4Params) :
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   intro hlim hos hlin hw
-  obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
-  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
-  rcases hlg_nonempty with ⟨hlg⟩
-  obtain ⟨Wfn, hWR⟩ := phi4_wightman_reconstruction_step (params := params) OS hlg
-  exact ⟨Wfn, OS, hS, hWR⟩
+  exact phi4_wightman_exists_of_explicit_data params
+    (hlinear := gap_phi4_linear_growth params
+      (ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)))
+    (hreconstruct := gap_phi4_wightman_reconstruction_step params
+      (WightmanReconstructionModel.wightman_reconstruction (params := params)))
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
     W_n(f̃) = conj(W_n(f)) where f̃(x₁,...,xₙ) = conj(f(xₙ,...,x₁)).
