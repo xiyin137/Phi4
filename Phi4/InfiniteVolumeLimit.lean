@@ -566,6 +566,36 @@ theorem connectedTwoPoint_sq_le_mul_diag
     · simp [A, Df, Dg, h]
   exact le_of_tendsto_of_tendsto' hA_sq hDiag_mul hpointwise
 
+/-- Infinite-volume half-diagonal bound:
+    `|Cᶜ_∞(f,g)| ≤ (Cᶜ_∞(f,f) + Cᶜ_∞(g,g))/2`. -/
+theorem connectedTwoPoint_abs_le_half_diag_sum
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    (f g : TestFun2D) :
+    |connectedTwoPoint params f g| ≤
+      (connectedTwoPoint params f f + connectedTwoPoint params g g) / 2 := by
+  let x : ℝ := connectedTwoPoint params f g
+  let a : ℝ := connectedTwoPoint params f f
+  let b : ℝ := connectedTwoPoint params g g
+  have hx2 : x ^ 2 ≤ a * b := by
+    simpa [x, a, b] using connectedTwoPoint_sq_le_mul_diag params f g
+  have ha : 0 ≤ a := by
+    simpa [a] using connectedTwoPoint_self_nonneg params f
+  have hb : 0 ≤ b := by
+    simpa [b] using connectedTwoPoint_self_nonneg params g
+  have hsq : (2 * |x|) ^ 2 ≤ (a + b) ^ 2 := by
+    have hsq_nonneg : 0 ≤ (a - b) ^ 2 := sq_nonneg (a - b)
+    nlinarith [hx2, hsq_nonneg, sq_abs x]
+  have h2le : 2 * |x| ≤ a + b := by
+    have hAbs : abs (2 * |x|) ≤ abs (a + b) := (sq_le_sq).1 hsq
+    have hleft : 0 ≤ 2 * |x| := by positivity
+    have hright : 0 ≤ a + b := add_nonneg ha hb
+    simpa [abs_of_nonneg hleft, abs_of_nonneg hright] using hAbs
+  have hxbound : |x| ≤ (a + b) / 2 := by
+    nlinarith [h2le]
+  simpa [x, a, b] using hxbound
+
 /-- If finite-volume FKG inequalities are available, the infinite-volume connected
     two-point function is nonnegative. -/
 theorem connectedTwoPoint_nonneg
