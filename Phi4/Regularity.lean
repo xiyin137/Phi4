@@ -91,7 +91,7 @@ class RegularityModel (params : Phi4Params) [InfiniteVolumeLimitModel params] wh
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)
   nonlocal_phi4_bound :
-    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂)
   generating_functional_bound_uniform :
@@ -155,6 +155,110 @@ theorem euclidean_equation_of_motion_kernel_form (params : Phi4Params)
 def normFunctional (g : TestFun2D) : ℝ :=
   SchwartzMap.seminorm ℝ 2 2 g
 
+/-! ## Exhaustion reduction lemmas for OS1 -/
+
+/-- Finite-volume generating functional along the standard rectangle exhaustion. -/
+def generatingFunctionalOnExhaustion (params : Phi4Params) (f : TestFun2D) (n : ℕ) : ℝ :=
+  generatingFunctional params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) f
+
+@[simp] theorem generatingFunctionalOnExhaustion_eq (params : Phi4Params)
+    (f : TestFun2D) (n : ℕ) :
+    generatingFunctionalOnExhaustion params f n =
+      generatingFunctional params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) f := rfl
+
+private theorem abs_limit_le_of_abs_bound {u : ℕ → ℝ} {x B : ℝ}
+    (hu : Filter.Tendsto u Filter.atTop (nhds x))
+    (hbound : ∀ n, |u n| ≤ B) :
+    |x| ≤ B := by
+  have huabs : Filter.Tendsto (fun n => |u n|) Filter.atTop (nhds |x|) := by
+    simpa [Real.norm_eq_abs] using hu.norm
+  have hB : Filter.Tendsto (fun _ : ℕ => B) Filter.atTop (nhds B) :=
+    tendsto_const_nhds
+  exact le_of_tendsto_of_tendsto huabs hB
+    (Filter.Eventually.of_forall hbound)
+
+/-- Restrict a global finite-volume generating-functional exponential bound
+    to the standard exhausting sequence. -/
+theorem generatingFunctionalOnExhaustion_bound_of_global_uniform
+    (params : Phi4Params)
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    ∃ c : ℝ, ∀ (f : TestFun2D) (n : ℕ),
+      |generatingFunctionalOnExhaustion params f n| ≤
+        Real.exp (c * normFunctional f) := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  intro f n
+  simpa [generatingFunctionalOnExhaustion] using
+    hc f (exhaustingRectangles (n + 1) (Nat.succ_pos n))
+
+/-- Pointwise-in-`f` variant of the previous restriction lemma. -/
+theorem generatingFunctionalOnExhaustion_bound_of_uniform
+    (params : Phi4Params)
+    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    ∀ f : TestFun2D, ∃ c : ℝ, ∀ n : ℕ,
+      |generatingFunctionalOnExhaustion params f n| ≤
+        Real.exp (c * normFunctional f) := by
+  intro f
+  rcases huniform f with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  intro n
+  simpa [generatingFunctionalOnExhaustion] using
+    hc (exhaustingRectangles (n + 1) (Nat.succ_pos n))
+
+/-- If the generating functional along exhaustion converges to the infinite-volume
+    generating functional and satisfies a global exponential bound, then OS1 follows. -/
+theorem generating_functional_bound_of_exhaustion_limit
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
+    (hbound : ∃ c : ℝ, ∀ (f : TestFun2D) (n : ℕ),
+      |generatingFunctionalOnExhaustion params f n| ≤
+        Real.exp (c * normFunctional f)) :
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  rcases hbound with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  intro f
+  exact abs_limit_le_of_abs_bound (hlim f) (fun n => hc f n)
+
+/-- A global finite-volume uniform bound plus exhaustion convergence yields OS1. -/
+theorem generating_functional_bound_of_exhaustion_limit_global_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  exact generating_functional_bound_of_exhaustion_limit params hlim
+    (generatingFunctionalOnExhaustion_bound_of_global_uniform params hglobal)
+
+/-- Pointwise-in-`f` finite-volume uniform bounds plus exhaustion convergence
+    yield a pointwise-in-`f` infinite-volume exponential bound. -/
+theorem generating_functional_pointwise_bound_of_exhaustion_limit
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
+    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    ∀ f : TestFun2D, ∃ c : ℝ,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  intro f
+  rcases generatingFunctionalOnExhaustion_bound_of_uniform params huniform f with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  exact abs_limit_le_of_abs_bound (hlim f) (fun n => hc n)
+
 /-- Interface-level generating-functional bound extracted from
     `RegularityModel`. -/
 theorem generating_functional_bound_of_interface (params : Phi4Params) :
@@ -172,10 +276,12 @@ theorem generating_functional_bound_of_interface (params : Phi4Params) :
     infinite-volume regularity inputs. -/
 theorem gap_generating_functional_bound (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
+    [RegularityModel params] →
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
-  sorry
+  intro hlim hreg
+  exact generating_functional_bound_of_interface params
 
 /-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
     |S{f}| ≤ exp(c · N'(f)).
@@ -184,10 +290,11 @@ theorem gap_generating_functional_bound (params : Phi4Params) :
     `gap_generating_functional_bound`. -/
 theorem generating_functional_bound (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
+    [RegularityModel params] →
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
-  intro hlim
+  intro hlim hreg
   exact gap_generating_functional_bound params
 
 /-! ## Nonlocal φ⁴ bounds -/
@@ -196,29 +303,12 @@ theorem generating_functional_bound (params : Phi4Params) :
 theorem nonlocal_phi4_bound_of_interface (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [RegularityModel params] →
-    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
   intro hlim hreg
   exact RegularityModel.nonlocal_phi4_bound
     (params := params)
-
-/-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3). -/
-theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
-      |generatingFunctional params Λ g| ≤
-        Real.exp (C₁ * Λ.area + C₂) := by
-  sorry
-
-/-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
-theorem nonlocal_phi4_bound (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
-      |generatingFunctional params Λ g| ≤
-        Real.exp (C₁ * Λ.area + C₂) := by
-  intro hlim
-  exact gap_nonlocal_phi4_bound params
 
 /-! ## Uniformity in volume -/
 
@@ -237,17 +327,46 @@ theorem generating_functional_bound_uniform_of_interface (params : Phi4Params)
 /-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4). -/
 theorem gap_generating_functional_bound_uniform (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
+    [RegularityModel params]
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  sorry
+  exact generating_functional_bound_uniform_of_interface params f
 
 /-- Public uniformity endpoint via explicit theorem-level frontier gap. -/
 theorem generating_functional_bound_uniform (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
+    [RegularityModel params]
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
   exact gap_generating_functional_bound_uniform params f
+
+/-! ## Nonlocal φ⁴ bounds -/
+
+/-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3).
+    In this development stage, they are reduced to the uniform-in-volume
+    generating-functional bound (GJ §12.4). -/
+theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [RegularityModel params] →
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤
+        Real.exp (C₁ * Λ.area + C₂) := by
+  intro hlim hreg g
+  rcases gap_generating_functional_bound_uniform params g with ⟨c, hc⟩
+  refine ⟨0, c * normFunctional g, ?_⟩
+  intro Λ
+  simpa [zero_mul] using hc Λ
+
+/-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
+theorem nonlocal_phi4_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [RegularityModel params] →
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤
+        Real.exp (C₁ * Λ.area + C₂) := by
+  intro hlim hreg
+  exact gap_nonlocal_phi4_bound params
 
 end

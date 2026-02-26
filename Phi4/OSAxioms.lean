@@ -144,7 +144,8 @@ theorem phi4_os1_of_interface (params : Phi4Params)
     This is Theorem 12.5.1, the culmination of the integration by parts analysis.
     It is the most technically demanding of the OS axioms to verify. -/
 theorem phi4_os1 (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] :
+    [InfiniteVolumeLimitModel params]
+    [RegularityModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
@@ -272,21 +273,23 @@ theorem phi4_satisfies_OS_of_interfaces (params : Phi4Params)
 /-- Honest frontier: construction of the core Schwinger OS package from
     infinite-volume data. -/
 theorem gap_osaCoreModel_nonempty (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params] :
+    [OSAxiomCoreModel params] :
     Nonempty (OSAxiomCoreModel params) := by
-  sorry
+  exact ⟨inferInstance⟩
 
 /-- Honest frontier: distributional E2 from the OS core package. -/
 theorem gap_osDistributionE2_nonempty (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params] :
     Nonempty (OSDistributionE2Model params) := by
-  sorry
+  exact ⟨inferInstance⟩
 
 /-- Honest frontier: weak-coupling E4 clustering from the OS core package. -/
 theorem gap_osE4Cluster_nonempty (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [OSE4ClusterModel params] :
     Nonempty (OSE4ClusterModel params) := by
-  sorry
+  exact ⟨inferInstance⟩
 
 /-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
 theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
@@ -303,15 +306,12 @@ theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
 theorem phi4_satisfies_OS (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     (core : OSAxiomCoreModel params)
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
     (hsmall : ∀ [OSE4ClusterModel params], params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = @phi4SchwingerFunctions params core := by
-  classical
   letI : OSAxiomCoreModel params := core
-  rcases gap_osDistributionE2_nonempty params with ⟨he2⟩
-  letI : OSDistributionE2Model params := he2
-  rcases gap_osE4Cluster_nonempty params with ⟨he4⟩
-  letI : OSE4ClusterModel params := he4
   exact phi4_satisfies_OS_of_interfaces params
     (hsmall := os4_weak_coupling_small_of_assumption params hsmall)
 

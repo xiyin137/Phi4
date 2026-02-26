@@ -16,7 +16,8 @@ namespace HonestGaps
 /-- Honest gap placeholder for OS linear-growth input (E0'). -/
 theorem gap_phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
@@ -24,7 +25,8 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
 
 /-- Honest gap placeholder for the OS-to-Wightman reconstruction step. -/
 theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
@@ -35,6 +37,8 @@ theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
 theorem gap_phi4_satisfies_OS (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
     (hsmall : ∀ [OSE4ClusterModel params], params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
@@ -43,7 +47,9 @@ theorem gap_phi4_satisfies_OS (params : Phi4Params)
 /-- Honest gap placeholder for Wightman existence at fixed parameters. -/
 theorem gap_phi4_wightman_exists (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧

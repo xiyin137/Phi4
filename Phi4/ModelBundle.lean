@@ -204,7 +204,7 @@ theorem generating_functional_bound_of_bundle (params : Phi4Params)
     directly from `RegularityModel` (trusted interface path). -/
 theorem nonlocal_phi4_bound_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
-    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) :=
   nonlocal_phi4_bound_of_interface params
