@@ -257,6 +257,34 @@ theorem cellAverage_nonneg (L : RectLattice Λ) (f : TestFun2D)
   unfold cellAverage
   exact div_nonneg (L.cellIntegral_nonneg f i j hf) (le_of_lt (L.cell_area_pos i j))
 
+/-- Cell integral written as `area × average`. -/
+theorem cellIntegral_eq_area_mul_cellAverage
+    (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellIntegral f i j = (L.cell i j).area * L.cellAverage f i j := by
+  unfold cellAverage
+  field_simp [ne_of_gt (L.cell_area_pos i j)]
+
+/-- Nonnegativity of node-sampling discretization. -/
+theorem discretizeByNode_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x)
+    (i : Fin (L.Nt + 1)) (j : Fin (L.Nx + 1)) :
+    0 ≤ L.discretizeByNode f i j := by
+  exact hf _
+
+/-- Nonnegativity of cell-anchor discretization. -/
+theorem discretizeByCellAnchor_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x)
+    (i : Fin L.Nt) (j : Fin L.Nx) :
+    0 ≤ L.discretizeByCellAnchor f i j := by
+  exact hf _
+
+/-- Nonnegativity of cell-average discretization. -/
+theorem discretizeByCellAverage_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x)
+    (i : Fin L.Nt) (j : Fin L.Nx) :
+    0 ≤ L.discretizeByCellAverage f i j := by
+  exact L.cellAverage_nonneg f i j hf
+
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     (L.cell i j).toSet ⊆ Λ.toSet := by
