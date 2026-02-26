@@ -101,10 +101,21 @@ class UniformWeakCouplingDecayModel (params : Phi4Params)
 class ReconstructionLinearGrowthModel (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params] where
-  phi4_linear_growth :
+  os_package : OsterwalderSchraderAxioms 1
+  os_package_eq : os_package.S = phi4SchwingerFunctions params
+  linear_growth : OSLinearGrowthCondition 1 os_package
+
+/-- Backward-compatible existential view of `ReconstructionLinearGrowthModel`. -/
+theorem ReconstructionLinearGrowthModel.phi4_linear_growth (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS)
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  refine ⟨ReconstructionLinearGrowthModel.os_package (params := params),
+    ReconstructionLinearGrowthModel.os_package_eq (params := params), ?_⟩
+  exact ⟨ReconstructionLinearGrowthModel.linear_growth (params := params)⟩
 
 /-- Fixed-`params` weak-coupling decay input, separated from linear-growth data. -/
 class ReconstructionWeakCouplingModel (params : Phi4Params)
@@ -268,7 +279,13 @@ theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
         OS.S = phi4SchwingerFunctions params ∧
         Nonempty (OSLinearGrowthCondition 1 OS)) :
     Nonempty (ReconstructionLinearGrowthModel params) := by
-  exact ⟨{ phi4_linear_growth := hlinear }⟩
+  rcases hlinear with ⟨OS, hOS, hlg_nonempty⟩
+  rcases hlg_nonempty with ⟨hlg⟩
+  exact ⟨{
+    os_package := OS
+    os_package_eq := hOS
+    linear_growth := hlg
+  }⟩
 
 /-- Construct `ReconstructionLinearGrowthModel` from explicit seminorm-growth
     constants for an OS package matching `phi4SchwingerFunctions`. -/
