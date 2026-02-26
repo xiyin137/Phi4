@@ -430,6 +430,68 @@ def connectedTwoPoint (params : Phi4Params)
         infiniteVolumeSchwinger params 1 ![f] *
           infiniteVolumeSchwinger params 1 ![g] := rfl
 
+/-- Along the exhausting rectangles, the finite-volume connected two-point
+    function converges to the infinite-volume connected two-point function. -/
+theorem connectedSchwingerTwo_tendsto_infinite
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (f g : TestFun2D) :
+    Filter.Tendsto
+      (fun n : ℕ => if h : 0 < n then
+        connectedSchwingerTwo params (exhaustingRectangles n h) f g
+      else 0)
+      Filter.atTop
+      (nhds (connectedTwoPoint params f g)) := by
+  have h2 := InfiniteVolumeLimitModel.infiniteVolumeSchwinger_tendsto
+    (params := params) 2 (![f, g] : Fin 2 → TestFun2D)
+  have h1f := InfiniteVolumeLimitModel.infiniteVolumeSchwinger_tendsto
+    (params := params) 1 (![f] : Fin 1 → TestFun2D)
+  have h1g := InfiniteVolumeLimitModel.infiniteVolumeSchwinger_tendsto
+    (params := params) 1 (![g] : Fin 1 → TestFun2D)
+  have hmul :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![f] else 0) *
+          (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![g] else 0))
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params 1 ![f] *
+          infiniteVolumeSchwinger params 1 ![g])) :=
+    h1f.mul h1g
+  have hsub :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+            (![f, g] : Fin 2 → TestFun2D) else 0) -
+          ((if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![f] else 0) *
+            (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![g] else 0)))
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D) -
+          infiniteVolumeSchwinger params 1 ![f] *
+            infiniteVolumeSchwinger params 1 ![g])) :=
+    h2.sub hmul
+  have hEqFun :
+      (fun n : ℕ => if h : 0 < n then
+        connectedSchwingerTwo params (exhaustingRectangles n h) f g
+      else 0)
+      =
+      (fun n : ℕ =>
+        (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
+          (![f, g] : Fin 2 → TestFun2D) else 0) -
+        ((if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![f] else 0) *
+          (if h : 0 < n then schwingerN params (exhaustingRectangles n h) 1 ![g] else 0))) := by
+    funext n
+    by_cases h : 0 < n
+    · simp [connectedSchwingerTwo, schwingerN_two_eq_schwingerTwo, h]
+    · simp [h]
+  have hEqLim :
+      connectedTwoPoint params f g =
+      infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D) -
+        infiniteVolumeSchwinger params 1 ![f] *
+          infiniteVolumeSchwinger params 1 ![g] := by
+    simp [connectedTwoPoint]
+  rw [hEqFun, hEqLim]
+  exact hsub
+
 /-- The infinite volume φ⁴₂ probability measure on S'(ℝ²).
     This is the weak limit of dμ_{Λₙ} as Λₙ ↗ ℝ². -/
 def infiniteVolumeMeasure (params : Phi4Params)
