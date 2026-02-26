@@ -3,6 +3,7 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Phi4.FiniteVolumeMeasure
+import Phi4.LatticeApproximation
 
 /-!
 # Correlation Inequalities
@@ -71,6 +72,57 @@ class CorrelationInequalityModel (params : Phi4Params) where
       (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
       (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
       schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g
+
+/-! ## Lattice-to-continuum bridge for GKS-I -/
+
+/-- Real-analysis helper: if `x` can be approximated arbitrarily well by
+    nonnegative reals, then `x` is nonnegative. -/
+lemma nonneg_of_approx_nonneg (x : ℝ)
+    (happrox : ∀ ε > 0, ∃ y : ℝ, 0 ≤ y ∧ |x - y| < ε) :
+    0 ≤ x := by
+  by_contra hx
+  have hxlt : x < 0 := lt_of_not_ge hx
+  have hxeps : 0 < -x := by linarith
+  rcases happrox (-x) hxeps with ⟨y, hy_nonneg, hy_close⟩
+  have hlower : -x ≤ |x - y| := by
+    calc
+      -x ≤ y - x := by linarith
+      _ = |y - x| := by
+            rw [abs_of_nonneg]
+            linarith
+      _ = |x - y| := by simp [abs_sub_comm]
+  linarith
+
+/-- Bridge assumptions for deriving continuum GKS-I from lattice approximants. -/
+class LatticeGriffithsFirstModel (params : Phi4Params) where
+  /-- Lattice approximant of the continuum two-point function at fixed volume and mesh. -/
+  latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ
+  /-- Lattice GKS-I positivity. -/
+  lattice_gks1 : ∀ (Λ : Rectangle) (L : Phi4.RectLattice Λ) (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      0 ≤ latticeTwo Λ L f g
+  /-- Arbitrarily fine lattice approximation of the continuum two-point function. -/
+  schwingerTwo_approx_lattice : ∀ (Λ : Rectangle) (f g : TestFun2D)
+      (ε : ℝ), 0 < ε →
+      ∃ L : Phi4.RectLattice Λ,
+        |schwingerTwo params Λ f g - latticeTwo Λ L f g| < ε
+
+/-- Continuum GKS-I obtained from lattice GKS-I plus convergence of lattice
+    approximants to the continuum two-point function. -/
+theorem griffiths_first_from_lattice
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    (Λ : Rectangle) (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
+    0 ≤ schwingerTwo params Λ f g := by
+  apply nonneg_of_approx_nonneg
+  intro ε hε
+  rcases LatticeGriffithsFirstModel.schwingerTwo_approx_lattice
+      (params := params) Λ f g ε hε with ⟨L, hclose⟩
+  refine ⟨LatticeGriffithsFirstModel.latticeTwo (params := params) Λ L f g,
+    LatticeGriffithsFirstModel.lattice_gks1 (params := params) Λ L f g hf hg,
+    ?_⟩
+  simpa [abs_sub_comm] using hclose
 
 /-! ## Griffiths' First Inequality (GKS-I) -/
 
