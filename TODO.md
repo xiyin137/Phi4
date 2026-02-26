@@ -7,6 +7,8 @@
 - `lake build Phi4` succeeds.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
+- `Phi4/CorrelationInequalities.lean` now includes lattice-to-continuum
+  bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Development Rules (Authoritative)
@@ -202,7 +204,8 @@ Level 7: ReconstructionInputModel
 ## Immediate Next Queue
 
 1. Complete Phase 0A (Codex: combinatorial pairings) and 0B (Claude: boundary covariance).
-2. Start Phase 1B (Codex+Claude): connect lattice discretization layer to correlation inequalities.
+2. Continue Phase 1B (Codex+Claude): instantiate lattice bridge models
+   to discharge `CorrelationInequalityModel` fields constructively.
 
 ## Risk Register
 
