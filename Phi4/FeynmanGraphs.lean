@@ -45,6 +45,18 @@ structure Pairing (r : ℕ) where
   /-- Pairs are ordered: first index < second index. -/
   ordered : ∀ p ∈ pairs, p.1 < p.2
 
+instance pairingFinite (r : ℕ) : Finite (Pairing r) := by
+  classical
+  refine Finite.of_injective (fun p : Pairing r => p.pairs) ?_
+  intro p q h
+  cases p
+  cases q
+  cases h
+  rfl
+
+noncomputable instance pairingFintype (r : ℕ) : Fintype (Pairing r) :=
+  Fintype.ofFinite (Pairing r)
+
 private def pairingLeftIdx (n : ℕ) (i : Fin n) : Fin (2 * n) :=
   ⟨i.1, by
     have hi : i.1 < n := i.2
@@ -145,6 +157,13 @@ def halfSplitPairing (n : ℕ) : Pairing (2 * n) where
 /-- Pairings exist on every even number of labels. -/
 theorem pairing_even_exists (n : ℕ) : Nonempty (Pairing (2 * n)) := by
   exact ⟨halfSplitPairing n⟩
+
+/-- There is at least one pairing on `2n` labels. -/
+theorem pairing_card_pos_even (n : ℕ) :
+    0 < Fintype.card (Pairing (2 * n)) := by
+  classical
+  letI : Nonempty (Pairing (2 * n)) := ⟨halfSplitPairing n⟩
+  exact Fintype.card_pos
 
 /-- The canonical pairing `halfSplitPairing n` has exactly `n` pairs. -/
 theorem halfSplitPairing_card (n : ℕ) :
