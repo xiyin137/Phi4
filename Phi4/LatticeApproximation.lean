@@ -29,6 +29,8 @@ noncomputable section
 
 namespace Phi4
 
+open MeasureTheory
+
 /-- Rectangular lattice with `Nt` time slices and `Nx` spatial slices over `Λ`. -/
 structure RectLattice (Λ : Rectangle) where
   Nt : ℕ
@@ -186,6 +188,74 @@ theorem cell_area_eq_meshArea (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx)
 theorem cell_area_pos (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     0 < (L.cell i j).area := by
   simpa [cell_area_eq_meshArea] using mul_pos L.timeStep_pos L.spaceStep_pos
+
+/-- Anchor point of cell `(i,j)`, chosen as its lower-left corner node. -/
+def cellAnchor (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) : Spacetime2D :=
+  L.node ⟨i.1, Nat.lt_succ_of_lt i.2⟩ ⟨j.1, Nat.lt_succ_of_lt j.2⟩
+
+/-- The cell anchor lies in the corresponding mesh cell. -/
+theorem cellAnchor_mem_cell (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellAnchor i j ∈ (L.cell i j).toSet := by
+  constructor
+  · rfl
+  constructor
+  · have h : (i.1 : ℝ) * L.timeStep ≤ ((i.1 + 1 : ℕ) : ℝ) * L.timeStep := by
+      have hi : (i.1 : ℝ) ≤ ((i.1 + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.le_succ i.1
+      exact mul_le_mul_of_nonneg_right hi (le_of_lt L.timeStep_pos)
+    simpa [cellAnchor, node, cell, sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using
+      add_le_add_left h Λ.x_min
+  constructor
+  · rfl
+  · have h : (j.1 : ℝ) * L.spaceStep ≤ ((j.1 + 1 : ℕ) : ℝ) * L.spaceStep := by
+      have hj : (j.1 : ℝ) ≤ ((j.1 + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.le_succ j.1
+      exact mul_le_mul_of_nonneg_right hj (le_of_lt L.spaceStep_pos)
+    simpa [cellAnchor, node, cell, sub_eq_add_neg, add_assoc, add_left_comm, add_comm] using
+      add_le_add_left h Λ.y_min
+
+/-- The cell anchor lies in the ambient cutoff rectangle `Λ`. -/
+theorem cellAnchor_mem_toSet (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellAnchor i j ∈ Λ.toSet := by
+  simpa [cellAnchor] using
+    (L.node_mem_toSet ⟨i.1, Nat.lt_succ_of_lt i.2⟩ ⟨j.1, Nat.lt_succ_of_lt j.2⟩)
+
+/-- Node-sampling discretization of a test function on lattice nodes. -/
+def discretizeByNode (L : RectLattice Λ) (f : TestFun2D) :
+    Fin (L.Nt + 1) → Fin (L.Nx + 1) → ℝ :=
+  fun i j => f (L.node i j)
+
+/-- Cell-anchor sampling discretization of a test function on mesh cells. -/
+def discretizeByCellAnchor (L : RectLattice Λ) (f : TestFun2D) :
+    Fin L.Nt → Fin L.Nx → ℝ :=
+  fun i j => f (L.cellAnchor i j)
+
+/-- Integral of a test function over one mesh cell. -/
+def cellIntegral (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) : ℝ :=
+  ∫ x in (L.cell i j).toSet, f x
+
+/-- Average value of a test function over one mesh cell. -/
+def cellAverage (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) : ℝ :=
+  L.cellIntegral f i j / (L.cell i j).area
+
+/-- Cell-average discretization of a test function on mesh cells. -/
+def discretizeByCellAverage (L : RectLattice Λ) (f : TestFun2D) :
+    Fin L.Nt → Fin L.Nx → ℝ :=
+  fun i j => L.cellAverage f i j
+
+/-- Positivity of cell integrals for nonnegative test functions. -/
+theorem cellIntegral_nonneg (L : RectLattice Λ) (f : TestFun2D)
+    (i : Fin L.Nt) (j : Fin L.Nx)
+    (hf : ∀ x, 0 ≤ f x) :
+    0 ≤ L.cellIntegral f i j := by
+  unfold cellIntegral
+  exact integral_nonneg_of_ae (Filter.Eventually.of_forall hf)
+
+/-- Positivity of cell averages for nonnegative test functions. -/
+theorem cellAverage_nonneg (L : RectLattice Λ) (f : TestFun2D)
+    (i : Fin L.Nt) (j : Fin L.Nx)
+    (hf : ∀ x, 0 ≤ f x) :
+    0 ≤ L.cellAverage f i j := by
+  unfold cellAverage
+  exact div_nonneg (L.cellIntegral_nonneg f i j hf) (le_of_lt (L.cell_area_pos i j))
 
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
