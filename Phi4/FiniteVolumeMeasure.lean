@@ -132,6 +132,19 @@ theorem schwingerN_two_eq_schwingerTwo (params : Phi4Params) (Λ : Rectangle)
     schwingerN params Λ 2 f = schwingerTwo params Λ (f 0) (f 1) := by
   simp [schwingerN, schwingerTwo, Fin.prod_univ_two]
 
+/-- Connected (truncated) finite-volume 2-point function:
+    `S₂^Λ(f,g) - S₁^Λ(f)S₁^Λ(g)`. -/
+def connectedSchwingerTwo (params : Phi4Params) (Λ : Rectangle)
+    (f g : TestFun2D) : ℝ :=
+  schwingerTwo params Λ f g -
+    schwingerN params Λ 1 ![f] * schwingerN params Λ 1 ![g]
+
+@[simp] theorem connectedSchwingerTwo_eq (params : Phi4Params) (Λ : Rectangle)
+    (f g : TestFun2D) :
+    connectedSchwingerTwo params Λ f g =
+      schwingerTwo params Λ f g -
+        schwingerN params Λ 1 ![f] * schwingerN params Λ 1 ![g] := rfl
+
 /-- The generating functional (Laplace transform) in finite volume:
     S_Λ{g} = ∫ exp(⟨ω, g⟩) dμ_Λ(ω) for real test functions g. -/
 def generatingFunctional (params : Phi4Params) (Λ : Rectangle)
@@ -145,6 +158,13 @@ theorem schwingerTwo_symm (params : Phi4Params) (Λ : Rectangle)
     (f g : TestFun2D) :
     schwingerTwo params Λ f g = schwingerTwo params Λ g f := by
   simp only [schwingerTwo, mul_comm]
+
+/-- Symmetry of connected 2-point function in finite volume. -/
+theorem connectedSchwingerTwo_symm (params : Phi4Params) (Λ : Rectangle)
+    (f g : TestFun2D) :
+    connectedSchwingerTwo params Λ f g = connectedSchwingerTwo params Λ g f := by
+  unfold connectedSchwingerTwo
+  rw [schwingerTwo_symm, mul_comm]
 
 /-- The n-point Schwinger function is symmetric under permutations.
     Proof: the product ∏ᵢ ω(f(σ(i))) = ∏ᵢ ω(f(i)) by `Equiv.prod_comp`. -/

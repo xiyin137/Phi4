@@ -94,6 +94,24 @@ class ReconstructionInputModel (params : Phi4Params)
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W
 
+/-- Connected 2-point exponential decay at fixed parameters. -/
+abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] : Prop :=
+  ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+    ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+      let g_shifted : TestFun2D := translateTestFun a g
+      |connectedTwoPoint params f g_shifted| ≤
+        C * Real.exp (-m_gap * ‖a‖)
+
+/-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
+abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params]
+    [ReconstructionInputModel params] : Prop :=
+  ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+    (params.coupling < coupling_bound →
+      ConnectedTwoPointDecayAtParams params)
+
 /-! ## Linear growth condition (E0') -/
 
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
@@ -137,11 +155,7 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
         p.coupling < coupling_bound →
-          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-              let g_shifted : TestFun2D := translateTestFun a g
-              |connectedTwoPoint p f g_shifted| ≤
-                C * Real.exp (-m_gap * ‖a‖) := by
+          ConnectedTwoPointDecayAtParams p := by
   intro hlim hos hrec
   exact ReconstructionInputModel.phi4_os4_weak_coupling
     (params := params)
@@ -169,6 +183,69 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
   refine ⟨m_gap, C, hm_gap, ?_⟩
   intro f g a
   simpa [connectedTwoPoint] using hbound f g a
+
+/-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
+    This extracts the specialization of `phi4_os4_weak_coupling` at the current
+    parameter set. -/
+theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    ConnectedTwoPointDecayThreshold params := by
+  intro hlim hos hrec
+  rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hdecay⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro hsmall
+  exact hdecay params hsmall
+
+/-- A canonical weak-coupling threshold selected from
+    `phi4_connectedTwoPoint_decay_threshold`. -/
+noncomputable def phi4WeakCouplingThreshold (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    ℝ := by
+  intro hlim hos hrec
+  exact Classical.choose (phi4_connectedTwoPoint_decay_threshold params)
+
+/-- Positivity of the selected weak-coupling threshold. -/
+theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    0 < phi4WeakCouplingThreshold params := by
+  intro hlim hos hrec
+  exact (Classical.choose_spec (phi4_connectedTwoPoint_decay_threshold params)).1
+
+/-- Exponential decay of connected 2-point functions when
+    `params.coupling` is below the selected weak-coupling threshold. -/
+theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    params.coupling < phi4WeakCouplingThreshold params →
+    ConnectedTwoPointDecayAtParams params := by
+  intro hlim hos hrec hsmall
+  exact (Classical.choose_spec (phi4_connectedTwoPoint_decay_threshold params)).2 hsmall
+
+/-- Explicit-Schwinger version of `phi4_connectedTwoPoint_decay_below_threshold`. -/
+theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [OSAxiomModel params] →
+    [ReconstructionInputModel params] →
+    params.coupling < phi4WeakCouplingThreshold params →
+    ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+      ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+        let g_shifted : TestFun2D := translateTestFun a g
+        |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
+          infiniteVolumeSchwinger params 1 ![f] *
+            infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
+          C * Real.exp (-m_gap * ‖a‖) := by
+  intro hlim hos hrec hsmall
+  rcases phi4_connectedTwoPoint_decay_below_threshold params hsmall with ⟨m_gap, C, hm_gap, hdecay⟩
+  refine ⟨m_gap, C, hm_gap, ?_⟩
+  intro f g a
+  simpa [connectedTwoPoint] using hdecay f g a
 
 /-! ## Wightman reconstruction -/
 

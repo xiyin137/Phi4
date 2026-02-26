@@ -98,4 +98,23 @@ theorem phi4_wightman_exists_of_bundle (params : Phi4Params)
         IsWickRotationPair OS.S Wfn.W :=
   phi4_wightman_exists params
 
+/-- Bundled wrapper for weak-coupling connected 2-point decay threshold existence. -/
+theorem phi4_connectedTwoPoint_decay_threshold_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ConnectedTwoPointDecayThreshold params :=
+  phi4_connectedTwoPoint_decay_threshold params
+
+/-- Bundled wrapper: positivity of the selected weak-coupling threshold. -/
+theorem phi4WeakCouplingThreshold_pos_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    0 < phi4WeakCouplingThreshold params :=
+  phi4WeakCouplingThreshold_pos params
+
+/-- Bundled wrapper: connected 2-point exponential decay below the selected threshold. -/
+theorem phi4_connectedTwoPoint_decay_below_threshold_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params]
+    (hsmall : params.coupling < phi4WeakCouplingThreshold params) :
+    ConnectedTwoPointDecayAtParams params :=
+  phi4_connectedTwoPoint_decay_below_threshold params hsmall
+
 end
