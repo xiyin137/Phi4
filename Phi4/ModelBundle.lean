@@ -48,8 +48,6 @@ class Phi4ModelBundle (params : Phi4Params) where
   osE2 : @OSDistributionE2Model params osAxiom
   reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
     infiniteVolumeSchwinger osAxiom
-  wightmanReconstruction : @WightmanReconstructionModel params
-    osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeCovarianceKernelModel params.mass params.mass_pos :=
@@ -185,11 +183,6 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   letI : ReconstructionLinearGrowthModel params := h.reconstructionLinearGrowth
   letI : ReconstructionWeakCouplingModel params := inferInstance
   infer_instance
-
-instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    WightmanReconstructionModel params := by
-  letI : OSAxiomCoreModel params := h.osAxiom
-  exact h.wightmanReconstruction
 
 /-- Convenience wrapper: bundled regularity interfaces yield the generating-functional
     bound directly from `RegularityModel` (trusted interface path). -/
