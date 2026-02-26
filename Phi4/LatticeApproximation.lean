@@ -493,6 +493,39 @@ theorem totalCellIntegral_mono
   intro j _
   exact L.cellIntegral_mono f g i j hfg
 
+/-- Linear map given by total exact cell integration. -/
+def totalCellIntegralLM (L : RectLattice Λ) : TestFun2D →ₗ[ℝ] ℝ where
+  toFun := fun f => L.totalCellIntegral f
+  map_add' := by
+    intro f g
+    exact L.totalCellIntegral_add f g
+  map_smul' := by
+    intro c f
+    exact L.totalCellIntegral_smul c f
+
+@[simp] theorem totalCellIntegralLM_apply (L : RectLattice Λ) (f : TestFun2D) :
+    L.totalCellIntegralLM f = L.totalCellIntegral f := rfl
+
+/-- Linear map given by cell-average Riemann summation. -/
+def riemannSumCellAverageLM (L : RectLattice Λ) : TestFun2D →ₗ[ℝ] ℝ where
+  toFun := fun f => L.riemannSumCellAverage f
+  map_add' := by
+    intro f g
+    exact L.riemannSumCellAverage_add f g
+  map_smul' := by
+    intro c f
+    exact L.riemannSumCellAverage_smul c f
+
+@[simp] theorem riemannSumCellAverageLM_apply (L : RectLattice Λ) (f : TestFun2D) :
+    L.riemannSumCellAverageLM f = L.riemannSumCellAverage f := rfl
+
+/-- The exact total-cell-integral linear map equals the cell-average Riemann-sum linear map. -/
+theorem totalCellIntegralLM_eq_riemannSumCellAverageLM
+    (L : RectLattice Λ) :
+    L.totalCellIntegralLM = L.riemannSumCellAverageLM := by
+  ext f
+  exact L.totalCellIntegral_eq_riemannSumCellAverage f
+
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     (L.cell i j).toSet ⊆ Λ.toSet := by
