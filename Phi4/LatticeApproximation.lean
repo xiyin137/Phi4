@@ -165,6 +165,28 @@ def cell (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) : Rectangle where
       mul_lt_mul_of_pos_right hj L.spaceStep_pos
     linarith
 
+/-- Cell width equals the time mesh spacing. -/
+theorem cell_width_eq_timeStep (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    (L.cell i j).width = L.timeStep := by
+  simp [Rectangle.width, cell]
+  ring
+
+/-- Cell height equals the space mesh spacing. -/
+theorem cell_height_eq_spaceStep (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    (L.cell i j).height = L.spaceStep := by
+  simp [Rectangle.height, cell]
+  ring
+
+/-- Cell area equals one mesh area element `Δt * Δx`. -/
+theorem cell_area_eq_meshArea (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    (L.cell i j).area = L.timeStep * L.spaceStep := by
+  simp [Rectangle.area, cell_width_eq_timeStep, cell_height_eq_spaceStep]
+
+/-- Every mesh cell has strictly positive area. -/
+theorem cell_area_pos (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
+    0 < (L.cell i j).area := by
+  simpa [cell_area_eq_meshArea] using mul_pos L.timeStep_pos L.spaceStep_pos
+
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     (L.cell i j).toSet ⊆ Λ.toSet := by
