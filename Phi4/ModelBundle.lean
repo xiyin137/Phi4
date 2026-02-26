@@ -161,6 +161,12 @@ theorem phi4_connectedTwoPoint_nonneg_of_bundle (params : Phi4Params)
     ∀ (f g : TestFun2D), 0 ≤ connectedTwoPoint params f g :=
   phi4_connectedTwoPoint_nonneg params
 
+/-- Bundled wrapper: infinite-volume diagonal connected 2-point nonnegativity. -/
+theorem phi4_connectedTwoPoint_self_nonneg_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f :=
+  phi4_connectedTwoPoint_self_nonneg params
+
 /-- Bundled wrapper: infinite-volume connected 2-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :

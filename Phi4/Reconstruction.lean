@@ -276,6 +276,15 @@ theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
   intro hlim hcorr f g
   exact connectedTwoPoint_nonneg params f g
 
+/-- Infinite-volume diagonal connected two-point nonnegativity from finite-volume
+    variance positivity and the infinite-volume limit. -/
+theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f := by
+  intro hlim hint f
+  exact connectedTwoPoint_self_nonneg params f
+
 /-- Infinite-volume connected two-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →

@@ -30,6 +30,7 @@ noncomputable section
 
 open MeasureTheory
 open scoped ENNReal NNReal
+open scoped ProbabilityTheory
 
 /-! ## Partition function -/
 
@@ -261,6 +262,46 @@ private theorem finiteVolume_product_integrable
       (ENNReal.ofReal (partitionFunction params Λ)⁻¹ • (μ.withDensity d)) :=
     hwd.smul_measure hscale_ne_top
   simpa [finiteVolumeMeasure, μ, d] using hscaled
+
+/-- Single-field observable is `L²` under the finite-volume interacting measure. -/
+theorem finiteVolume_pairing_memLp_two (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f : TestFun2D) :
+    MemLp (fun ω : FieldConfig2D => ω f) (2 : ℝ≥0∞)
+      (finiteVolumeMeasure params Λ) := by
+  set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hIntSq : Integrable (fun ω : FieldConfig2D => (ω f) ^ 2) μ := by
+    have hprod := finiteVolume_product_integrable params Λ 2 ![f, f]
+    refine hprod.congr ?_
+    filter_upwards with ω
+    simp [Fin.prod_univ_two, pow_two]
+  have hAEMeas :
+      AEStronglyMeasurable (fun ω : FieldConfig2D => ω f) μ := by
+    exact (GaussianField.configuration_eval_measurable f).aestronglyMeasurable
+  exact (memLp_two_iff_integrable_sq hAEMeas).2 hIntSq
+
+/-- Diagonal connected 2-point positivity (variance form) in finite volume. -/
+theorem connectedSchwingerTwo_self_nonneg (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f : TestFun2D) :
+    0 ≤ connectedSchwingerTwo params Λ f f := by
+  let μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hprob : IsProbabilityMeasure μ := by
+    simpa [μ] using finiteVolumeMeasure_isProbability params Λ
+  letI : IsProbabilityMeasure μ := hprob
+  let X : FieldConfig2D → ℝ := fun ω => ω f
+  have hX : MemLp X 2 μ := by
+    simpa [μ, X] using finiteVolume_pairing_memLp_two params Λ f
+  have hcov_eq :
+      cov[X, X; μ] = connectedSchwingerTwo params Λ f f := by
+    have hcov_sub : cov[X, X; μ] = μ[X * X] - μ[X] * μ[X] :=
+      ProbabilityTheory.covariance_eq_sub hX hX
+    simpa [μ, X, connectedSchwingerTwo, schwingerTwo, schwingerN, Fin.prod_univ_one]
+      using hcov_sub
+  have hcov_nonneg : 0 ≤ cov[X, X; μ] := by
+    rw [ProbabilityTheory.covariance_self hX.aemeasurable]
+    exact ProbabilityTheory.variance_nonneg X μ
+  exact hcov_eq ▸ hcov_nonneg
 
 /-- The Schwinger functions are multilinear in each argument.
     Proof: ω is linear (WeakDual), so the product splits at index i,

@@ -509,6 +509,28 @@ theorem connectedSchwingerTwo_tendsto_infinite
   rw [hEqFun, hEqLim]
   exact hsub
 
+/-- Diagonal connected two-point nonnegativity in infinite volume, obtained from
+    finite-volume variance positivity and convergence along the exhaustion. -/
+theorem connectedTwoPoint_self_nonneg
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    (f : TestFun2D) :
+    0 ≤ connectedTwoPoint params f f := by
+  have hlim := connectedSchwingerTwo_tendsto_infinite params f f
+  have hnonneg : ∀ n : ℕ,
+      0 ≤
+        (if h : 0 < n then
+          connectedSchwingerTwo params (exhaustingRectangles n h) f f
+        else 0) := by
+    intro n
+    by_cases h : 0 < n
+    · have hConn :=
+        connectedSchwingerTwo_self_nonneg params (exhaustingRectangles n h) f
+      simpa [h] using hConn
+    · simp [h]
+  exact ge_of_tendsto' hlim hnonneg
+
 /-- If finite-volume FKG inequalities are available, the infinite-volume connected
     two-point function is nonnegative. -/
 theorem connectedTwoPoint_nonneg
