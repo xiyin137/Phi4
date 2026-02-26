@@ -71,13 +71,13 @@ theorem spaceStep_pos (L : RectLattice Λ) : 0 < L.spaceStep := by
   unfold spaceStep Rectangle.height
   exact div_pos (sub_pos.mpr Λ.hy) hNxR
 
-private theorem timeStep_mul_Nt (L : RectLattice Λ) :
+theorem timeStep_mul_Nt (L : RectLattice Λ) :
     (L.Nt : ℝ) * L.timeStep = Λ.width := by
   have hNt_ne : (L.Nt : ℝ) ≠ 0 := by exact_mod_cast (Nat.ne_of_gt L.hNt)
   unfold timeStep
   field_simp [hNt_ne]
 
-private theorem spaceStep_mul_Nx (L : RectLattice Λ) :
+theorem spaceStep_mul_Nx (L : RectLattice Λ) :
     (L.Nx : ℝ) * L.spaceStep = Λ.height := by
   have hNx_ne : (L.Nx : ℝ) ≠ 0 := by exact_mod_cast (Nat.ne_of_gt L.hNx)
   unfold spaceStep
@@ -188,6 +188,24 @@ theorem cell_area_eq_meshArea (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx)
 theorem cell_area_pos (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     0 < (L.cell i j).area := by
   simpa [cell_area_eq_meshArea] using mul_pos L.timeStep_pos L.spaceStep_pos
+
+/-- The mesh cells partition `Λ` in total area:
+    the sum of all cell areas equals the rectangle area. -/
+theorem sum_cell_areas_eq_area (L : RectLattice Λ) :
+    (∑ i : Fin L.Nt, ∑ j : Fin L.Nx, (L.cell i j).area) = Λ.area := by
+  calc
+    (∑ i : Fin L.Nt, ∑ j : Fin L.Nx, (L.cell i j).area)
+        = ∑ i : Fin L.Nt, ∑ j : Fin L.Nx, L.timeStep * L.spaceStep := by
+            simp [cell_area_eq_meshArea]
+    _ = ∑ i : Fin L.Nt, ((L.Nx : ℝ) * (L.timeStep * L.spaceStep)) := by
+          refine Finset.sum_congr rfl ?_
+          intro i _
+          simp [Finset.sum_const, Finset.card_univ]
+    _ = (L.Nt : ℝ) * ((L.Nx : ℝ) * (L.timeStep * L.spaceStep)) := by
+          simp [Finset.sum_const, Finset.card_univ]
+    _ = ((L.Nt : ℝ) * L.timeStep) * ((L.Nx : ℝ) * L.spaceStep) := by ring
+    _ = Λ.width * Λ.height := by rw [L.timeStep_mul_Nt, L.spaceStep_mul_Nx]
+    _ = Λ.area := by simp [Rectangle.area]
 
 /-- Anchor point of cell `(i,j)`, chosen as its lower-left corner node. -/
 def cellAnchor (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) : Spacetime2D :=
