@@ -246,7 +246,7 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
       Nonempty (OSLinearGrowthCondition 1 OS) := by
   exact hlinear
 
-/-- Public linear-growth endpoint via explicit theorem-level frontier gap. -/
+/-- Public linear-growth endpoint from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
@@ -254,8 +254,7 @@ theorem phi4_linear_growth (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact gap_phi4_linear_growth params
-    (ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
+  exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
 
 /-- Construct `WightmanReconstructionModel` from an explicit reconstruction rule. -/
 theorem wightmanReconstructionModel_nonempty_of_data (params : Phi4Params)
