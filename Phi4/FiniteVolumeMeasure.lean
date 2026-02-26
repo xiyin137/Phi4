@@ -721,6 +721,35 @@ theorem connectedSchwingerTwo_sq_le_mul_diag
       linarith [hmul_nonneg']
   simpa [B] using hcs
 
+/-- Geometric-mean bound from finite-volume connected two-point Cauchy-Schwarz:
+    `|Cᶜ_Λ(f,g)| ≤ √(Cᶜ_Λ(f,f) Cᶜ_Λ(g,g))`. -/
+theorem connectedSchwingerTwo_abs_le_sqrt_diag_mul
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle)
+    (f g : TestFun2D) :
+    |connectedSchwingerTwo params Λ f g| ≤
+      Real.sqrt (connectedSchwingerTwo params Λ f f * connectedSchwingerTwo params Λ g g) := by
+  let x : ℝ := connectedSchwingerTwo params Λ f g
+  let y : ℝ := connectedSchwingerTwo params Λ f f * connectedSchwingerTwo params Λ g g
+  have hx2 : x ^ 2 ≤ y := by
+    simpa [x, y] using connectedSchwingerTwo_sq_le_mul_diag params Λ f g
+  have hy_nonneg : 0 ≤ y := by
+    have hff : 0 ≤ connectedSchwingerTwo params Λ f f := connectedSchwingerTwo_self_nonneg params Λ f
+    have hgg : 0 ≤ connectedSchwingerTwo params Λ g g := connectedSchwingerTwo_self_nonneg params Λ g
+    exact mul_nonneg hff hgg
+  have hxy_sq : (|x|) ^ 2 ≤ (Real.sqrt y) ^ 2 := by
+    have h1 : |x| ^ 2 ≤ y := by
+      simpa [sq_abs] using hx2
+    have h2 : y = (Real.sqrt y) ^ 2 := by
+      symm
+      exact Real.sq_sqrt hy_nonneg
+    linarith
+  have hxy_abs : |(|x|)| ≤ |Real.sqrt y| := (sq_le_sq).1 hxy_sq
+  have hxy : |x| ≤ Real.sqrt y := by
+    simpa [abs_abs, abs_of_nonneg (Real.sqrt_nonneg y)] using hxy_abs
+  simpa [x, y] using hxy
+
 /-! ## Finite-volume comparison interface -/
 
 /-- Comparison input controlling interacting two-point functions by the free Gaussian
