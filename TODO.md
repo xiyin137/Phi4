@@ -1,6 +1,6 @@
 # TODO: 2D φ⁴ Project Development Plan
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-26)
 
 - `Phi4/*.lean` has `0` `sorry`.
 - `Phi4/*.lean` has `0` `axiom` declarations.
@@ -137,15 +137,67 @@ Deliverables:
 Exit criteria:
 - clean, auditable final theorem interface showing exact remaining assumptions.
 
+## Phased Development Plan (2026-02-26)
+
+### Model Classes to Replace (Dependency Order)
+
+```
+Level 0: BoundaryCovarianceModel, PairingEnumerationModel
+Level 1: GaussianWickExpansionModel, FreeRP, DirichletRP
+Level 2: FeynmanGraphEstimateModel, InteractionIntegrability, CorrelationInequality, InteractingRP
+Level 3: FiniteVolumeComparison, MultipleReflectionModel
+Level 4: InfiniteVolumeLimitModel
+Level 5: WickPowersModel, RegularityModel
+Level 6: OSAxiomModel
+Level 7: ReconstructionInputModel
+```
+
+### Phase 0: Infrastructure Foundation
+- [ ] **0A** (Codex): Combinatorial pairings — `Phi4/Combinatorics/PerfectMatchings.lean`
+- [ ] **0B** (Claude): Boundary covariance kernels — `Phi4/GreenFunction/{Dirichlet,Neumann,Periodic}Kernel.lean`
+- [ ] **0C** (Codex): Lattice approximation framework — `Phi4/LatticeApproximation/`
+
+### Phase 1: Gaussian Estimates & Correlation Inequalities
+- [ ] **1A** (Claude): Wick expansion + graph bounds → instantiate `GaussianWickExpansionModel`, `FeynmanGraphEstimateModel`
+- [ ] **1B** (Codex+Claude): Correlation inequalities via lattice → instantiate `CorrelationInequalityModel`
+- [ ] **1C** (Claude): `exp_interaction_Lp` (GJ 8.6.2) → instantiate `InteractionIntegrabilityModel`
+
+### Phase 2: Reflection Positivity & Multiple Reflections
+- [ ] **2A** (Claude): Free covariance RP (Fourier space)
+- [ ] **2B** (Claude): Dirichlet + interacting RP (GJ 10.4)
+- [ ] **2C** (Claude): Chessboard estimate (GJ 10.5.5) + uniform bound (GJ 11.3.1) — **hardest**
+- [ ] **2D** (Claude): Finite volume comparison from Lebowitz
+
+### Phase 3: Infinite Volume Construction
+- [ ] **3A** (Claude): Schwinger convergence (monotone bounded → convergent)
+- [ ] **3B** (Claude): Measure construction (Bochner-Minlos or Riesz-Markov)
+- [ ] **3C** (Codex): Monotonicity extension beyond k=2
+
+### Phase 4: Regularity & OS Axioms
+- [ ] **4A** (Claude): Wick powers in infinite volume (GJ 12.2.1)
+- [ ] **4B** (Claude): Schwinger-Dyson equation (GJ 12.2.3)
+- [ ] **4C** (Claude): Generating functional bound (GJ 12.5.1) — **most analytically demanding**
+- [ ] **4D** (Codex+Claude): OS axiom packaging (OS0-OS3)
+
+### Phase 5: Cluster Expansion & Reconstruction
+- [ ] **5A** (Claude+Codex): Cluster expansion infrastructure
+- [ ] **5B** (Claude): OS4 for weak coupling
+- [ ] **5C** (Claude): Linear growth condition bridge
+- [ ] **5D** (Codex): Wightman reconstruction bridging
+
+### Agent Coordination
+- **Claude Code**: proof-heavy tasks (PDE, analysis, MCP-assisted interactive proving)
+- **Codex**: structural code generation (combinatorics, lattice framework, API packaging)
+
 ## Immediate Next Queue
 
-1. Reduce redundancy between `OSAxiomModel.os3` and `OSAxiomModel.e2_reflection_positive` by deriving one from the other where possible.
-2. Strengthen `InfiniteVolumeLimit` monotonicity infrastructure for higher-point channels.
-3. Continue replacing interface-level fields with proved lemmas in `Interaction` and `FiniteVolumeMeasure`.
-4. Audit and clean warning-heavy declarations (unused binders/tactics) that obscure proof intent.
+1. Begin Phase 0A (Codex: combinatorial pairings) and 0B (Claude: boundary covariance).
+2. Begin Phase 0C (Codex: lattice approximation framework).
 
 ## Risk Register
 
 - Upstream `OSReconstruction` still has `sorry` in some modules; treat reconstruction usage conservatively.
-- Cluster expansion / OS4 remains a major deep-analytic milestone.
+- Cluster expansion / OS4 remains a major deep-analytic milestone; OS0-OS3 stand alone without it.
+- Bochner-Minlos theorem for nuclear spaces likely not in Mathlib — may need axiomatization or Riesz-Markov alternative.
+- Chessboard estimate / Thm 11.3.1 (uniform bound) is the hardest single analytic estimate.
 - Overly abstract interfaces can drift from mathematically sharp statements; periodic statement-audit is required.
