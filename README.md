@@ -7,7 +7,7 @@ A Lean 4 formalization of constructive 2D φ⁴ Euclidean QFT, with the end goal
 
 Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of View* (2nd ed.).
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-26)
 
 - `Phi4/*.lean` `sorry` count: `0`.
 - `Phi4/*.lean` `axiom` declarations: `0`.
@@ -29,6 +29,7 @@ Formalize a mathematically sound pipeline for φ⁴₂:
 ```mermaid
 flowchart TD
   Defs[Phi4.Defs]
+  Lattice[Phi4.LatticeApproximation]
   FreeField[Phi4.FreeField]
   BesselK1[Phi4.Bessel.BesselK1]
   BesselK0[Phi4.Bessel.BesselK0]
@@ -50,6 +51,7 @@ flowchart TD
   HeatKernel[HeatKernel]
   OSRec[OSReconstruction]
 
+  Defs --> Lattice
   Defs --> FreeField
   BesselK1 --> BesselK0 --> CovOps
   FreeField --> CovOps --> Wick
@@ -101,7 +103,10 @@ Some high-complexity components are intentionally exposed as structured assumpti
 - `InfiniteVolumeLimitModel`
 - `WickPowersModel`
 - `RegularityModel`
-- `OSAxiomModel`
+- `OSAxiomCoreModel`
+- `OSE4ClusterModel`
+- `OSDistributionE2Model`
+- `MeasureOS3Model`
 - `ReconstructionInputModel`
 
 `Phi4.ModelBundle` collects these interfaces into one bundled entrypoint.
@@ -111,6 +116,7 @@ Some high-complexity components are intentionally exposed as structured assumpti
 | File | Purpose |
 |------|---------|
 | `Phi4/Defs.lean` | Core types and geometric/setup data |
+| `Phi4/LatticeApproximation.lean` | Rectangular lattice geometry, discretization, and Riemann-sum infrastructure |
 | `Phi4/FreeField.lean` | Free Gaussian field and covariance CLM infrastructure |
 | `Phi4/Bessel/BesselK1.lean` | Bessel K1 technical lemmas |
 | `Phi4/Bessel/BesselK0.lean` | Bessel K0 definitions and bridge lemmas |

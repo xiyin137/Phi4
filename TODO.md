@@ -5,6 +5,8 @@
 - `Phi4/*.lean` has `0` `sorry`.
 - `Phi4/*.lean` has `0` `axiom` declarations.
 - `lake build Phi4` succeeds.
+- `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
+  discretization maps, Riemann-sum identities, and monotonicity lemmas.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Development Rules (Authoritative)
@@ -20,6 +22,7 @@
 
 ```mermaid
 flowchart TD
+  Defs[Defs] --> Lattice[LatticeApproximation]
   Defs[Defs] --> FreeField[FreeField]
   BesselK1[BesselK1] --> BesselK0[BesselK0] --> CovOps[CovarianceOperators]
   FreeField --> CovOps --> Wick[WickProduct]
@@ -68,10 +71,16 @@ flowchart TD
   UB --> IVLM
   IVLM --> WPM[WickPowersModel]
   IVLM --> RM[RegularityModel]
-  IVLM --> OSM[OSAxiomModel]
-  OSM --> RIM[ReconstructionInputModel]
+  IVLM --> OSMC[OSAxiomCoreModel]
+  OSMC --> OSE4[OSE4ClusterModel]
+  OSMC --> OSE2[OSDistributionE2Model]
+  IVLM --> OSM3[MeasureOS3Model]
+  OSMC --> RIM[ReconstructionInputModel]
   IVLM --> Bundle[Phi4ModelBundle]
-  OSM --> Bundle
+  OSMC --> Bundle
+  OSE4 --> Bundle
+  OSE2 --> Bundle
+  OSM3 --> Bundle
   RIM --> Bundle
 ```
 
@@ -130,7 +139,8 @@ Exit criteria:
 Goal: keep final reconstruction stage sound despite upstream churn.
 
 Deliverables:
-- maintain `OSAxiomModel` with minimal, non-redundant assumptions,
+- maintain `OSAxiomCoreModel`/`OSE4ClusterModel`/`OSDistributionE2Model`
+  with minimal, non-redundant assumptions,
 - keep `ReconstructionInputModel` explicit until upstream no-sorry reconstruction theorem is auditable,
 - centralize handoff through `Phi4ModelBundle`.
 
@@ -148,14 +158,14 @@ Level 2: FeynmanGraphEstimateModel, InteractionIntegrability, CorrelationInequal
 Level 3: FiniteVolumeComparison, MultipleReflectionModel
 Level 4: InfiniteVolumeLimitModel
 Level 5: WickPowersModel, RegularityModel
-Level 6: OSAxiomModel
+Level 6: OSAxiomCoreModel, OSE4ClusterModel, OSDistributionE2Model, MeasureOS3Model
 Level 7: ReconstructionInputModel
 ```
 
 ### Phase 0: Infrastructure Foundation
 - [ ] **0A** (Codex): Combinatorial pairings — `Phi4/Combinatorics/PerfectMatchings.lean`
 - [ ] **0B** (Claude): Boundary covariance kernels — `Phi4/GreenFunction/{Dirichlet,Neumann,Periodic}Kernel.lean`
-- [ ] **0C** (Codex): Lattice approximation framework — `Phi4/LatticeApproximation/`
+- [x] **0C** (Codex): Lattice approximation framework — `Phi4/LatticeApproximation.lean`
 
 ### Phase 1: Gaussian Estimates & Correlation Inequalities
 - [ ] **1A** (Claude): Wick expansion + graph bounds → instantiate `GaussianWickExpansionModel`, `FeynmanGraphEstimateModel`
@@ -191,8 +201,8 @@ Level 7: ReconstructionInputModel
 
 ## Immediate Next Queue
 
-1. Begin Phase 0A (Codex: combinatorial pairings) and 0B (Claude: boundary covariance).
-2. Begin Phase 0C (Codex: lattice approximation framework).
+1. Complete Phase 0A (Codex: combinatorial pairings) and 0B (Claude: boundary covariance).
+2. Start Phase 1B (Codex+Claude): connect lattice discretization layer to correlation inequalities.
 
 ## Risk Register
 
