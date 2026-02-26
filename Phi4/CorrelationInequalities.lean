@@ -93,6 +93,31 @@ lemma nonneg_of_approx_nonneg (x : ℝ)
       _ = |x - y| := by simp [abs_sub_comm]
   linarith
 
+/-- Real-analysis helper: if `x` and `y` can be approximated arbitrarily well by
+    ordered pairs `a ≤ b`, then `x ≤ y`. -/
+lemma le_of_approx_ordered (x y : ℝ)
+    (happrox : ∀ ε > 0,
+      ∃ a b : ℝ, a ≤ b ∧ |x - a| < ε ∧ |y - b| < ε) :
+    x ≤ y := by
+  by_contra hxy
+  have hxylt : y < x := lt_of_not_ge hxy
+  let ε : ℝ := (x - y) / 4
+  have hε : 0 < ε := by
+    have : 0 < x - y := by linarith
+    exact div_pos this (by norm_num)
+  rcases happrox ε hε with ⟨a, b, hab, hxa, hyb⟩
+  have hxa' := abs_lt.mp hxa
+  have hyb' := abs_lt.mp hyb
+  have ha_lower : x - ε < a := by linarith [hxa'.2]
+  have hb_upper : b < y + ε := by linarith [hyb'.1]
+  have hgap : y + ε < x - ε := by
+    dsimp [ε]
+    linarith
+  have hab_false : ¬ a ≤ b := by
+    have : b < a := by linarith
+    exact not_le_of_gt this
+  exact hab_false hab
+
 /-- Bridge assumptions for deriving continuum GKS-I from lattice approximants. -/
 class LatticeGriffithsFirstModel (params : Phi4Params) where
   /-- Lattice approximant of the continuum two-point function at fixed volume and mesh. -/
@@ -123,6 +148,38 @@ theorem griffiths_first_from_lattice
     LatticeGriffithsFirstModel.lattice_gks1 (params := params) Λ L f g hf hg,
     ?_⟩
   simpa [abs_sub_comm] using hclose
+
+/-- Bridge assumptions for deriving continuum volume-monotonicity of the
+    two-point function from lattice-ordered approximants. -/
+class LatticeSchwingerTwoMonotoneModel (params : Phi4Params) where
+  latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ
+  approx_monotone_pair : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0)
+      (ε : ℝ), 0 < ε →
+      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
+        latticeTwo Λ₁ L₁ f g ≤ latticeTwo Λ₂ L₂ f g ∧
+        |schwingerTwo params Λ₁ f g - latticeTwo Λ₁ L₁ f g| < ε ∧
+        |schwingerTwo params Λ₂ f g - latticeTwo Λ₂ L₂ f g| < ε
+
+/-- Continuum two-point monotonicity from lattice-ordered approximation pairs. -/
+theorem schwinger_two_monotone_from_lattice
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (Λ₁ Λ₂ : Rectangle)
+    (h : Λ₁.toSet ⊆ Λ₂.toSet)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0) :
+    schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g := by
+  apply le_of_approx_ordered
+  intro ε hε
+  rcases LatticeSchwingerTwoMonotoneModel.approx_monotone_pair
+      (params := params) Λ₁ Λ₂ h f g hf hg hfΛ hgΛ ε hε with
+      ⟨L₁, L₂, hmon, hclose₁, hclose₂⟩
+  refine ⟨LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ₁ L₁ f g,
+    LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ₂ L₂ f g,
+    hmon, hclose₁, hclose₂⟩
 
 /-! ## Griffiths' First Inequality (GKS-I) -/
 
