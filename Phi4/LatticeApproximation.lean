@@ -285,6 +285,46 @@ theorem discretizeByCellAverage_nonneg
     0 ≤ L.discretizeByCellAverage f i j := by
   exact L.cellAverage_nonneg f i j hf
 
+/-- Cell-anchor Riemann sum on the finite lattice. -/
+def riemannSumCellAnchor (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
+  ∑ i : Fin L.Nt, ∑ j : Fin L.Nx,
+    (L.cell i j).area * L.discretizeByCellAnchor f i j
+
+/-- Cell-average Riemann sum on the finite lattice. -/
+def riemannSumCellAverage (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
+  ∑ i : Fin L.Nt, ∑ j : Fin L.Nx,
+    (L.cell i j).area * L.discretizeByCellAverage f i j
+
+/-- Cell-average Riemann sum equals the sum of exact cell integrals. -/
+theorem riemannSumCellAverage_eq_sum_cellIntegrals
+    (L : RectLattice Λ) (f : TestFun2D) :
+    L.riemannSumCellAverage f =
+      ∑ i : Fin L.Nt, ∑ j : Fin L.Nx, L.cellIntegral f i j := by
+  unfold riemannSumCellAverage discretizeByCellAverage
+  simp [cellIntegral_eq_area_mul_cellAverage]
+
+/-- Nonnegativity of cell-anchor Riemann sums for nonnegative test functions. -/
+theorem riemannSumCellAnchor_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
+    0 ≤ L.riemannSumCellAnchor f := by
+  unfold riemannSumCellAnchor
+  refine Finset.sum_nonneg ?_
+  intro i _
+  refine Finset.sum_nonneg ?_
+  intro j _
+  exact mul_nonneg (le_of_lt (L.cell_area_pos i j)) (L.discretizeByCellAnchor_nonneg f hf i j)
+
+/-- Nonnegativity of cell-average Riemann sums for nonnegative test functions. -/
+theorem riemannSumCellAverage_nonneg
+    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
+    0 ≤ L.riemannSumCellAverage f := by
+  rw [L.riemannSumCellAverage_eq_sum_cellIntegrals f]
+  refine Finset.sum_nonneg ?_
+  intro i _
+  refine Finset.sum_nonneg ?_
+  intro j _
+  exact L.cellIntegral_nonneg f i j hf
+
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
     (L.cell i j).toSet ⊆ Λ.toSet := by
