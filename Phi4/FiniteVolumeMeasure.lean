@@ -311,6 +311,118 @@ theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
     finiteVolume_product_integrable params Λ n (Function.update f i (g i))
   rw [integral_add h_int1 h_int2, integral_const_mul]
 
+/-- Additivity in the first argument of the finite-volume two-point function. -/
+theorem schwingerTwo_add_left (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f₁ f₂ g : TestFun2D) :
+    schwingerTwo params Λ (f₁ + f₂) g =
+      schwingerTwo params Λ f₁ g + schwingerTwo params Λ f₂ g := by
+  let F : Fin 2 → TestFun2D := ![f₁, g]
+  let G : Fin 2 → TestFun2D := Function.update F 0 f₂
+  have hlin := schwingerN_multilinear params Λ 2 F G 1 0
+  have hleft : Function.update F 0 (1 • F 0 + G 0) = ![f₁ + f₂, g] := by
+    ext i
+    fin_cases i <;> simp [F, G]
+  have hright : Function.update F 0 (G 0) = ![f₂, g] := by
+    ext i
+    fin_cases i <;> simp [F, G]
+  have hlin' :
+      schwingerN params Λ 2 (![f₁ + f₂, g] : Fin 2 → TestFun2D) =
+        1 * schwingerN params Λ 2 F + schwingerN params Λ 2 (![f₂, g] : Fin 2 → TestFun2D) := by
+    simpa [hleft, hright] using hlin
+  have hF : schwingerN params Λ 2 F = schwingerTwo params Λ f₁ g := by
+    simpa [F] using schwingerN_two_eq_schwingerTwo params Λ F
+  have h2 : schwingerN params Λ 2 (![f₂, g] : Fin 2 → TestFun2D) = schwingerTwo params Λ f₂ g := by
+    simpa using schwingerN_two_eq_schwingerTwo params Λ (![f₂, g] : Fin 2 → TestFun2D)
+  calc
+    schwingerTwo params Λ (f₁ + f₂) g
+        = schwingerN params Λ 2 (![f₁ + f₂, g] : Fin 2 → TestFun2D) := by
+            exact (schwingerN_two_eq_schwingerTwo params Λ
+              (![f₁ + f₂, g] : Fin 2 → TestFun2D)).symm
+    _ = 1 * schwingerN params Λ 2 F + schwingerN params Λ 2 (![f₂, g] : Fin 2 → TestFun2D) := hlin'
+    _ = schwingerN params Λ 2 F + schwingerN params Λ 2 (![f₂, g] : Fin 2 → TestFun2D) := by simp
+    _ = schwingerTwo params Λ f₁ g + schwingerTwo params Λ f₂ g := by simp [hF, h2]
+
+/-- Scalar linearity in the first argument of the finite-volume two-point function. -/
+theorem schwingerTwo_smul_left (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (c : ℝ) (f g : TestFun2D) :
+    schwingerTwo params Λ (c • f) g = c * schwingerTwo params Λ f g := by
+  let F : Fin 2 → TestFun2D := ![f, g]
+  let G : Fin 2 → TestFun2D := Function.update F 0 0
+  have hlin := schwingerN_multilinear params Λ 2 F G c 0
+  have hleft : Function.update F 0 (c • F 0 + G 0) = ![c • f, g] := by
+    ext i
+    fin_cases i <;> simp [F, G]
+  have hright : Function.update F 0 (G 0) = ![(0 : TestFun2D), g] := by
+    ext i
+    fin_cases i <;> simp [F, G]
+  have hlin' :
+      schwingerN params Λ 2 (![c • f, g] : Fin 2 → TestFun2D) =
+        c * schwingerN params Λ 2 F +
+          schwingerN params Λ 2 (![(0 : TestFun2D), g] : Fin 2 → TestFun2D) := by
+    simpa [hleft, hright] using hlin
+  have hF : schwingerN params Λ 2 F = schwingerTwo params Λ f g := by
+    simpa [F] using schwingerN_two_eq_schwingerTwo params Λ F
+  have hzero : schwingerN params Λ 2 (![(0 : TestFun2D), g] : Fin 2 → TestFun2D) = 0 := by
+    simp [schwingerN]
+  calc
+    schwingerTwo params Λ (c • f) g
+        = schwingerN params Λ 2 (![c • f, g] : Fin 2 → TestFun2D) := by
+            exact (schwingerN_two_eq_schwingerTwo params Λ
+              (![c • f, g] : Fin 2 → TestFun2D)).symm
+    _ = c * schwingerN params Λ 2 F +
+          schwingerN params Λ 2 (![(0 : TestFun2D), g] : Fin 2 → TestFun2D) := hlin'
+    _ = c * schwingerN params Λ 2 F := by simp [hzero]
+    _ = c * schwingerTwo params Λ f g := by simp [hF]
+
+/-- Additivity in the second argument of the finite-volume two-point function. -/
+theorem schwingerTwo_add_right (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f g₁ g₂ : TestFun2D) :
+    schwingerTwo params Λ f (g₁ + g₂) =
+      schwingerTwo params Λ f g₁ + schwingerTwo params Λ f g₂ := by
+  calc
+    schwingerTwo params Λ f (g₁ + g₂)
+        = schwingerTwo params Λ (g₁ + g₂) f := schwingerTwo_symm params Λ f (g₁ + g₂)
+    _ = schwingerTwo params Λ g₁ f + schwingerTwo params Λ g₂ f :=
+          schwingerTwo_add_left params Λ g₁ g₂ f
+    _ = schwingerTwo params Λ f g₁ + schwingerTwo params Λ f g₂ := by
+          rw [schwingerTwo_symm params Λ g₁ f, schwingerTwo_symm params Λ g₂ f]
+
+/-- Scalar linearity in the second argument of the finite-volume two-point function. -/
+theorem schwingerTwo_smul_right (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (c : ℝ) (f g : TestFun2D) :
+    schwingerTwo params Λ f (c • g) = c * schwingerTwo params Λ f g := by
+  calc
+    schwingerTwo params Λ f (c • g)
+        = schwingerTwo params Λ (c • g) f := schwingerTwo_symm params Λ f (c • g)
+    _ = c * schwingerTwo params Λ g f := schwingerTwo_smul_left params Λ c g f
+    _ = c * schwingerTwo params Λ f g := by rw [schwingerTwo_symm params Λ g f]
+
+/-- The finite-volume two-point function packaged as a bilinear map. -/
+def schwingerTwoBilinear (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
+    TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ where
+  toFun f :=
+    { toFun := fun g => schwingerTwo params Λ f g
+      map_add' := by
+        intro g₁ g₂
+        exact schwingerTwo_add_right params Λ f g₁ g₂
+      map_smul' := by
+        intro c g
+        exact schwingerTwo_smul_right params Λ c f g }
+  map_add' := by
+    intro f₁ f₂
+    ext g
+    exact schwingerTwo_add_left params Λ f₁ f₂ g
+  map_smul' := by
+    intro c f
+    ext g
+    exact schwingerTwo_smul_left params Λ c f g
+
 /-! ## Finite-volume comparison interface -/
 
 /-- Comparison input controlling interacting two-point functions by the free Gaussian
