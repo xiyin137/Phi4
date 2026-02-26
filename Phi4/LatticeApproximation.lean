@@ -257,6 +257,35 @@ theorem cellAverage_nonneg (L : RectLattice Λ) (f : TestFun2D)
   unfold cellAverage
   exact div_nonneg (L.cellIntegral_nonneg f i j hf) (le_of_lt (L.cell_area_pos i j))
 
+/-- Monotonicity of cell integrals under pointwise comparison. -/
+theorem cellIntegral_mono
+    (L : RectLattice Λ)
+    (f g : TestFun2D)
+    (i : Fin L.Nt) (j : Fin L.Nx)
+    (hfg : ∀ x, f x ≤ g x) :
+    L.cellIntegral f i j ≤ L.cellIntegral g i j := by
+  unfold cellIntegral
+  exact MeasureTheory.integral_mono_ae
+    (MeasureTheory.Integrable.restrict
+      (s := (L.cell i j).toSet)
+      (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) f))
+    (MeasureTheory.Integrable.restrict
+      (s := (L.cell i j).toSet)
+      (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) g))
+    (Filter.Eventually.of_forall hfg)
+
+/-- Monotonicity of cell averages under pointwise comparison. -/
+theorem cellAverage_mono
+    (L : RectLattice Λ)
+    (f g : TestFun2D)
+    (i : Fin L.Nt) (j : Fin L.Nx)
+    (hfg : ∀ x, f x ≤ g x) :
+    L.cellAverage f i j ≤ L.cellAverage g i j := by
+  unfold cellAverage
+  exact div_le_div_of_nonneg_right
+    (L.cellIntegral_mono f g i j hfg)
+    (le_of_lt (L.cell_area_pos i j))
+
 /-- Cell integral written as `area × average`. -/
 theorem cellIntegral_eq_area_mul_cellAverage
     (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
@@ -284,6 +313,15 @@ theorem discretizeByCellAverage_nonneg
     (i : Fin L.Nt) (j : Fin L.Nx) :
     0 ≤ L.discretizeByCellAverage f i j := by
   exact L.cellAverage_nonneg f i j hf
+
+/-- Monotonicity of cell-average discretization under pointwise comparison. -/
+theorem discretizeByCellAverage_mono
+    (L : RectLattice Λ)
+    (f g : TestFun2D)
+    (hfg : ∀ x, f x ≤ g x)
+    (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.discretizeByCellAverage f i j ≤ L.discretizeByCellAverage g i j := by
+  exact L.cellAverage_mono f g i j hfg
 
 /-- Cell-anchor Riemann sum on the finite lattice. -/
 def riemannSumCellAnchor (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
@@ -324,6 +362,21 @@ theorem riemannSumCellAverage_nonneg
   refine Finset.sum_nonneg ?_
   intro j _
   exact L.cellIntegral_nonneg f i j hf
+
+/-- Monotonicity of cell-average Riemann sums under pointwise comparison. -/
+theorem riemannSumCellAverage_mono
+    (L : RectLattice Λ)
+    (f g : TestFun2D)
+    (hfg : ∀ x, f x ≤ g x) :
+    L.riemannSumCellAverage f ≤ L.riemannSumCellAverage g := by
+  unfold riemannSumCellAverage
+  refine Finset.sum_le_sum ?_
+  intro i _
+  refine Finset.sum_le_sum ?_
+  intro j _
+  exact mul_le_mul_of_nonneg_left
+    (L.discretizeByCellAverage_mono f g hfg i j)
+    (le_of_lt (L.cell_area_pos i j))
 
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
