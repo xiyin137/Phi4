@@ -611,6 +611,116 @@ theorem connectedSchwingerTwo_quadratic_nonneg_standard
   rw [hEq] at hbase
   exact hbase
 
+/-- Two-point absolute-value bound from quadratic positivity:
+    `|Cᶜ(f,g)| ≤ (Cᶜ(f,f) + Cᶜ(g,g)) / 2`. -/
+theorem connectedSchwingerTwo_abs_le_half_diag_sum
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle)
+    (f g : TestFun2D) :
+    |connectedSchwingerTwo params Λ f g| ≤
+      (connectedSchwingerTwo params Λ f f + connectedSchwingerTwo params Λ g g) / 2 := by
+  let B := connectedSchwingerTwoBilinear params Λ
+  have hplus : 0 ≤ B (f + g) (f + g) :=
+    connectedSchwingerTwoBilinear_self_nonneg params Λ (f + g)
+  have hminus : 0 ≤ B (f - g) (f - g) :=
+    connectedSchwingerTwoBilinear_self_nonneg params Λ (f - g)
+  have hsym : B f g = B g f :=
+    connectedSchwingerTwoBilinear_symm params Λ f g
+  have hplus_expand : B (f + g) (f + g) = B f f + B f g + B g f + B g g := by
+    calc
+      B (f + g) (f + g) = (B f + B g) (f + g) := by
+        simpa using congrArg (fun L : TestFun2D →ₗ[ℝ] ℝ => L (f + g)) (B.map_add f g)
+      _ = B f (f + g) + B g (f + g) := by rfl
+      _ = (B f f + B f g) + (B g f + B g g) := by
+        rw [(B f).map_add f g, (B g).map_add f g]
+      _ = B f f + B f g + B g f + B g g := by ring
+  have hminus_expand : B (f - g) (f - g) = B f f - B f g - B g f + B g g := by
+    calc
+      B (f - g) (f - g) = (B f - B g) (f - g) := by
+        simpa using congrArg (fun L : TestFun2D →ₗ[ℝ] ℝ => L (f - g)) (B.map_sub f g)
+      _ = B f (f - g) - B g (f - g) := by rfl
+      _ = (B f f - B f g) - (B g f - B g g) := by
+        rw [(B f).map_sub f g, (B g).map_sub f g]
+      _ = B f f - B f g - B g f + B g g := by ring
+  have hplus' : 0 ≤ B f f + 2 * B f g + B g g := by
+    rw [hplus_expand] at hplus
+    rw [hsym] at hplus
+    linarith
+  have hminus' : 0 ≤ B f f - 2 * B f g + B g g := by
+    rw [hminus_expand] at hminus
+    rw [hsym] at hminus
+    linarith
+  have hupper : B f g ≤ (B f f + B g g) / 2 := by
+    linarith
+  have habs : |B f g| ≤ (B f f + B g g) / 2 := by
+    exact abs_le.mpr ⟨by linarith, hupper⟩
+  simpa [B] using habs
+
+/-! ### Cauchy-Schwarz-type consequences -/
+
+/-- Cauchy-Schwarz inequality for the connected finite-volume two-point form:
+    `(Cᶜ(f,g))² ≤ Cᶜ(f,f) Cᶜ(g,g)`. -/
+theorem connectedSchwingerTwo_sq_le_mul_diag
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle)
+    (f g : TestFun2D) :
+    (connectedSchwingerTwo params Λ f g) ^ 2 ≤
+      connectedSchwingerTwo params Λ f f * connectedSchwingerTwo params Λ g g := by
+  let B := connectedSchwingerTwoBilinear params Λ
+  have hsym : B f g = B g f :=
+    connectedSchwingerTwoBilinear_symm params Λ f g
+  have hff : 0 ≤ B f f :=
+    connectedSchwingerTwoBilinear_self_nonneg params Λ f
+  have hgg : 0 ≤ B g g :=
+    connectedSchwingerTwoBilinear_self_nonneg params Λ g
+  have hquad_poly (t : ℝ) :
+      0 ≤ B f f + (2 * t) * B f g + t ^ 2 * B g g := by
+    have hquad : 0 ≤ B (f + t • g) (f + t • g) :=
+      connectedSchwingerTwoBilinear_self_nonneg params Λ (f + t • g)
+    have hexp :
+        B (f + t • g) (f + t • g) = B f f + t * B g f + t * (B f g + t * B g g) := by
+      simp [map_add, map_smul, add_assoc]
+    rw [hexp, hsym.symm] at hquad
+    nlinarith [hquad]
+  have hcs : (B f g) ^ 2 ≤ B f f * B g g := by
+    by_cases hgg0 : B g g = 0
+    · have hfg0 : B f g = 0 := by
+        by_contra hfg0
+        let t0 : ℝ := -((B f f + 1) / (2 * B f g))
+        have hdenom : 2 * B f g ≠ 0 := by
+          intro h
+          apply hfg0
+          linarith
+        have hq0 : 0 ≤ B f f + (2 * t0) * B f g + t0 ^ 2 * B g g := hquad_poly t0
+        have ht : (2 * t0) * B f g = -(B f f + 1) := by
+          dsimp [t0]
+          field_simp [hdenom]
+        have ht2 : t0 ^ 2 * B g g = 0 := by
+          simp [hgg0]
+        linarith [hq0, ht, ht2]
+      rw [hfg0, hgg0]
+      nlinarith
+    · have hgg_pos : 0 < B g g := lt_of_le_of_ne hgg (by simpa [eq_comm] using hgg0)
+      let t0 : ℝ := -(B f g) / (B g g)
+      have hq0 : 0 ≤ B f f + (2 * t0) * B f g + t0 ^ 2 * B g g := hquad_poly t0
+      have hcalc : (2 * t0) * B f g + t0 ^ 2 * B g g = -((B f g) ^ 2 / (B g g)) := by
+        dsimp [t0]
+        field_simp [hgg0]
+        ring
+      have hstep : 0 ≤ B f f - (B f g) ^ 2 / (B g g) := by
+        linarith [hq0, hcalc]
+      have hmul_nonneg : 0 ≤ (B f f - (B f g) ^ 2 / (B g g)) * (B g g) := by
+        exact mul_nonneg hstep (le_of_lt hgg_pos)
+      have hmul_nonneg' : 0 ≤ B f f * B g g - (B f g) ^ 2 := by
+        have hcalc2 :
+            (B f f - (B f g) ^ 2 / (B g g)) * (B g g) = B f f * B g g - (B f g) ^ 2 := by
+          field_simp [hgg0]
+        linarith [hmul_nonneg, hcalc2]
+      linarith [hmul_nonneg']
+  simpa [B] using hcs
+
 /-! ## Finite-volume comparison interface -/
 
 /-- Comparison input controlling interacting two-point functions by the free Gaussian
