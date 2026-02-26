@@ -393,6 +393,35 @@ theorem fkg_inequality (params : Phi4Params) (Λ : Rectangle)
   exact CorrelationInequalityModel.fkg_inequality
     (params := params) Λ F G hF_mono hG_mono
 
+/-- FKG implies nonnegativity of the connected finite-volume two-point function
+    for linear field observables. -/
+theorem connectedSchwingerTwo_nonneg
+    (params : Phi4Params) (Λ : Rectangle)
+    [CorrelationInequalityModel params]
+    (f g : TestFun2D) :
+    0 ≤ connectedSchwingerTwo params Λ f g := by
+  have hmonoF :
+      ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ h : TestFun2D, ω₁ h ≤ ω₂ h) →
+        (fun ω : FieldConfig2D => ω f) ω₁ ≤ (fun ω : FieldConfig2D => ω f) ω₂ := by
+    intro ω₁ ω₂ hω
+    exact hω f
+  have hmonoG :
+      ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ h : TestFun2D, ω₁ h ≤ ω₂ h) →
+        (fun ω : FieldConfig2D => ω g) ω₁ ≤ (fun ω : FieldConfig2D => ω g) ω₂ := by
+    intro ω₁ ω₂ hω
+    exact hω g
+  have hfkg := fkg_inequality params Λ
+    (fun ω : FieldConfig2D => ω f)
+    (fun ω : FieldConfig2D => ω g)
+    hmonoF hmonoG
+  have hfkg' :
+      schwingerN params Λ 1 ![f] * schwingerN params Λ 1 ![g] ≤ schwingerTwo params Λ f g := by
+    simpa [schwingerN, schwingerTwo] using hfkg
+  unfold connectedSchwingerTwo
+  exact sub_nonneg.mpr hfkg'
+
 /-! ## Lebowitz Inequality -/
 
 /-- **Lebowitz inequality**: The 4-point Schwinger function is bounded by the

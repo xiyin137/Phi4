@@ -311,6 +311,62 @@ theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
     finiteVolume_product_integrable params Λ n (Function.update f i (g i))
   rw [integral_add h_int1 h_int2, integral_const_mul]
 
+/-- Additivity of the one-point Schwinger functional. -/
+theorem schwingerOne_add (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f g : TestFun2D) :
+    schwingerN params Λ 1 ![f + g] =
+      schwingerN params Λ 1 ![f] + schwingerN params Λ 1 ![g] := by
+  let F : Fin 1 → TestFun2D := ![f]
+  let G : Fin 1 → TestFun2D := Function.update F 0 g
+  have hlin := schwingerN_multilinear params Λ 1 F G 1 0
+  have hleft : Function.update F 0 (1 • F 0 + G 0) = ![f + g] := by
+    ext i
+    fin_cases i
+    simp [F, G]
+  have hright : Function.update F 0 (G 0) = ![g] := by
+    ext i
+    fin_cases i
+    simp [F, G]
+  simpa [hleft, hright, F] using hlin
+
+/-- Scalar linearity of the one-point Schwinger functional. -/
+theorem schwingerOne_smul (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (c : ℝ) (f : TestFun2D) :
+    schwingerN params Λ 1 ![c • f] = c * schwingerN params Λ 1 ![f] := by
+  let F : Fin 1 → TestFun2D := ![f]
+  let G : Fin 1 → TestFun2D := Function.update F 0 0
+  have hlin := schwingerN_multilinear params Λ 1 F G c 0
+  have hleft : Function.update F 0 (c • F 0 + G 0) = ![c • f] := by
+    ext i
+    fin_cases i
+    simp [F, G]
+  have hright : Function.update F 0 (G 0) = ![(0 : TestFun2D)] := by
+    ext i
+    fin_cases i
+    simp [F, G]
+  have hzero : schwingerN params Λ 1 ![(0 : TestFun2D)] = 0 := by
+    simp [schwingerN]
+  calc
+    schwingerN params Λ 1 ![c • f]
+        = c * schwingerN params Λ 1 F + schwingerN params Λ 1 ![(0 : TestFun2D)] := by
+            simpa [hleft, hright] using hlin
+    _ = c * schwingerN params Λ 1 F := by simp [hzero]
+    _ = c * schwingerN params Λ 1 ![f] := by simp [F]
+
+/-- The one-point Schwinger functional as a linear map. -/
+def schwingerOneLinear (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) : TestFun2D →ₗ[ℝ] ℝ where
+  toFun f := schwingerN params Λ 1 ![f]
+  map_add' := by
+    intro f g
+    exact schwingerOne_add params Λ f g
+  map_smul' := by
+    intro c f
+    exact schwingerOne_smul params Λ c f
+
 /-- Additivity in the first argument of the finite-volume two-point function. -/
 theorem schwingerTwo_add_left (params : Phi4Params)
     [InteractionIntegrabilityModel params]
@@ -422,6 +478,35 @@ def schwingerTwoBilinear (params : Phi4Params)
     intro c f
     ext g
     exact schwingerTwo_smul_left params Λ c f g
+
+/-- The connected finite-volume two-point function packaged as a bilinear map. -/
+def connectedSchwingerTwoBilinear (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
+    TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ where
+  toFun f :=
+    { toFun := fun g => connectedSchwingerTwo params Λ f g
+      map_add' := by
+        intro g₁ g₂
+        unfold connectedSchwingerTwo
+        rw [schwingerTwo_add_right, schwingerOne_add params Λ g₁ g₂]
+        ring_nf
+      map_smul' := by
+        intro c g
+        unfold connectedSchwingerTwo
+        rw [schwingerTwo_smul_right, schwingerOne_smul params Λ c g]
+        simp [smul_eq_mul]
+        ring_nf }
+  map_add' := by
+    intro f₁ f₂
+    ext g
+    simp [connectedSchwingerTwo, schwingerTwo_add_left, schwingerOne_add]
+    ring_nf
+  map_smul' := by
+    intro c f
+    ext g
+    simp [connectedSchwingerTwo, schwingerTwo_smul_left, schwingerOne_smul, smul_eq_mul]
+    ring_nf
 
 /-! ## Finite-volume comparison interface -/
 
