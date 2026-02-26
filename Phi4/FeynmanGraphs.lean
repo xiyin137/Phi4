@@ -165,6 +165,112 @@ theorem pairing_card_pos_even (n : ℕ) :
   letI : Nonempty (Pairing (2 * n)) := ⟨halfSplitPairing n⟩
   exact Fintype.card_pos
 
+namespace Pairing
+
+variable {r : ℕ}
+
+private def coveringPair (π : Pairing r) (i : Fin r) : Fin r × Fin r :=
+  Classical.choose (ExistsUnique.exists (π.covers i))
+
+private lemma coveringPair_mem (π : Pairing r) (i : Fin r) :
+    coveringPair π i ∈ π.pairs := by
+  exact (Classical.choose_spec (ExistsUnique.exists (π.covers i))).1
+
+private lemma coveringPair_contains (π : Pairing r) (i : Fin r) :
+    (coveringPair π i).1 = i ∨ (coveringPair π i).2 = i := by
+  exact (Classical.choose_spec (ExistsUnique.exists (π.covers i))).2
+
+private lemma coveringPair_eq_of_mem_contains
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
+    (hpMem : p ∈ π.pairs) (hpContains : p.1 = i ∨ p.2 = i) :
+    coveringPair π i = p := by
+  have hchosen :
+      coveringPair π i ∈ π.pairs ∧
+        ((coveringPair π i).1 = i ∨ (coveringPair π i).2 = i) :=
+    Classical.choose_spec (ExistsUnique.exists (π.covers i))
+  exact ExistsUnique.unique (π.covers i) hchosen ⟨hpMem, hpContains⟩
+
+private lemma coveringPair_eq_iff_endpoint
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
+    (hpMem : p ∈ π.pairs) :
+    coveringPair π i = p ↔ i = p.1 ∨ i = p.2 := by
+  constructor
+  · intro h
+    have hcontains : (coveringPair π i).1 = i ∨ (coveringPair π i).2 = i :=
+      coveringPair_contains π i
+    rcases hcontains with h1 | h2
+    · exact Or.inl (by simpa [h] using h1.symm)
+    · exact Or.inr (by simpa [h] using h2.symm)
+  · intro hi
+    have hpContains : p.1 = i ∨ p.2 = i := by
+      rcases hi with hi1 | hi2
+      · exact Or.inl hi1.symm
+      · exact Or.inr hi2.symm
+    exact coveringPair_eq_of_mem_contains π i p hpMem hpContains
+
+private lemma card_endpoint_eq_two
+    (π : Pairing r) (p : Fin r × Fin r) (hpMem : p ∈ π.pairs) :
+    ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)).card = 2 := by
+  have hpne : p.1 ≠ p.2 := ne_of_lt (π.ordered p hpMem)
+  have hEq : ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)) = ({p.1, p.2} : Finset (Fin r)) := by
+    ext i
+    simp
+  simp [hEq, hpne]
+
+/-- Any pairing on `r` labels forces `r` to be even. -/
+theorem even_card (π : Pairing r) : Even r := by
+  classical
+  have hMaps :
+      ((Finset.univ : Finset (Fin r)) : Set (Fin r)).MapsTo
+        (coveringPair π) (π.pairs : Set (Fin r × Fin r)) := by
+    intro i hi
+    exact coveringPair_mem π i
+  have hCount := Finset.card_eq_sum_card_fiberwise
+    (s := (Finset.univ : Finset (Fin r)))
+    (t := π.pairs)
+    (f := coveringPair π)
+    hMaps
+  have hFiber : ∀ p ∈ π.pairs,
+      ({i : Fin r | coveringPair π i = p} : Finset (Fin r)).card = 2 := by
+    intro p hp
+    have hEq :
+        ({i : Fin r | coveringPair π i = p} : Finset (Fin r))
+          = ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)) := by
+      ext i
+      simp [coveringPair_eq_iff_endpoint, hp]
+    calc
+      ({i : Fin r | coveringPair π i = p} : Finset (Fin r)).card
+          = ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)).card := by simp [hEq]
+      _ = 2 := card_endpoint_eq_two π p hp
+  have hCount2 : r = ∑ b ∈ π.pairs, 2 := by
+    calc
+      r = ∑ b ∈ π.pairs, ({a : Fin r | coveringPair π a = b} : Finset (Fin r)).card := by
+            simpa [Finset.card_univ] using hCount
+      _ = ∑ b ∈ π.pairs, 2 := by
+            refine Finset.sum_congr rfl ?_
+            intro b hb
+            exact hFiber b hb
+  have hCount' : r = 2 * π.pairs.card := by
+    calc
+      r = ∑ b ∈ π.pairs, 2 := hCount2
+      _ = π.pairs.card * 2 := by simp
+      _ = 2 * π.pairs.card := by omega
+  refine ⟨π.pairs.card, ?_⟩
+  simpa [two_mul] using hCount'
+
+/-- There are no pairings on an odd number of labels. -/
+theorem isEmpty_odd (n : ℕ) : IsEmpty (Pairing (2 * n + 1)) := by
+  refine ⟨?_⟩
+  intro π
+  have hEven : Even (2 * n + 1) := even_card π
+  have hEven2 : Even (2 * n) := even_two.mul_right n
+  have hnot : ¬ Even ((2 * n) + 1) := by
+    intro h
+    exact ((Nat.even_add_one (n := 2 * n)).1 h) hEven2
+  exact hnot hEven
+
+end Pairing
+
 /-- The canonical pairing `halfSplitPairing n` has exactly `n` pairs. -/
 theorem halfSplitPairing_card (n : ℕ) :
     (halfSplitPairing n).pairs.card = n := by
