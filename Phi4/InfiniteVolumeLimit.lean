@@ -492,6 +492,29 @@ theorem connectedSchwingerTwo_tendsto_infinite
   rw [hEqFun, hEqLim]
   exact hsub
 
+/-- If finite-volume FKG inequalities are available, the infinite-volume connected
+    two-point function is nonnegative. -/
+theorem connectedTwoPoint_nonneg
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [CorrelationInequalityModel params]
+    (f g : TestFun2D) :
+    0 ≤ connectedTwoPoint params f g := by
+  have hlim := connectedSchwingerTwo_tendsto_infinite params f g
+  have hnonneg : ∀ n : ℕ,
+      0 ≤
+        (if h : 0 < n then
+          connectedSchwingerTwo params (exhaustingRectangles n h) f g
+        else 0) := by
+    intro n
+    by_cases h : 0 < n
+    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f g
+      unfold connectedSchwingerTwo at hConn
+      simp [h]
+      linarith
+    · simp [h]
+  exact ge_of_tendsto' hlim hnonneg
+
 /-- The infinite volume φ⁴₂ probability measure on S'(ℝ²).
     This is the weak limit of dμ_{Λₙ} as Λₙ ↗ ℝ². -/
 def infiniteVolumeMeasure (params : Phi4Params)
