@@ -997,6 +997,25 @@ theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
 
 /-! ## Wightman reconstruction -/
 
+/-- Class-free reconstruction step: linear growth plus an OS-to-Wightman
+    reconstruction rule yields Wightman existence for a Schwinger family `S`. -/
+theorem wightman_exists_of_linear_growth_and_reconstruction
+    (S : SchwingerFunctions 1)
+    (hlinear : ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = S ∧ Nonempty (OSLinearGrowthCondition 1 OS))
+    (hreconstruct : ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W) :
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS : OsterwalderSchraderAxioms 1),
+        OS.S = S ∧ IsWickRotationPair OS.S Wfn.W := by
+  rcases hlinear with ⟨OS, hOS_lg⟩
+  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
+  rcases hlg_nonempty with ⟨hlg⟩
+  rcases hreconstruct OS hlg with ⟨Wfn, hWR⟩
+  exact ⟨Wfn, OS, hS, hWR⟩
+
 /-- Construct Wightman existence from explicit linear-growth and reconstruction
     rule data at fixed `params`. -/
 theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
@@ -1014,11 +1033,8 @@ theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   intro hlim hos hlinear hreconstruct
-  rcases hlinear with ⟨OS, hOS_lg⟩
-  rcases hOS_lg with ⟨hS, hlg_nonempty⟩
-  rcases hlg_nonempty with ⟨hlg⟩
-  rcases hreconstruct OS hlg with ⟨Wfn, hWR⟩
-  exact ⟨Wfn, OS, hS, hWR⟩
+  exact wightman_exists_of_linear_growth_and_reconstruction
+    (S := phi4SchwingerFunctions params) hlinear hreconstruct
 
 /-- Interface-level Wightman existence from linear-growth and reconstruction
     backends, without using frontier-gap theorems. -/
