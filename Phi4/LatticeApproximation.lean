@@ -250,6 +250,24 @@ def discretizeByCellAnchor (L : RectLattice Λ) (f : TestFun2D) :
 def cellIntegral (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) : ℝ :=
   ∫ x in (L.cell i j).toSet, f x
 
+/-- Additivity of cell integrals. -/
+theorem cellIntegral_add
+    (L : RectLattice Λ) (f g : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellIntegral (f + g) i j = L.cellIntegral f i j + L.cellIntegral g i j := by
+  unfold cellIntegral
+  have hf : Integrable f (volume.restrict (L.cell i j).toSet) :=
+    (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) f).restrict
+  have hg : Integrable g (volume.restrict (L.cell i j).toSet) :=
+    (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) g).restrict
+  exact integral_add hf hg
+
+/-- Scalar linearity of cell integrals. -/
+theorem cellIntegral_smul
+    (L : RectLattice Λ) (c : ℝ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellIntegral (c • f) i j = c * L.cellIntegral f i j := by
+  unfold cellIntegral
+  exact integral_const_mul c f
+
 /-- Average value of a test function over one mesh cell. -/
 def cellAverage (L : RectLattice Λ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) : ℝ :=
   L.cellIntegral f i j / (L.cell i j).area
@@ -274,6 +292,22 @@ theorem cellAverage_nonneg (L : RectLattice Λ) (f : TestFun2D)
     0 ≤ L.cellAverage f i j := by
   unfold cellAverage
   exact div_nonneg (L.cellIntegral_nonneg f i j hf) (le_of_lt (L.cell_area_pos i j))
+
+/-- Additivity of cell averages. -/
+theorem cellAverage_add
+    (L : RectLattice Λ) (f g : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellAverage (f + g) i j = L.cellAverage f i j + L.cellAverage g i j := by
+  unfold cellAverage
+  rw [L.cellIntegral_add f g i j]
+  ring
+
+/-- Scalar linearity of cell averages. -/
+theorem cellAverage_smul
+    (L : RectLattice Λ) (c : ℝ) (f : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
+    L.cellAverage (c • f) i j = c * L.cellAverage f i j := by
+  unfold cellAverage
+  rw [L.cellIntegral_smul c f i j]
+  ring
 
 /-- Monotonicity of cell integrals under pointwise comparison. -/
 theorem cellIntegral_mono
@@ -381,6 +415,21 @@ theorem riemannSumCellAverage_nonneg
   intro j _
   exact L.cellIntegral_nonneg f i j hf
 
+/-- Additivity of cell-average Riemann sums. -/
+theorem riemannSumCellAverage_add
+    (L : RectLattice Λ) (f g : TestFun2D) :
+    L.riemannSumCellAverage (f + g) =
+      L.riemannSumCellAverage f + L.riemannSumCellAverage g := by
+  unfold riemannSumCellAverage discretizeByCellAverage
+  simp [L.cellAverage_add, Finset.sum_add_distrib, left_distrib]
+
+/-- Scalar linearity of cell-average Riemann sums. -/
+theorem riemannSumCellAverage_smul
+    (L : RectLattice Λ) (c : ℝ) (f : TestFun2D) :
+    L.riemannSumCellAverage (c • f) = c * L.riemannSumCellAverage f := by
+  unfold riemannSumCellAverage discretizeByCellAverage
+  simp [L.cellAverage_smul, Finset.mul_sum, mul_left_comm]
+
 /-- Monotonicity of cell-average Riemann sums under pointwise comparison. -/
 theorem riemannSumCellAverage_mono
     (L : RectLattice Λ)
@@ -399,6 +448,20 @@ theorem riemannSumCellAverage_mono
 /-- Total cell integral: sum of exact integrals over all mesh cells. -/
 def totalCellIntegral (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
   ∑ i : Fin L.Nt, ∑ j : Fin L.Nx, L.cellIntegral f i j
+
+/-- Additivity of total cell integrals. -/
+theorem totalCellIntegral_add
+    (L : RectLattice Λ) (f g : TestFun2D) :
+    L.totalCellIntegral (f + g) = L.totalCellIntegral f + L.totalCellIntegral g := by
+  unfold totalCellIntegral
+  simp [cellIntegral_add, Finset.sum_add_distrib]
+
+/-- Scalar linearity of total cell integrals. -/
+theorem totalCellIntegral_smul
+    (L : RectLattice Λ) (c : ℝ) (f : TestFun2D) :
+    L.totalCellIntegral (c • f) = c * L.totalCellIntegral f := by
+  unfold totalCellIntegral
+  simp [cellIntegral_smul, Finset.mul_sum]
 
 /-- Total cell integral equals the cell-average Riemann sum. -/
 theorem totalCellIntegral_eq_riemannSumCellAverage
