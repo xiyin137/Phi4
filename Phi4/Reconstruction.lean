@@ -267,6 +267,15 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
   intro f g a
   simpa [connectedTwoPoint] using hdecay f g a
 
+/-- Infinite-volume connected two-point nonnegativity inherited from finite-volume
+    FKG positivity. -/
+theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [CorrelationInequalityModel params] →
+    ∀ (f g : TestFun2D), 0 ≤ connectedTwoPoint params f g := by
+  intro hlim hcorr f g
+  exact connectedTwoPoint_nonneg params f g
+
 /-! ## Wightman reconstruction -/
 
 /-- **Main Theorem**: The φ⁴₂ theory defines a Wightman quantum field theory.
