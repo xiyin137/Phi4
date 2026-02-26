@@ -468,7 +468,20 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = @phi4SchwingerFunctions params core := by
   letI : OSAxiomCoreModel params := core
-  exact phi4_satisfies_OS_of_interfaces params
-    (hsmall := hsmall)
+  have hsmall' : params.coupling < OSE4ClusterModel.weak_coupling_threshold (params := params) := by
+    simpa [os4WeakCouplingThreshold] using hsmall
+  rcases phi4_satisfies_OS_of_explicit_data params
+      (S := OSAxiomCoreModel.schwingerFunctions (params := params))
+      (hos0 := OSAxiomCoreModel.os0 (params := params))
+      (hos2_translation := OSAxiomCoreModel.os2_translation (params := params))
+      (hos2_rotation := OSAxiomCoreModel.os2_rotation (params := params))
+      (he3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params))
+      (he2 := OSDistributionE2Model.e2_reflection_positive (params := params))
+      (threshold := OSE4ClusterModel.weak_coupling_threshold (params := params))
+      (hthreshold_pos := OSE4ClusterModel.weak_coupling_threshold_pos (params := params))
+      (hcluster := OSE4ClusterModel.e4_cluster_of_weak_coupling (params := params))
+      (hsmall := hsmall') with ⟨OS, hOS⟩
+  refine ⟨OS, ?_⟩
+  simpa [phi4SchwingerFunctions] using hOS
 
 end
