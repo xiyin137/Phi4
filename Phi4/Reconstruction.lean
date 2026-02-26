@@ -78,6 +78,19 @@ abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
       |connectedTwoPoint params f g_shifted| ≤
         C * Real.exp (-m_gap * ‖a‖)
 
+/-! ## Uniform weak-coupling decay interface -/
+
+/-- Optional global weak-coupling decay input used for the explicit
+    cross-parameter OS4 statement. This is intentionally separate from
+    `ReconstructionInputModel`, which only carries fixed-`params` data. -/
+class UniformWeakCouplingDecayModel (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] where
+  phi4_os4_weak_coupling :
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+        p.coupling < coupling_bound →
+          ConnectedTwoPointDecayAtParams p
+
 /-! ## Abstract reconstruction inputs -/
 
 /-- Inputs needed for OS reconstruction beyond the basic OSreconstruction API.
@@ -90,15 +103,6 @@ class ReconstructionInputModel (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS)
-  phi4_os4_weak_coupling :
-    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
-        p.coupling < coupling_bound →
-          ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-            ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-              let g_shifted : TestFun2D := translateTestFun a g
-              |connectedTwoPoint p f g_shifted| ≤
-                C * Real.exp (-m_gap * ‖a‖)
   /-- A canonical weak-coupling threshold for the current parameter set. -/
   weak_coupling_threshold : ℝ
   weak_coupling_threshold_pos : 0 < weak_coupling_threshold
@@ -159,20 +163,20 @@ theorem phi4_linear_growth (params : Phi4Params)
 theorem phi4_os4_weak_coupling (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
-    [ReconstructionInputModel params] →
+    [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p := by
   intro hlim hos hrec
-  exact ReconstructionInputModel.phi4_os4_weak_coupling
+  exact UniformWeakCouplingDecayModel.phi4_os4_weak_coupling
     (params := params)
 
 /-- Backward-compatible OS4 weak-coupling form written with explicit Schwinger moments. -/
 theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
-    [ReconstructionInputModel params] →
+    [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
         p.coupling < coupling_bound →

@@ -28,6 +28,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   interactingRP : InteractingReflectionPositivityModel params
   multipleReflection : MultipleReflectionModel params
   infiniteVolume : InfiniteVolumeLimitModel params
+  uniformWeakCoupling : @UniformWeakCouplingDecayModel params infiniteVolume
   wickPowers : @WickPowersModel params infiniteVolume
   regularity : @RegularityModel params infiniteVolume
   measureOS3 : @MeasureOS3Model params infiniteVolume
@@ -73,6 +74,11 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     InfiniteVolumeLimitModel params :=
   h.infiniteVolume
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    UniformWeakCouplingDecayModel params := by
+  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  exact h.uniformWeakCoupling
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WickPowersModel params := by
