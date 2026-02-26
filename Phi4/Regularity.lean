@@ -309,6 +309,44 @@ theorem diagonal_moment_limit_bound_of_exhaustion
   refine ⟨c, ?_⟩
   exact abs_limit_le_of_abs_bound hlim (fun k => hc k)
 
+/-- Diagonal infinite-volume Schwinger moments are bounded by the same explicit
+    factorial-exponential expression, provided finite-volume exponential
+    integrability along exhaustion and a global finite-volume OS1-type bound. -/
+theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
+    (params : Phi4Params) [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (f : TestFun2D) (n : ℕ)
+    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
+    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+    ∃ c : ℝ,
+      |infiniteVolumeSchwinger params n (fun _ => f)| ≤
+        (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
+  have hraw :
+      Filter.Tendsto
+        (fun m : ℕ =>
+          if h : 0 < m then schwingerN params (exhaustingRectangles m h) n (fun _ => f) else 0)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params n (fun _ => f))) :=
+    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+      (params := params) n (fun _ => f)
+  have hlim :
+      Filter.Tendsto
+        (fun k : ℕ =>
+          schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f))
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params n (fun _ => f))) := by
+    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
+    simpa using hcomp
+  exact diagonal_moment_limit_bound_of_exhaustion
+    params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim hExp hExpNeg
+
 /-- If the generating functional along exhaustion converges to the infinite-volume
     generating functional and satisfies a global exponential bound, then OS1 follows. -/
 theorem generating_functional_bound_of_exhaustion_limit
