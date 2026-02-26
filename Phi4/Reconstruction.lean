@@ -1326,9 +1326,7 @@ theorem phi4_wightman_exists (params : Phi4Params) :
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   intro hlim hos hlin
-  exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
-    (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
+  exact phi4_wightman_exists_of_interfaces params
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
     W_n(f̃) = conj(W_n(f)) where f̃(x₁,...,xₙ) = conj(f(xₙ,...,x₁)).
