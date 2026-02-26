@@ -217,8 +217,9 @@ private lemma card_endpoint_eq_two
     simp
   simp [hEq, hpne]
 
-/-- Any pairing on `r` labels forces `r` to be even. -/
-theorem even_card (π : Pairing r) : Even r := by
+/-- In any pairing on `r` labels, each pair covers exactly two labels, so
+    `2 * |pairs| = r`. -/
+theorem two_mul_pairs_card (π : Pairing r) : 2 * π.pairs.card = r := by
   classical
   have hMaps :
       ((Finset.univ : Finset (Fin r)) : Set (Fin r)).MapsTo
@@ -255,8 +256,19 @@ theorem even_card (π : Pairing r) : Even r := by
       r = ∑ b ∈ π.pairs, 2 := hCount2
       _ = π.pairs.card * 2 := by simp
       _ = 2 * π.pairs.card := by omega
+  exact hCount'.symm
+
+/-- Any pairing on `r` labels forces `r` to be even. -/
+theorem even_card (π : Pairing r) : Even r := by
   refine ⟨π.pairs.card, ?_⟩
-  simpa [two_mul] using hCount'
+  simpa [two_mul] using (two_mul_pairs_card π).symm
+
+/-- For a pairing on `2n` labels, there are exactly `n` pairs. -/
+theorem pairs_card_even (n : ℕ) (π : Pairing (2 * n)) :
+    π.pairs.card = n := by
+  have hcard : 2 * π.pairs.card = 2 * n := by
+    simpa using (two_mul_pairs_card π)
+  omega
 
 /-- There are no pairings on an odd number of labels. -/
 theorem isEmpty_odd (n : ℕ) : IsEmpty (Pairing (2 * n + 1)) := by
