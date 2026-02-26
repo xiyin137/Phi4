@@ -194,6 +194,17 @@ theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
 
 /-! ## Linear growth condition (E0') -/
 
+/-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
+theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    (hlinear :
+      ∃ OS : OsterwalderSchraderAxioms 1,
+        OS.S = phi4SchwingerFunctions params ∧
+        Nonempty (OSLinearGrowthCondition 1 OS)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  exact ⟨{ phi4_linear_growth := hlinear }⟩
+
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
     |S_n(f)| ≤ α · βⁿ · (n!)^γ · ‖f‖_s
     with γ = 1/2 for the φ⁴ interaction.
@@ -207,11 +218,14 @@ theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
 theorem gap_phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
-    [ReconstructionLinearGrowthModel params] :
+    (hlinear :
+      ∃ OS : OsterwalderSchraderAxioms 1,
+        OS.S = phi4SchwingerFunctions params ∧
+        Nonempty (OSLinearGrowthCondition 1 OS)) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact phi4_linear_growth_of_interface params
+  exact hlinear
 
 /-- Public linear-growth endpoint via explicit theorem-level frontier gap. -/
 theorem phi4_linear_growth (params : Phi4Params)
@@ -222,16 +236,33 @@ theorem phi4_linear_growth (params : Phi4Params)
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
   exact gap_phi4_linear_growth params
+    (ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
 
-/-- Honest frontier: reconstruction step from OS + linear growth to Wightman data. -/
+/-- Construct `WightmanReconstructionModel` from an explicit reconstruction rule. -/
+theorem wightmanReconstructionModel_nonempty_of_data (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    (hreconstruct :
+      ∀ (OS : OsterwalderSchraderAxioms 1),
+        OSLinearGrowthCondition 1 OS →
+          ∃ (Wfn : WightmanFunctions 1),
+            IsWickRotationPair OS.S Wfn.W) :
+    Nonempty (WightmanReconstructionModel params) := by
+  exact ⟨{ wightman_reconstruction := hreconstruct }⟩
+
+/-- Honest frontier: reconstruction step from explicit OS+linear-growth
+    reconstruction data. -/
 theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
     [OSAxiomCoreModel params]
-    [WightmanReconstructionModel params] :
+    (hreconstruct :
+      ∀ (OS : OsterwalderSchraderAxioms 1),
+        OSLinearGrowthCondition 1 OS →
+          ∃ (Wfn : WightmanFunctions 1),
+            IsWickRotationPair OS.S Wfn.W) :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
-  exact phi4_wightman_reconstruction_step_of_interface params
+  exact hreconstruct
 
 /-- Explicit reconstruction step from OS + linear growth to Wightman data,
     via the frontier theorem `gap_phi4_wightman_reconstruction_step`. -/
@@ -243,6 +274,7 @@ theorem phi4_wightman_reconstruction_step (params : Phi4Params)
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
   exact gap_phi4_wightman_reconstruction_step params
+    (WightmanReconstructionModel.wightman_reconstruction (params := params))
 
 /-! ## OS4: Clustering (for weak coupling) -/
 

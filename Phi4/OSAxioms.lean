@@ -272,24 +272,115 @@ theorem phi4_satisfies_OS_of_interfaces (params : Phi4Params)
 
 /-- Honest frontier: construction of the core Schwinger OS package from
     infinite-volume data. -/
-theorem gap_osaCoreModel_nonempty (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+theorem osaCoreModel_nonempty_of_data (params : Phi4Params)
+    (S : SchwingerFunctions 1)
+    (hos0 : ∀ n, Continuous (S n))
+    (hos2_translation :
+      ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
+        S n f = S n g)
+    (hos2_rotation :
+      ∀ (n : ℕ) (R : Matrix (Fin 2) (Fin 2) ℝ),
+        R.transpose * R = 1 → R.det = 1 →
+        ∀ (f g : SchwartzNPoint 1 n),
+          (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
+          S n f = S n g)
+    (he3_symmetric :
+      ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
+        S n f = S n g) :
     Nonempty (OSAxiomCoreModel params) := by
-  exact ⟨inferInstance⟩
+  refine ⟨{
+    schwingerFunctions := S
+    os0 := hos0
+    os2_translation := hos2_translation
+    os2_rotation := hos2_rotation
+    e3_symmetric := he3_symmetric
+  }⟩
+
+/-- Honest frontier: construction of the core Schwinger OS package from
+    explicit Schwinger-data assumptions. -/
+theorem gap_osaCoreModel_nonempty (params : Phi4Params)
+    (S : SchwingerFunctions 1)
+    (hos0 : ∀ n, Continuous (S n))
+    (hos2_translation :
+      ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
+        S n f = S n g)
+    (hos2_rotation :
+      ∀ (n : ℕ) (R : Matrix (Fin 2) (Fin 2) ℝ),
+        R.transpose * R = 1 → R.det = 1 →
+        ∀ (f g : SchwartzNPoint 1 n),
+          (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
+          S n f = S n g)
+    (he3_symmetric :
+      ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
+        (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
+        S n f = S n g) :
+    Nonempty (OSAxiomCoreModel params) := by
+  exact osaCoreModel_nonempty_of_data params S hos0 hos2_translation hos2_rotation he3_symmetric
 
 /-- Honest frontier: distributional E2 from the OS core package. -/
+theorem osDistributionE2Model_nonempty_of_data (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    (he2 :
+      ∀ (F : BorchersSequence 1),
+        (∀ n, ∀ x : NPointDomain 1 n,
+          (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
+        (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
+    Nonempty (OSDistributionE2Model params) := by
+  exact ⟨{ e2_reflection_positive := he2 }⟩
+
+/-- Honest frontier: distributional E2 from explicit reflection-positivity data. -/
 theorem gap_osDistributionE2_nonempty (params : Phi4Params)
     [OSAxiomCoreModel params]
-    [OSDistributionE2Model params] :
+    (he2 :
+      ∀ (F : BorchersSequence 1),
+        (∀ n, ∀ x : NPointDomain 1 n,
+          (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
+        (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
     Nonempty (OSDistributionE2Model params) := by
-  exact ⟨inferInstance⟩
+  exact osDistributionE2Model_nonempty_of_data params he2
 
 /-- Honest frontier: weak-coupling E4 clustering from the OS core package. -/
+theorem osE4ClusterModel_nonempty_of_data (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    (threshold : ℝ)
+    (hthreshold_pos : 0 < threshold)
+    (hcluster :
+      params.coupling < threshold →
+        ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
+          ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
+            ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
+              ∀ (g_a : SchwartzNPoint 1 m),
+                (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
+                ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
+                  OSAxiomCoreModel.schwingerFunctions (params := params) n f *
+                    OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε) :
+    Nonempty (OSE4ClusterModel params) := by
+  exact ⟨{
+    weak_coupling_threshold := threshold
+    weak_coupling_threshold_pos := hthreshold_pos
+    e4_cluster_of_weak_coupling := hcluster
+  }⟩
+
+/-- Honest frontier: weak-coupling E4 clustering from explicit cluster data. -/
 theorem gap_osE4Cluster_nonempty (params : Phi4Params)
     [OSAxiomCoreModel params]
-    [OSE4ClusterModel params] :
+    (threshold : ℝ)
+    (hthreshold_pos : 0 < threshold)
+    (hcluster :
+      params.coupling < threshold →
+        ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
+          ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
+            ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
+              ∀ (g_a : SchwartzNPoint 1 m),
+                (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
+                ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
+                  OSAxiomCoreModel.schwingerFunctions (params := params) n f *
+                    OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε) :
     Nonempty (OSE4ClusterModel params) := by
-  exact ⟨inferInstance⟩
+  exact osE4ClusterModel_nonempty_of_data params threshold hthreshold_pos hcluster
 
 /-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
 theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
