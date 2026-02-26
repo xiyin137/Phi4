@@ -45,6 +45,101 @@ structure Pairing (r : ℕ) where
   /-- Pairs are ordered: first index < second index. -/
   ordered : ∀ p ∈ pairs, p.1 < p.2
 
+private def pairingLeftIdx (n : ℕ) (i : Fin n) : Fin (2 * n) :=
+  ⟨i.1, by
+    have hi : i.1 < n := i.2
+    omega⟩
+
+private def pairingRightIdx (n : ℕ) (i : Fin n) : Fin (2 * n) :=
+  ⟨n + i.1, by
+    have hi : i.1 < n := i.2
+    omega⟩
+
+private def halfSplitPair (n : ℕ) (i : Fin n) : Fin (2 * n) × Fin (2 * n) :=
+  (pairingLeftIdx n i, pairingRightIdx n i)
+
+private def halfSplitPairs (n : ℕ) : Finset (Fin (2 * n) × Fin (2 * n)) :=
+  Finset.univ.image (halfSplitPair n)
+
+private lemma halfSplitPairs_mem_iff
+    (n : ℕ) (p : Fin (2 * n) × Fin (2 * n)) :
+    p ∈ halfSplitPairs n ↔ ∃ i : Fin n, halfSplitPair n i = p := by
+  constructor
+  · intro hp
+    rcases Finset.mem_image.mp hp with ⟨i, _, hi⟩
+    exact ⟨i, hi⟩
+  · intro hp
+    rcases hp with ⟨i, rfl⟩
+    exact Finset.mem_image.mpr ⟨i, Finset.mem_univ i, rfl⟩
+
+/-- Canonical pairing on `2n` labels obtained by pairing each `i < n`
+    with `n + i`. -/
+def halfSplitPairing (n : ℕ) : Pairing (2 * n) where
+  pairs := halfSplitPairs n
+  covers := by
+    intro j
+    by_cases hj : j.1 < n
+    · let i : Fin n := ⟨j.1, hj⟩
+      refine ⟨halfSplitPair n i, ?_, ?_⟩
+      · refine ⟨(halfSplitPairs_mem_iff n (halfSplitPair n i)).2 ⟨i, rfl⟩, Or.inl ?_⟩
+        ext
+        simp [halfSplitPair, pairingLeftIdx, i]
+      · intro p hp
+        rcases hp with ⟨hpMem, hpj⟩
+        rcases (halfSplitPairs_mem_iff n p).1 hpMem with ⟨k, hk⟩
+        have hpj' : (halfSplitPair n k).1 = j ∨ (halfSplitPair n k).2 = j := by
+          simpa [hk] using hpj
+        rcases hpj' with hkleft | hkright
+        · have hkval : k.1 = j.1 := congrArg Fin.val hkleft
+          have hkival : k.1 = i.1 := by simpa [i] using hkval
+          have hki : k = i := Fin.ext hkival
+          calc
+            p = halfSplitPair n k := by simp [hk]
+            _ = halfSplitPair n i := by simp [hki]
+        · exfalso
+          have hge : n ≤ j.1 := by
+            have hkval : n + k.1 = j.1 := congrArg Fin.val hkright
+            omega
+          exact (Nat.not_lt.mpr hge) hj
+    · have hjn : n ≤ j.1 := Nat.not_lt.mp hj
+      have hjlt : j.1 - n < n := by
+        have hj2 : j.1 < 2 * n := j.2
+        omega
+      let i : Fin n := ⟨j.1 - n, hjlt⟩
+      refine ⟨halfSplitPair n i, ?_, ?_⟩
+      · refine ⟨(halfSplitPairs_mem_iff n (halfSplitPair n i)).2 ⟨i, rfl⟩, Or.inr ?_⟩
+        ext
+        simp [halfSplitPair, pairingRightIdx, i]
+        omega
+      · intro p hp
+        rcases hp with ⟨hpMem, hpj⟩
+        rcases (halfSplitPairs_mem_iff n p).1 hpMem with ⟨k, hk⟩
+        have hpj' : (halfSplitPair n k).1 = j ∨ (halfSplitPair n k).2 = j := by
+          simpa [hk] using hpj
+        rcases hpj' with hkleft | hkright
+        · exfalso
+          have hlt : j.1 < n := by
+            have hkval : k.1 = j.1 := congrArg Fin.val hkleft
+            omega
+          exact hj hlt
+        · have hkval : n + k.1 = j.1 := congrArg Fin.val hkright
+          have hkiVal : k.1 = j.1 - n := by omega
+          have hkival : k.1 = i.1 := by simpa [i] using hkiVal
+          have hki : k = i := Fin.ext hkival
+          calc
+            p = halfSplitPair n k := by simp [hk]
+            _ = halfSplitPair n i := by simp [hki]
+  ordered := by
+    intro p hp
+    rcases (halfSplitPairs_mem_iff n p).1 hp with ⟨i, rfl⟩
+    change pairingLeftIdx n i < pairingRightIdx n i
+    show i.1 < n + i.1
+    omega
+
+/-- Pairings exist on every even number of labels. -/
+theorem pairing_even_exists (n : ℕ) : Nonempty (Pairing (2 * n)) := by
+  exact ⟨halfSplitPairing n⟩
+
 /-! ## Abstract pairing/graph expansion interfaces -/
 
 /-- Enumeration model for perfect matchings on finite sets. -/
