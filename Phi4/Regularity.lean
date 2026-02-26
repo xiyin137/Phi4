@@ -260,6 +260,55 @@ theorem generatingFunctionalOnExhaustion_bound_of_uniform
   simpa [generatingFunctionalOnExhaustion] using
     hc (exhaustingRectangles (n + 1) (Nat.succ_pos n))
 
+/-- Uniform diagonal moment bound along exhaustion from a global finite-volume
+    generating-functional exponential estimate. -/
+theorem diagonal_moment_bound_on_exhaustion_of_global_uniform
+    (params : Phi4Params) [InteractionWeightModel params]
+    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (f : TestFun2D) (n : ℕ)
+    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
+    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+    ∃ c : ℝ, ∀ k : ℕ,
+      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f)| ≤
+        (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  intro k
+  exact finiteVolume_diagonal_moment_bound_of_generating_bound
+    params c hc
+    (exhaustingRectangles (k + 1) (Nat.succ_pos k))
+    f n (hExp k) (hExpNeg k)
+
+/-- Transfer the exhaustion diagonal-moment bound to the limit point. -/
+theorem diagonal_moment_limit_bound_of_exhaustion
+    (params : Phi4Params) [InteractionWeightModel params]
+    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (f : TestFun2D) (n : ℕ) (x : ℝ)
+    (hlim : Filter.Tendsto
+      (fun k : ℕ =>
+        schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f))
+      Filter.atTop (nhds x))
+    (hExp : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k))))
+    (hExpNeg : ∀ k : ℕ, Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
+      (finiteVolumeMeasure params
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k)))) :
+    ∃ c : ℝ,
+      |x| ≤ (Nat.factorial n : ℝ) *
+        (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
+  rcases diagonal_moment_bound_on_exhaustion_of_global_uniform
+      params hglobal f n hExp hExpNeg with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  exact abs_limit_le_of_abs_bound hlim (fun k => hc k)
+
 /-- If the generating functional along exhaustion converges to the infinite-volume
     generating functional and satisfies a global exponential bound, then OS1 follows. -/
 theorem generating_functional_bound_of_exhaustion_limit
