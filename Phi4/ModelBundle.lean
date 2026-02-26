@@ -34,6 +34,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   measureOS3 : @MeasureOS3Model params infiniteVolume
   osAxiom : @OSAxiomModel params infiniteVolume
   reconstructionInput : @ReconstructionInputModel params infiniteVolume osAxiom
+  wightmanReconstruction : @WightmanReconstructionModel params infiniteVolume osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeCovarianceKernelModel params.mass params.mass_pos :=
@@ -105,6 +106,12 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   letI : OSAxiomModel params := h.osAxiom
   exact h.reconstructionInput
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    WightmanReconstructionModel params := by
+  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : OSAxiomModel params := h.osAxiom
+  exact h.wightmanReconstruction
 
 /-- Convenience wrapper: a bundled model gives the Wightman reconstruction result. -/
 theorem phi4_wightman_exists_of_bundle (params : Phi4Params)

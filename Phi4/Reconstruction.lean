@@ -109,6 +109,12 @@ class ReconstructionInputModel (params : Phi4Params)
   connectedTwoPoint_decay_of_weak_coupling :
     params.coupling < weak_coupling_threshold →
       ConnectedTwoPointDecayAtParams params
+
+/-- Abstract OS-to-Wightman reconstruction backend for fixed `params`.
+    Kept separate from `ReconstructionInputModel` so fixed-`params`
+    analytic assumptions and reconstruction machinery are not bundled together. -/
+class WightmanReconstructionModel (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] [OSAxiomModel params] where
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -278,15 +284,16 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
+    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hrec
+  intro hlim hos hrec hwrec
   obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
   rcases hOS_lg with ⟨hS, hlg_nonempty⟩
   rcases hlg_nonempty with ⟨hlg⟩
-  obtain ⟨Wfn, hWR⟩ := ReconstructionInputModel.wightman_reconstruction
+  obtain ⟨Wfn, hWR⟩ := WightmanReconstructionModel.wightman_reconstruction
     (params := params) OS hlg
   exact ⟨Wfn, OS, hS, hWR⟩
 
@@ -300,12 +307,13 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
+    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hlim hos hrec
+  intro hlim hos hrec hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -318,10 +326,11 @@ theorem phi4_locality (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
+    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hlim hos hrec
+  intro hlim hos hrec hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
@@ -332,10 +341,11 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
+    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hlim hos hrec
+  intro hlim hos hrec hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -350,10 +360,11 @@ theorem phi4_unique_vacuum (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
+    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hlim hos hrec
+  intro hlim hos hrec hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
