@@ -273,21 +273,25 @@ theorem generating_functional_bound_of_interface (params : Phi4Params) :
       (params := params))
 
 /-- Honest frontier: generating-functional bound (OS1 / E0') from
-    infinite-volume regularity inputs. -/
+    explicit exhaustion convergence and finite-volume uniform bounds. -/
 theorem gap_generating_functional_bound (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [RegularityModel params] →
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)))) →
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) →
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
-  intro hlim hreg
-  exact generating_functional_bound_of_interface params
+  intro hlimModel hlim hglobal
+  exact generating_functional_bound_of_exhaustion_limit_global_uniform
+    params hlim hglobal
 
 /-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
     |S{f}| ≤ exp(c · N'(f)).
 
-    Current status: exposed via explicit theorem-level frontier gap
-    `gap_generating_functional_bound`. -/
+    Public endpoint routed through the regularity interface. -/
 theorem generating_functional_bound (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [RegularityModel params] →
@@ -295,7 +299,7 @@ theorem generating_functional_bound (params : Phi4Params) :
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
   intro hlim hreg
-  exact gap_generating_functional_bound params
+  exact generating_functional_bound_of_interface params
 
 /-! ## Nonlocal φ⁴ bounds -/
 
@@ -324,14 +328,16 @@ theorem generating_functional_bound_uniform_of_interface (params : Phi4Params)
     (RegularityModel.generating_functional_bound_uniform
       (params := params) f)
 
-/-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4). -/
+/-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4)
+    from explicit pointwise-in-`f` finite-volume data. -/
 theorem gap_generating_functional_bound_uniform (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [RegularityModel params]
+    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f))
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  exact generating_functional_bound_uniform_of_interface params f
+  exact huniform f
 
 /-- Public uniformity endpoint via explicit theorem-level frontier gap. -/
 theorem generating_functional_bound_uniform (params : Phi4Params)
@@ -340,21 +346,21 @@ theorem generating_functional_bound_uniform (params : Phi4Params)
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  exact gap_generating_functional_bound_uniform params f
+  exact generating_functional_bound_uniform_of_interface params f
 
 /-! ## Nonlocal φ⁴ bounds -/
 
-/-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3).
-    In this development stage, they are reduced to the uniform-in-volume
-    generating-functional bound (GJ §12.4). -/
+/-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3) from explicit
+    pointwise-in-`f` uniform finite-volume bounds. -/
 theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
-    [RegularityModel params] →
+    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) →
     ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
-  intro hlim hreg g
-  rcases gap_generating_functional_bound_uniform params g with ⟨c, hc⟩
+  intro hlim huniform g
+  rcases gap_generating_functional_bound_uniform params huniform g with ⟨c, hc⟩
   refine ⟨0, c * normFunctional g, ?_⟩
   intro Λ
   simpa [zero_mul] using hc Λ
@@ -367,6 +373,6 @@ theorem nonlocal_phi4_bound (params : Phi4Params) :
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
   intro hlim hreg
-  exact gap_nonlocal_phi4_bound params
+  exact nonlocal_phi4_bound_of_interface params
 
 end
