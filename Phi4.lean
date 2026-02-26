@@ -36,6 +36,7 @@ Reconstruction ← OSAxioms                  (OS → Wightman via reconstruction
 -/
 
 import Phi4.Defs
+import Phi4.LatticeApproximation
 import Phi4.FreeField
 import Phi4.CovarianceOperators
 import Phi4.WickProduct
