@@ -39,7 +39,7 @@ theorem gap_phi4_satisfies_OS (params : Phi4Params)
     [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
-    (hsmall : ∀ [OSE4ClusterModel params], params.coupling < os4WeakCouplingThreshold params) :
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
   exact phi4_satisfies_OS params (core := inferInstance) hsmall

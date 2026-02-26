@@ -308,11 +308,11 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     (core : OSAxiomCoreModel params)
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
-    (hsmall : ∀ [OSE4ClusterModel params], params.coupling < os4WeakCouplingThreshold params) :
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = @phi4SchwingerFunctions params core := by
   letI : OSAxiomCoreModel params := core
   exact phi4_satisfies_OS_of_interfaces params
-    (hsmall := os4_weak_coupling_small_of_assumption params hsmall)
+    (hsmall := hsmall)
 
 end
