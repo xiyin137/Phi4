@@ -196,6 +196,16 @@ theorem freeCovariance_eq_kernel (mass : ℝ) (hmass : 0 < mass)
   exact FreeCovarianceKernelModel.covariance_eq_kernel
     (mass := mass) (hmass := hmass) f g
 
+/-- Kernel-form two-point identity for the free field:
+    `E[ω(f)ω(g)] = ∬ f(x) C(x,y) g(y) dx dy`. -/
+theorem freeField_two_point_kernel (mass : ℝ) (hmass : 0 < mass)
+    [FreeCovarianceKernelModel mass hmass]
+    (f g : TestFun2D) :
+    ∫ ω, ω f * ω g ∂(freeFieldMeasure mass hmass) =
+      ∫ x, ∫ y, f x * freeCovKernel mass x y * g y := by
+  rw [freeField_two_point]
+  exact freeCovariance_eq_kernel mass hmass f g
+
 /-- The covariance kernel is symmetric. -/
 theorem freeCovKernel_symm (mass : ℝ) (x y : Spacetime2D) :
     freeCovKernel mass x y = freeCovKernel mass y x := by
@@ -245,6 +255,26 @@ theorem freeCovKernel_pos_def (mass : ℝ) (hmass : 0 < mass) :
         (∑ i, c i • T (f i)) (∑ i, c i • T (f i)) := h_nonneg
     _ = ∑ i, ∑ j, c i * c j * GaussianField.covariance T (f i) (f j) := by
       simpa using h_expand
+
+/-- Positive-semidefiniteness of the free covariance in kernel form. -/
+theorem freeCovKernel_pos_def_integral (mass : ℝ) (hmass : 0 < mass)
+    [FreeCovarianceKernelModel mass hmass] :
+    ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℝ),
+      0 ≤ ∑ i, ∑ j, c i * c j *
+        (∫ x, ∫ y, f i x * freeCovKernel mass x y * f j y) := by
+  intro n f c
+  have hcov := freeCovKernel_pos_def mass hmass n f c
+  have hrewrite :
+      (∑ i, ∑ j, c i * c j * GaussianField.covariance (freeCovarianceCLM mass hmass) (f i) (f j))
+        =
+      (∑ i, ∑ j, c i * c j * (∫ x, ∫ y, f i x * freeCovKernel mass x y * f j y)) := by
+    refine Finset.sum_congr rfl ?_
+    intro i _
+    refine Finset.sum_congr rfl ?_
+    intro j _
+    rw [freeCovariance_eq_kernel mass hmass (f i) (f j)]
+  rw [hrewrite] at hcov
+  exact hcov
 
 /-- UV mollifier: a smooth bump function centered at x with support of radius ~1/κ.
     This is the approximate delta function δ_{κ,x} used for UV regularization.
