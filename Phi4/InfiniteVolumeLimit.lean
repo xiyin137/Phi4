@@ -152,6 +152,130 @@ theorem schwingerN_monotone_in_volume_from_lattice (params : Phi4Params)
   exact schwingerN_monotone_in_volume_two_from_lattice
     params n₁ n₂ hn₁ hn₂ h f hf hfsupp
 
+private lemma support_zero_outside_of_subset
+    (f : TestFun2D) {A B : Set Spacetime2D}
+    (hAB : A ⊆ B)
+    (hfA : ∀ x ∉ A, f x = 0) :
+    ∀ x ∉ B, f x = 0 := by
+  intro x hxB
+  exact hfA x (fun hxA => hxB (hAB hxA))
+
+private theorem tendsto_iSup_of_monotone_abs_bounded
+    (a : ℕ → ℝ)
+    (hmono : Monotone a)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ, |a n| ≤ C) :
+    Filter.Tendsto a Filter.atTop (nhds (⨆ n : ℕ, a n)) := by
+  rcases hbound with ⟨C, hC⟩
+  have hbdd : BddAbove (Set.range a) := by
+    refine ⟨C, ?_⟩
+    rintro y ⟨n, rfl⟩
+    exact le_trans (le_abs_self _) (hC n)
+  exact tendsto_atTop_ciSup hmono hbdd
+
+/-- Convergence of the two-point finite-volume sequence from:
+    1. positivity-preserving test functions with support in a base rectangle,
+    2. volume monotonicity (`CorrelationInequalityModel`), and
+    3. an explicit uniform absolute bound.
+
+    The limit is identified with the supremum over the exhaustion sequence. -/
+theorem schwingerTwo_tendsto_iSup_of_monotone_bounded
+    (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g| ≤ C) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)) := by
+  have hmono : Monotone (fun n : ℕ =>
+      schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g) := by
+    intro n m hnm
+    have hle : n + n0 + 1 ≤ m + n0 + 1 := by
+      exact Nat.add_le_add_right hnm (n0 + 1)
+    have hsub0n :
+        (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet ⊆
+          (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet :=
+      exhaustingRectangles_mono_toSet
+        (n0 + 1) (n + n0 + 1)
+        (Nat.succ_pos n0) (Nat.succ_pos (n + n0)) (by omega)
+    have hfsuppn :
+        ∀ x ∉ (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet, f x = 0 :=
+      support_zero_outside_of_subset f hsub0n hfsupp0
+    have hgsuppn :
+        ∀ x ∉ (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet, g x = 0 :=
+      support_zero_outside_of_subset g hsub0n hgsupp0
+    exact schwinger_monotone_in_volume params
+      (n + n0 + 1) (m + n0 + 1)
+      (Nat.succ_pos (n + n0)) (Nat.succ_pos (m + n0)) hle
+      f g hf hg hfsuppn hgsuppn
+  exact tendsto_iSup_of_monotone_abs_bounded
+    (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+    hmono hbound
+
+/-- Lattice-bridge variant of monotone-bounded convergence for the finite-volume
+    two-point sequence. -/
+theorem schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g| ≤ C) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)) := by
+  have hmono : Monotone (fun n : ℕ =>
+      schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g) := by
+    intro n m hnm
+    have hle : n + n0 + 1 ≤ m + n0 + 1 := by
+      exact Nat.add_le_add_right hnm (n0 + 1)
+    have hsub0n :
+        (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet ⊆
+          (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet :=
+      exhaustingRectangles_mono_toSet
+        (n0 + 1) (n + n0 + 1)
+        (Nat.succ_pos n0) (Nat.succ_pos (n + n0)) (by omega)
+    have hfsuppn :
+        ∀ x ∉ (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet, f x = 0 :=
+      support_zero_outside_of_subset f hsub0n hfsupp0
+    have hgsuppn :
+        ∀ x ∉ (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)).toSet, g x = 0 :=
+      support_zero_outside_of_subset g hsub0n hgsupp0
+    exact schwinger_monotone_in_volume_from_lattice params
+      (n + n0 + 1) (m + n0 + 1)
+      (Nat.succ_pos (n + n0)) (Nat.succ_pos (m + n0)) hle
+      f g hf hg hfsuppn hgsuppn
+  exact tendsto_iSup_of_monotone_abs_bounded
+    (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+    hmono hbound
+
+/-- Existence form of `schwingerTwo_tendsto_iSup_of_monotone_bounded`. -/
+theorem schwingerTwo_limit_exists_of_monotone_bounded
+    (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g| ≤ C) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g, ?_⟩
+  exact schwingerTwo_tendsto_iSup_of_monotone_bounded
+    params n0 f g hf hg hfsupp0 hgsupp0 hbound
+
 /-! ## Uniform upper bounds -/
 
 /-- Model of infinite-volume existence data: uniform bounds, limiting Schwinger
