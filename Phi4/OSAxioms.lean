@@ -50,13 +50,6 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
       ∀ (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
         schwingerFunctions n f = schwingerFunctions n g
-  /-- Distributional reflection positivity used by `phi4_satisfies_OS`
-      to feed the OSReconstruction API. -/
-  e2_reflection_positive :
-    ∀ (F : BorchersSequence 1),
-      (∀ n, ∀ x : NPointDomain 1 n,
-        (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
-      (OSInnerProduct 1 schwingerFunctions F F).re ≥ 0
   e3_symmetric :
     ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
@@ -85,6 +78,17 @@ class MeasureOS3Model (params : Phi4Params) [InfiniteVolumeLimitModel params] wh
         0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
           ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
             ∂(infiniteVolumeMeasure params)).re
+
+/-- Distributional E2 reflection positivity interface for the OS reconstruction API.
+    Kept separate from `OSAxiomModel` so Schwinger-function packaging and E2
+    positivity are explicitly decoupled assumptions. -/
+class OSDistributionE2Model (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] [OSAxiomModel params] where
+  e2_reflection_positive :
+    ∀ (F : BorchersSequence 1),
+      (∀ n, ∀ x : NPointDomain 1 n,
+        (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
+      (OSInnerProduct 1 (OSAxiomModel.schwingerFunctions (params := params)) F F).re ≥ 0
 
 /-! ## Schwinger functions as distributions
 
@@ -189,6 +193,19 @@ theorem phi4_os3 (params : Phi4Params)
         ∂(infiniteVolumeMeasure params)).re := by
   exact MeasureOS3Model.os3 (params := params) n f c hf
 
+/-- Distributional E2 reflection positivity for the packaged φ⁴₂ Schwinger functions. -/
+theorem phi4_e2_distributional (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params]
+    [OSDistributionE2Model params] :
+    ∀ (F : BorchersSequence 1),
+      (∀ n, ∀ x : NPointDomain 1 n,
+        (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
+      (OSInnerProduct 1 (phi4SchwingerFunctions params) F F).re ≥ 0 := by
+  intro F hF
+  simpa [phi4SchwingerFunctions] using
+    OSDistributionE2Model.e2_reflection_positive (params := params) F hF
+
 /-! ## Main theorem: OS axioms hold -/
 
 /-- Canonical weak-coupling threshold carried by `OSAxiomModel`. -/
@@ -226,7 +243,7 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
     This combines:
     - E0: from `phi4_os0` (temperedness of Schwinger functions)
     - E1: from `phi4_os2_translation` and `phi4_os2_rotation` (Euclidean covariance)
-    - E2: from `OSAxiomModel.e2_reflection_positive` (distributional reflection positivity)
+    - E2: from `phi4_e2_distributional` (distributional reflection positivity)
     - E3: from symmetry of the path integral (permutation invariance)
     - E4: from the cluster expansion (Chapter 18, weak coupling)
 
@@ -241,6 +258,7 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
 theorem phi4_satisfies_OS (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
     [OSAxiomModel params]
+    [OSDistributionE2Model params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
@@ -249,7 +267,7 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     E0_tempered := phi4_os0 params
     E1_translation_invariant := phi4_os2_translation params
     E1_rotation_invariant := phi4_os2_rotation params
-    E2_reflection_positive := OSAxiomModel.e2_reflection_positive (params := params)
+    E2_reflection_positive := phi4_e2_distributional params
     E3_symmetric := OSAxiomModel.e3_symmetric (params := params)
     E4_cluster := phi4_e4_cluster_of_weak_coupling params hsmall
   }, rfl⟩

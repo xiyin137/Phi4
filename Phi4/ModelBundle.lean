@@ -33,6 +33,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   regularity : @RegularityModel params infiniteVolume
   measureOS3 : @MeasureOS3Model params infiniteVolume
   osAxiom : @OSAxiomModel params infiniteVolume
+  osE2 : @OSDistributionE2Model params infiniteVolume osAxiom
   reconstructionInput : @ReconstructionInputModel params infiniteVolume osAxiom
   wightmanReconstruction : @WightmanReconstructionModel params infiniteVolume osAxiom
 
@@ -100,6 +101,12 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSAxiomModel params := by
   letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   exact h.osAxiom
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    OSDistributionE2Model params := by
+  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : OSAxiomModel params := h.osAxiom
+  exact h.osE2
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
