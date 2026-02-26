@@ -276,6 +276,76 @@ theorem schwingerTwo_limit_exists_of_monotone_bounded
   exact schwingerTwo_tendsto_iSup_of_monotone_bounded
     params n0 f g hf hg hfsupp0 hgsupp0 hbound
 
+/-- `schwingerN` (`k = 2`) form of monotone-bounded convergence. -/
+theorem schwingerN_two_tendsto_iSup_of_monotone_bounded
+    (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f| ≤ C) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)) := by
+  have hboundTwo : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) (f 0) (f 1)| ≤ C := by
+    rcases hbound with ⟨C, hC⟩
+    refine ⟨C, ?_⟩
+    intro n
+    simpa [schwingerN_two_eq_schwingerTwo] using hC n
+  have hTwo := schwingerTwo_tendsto_iSup_of_monotone_bounded
+    params n0 (f 0) (f 1) (hf 0) (hf 1) (hfsupp0 0) (hfsupp0 1) hboundTwo
+  simpa [schwingerN_two_eq_schwingerTwo] using hTwo
+
+/-- Lattice-bridge `schwingerN` (`k = 2`) form of monotone-bounded convergence. -/
+theorem schwingerN_two_tendsto_iSup_of_lattice_monotone_bounded
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f| ≤ C) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)) := by
+  have hboundTwo : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) (f 0) (f 1)| ≤ C := by
+    rcases hbound with ⟨C, hC⟩
+    refine ⟨C, ?_⟩
+    intro n
+    simpa [schwingerN_two_eq_schwingerTwo] using hC n
+  have hTwo := schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
+    params n0 (f 0) (f 1) (hf 0) (hf 1) (hfsupp0 0) (hfsupp0 1) hboundTwo
+  simpa [schwingerN_two_eq_schwingerTwo] using hTwo
+
+/-- Existence form of `schwingerN_two_tendsto_iSup_of_monotone_bounded`. -/
+theorem schwingerN_two_limit_exists_of_monotone_bounded
+    (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f| ≤ C) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f, ?_⟩
+  exact schwingerN_two_tendsto_iSup_of_monotone_bounded params n0 f hf hfsupp0 hbound
+
 /-! ## Uniform upper bounds -/
 
 /-- Model of infinite-volume existence data: uniform bounds, limiting Schwinger
