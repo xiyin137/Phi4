@@ -67,23 +67,111 @@ class BoundaryCovarianceModel (mass : ℝ) (hmass : 0 < mass) where
         DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
           dirichletKernel Λ p.1 p.2) (x, y)
 
-/-- The Dirichlet covariance C_Λ^D = (-Δ_D + m²)⁻¹ on Λ, supplied by
+/-- Minimal kernel data for boundary-condition covariance operators. -/
+class BoundaryKernelModel (mass : ℝ) (hmass : 0 < mass) where
+  dirichletKernel : Rectangle → Spacetime2D → Spacetime2D → ℝ
+  neumannKernel : Rectangle → Spacetime2D → Spacetime2D → ℝ
+  periodicKernel : (L₁ L₂ : ℝ) → 0 < L₁ → 0 < L₂ → Spacetime2D → Spacetime2D → ℝ
+
+/-- Quadratic-form comparison input for boundary covariances. -/
+class BoundaryComparisonModel (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] where
+  dirichlet_le_free : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x *
+        BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x y * f y ≤
+        ∫ x, ∫ y, f x * freeCovKernel mass x y * f y
+  free_le_neumann : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x * freeCovKernel mass x y * f y ≤
+        ∫ x, ∫ y, f x *
+          BoundaryKernelModel.neumannKernel (mass := mass) (hmass := hmass) Λ x y * f y
+  dirichlet_monotone : ∀ (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : TestFun2D) (_hf : ∀ x ∉ Λ₁.toSet, f x = 0),
+      ∫ x, ∫ y, f x *
+        BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ₁ x y * f y ≤
+        ∫ x, ∫ y, f x *
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ₂ x y * f y
+
+/-- Regularity input for boundary covariances. -/
+class BoundaryRegularityModel (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] where
+  covarianceChange_pointwise_bounded : ∀ (Λ : Rectangle),
+      ∃ C : ℝ, ∀ x : Spacetime2D, x ∈ Λ.toSet →
+        |(freeCovKernel mass x x -
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x x)| ≤ C
+  dirichlet_smooth_off_diagonal : ∀ (Λ : Rectangle),
+      ∀ x y : Spacetime2D, x ≠ y → x ∈ Λ.toSet → y ∈ Λ.toSet →
+        DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ p.1 p.2) (x, y)
+
+/-- Any full boundary covariance model provides the kernel subinterface. -/
+instance (priority := 100) boundaryKernelModel_of_covariance
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryCovarianceModel mass hmass] :
+    BoundaryKernelModel mass hmass where
+  dirichletKernel := BoundaryCovarianceModel.dirichletKernel (mass := mass) (hmass := hmass)
+  neumannKernel := BoundaryCovarianceModel.neumannKernel (mass := mass) (hmass := hmass)
+  periodicKernel := BoundaryCovarianceModel.periodicKernel (mass := mass) (hmass := hmass)
+
+/-- Any full boundary covariance model provides the comparison subinterface. -/
+instance (priority := 100) boundaryComparisonModel_of_covariance
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryCovarianceModel mass hmass] :
+    BoundaryComparisonModel mass hmass where
+  dirichlet_le_free :=
+    BoundaryCovarianceModel.dirichlet_le_free (mass := mass) (hmass := hmass)
+  free_le_neumann :=
+    BoundaryCovarianceModel.free_le_neumann (mass := mass) (hmass := hmass)
+  dirichlet_monotone :=
+    BoundaryCovarianceModel.dirichlet_monotone (mass := mass) (hmass := hmass)
+
+/-- Any full boundary covariance model provides the regularity subinterface. -/
+instance (priority := 100) boundaryRegularityModel_of_covariance
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryCovarianceModel mass hmass] :
+    BoundaryRegularityModel mass hmass where
+  covarianceChange_pointwise_bounded :=
+    BoundaryCovarianceModel.covarianceChange_pointwise_bounded (mass := mass) (hmass := hmass)
+  dirichlet_smooth_off_diagonal :=
+    BoundaryCovarianceModel.dirichlet_smooth_off_diagonal (mass := mass) (hmass := hmass)
+
+/-- The three boundary-covariance subinterfaces reconstruct the original
     `BoundaryCovarianceModel`. -/
+instance (priority := 100) boundaryCovarianceModel_of_submodels
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass]
+    [BoundaryComparisonModel mass hmass]
+    [BoundaryRegularityModel mass hmass] :
+    BoundaryCovarianceModel mass hmass where
+  dirichletKernel := BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass)
+  neumannKernel := BoundaryKernelModel.neumannKernel (mass := mass) (hmass := hmass)
+  periodicKernel := BoundaryKernelModel.periodicKernel (mass := mass) (hmass := hmass)
+  dirichlet_le_free := BoundaryComparisonModel.dirichlet_le_free (mass := mass) (hmass := hmass)
+  free_le_neumann := BoundaryComparisonModel.free_le_neumann (mass := mass) (hmass := hmass)
+  dirichlet_monotone := BoundaryComparisonModel.dirichlet_monotone (mass := mass) (hmass := hmass)
+  covarianceChange_pointwise_bounded :=
+    BoundaryRegularityModel.covarianceChange_pointwise_bounded (mass := mass) (hmass := hmass)
+  dirichlet_smooth_off_diagonal :=
+    BoundaryRegularityModel.dirichlet_smooth_off_diagonal (mass := mass) (hmass := hmass)
+
+/-- The Dirichlet covariance C_Λ^D = (-Δ_D + m²)⁻¹ on Λ, supplied by
+    `BoundaryKernelModel`. -/
 def dirichletCov (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass] (x y : Spacetime2D) : ℝ :=
-  BoundaryCovarianceModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x y
+    [BoundaryKernelModel mass hmass] (x y : Spacetime2D) : ℝ :=
+  BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x y
 
 /-- The Neumann covariance C_Λ^N = (-Δ_N + m²)⁻¹ on Λ, supplied by
-    `BoundaryCovarianceModel`. -/
+    `BoundaryKernelModel`. -/
 def neumannCov (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass] (x y : Spacetime2D) : ℝ :=
-  BoundaryCovarianceModel.neumannKernel (mass := mass) (hmass := hmass) Λ x y
+    [BoundaryKernelModel mass hmass] (x y : Spacetime2D) : ℝ :=
+  BoundaryKernelModel.neumannKernel (mass := mass) (hmass := hmass) Λ x y
 
 /-- The periodic covariance on `[0,L₁] × [0,L₂]`, supplied by
-    `BoundaryCovarianceModel`. -/
+    `BoundaryKernelModel`. -/
 def periodicCov (L₁ L₂ mass : ℝ) (hL₁ : 0 < L₁) (hL₂ : 0 < L₂) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass] (x y : Spacetime2D) : ℝ :=
-  BoundaryCovarianceModel.periodicKernel (mass := mass) (hmass := hmass) L₁ L₂ hL₁ hL₂ x y
+    [BoundaryKernelModel mass hmass] (x y : Spacetime2D) : ℝ :=
+  BoundaryKernelModel.periodicKernel (mass := mass) (hmass := hmass) L₁ L₂ hL₁ hL₂ x y
 
 /-! ## Covariance operator inequalities
 
@@ -93,32 +181,78 @@ This follows from the min-max characterization of eigenvalues. -/
 /-- Dirichlet ≤ free covariance: C_D(f,f) ≤ C(f,f) for all f supported in Λ.
     This is because Dirichlet conditions restrict the variational space. -/
 theorem dirichlet_le_free (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass]
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
     (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
     ∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y ≤
       ∫ x, ∫ y, f x * freeCovKernel mass x y * f y := by
   simpa [dirichletCov] using
-    (BoundaryCovarianceModel.dirichlet_le_free (mass := mass) (hmass := hmass) Λ f hf)
+    (BoundaryComparisonModel.dirichlet_le_free (mass := mass) (hmass := hmass) Λ f hf)
 
 /-- Free ≤ Neumann covariance: C(f,f) ≤ C_N(f,f) for all f supported in Λ.
     Neumann conditions enlarge the variational space. -/
 theorem free_le_neumann (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass]
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
     (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
     ∫ x, ∫ y, f x * freeCovKernel mass x y * f y ≤
       ∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y := by
   simpa [neumannCov] using
-    (BoundaryCovarianceModel.free_le_neumann (mass := mass) (hmass := hmass) Λ f hf)
+    (BoundaryComparisonModel.free_le_neumann (mass := mass) (hmass := hmass) Λ f hf)
 
 /-- Dirichlet monotonicity: If Λ₁ ⊂ Λ₂, then C_{Λ₁}^D ≤ C_{Λ₂}^D.
     Enlarging the domain relaxes the Dirichlet constraint. -/
 theorem dirichlet_monotone (Λ₁ Λ₂ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass]
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
     (h : Λ₁.toSet ⊆ Λ₂.toSet) (f : TestFun2D) (hf : ∀ x ∉ Λ₁.toSet, f x = 0) :
     ∫ x, ∫ y, f x * dirichletCov Λ₁ mass hmass x y * f y ≤
       ∫ x, ∫ y, f x * dirichletCov Λ₂ mass hmass x y * f y := by
   simpa [dirichletCov] using
-    (BoundaryCovarianceModel.dirichlet_monotone (mass := mass) (hmass := hmass) Λ₁ Λ₂ h f hf)
+    (BoundaryComparisonModel.dirichlet_monotone (mass := mass) (hmass := hmass) Λ₁ Λ₂ h f hf)
+
+/-- Combined comparison `C_Λ^D ≤ C_Λ^N` as quadratic forms for test functions
+    supported in `Λ`. -/
+theorem dirichlet_le_neumann (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
+    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
+    ∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y ≤
+      ∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y := by
+  exact le_trans (dirichlet_le_free Λ mass hmass f hf)
+    (free_le_neumann Λ mass hmass f hf)
+
+/-- Nonnegativity of the free-minus-Dirichlet quadratic form on functions
+    supported in `Λ`. -/
+theorem free_minus_dirichlet_quadratic_nonneg
+    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
+    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
+    0 ≤
+      (∫ x, ∫ y, f x * freeCovKernel mass x y * f y) -
+        (∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y) := by
+  have h := dirichlet_le_free Λ mass hmass f hf
+  linarith
+
+/-- Nonnegativity of the Neumann-minus-free quadratic form on functions
+    supported in `Λ`. -/
+theorem neumann_minus_free_quadratic_nonneg
+    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
+    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
+    0 ≤
+      (∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y) -
+        (∫ x, ∫ y, f x * freeCovKernel mass x y * f y) := by
+  have h := free_le_neumann Λ mass hmass f hf
+  linarith
+
+/-- Nonnegativity of the Neumann-minus-Dirichlet quadratic form on functions
+    supported in `Λ`. -/
+theorem neumann_minus_dirichlet_quadratic_nonneg
+    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
+    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
+    0 ≤
+      (∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y) -
+        (∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y) := by
+  have h := dirichlet_le_neumann Λ mass hmass f hf
+  linarith
 
 /-! ## Change of boundary conditions
 
@@ -127,30 +261,30 @@ In d=2, the pointwise "mass" δc(x) = δC(x,x) satisfies |δc(x)| ≤ const. -/
 
 /-- The change-of-covariance kernel δC = C - C_D. -/
 def covarianceChange (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass]
+    [BoundaryKernelModel mass hmass]
     (x y : Spacetime2D) : ℝ :=
   freeCovKernel mass x y - dirichletCov Λ mass hmass x y
 
 /-- The pointwise covariance change δc(x) = δC(x,x) is bounded.
     This is crucial for the re-Wick-ordering estimates in d=2 (Glimm-Jaffe 7.6). -/
 theorem covarianceChange_pointwise_bounded (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass] :
+    [BoundaryKernelModel mass hmass] [BoundaryRegularityModel mass hmass] :
     ∃ C : ℝ, ∀ x : Spacetime2D, x ∈ Λ.toSet →
       |covarianceChange Λ mass hmass x x| ≤ C := by
   simpa [covarianceChange, dirichletCov] using
-    (BoundaryCovarianceModel.covarianceChange_pointwise_bounded
+    (BoundaryRegularityModel.covarianceChange_pointwise_bounded
       (mass := mass) (hmass := hmass) Λ)
 
 /-! ## Regularity of covariance kernels -/
 
 /-- The Dirichlet covariance kernel is smooth off the diagonal. -/
 theorem dirichletCov_smooth_off_diagonal (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass] :
+    [BoundaryKernelModel mass hmass] [BoundaryRegularityModel mass hmass] :
     ∀ x y : Spacetime2D, x ≠ y → x ∈ Λ.toSet → y ∈ Λ.toSet →
       DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
         dirichletCov Λ mass hmass p.1 p.2) (x, y) := by
   simpa [dirichletCov] using
-    (BoundaryCovarianceModel.dirichlet_smooth_off_diagonal
+    (BoundaryRegularityModel.dirichlet_smooth_off_diagonal
       (mass := mass) (hmass := hmass) Λ)
 
 /-- Rewrite the free covariance kernel using the 2D Schwinger integral identity. -/

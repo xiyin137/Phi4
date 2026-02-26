@@ -7,8 +7,44 @@
 - `lake build Phi4` succeeds.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
+- `Phi4/Combinatorics/PerfectMatchings.lean` now centralizes pairing/perfect-matching
+  combinatorics for Wick/Feynman expansion infrastructure.
+- `PairingEnumerationModel` now records only cardinality of pairings; enumeration
+  itself is canonical via `Finset.univ`.
+- `Phi4/CovarianceOperators.lean` now exposes boundary-covariance subinterfaces
+  (`BoundaryKernelModel`, `BoundaryComparisonModel`, `BoundaryRegularityModel`)
+  plus derived quadratic comparison lemmas (`C_D ≤ C ≤ C_N` consequences).
+- `Phi4/ReflectionPositivity.lean` now requires only boundary-kernel data for
+  Dirichlet RP assumptions (`BoundaryKernelModel`), consistent with the covariance split.
+- `Phi4/ModelBundle.lean` now carries boundary kernel/comparison/regularity
+  submodels directly; full boundary covariance is reconstructed by instance.
+- `Phi4/GreenFunction/PeriodicKernel.lean` now provides concrete periodic
+  image-shift and truncated lattice-sum kernel infrastructure.
 - `Phi4/CorrelationInequalities.lean` now includes lattice-to-continuum
-  bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer.
+  bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer,
+  and now exposes correlation subinterfaces
+  (`CorrelationTwoPointModel`, `CorrelationFourPointModel`, `CorrelationFKGModel`).
+- `Phi4/InfiniteVolumeLimit.lean` and `Phi4/Reconstruction.lean` now use
+  minimal correlation assumptions by theorem block (two-point/four-point/FKG).
+- `Phi4/InfiniteVolumeLimit.lean` now exposes
+  `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel`, with
+  `InfiniteVolumeLimitModel` reconstructed by compatibility instance.
+- Infinite-volume inequality/convergence theorem blocks in
+  `Phi4/InfiniteVolumeLimit.lean` and wrappers in `Phi4/Reconstruction.lean`
+  now use `InfiniteVolumeSchwingerModel` where measure representation is unused.
+- `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure
+  submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
+- `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
+  Schwinger+measure assumptions, and `phi4_os3` follows this reduced interface.
+- `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now
+  decoupled from `InfiniteVolumeLimitModel`; `phi4_satisfies_OS` now depends on
+  the OS-package interfaces directly rather than a separate IV-limit hypothesis.
+- `Phi4/Reconstruction.lean` now places
+  `ConnectedTwoPointDecayAtParams`, `UniformWeakCouplingDecayModel`,
+  `ReconstructionInputModel`, and `WightmanReconstructionModel` on
+  `InfiniteVolumeSchwingerModel` rather than `InfiniteVolumeLimitModel`.
+- `Phi4/ModelBundle.lean` now carries correlation submodels directly; full
+  `CorrelationInequalityModel` is reconstructed by instance.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Development Rules (Authoritative)
@@ -25,9 +61,12 @@
 ```mermaid
 flowchart TD
   Defs[Defs] --> Lattice[LatticeApproximation]
+  Defs[Defs] --> PMatch[Combinatorics.PerfectMatchings]
   Defs[Defs] --> FreeField[FreeField]
+  FreeField --> GPer[GreenFunction.PeriodicKernel]
   BesselK1[BesselK1] --> BesselK0[BesselK0] --> CovOps[CovarianceOperators]
   FreeField --> CovOps --> Wick[WickProduct]
+  PMatch --> Graphs[FeynmanGraphs]
   Wick --> Graphs[FeynmanGraphs]
   Wick --> Interaction[Interaction]
   Interaction --> FVM[FiniteVolumeMeasure]
@@ -66,17 +105,31 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  IIM[InteractionIntegrabilityModel] --> FVMCore[Finite-volume core theorems]
-  CIM[CorrelationInequalityModel] --> Mono[Monotonicity results]
+  BKM[BoundaryKernelModel] --> BComp[BoundaryComparisonModel]
+  BKM --> BReg[BoundaryRegularityModel]
+  BComp --> CovOps[Covariance comparisons]
+  BReg --> CovOps
+  IUV[InteractionUVModel] --> InteractionL2[Interaction UV/L² lemmas]
+  IWM[InteractionWeightModel] --> FVMCore[Finite-volume core theorems]
+  C2P[CorrelationTwoPointModel] --> Mono[Monotonicity results]
+  C4P[CorrelationFourPointModel] --> IV4[4-point/cumulant bounds]
+  CFKG[CorrelationFKGModel] --> Conn2[Connected 2-point nonnegativity]
   MRM[MultipleReflectionModel] --> UB[Uniform bounds]
-  Mono --> IVLM[InfiniteVolumeLimitModel]
+  Mono --> IVS[InfiniteVolumeSchwingerModel]
+  IV4 --> IVS
+  Conn2 --> IVS
   UB --> IVLM
+  IVS --> IVM[InfiniteVolumeMeasureModel]
+  IVS --> IVLM[InfiniteVolumeLimitModel]
+  IVM --> IVLM
   IVLM --> WPM[WickPowersModel]
   IVLM --> RM[RegularityModel]
-  IVLM --> OSMC[OSAxiomCoreModel]
+  IVS --> OSM3[MeasureOS3Model]
+  IVM --> OSM3
+  OSMC[OSAxiomCoreModel]
   OSMC --> OSE4[OSE4ClusterModel]
   OSMC --> OSE2[OSDistributionE2Model]
-  IVLM --> OSM3[MeasureOS3Model]
+  IVS --> RIM[ReconstructionInputModel]
   OSMC --> RIM[ReconstructionInputModel]
   IVLM --> Bundle[Phi4ModelBundle]
   OSMC --> Bundle
@@ -115,6 +168,10 @@ Exit criteria:
 ## WP3: Infinite-Volume Construction Upgrade
 
 Goal: reduce `InfiniteVolumeLimitModel` by proving concrete convergence/representation steps.
+
+Progress:
+- split completed: `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel`
+  now isolate convergence/bounds from measure representation.
 
 Deliverables:
 - strengthen monotonicity beyond the currently packaged 2-point channel,
@@ -156,22 +213,26 @@ Exit criteria:
 ```
 Level 0: BoundaryCovarianceModel, PairingEnumerationModel
 Level 1: GaussianWickExpansionModel, FreeRP, DirichletRP
-Level 2: FeynmanGraphEstimateModel, InteractionIntegrability, CorrelationInequality, InteractingRP
+Level 2: FeynmanGraphEstimateModel, InteractionUV, InteractionWeight,
+         CorrelationTwoPoint, CorrelationFourPoint, CorrelationFKG, InteractingRP
 Level 3: FiniteVolumeComparison, MultipleReflectionModel
 Level 4: InfiniteVolumeLimitModel
 Level 5: WickPowersModel, RegularityModel
-Level 6: OSAxiomCoreModel, OSE4ClusterModel, OSDistributionE2Model, MeasureOS3Model
+Level 6: OSAxiomCoreModel (now IV-limit independent), OSE4ClusterModel,
+         OSDistributionE2Model, MeasureOS3Model
 Level 7: ReconstructionInputModel
 ```
 
 ### Phase 0: Infrastructure Foundation
-- [ ] **0A** (Codex): Combinatorial pairings — `Phi4/Combinatorics/PerfectMatchings.lean`
+- [x] **0A** (Codex): Combinatorial pairings — `Phi4/Combinatorics/PerfectMatchings.lean`
 - [ ] **0B** (Claude): Boundary covariance kernels — `Phi4/GreenFunction/{Dirichlet,Neumann,Periodic}Kernel.lean`
 - [x] **0C** (Codex): Lattice approximation framework — `Phi4/LatticeApproximation.lean`
 
 ### Phase 1: Gaussian Estimates & Correlation Inequalities
 - [ ] **1A** (Claude): Wick expansion + graph bounds → instantiate `GaussianWickExpansionModel`, `FeynmanGraphEstimateModel`
-- [ ] **1B** (Codex+Claude): Correlation inequalities via lattice → instantiate `CorrelationInequalityModel`
+- [ ] **1B** (Codex+Claude): Correlation inequalities via lattice/core →
+      instantiate `CorrelationTwoPointModel` + `CorrelationFourPointModel` +
+      `CorrelationFKGModel` (and hence `CorrelationInequalityModel`)
 - [ ] **1C** (Claude): `exp_interaction_Lp` (GJ 8.6.2) → instantiate `InteractionIntegrabilityModel`
 
 ### Phase 2: Reflection Positivity & Multiple Reflections
@@ -203,9 +264,9 @@ Level 7: ReconstructionInputModel
 
 ## Immediate Next Queue
 
-1. Complete Phase 0A (Codex: combinatorial pairings) and 0B (Claude: boundary covariance).
-2. Continue Phase 1B (Codex+Claude): instantiate lattice bridge models
-   to discharge `CorrelationInequalityModel` fields constructively.
+1. Complete Phase 0B (Claude: boundary covariance).
+2. Continue Phase 1B (Codex+Claude): instantiate lattice/core bridge models
+   to discharge correlation submodel fields constructively.
 
 ## Risk Register
 

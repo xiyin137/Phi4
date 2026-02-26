@@ -19,9 +19,12 @@ Point of View*, Part II (Chapters 7-12) and Chapter 19.
 
 ```
 FreeField ← Defs                           (free Gaussian field dφ_C)
+Combinatorics.PerfectMatchings ← Defs      (perfect matching / pairing infrastructure)
+GreenFunction.PeriodicKernel ← FreeField   (periodic image-sum kernel infrastructure)
 CovarianceOperators ← FreeField            (Dirichlet/Neumann BC, inequalities)
 WickProduct ← CovarianceOperators          (:φⁿ: Wick ordering)
 FeynmanGraphs ← WickProduct                (Feynman diagram expansion)
+             ← Combinatorics.PerfectMatchings
 Interaction ← WickProduct                  (V_Λ = λ∫:φ⁴:, e^{-V} ∈ Lᵖ)
 FiniteVolumeMeasure ← Interaction          (dμ_Λ = Z⁻¹ e^{-V} dφ_C)
 CorrelationInequalities ← FiniteVolume     (GKS, FKG, Lebowitz)
@@ -37,6 +40,8 @@ Reconstruction ← OSAxioms                  (OS → Wightman via reconstruction
 
 import Phi4.Defs
 import Phi4.LatticeApproximation
+import Phi4.Combinatorics.PerfectMatchings
+import Phi4.GreenFunction.PeriodicKernel
 import Phi4.FreeField
 import Phi4.CovarianceOperators
 import Phi4.WickProduct

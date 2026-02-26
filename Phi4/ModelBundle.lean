@@ -19,44 +19,82 @@ open Reconstruction
 /-- Bundled development assumptions for the φ⁴₂ pipeline at fixed parameters. -/
 class Phi4ModelBundle (params : Phi4Params) where
   freeCovarianceKernel : FreeCovarianceKernelModel params.mass params.mass_pos
-  boundaryCovariance : BoundaryCovarianceModel params.mass params.mass_pos
-  interactionIntegrability : InteractionIntegrabilityModel params
+  boundaryKernel : BoundaryKernelModel params.mass params.mass_pos
+  boundaryComparison : @BoundaryComparisonModel params.mass params.mass_pos boundaryKernel
+  boundaryRegularity : @BoundaryRegularityModel params.mass params.mass_pos boundaryKernel
+  interactionWeight : InteractionWeightModel params
   finiteVolumeComparison : FiniteVolumeComparisonModel params
-  correlationIneq : CorrelationInequalityModel params
+  correlationTwoPoint : CorrelationTwoPointModel params
+  correlationFourPoint : CorrelationFourPointModel params
+  correlationFKG : CorrelationFKGModel params
   freeRP : FreeReflectionPositivityModel params.mass params.mass_pos
   dirichletRP : DirichletReflectionPositivityModel params.mass params.mass_pos
   interactingRP : InteractingReflectionPositivityModel params
   multipleReflection : MultipleReflectionModel params
-  infiniteVolume : InfiniteVolumeLimitModel params
-  uniformWeakCoupling : @UniformWeakCouplingDecayModel params infiniteVolume
-  wickPowers : @WickPowersModel params infiniteVolume
-  regularity : @RegularityModel params infiniteVolume
-  measureOS3 : @MeasureOS3Model params infiniteVolume
-  osAxiom : @OSAxiomCoreModel params infiniteVolume
-  osE4 : @OSE4ClusterModel params infiniteVolume osAxiom
-  osE2 : @OSDistributionE2Model params infiniteVolume osAxiom
-  reconstructionInput : @ReconstructionInputModel params infiniteVolume osAxiom
-  wightmanReconstruction : @WightmanReconstructionModel params infiniteVolume osAxiom
+  infiniteVolumeSchwinger : InfiniteVolumeSchwingerModel params
+  infiniteVolumeMeasure : @InfiniteVolumeMeasureModel params infiniteVolumeSchwinger
+  uniformWeakCoupling : @UniformWeakCouplingDecayModel params
+    infiniteVolumeSchwinger
+  wickPowers : @WickPowersModel params
+    (@infiniteVolumeLimitModel_of_submodels params
+      infiniteVolumeSchwinger infiniteVolumeMeasure)
+  regularity : @RegularityModel params
+    (@infiniteVolumeLimitModel_of_submodels params
+      infiniteVolumeSchwinger infiniteVolumeMeasure)
+  measureOS3 : @MeasureOS3Model params
+    infiniteVolumeSchwinger infiniteVolumeMeasure
+  osAxiom : OSAxiomCoreModel params
+  osE4 : @OSE4ClusterModel params osAxiom
+  osE2 : @OSDistributionE2Model params osAxiom
+  reconstructionInput : @ReconstructionInputModel params
+    infiniteVolumeSchwinger osAxiom
+  wightmanReconstruction : @WightmanReconstructionModel params
+    osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeCovarianceKernelModel params.mass params.mass_pos :=
   h.freeCovarianceKernel
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    BoundaryCovarianceModel params.mass params.mass_pos :=
-  h.boundaryCovariance
+    BoundaryKernelModel params.mass params.mass_pos :=
+  h.boundaryKernel
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    InteractionIntegrabilityModel params :=
-  h.interactionIntegrability
+    BoundaryComparisonModel params.mass params.mass_pos := by
+  letI : BoundaryKernelModel params.mass params.mass_pos := h.boundaryKernel
+  exact h.boundaryComparison
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    BoundaryRegularityModel params.mass params.mass_pos := by
+  letI : BoundaryKernelModel params.mass params.mass_pos := h.boundaryKernel
+  exact h.boundaryRegularity
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    InteractionWeightModel params :=
+  h.interactionWeight
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FiniteVolumeComparisonModel params :=
   h.finiteVolumeComparison
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    CorrelationInequalityModel params :=
-  h.correlationIneq
+    CorrelationTwoPointModel params :=
+  h.correlationTwoPoint
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationFourPointModel params :=
+  h.correlationFourPoint
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationFKGModel params :=
+  h.correlationFKG
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationInequalityModel params := by
+  letI : CorrelationTwoPointModel params := h.correlationTwoPoint
+  letI : CorrelationFourPointModel params := h.correlationFourPoint
+  letI : CorrelationFKGModel params := h.correlationFKG
+  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeReflectionPositivityModel params.mass params.mass_pos :=
@@ -75,55 +113,68 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   h.multipleReflection
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    InfiniteVolumeLimitModel params :=
-  h.infiniteVolume
+    InfiniteVolumeSchwingerModel params :=
+  h.infiniteVolumeSchwinger
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    InfiniteVolumeMeasureModel params := by
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  exact h.infiniteVolumeMeasure
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    InfiniteVolumeLimitModel params := by
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     UniformWeakCouplingDecayModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   exact h.uniformWeakCoupling
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WickPowersModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  letI : InfiniteVolumeLimitModel params := inferInstance
   exact h.wickPowers
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     RegularityModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  letI : InfiniteVolumeLimitModel params := inferInstance
   exact h.regularity
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     MeasureOS3Model params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
   exact h.measureOS3
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSAxiomCoreModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   exact h.osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSE4ClusterModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.osE4
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSDistributionE2Model params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.osE2
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.reconstructionInput
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WightmanReconstructionModel params := by
-  letI : InfiniteVolumeLimitModel params := h.infiniteVolume
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.wightmanReconstruction
 
@@ -206,6 +257,306 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg_standard_of_bundle (params : Phi
       0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
         c i * c j * connectedTwoPoint params (f i) (f j))) :=
   phi4_connectedTwoPoint_quadratic_nonneg_standard params
+
+/-- Bundled wrapper: infinite-volume 4-point cumulant nonpositivity. -/
+theorem phi4_infiniteCumulantFourPoint_nonpos_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ≤ 0 :=
+  phi4_infiniteCumulantFourPoint_nonpos params
+
+/-- Bundled wrapper: infinite-volume absolute bound for the fully connected
+    4-point cumulant. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteCumulantFourPoint_abs_bound params
+
+/-- Bundled wrapper: channel-wise lower bounds for the infinite-volume
+    fully connected 4-point cumulant. -/
+theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₃])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ∧
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₃])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ∧
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₄])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ :=
+  phi4_infiniteCumulantFourPoint_lower_bounds_all_channels params
+
+/-- Bundled wrapper: alternative infinite-volume cumulant absolute bound from
+    the `(13)(24)` channel. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteCumulantFourPoint_abs_bound_alt13 params
+
+/-- Bundled wrapper: alternative infinite-volume cumulant absolute bound from
+    the `(14)(23)` channel. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] :=
+  phi4_infiniteCumulantFourPoint_abs_bound_alt14 params
+
+/-- Bundled wrapper: infinite-volume all-channel 4-point bounds. -/
+theorem phi4_infiniteSchwinger_four_bounds_all_channels_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      max (infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄])
+        (max (infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄])
+          (infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃]))
+        ≤ infiniteVolumeSchwinger params 4 ![f₁, f₂, f₃, f₄] ∧
+      infiniteVolumeSchwinger params 4 ![f₁, f₂, f₃, f₄] ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteSchwinger_four_bounds_all_channels params
+
+/-- Bundled wrapper: nonnegativity of infinite-volume `(12)(34)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_nonneg_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ :=
+  phi4_infiniteTruncatedFourPoint12_nonneg params
+
+/-- Bundled wrapper: nonnegativity of infinite-volume `(13)(24)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_nonneg_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ :=
+  phi4_infiniteTruncatedFourPoint13_nonneg params
+
+/-- Bundled wrapper: nonnegativity of infinite-volume `(14)(23)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_nonneg_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ :=
+  phi4_infiniteTruncatedFourPoint14_nonneg params
+
+/-- Bundled wrapper: upper bound for infinite-volume `(12)(34)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_upper_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint12_upper params
+
+/-- Bundled wrapper: upper bound for infinite-volume `(13)(24)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_upper_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint13_upper params
+
+/-- Bundled wrapper: upper bound for infinite-volume `(14)(23)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_upper_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] :=
+  phi4_infiniteTruncatedFourPoint14_upper params
+
+/-- Bundled wrapper: absolute-value bound for infinite-volume `(12)(34)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_abs_bound_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint12_abs_bound params
+
+/-- Bundled wrapper: absolute-value bound for infinite-volume `(13)(24)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_abs_bound_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint13_abs_bound params
+
+/-- Bundled wrapper: absolute-value bound for infinite-volume `(14)(23)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_abs_bound_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] :=
+  phi4_infiniteTruncatedFourPoint14_abs_bound params
+
+/-- Bundled wrapper: two-sided bounds for infinite-volume `(12)(34)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_bounds_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint12_bounds params
+
+/-- Bundled wrapper: two-sided bounds for infinite-volume `(13)(24)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_bounds_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] :=
+  phi4_infiniteTruncatedFourPoint13_bounds params
+
+/-- Bundled wrapper: two-sided bounds for infinite-volume `(14)(23)`
+    pairing-subtracted 4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_bounds_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] :=
+  phi4_infiniteTruncatedFourPoint14_bounds params
+
+/-- Bundled wrapper: combined two-sided bounds for all infinite-volume
+    pairing-subtracted 4-point channels. -/
+theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels_of_bundle
+    (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] ∧
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] ∧
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] :=
+  phi4_infiniteTruncatedFourPoint_bounds_all_channels params
 
 /-- Bundled wrapper: infinite-volume connected 2-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm_of_bundle (params : Phi4Params)

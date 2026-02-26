@@ -73,6 +73,80 @@ class CorrelationInequalityModel (params : Phi4Params) where
       (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
       schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g
 
+/-- Two-point correlation inequality input: GKS-I positivity and
+    finite-volume monotonicity under domain inclusion. -/
+class CorrelationTwoPointModel (params : Phi4Params) where
+  griffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      0 ≤ schwingerTwo params Λ f g
+  schwinger_two_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
+      schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g
+
+/-- Four-point correlation inequality input: one GKS-II pairing channel and the
+    Lebowitz four-point upper bound. -/
+class CorrelationFourPointModel (params : Phi4Params) where
+  griffiths_second : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄]
+  lebowitz_inequality : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
+        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
+        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃
+
+/-- FKG positive-correlation input for finite-volume observables. -/
+class CorrelationFKGModel (params : Phi4Params) where
+  fkg_inequality : ∀ (Λ : Rectangle)
+      (F G : FieldConfig2D → ℝ)
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
+        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
+      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
+
+/-- Any full correlation-inequality model provides the two-point subinterface. -/
+instance (priority := 100) correlationTwoPointModel_of_full
+    (params : Phi4Params) [CorrelationInequalityModel params] :
+    CorrelationTwoPointModel params where
+  griffiths_first := CorrelationInequalityModel.griffiths_first (params := params)
+  schwinger_two_monotone := CorrelationInequalityModel.schwinger_two_monotone (params := params)
+
+/-- Any full correlation-inequality model provides the four-point subinterface. -/
+instance (priority := 100) correlationFourPointModel_of_full
+    (params : Phi4Params) [CorrelationInequalityModel params] :
+    CorrelationFourPointModel params where
+  griffiths_second := CorrelationInequalityModel.griffiths_second (params := params)
+  lebowitz_inequality := CorrelationInequalityModel.lebowitz_inequality (params := params)
+
+/-- Any full correlation-inequality model provides the FKG subinterface. -/
+instance (priority := 100) correlationFKGModel_of_full
+    (params : Phi4Params) [CorrelationInequalityModel params] :
+    CorrelationFKGModel params where
+  fkg_inequality := CorrelationInequalityModel.fkg_inequality (params := params)
+
+/-- The three correlation-inequality subinterfaces reconstruct the original
+    `CorrelationInequalityModel`. -/
+instance (priority := 100) correlationInequalityModel_of_submodels
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [CorrelationFourPointModel params]
+    [CorrelationFKGModel params] :
+    CorrelationInequalityModel params where
+  griffiths_first := CorrelationTwoPointModel.griffiths_first (params := params)
+  griffiths_second := CorrelationFourPointModel.griffiths_second (params := params)
+  fkg_inequality := CorrelationFKGModel.fkg_inequality (params := params)
+  lebowitz_inequality := CorrelationFourPointModel.lebowitz_inequality (params := params)
+  schwinger_two_monotone := CorrelationTwoPointModel.schwinger_two_monotone (params := params)
+
 /-! ## Lattice-to-continuum bridge for GKS-I -/
 
 /-- Real-analysis helper: if `x` can be approximated arbitrarily well by
@@ -226,6 +300,40 @@ def correlationInequalityModelOfLattice
   lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
 
+/-- Low-priority instance: if lattice bridge data and the remaining core
+    inequalities are available, synthesize the full correlation-inequality model. -/
+instance (priority := 100) correlationInequalityModel_of_lattice
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationInequalityCoreModel params] :
+    CorrelationInequalityModel params :=
+  correlationInequalityModelOfLattice params
+
+/-- Lattice bridge data yields the two-point correlation-inequality subinterface. -/
+instance (priority := 100) correlationTwoPointModel_of_lattice
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params] :
+    CorrelationTwoPointModel params where
+  griffiths_first := griffiths_first_from_lattice (params := params)
+  schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
+
+/-- Core assumptions provide the four-point correlation-inequality subinterface. -/
+instance (priority := 100) correlationFourPointModel_of_core
+    (params : Phi4Params)
+    [CorrelationInequalityCoreModel params] :
+    CorrelationFourPointModel params where
+  griffiths_second := CorrelationInequalityCoreModel.griffiths_second (params := params)
+  lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
+
+/-- Core assumptions provide the finite-volume FKG subinterface. -/
+instance (priority := 100) correlationFKGModel_of_core
+    (params : Phi4Params)
+    [CorrelationInequalityCoreModel params] :
+    CorrelationFKGModel params where
+  fkg_inequality := CorrelationInequalityCoreModel.fkg_inequality (params := params)
+
 /-! ## Griffiths' First Inequality (GKS-I) -/
 
 /-- **GKS-I**: For the φ⁴₂ measure dμ_Λ with P = even + linear,
@@ -235,10 +343,10 @@ def correlationInequalityModelOfLattice
     via lattice approximation. The key input is that e^{-V} is a function
     of φ with a "ferromagnetic" structure (all couplings positive). -/
 theorem griffiths_first (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationTwoPointModel params]
     (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
     0 ≤ schwingerTwo params Λ f g := by
-  exact CorrelationInequalityModel.griffiths_first (params := params) Λ f g hf hg
+  exact CorrelationTwoPointModel.griffiths_first (params := params) Λ f g hf hg
 
 /-! ## Griffiths' Second Inequality (GKS-II) -/
 
@@ -250,13 +358,13 @@ theorem griffiths_first (params : Phi4Params) (Λ : Rectangle)
     This channel inequality is one of the core inputs in the monotonicity
     arguments used for the infinite-volume limit. -/
 theorem griffiths_second (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
     schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
       schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] := by
-  exact CorrelationInequalityModel.griffiths_second
+  exact CorrelationFourPointModel.griffiths_second
     (params := params) Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 private def fin4_1 : Fin 4 := ⟨1, by decide⟩
@@ -284,7 +392,7 @@ private lemma schwingerN4_perm_01423
 
 /-- GKS-II in the `(13)(24)` channel, obtained from `(12)(34)` via permutation symmetry. -/
 theorem griffiths_second_13_24 (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -299,7 +407,7 @@ theorem griffiths_second_13_24 (params : Phi4Params) (Λ : Rectangle)
 
 /-- GKS-II in the `(14)(23)` channel, obtained from `(12)(34)` via permutation symmetry. -/
 theorem griffiths_second_14_23 (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -338,7 +446,7 @@ def truncatedFourPoint14 (params : Phi4Params) (Λ : Rectangle)
 /-- Nonnegativity of the `(12)(34)` pairing-subtracted 4-point expression:
     `S₄ - S₂(12)S₂(34) ≥ 0`. -/
 theorem pairing_subtracted_four_point_nonneg (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -351,7 +459,7 @@ theorem pairing_subtracted_four_point_nonneg (params : Phi4Params) (Λ : Rectang
     `S₄ - S₂(13)S₂(24) ≥ 0`. -/
 theorem pairing_subtracted_four_point_nonneg_13_24
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -364,7 +472,7 @@ theorem pairing_subtracted_four_point_nonneg_13_24
     `S₄ - S₂(14)S₂(23) ≥ 0`. -/
 theorem pairing_subtracted_four_point_nonneg_14_23
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -383,21 +491,21 @@ theorem pairing_subtracted_four_point_nonneg_14_23
     This is a far-reaching generalization of GKS-I and implies, among other things,
     that the 2-point function dominates the truncated 4-point function. -/
 theorem fkg_inequality (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFKGModel params]
     (F G : FieldConfig2D → ℝ)
     (hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
     (hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂) :
     (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
       (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
     ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ) := by
-  exact CorrelationInequalityModel.fkg_inequality
+  exact CorrelationFKGModel.fkg_inequality
     (params := params) Λ F G hF_mono hG_mono
 
 /-- FKG implies nonnegativity of the connected finite-volume two-point function
     for linear field observables. -/
 theorem connectedSchwingerTwo_nonneg
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFKGModel params]
     (f g : TestFun2D) :
     0 ≤ connectedSchwingerTwo params Λ f g := by
   have hmonoF :
@@ -435,7 +543,7 @@ theorem connectedSchwingerTwo_nonneg
     Together, they "squeeze" the 4-point function near its Gaussian value
     for weak coupling. -/
 theorem lebowitz_inequality (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -443,14 +551,14 @@ theorem lebowitz_inequality (params : Phi4Params) (Λ : Rectangle)
       schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
       schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
       schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
-  exact CorrelationInequalityModel.lebowitz_inequality
+  exact CorrelationFourPointModel.lebowitz_inequality
     (params := params) Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Upper bound on the `(12)(34)` pairing-subtracted expression from Lebowitz:
     `S₄ - S₂(12)S₂(34) ≤ S₂(13)S₂(24) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_upper_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -465,7 +573,7 @@ theorem pairing_subtracted_four_point_upper_bound
     `S₄ - S₂(13)S₂(24) ≤ S₂(12)S₂(34) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_upper_bound_13_24
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -480,7 +588,7 @@ theorem pairing_subtracted_four_point_upper_bound_13_24
     `S₄ - S₂(14)S₂(23) ≤ S₂(12)S₂(34) + S₂(13)S₂(24)`. -/
 theorem pairing_subtracted_four_point_upper_bound_14_23
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -494,7 +602,7 @@ theorem pairing_subtracted_four_point_upper_bound_14_23
 /-- Two-sided estimate for the `(12)(34)` pairing-subtracted 4-point expression. -/
 theorem pairing_subtracted_four_point_bounds
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -512,7 +620,7 @@ theorem pairing_subtracted_four_point_bounds
     `|S₄ - S₂(12)S₂(34)| ≤ S₂(13)S₂(24) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_abs_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -529,7 +637,7 @@ theorem pairing_subtracted_four_point_abs_bound
     `|S₄ - S₂(13)S₂(24)| ≤ S₂(12)S₂(34) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_abs_bound_13_24
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -546,7 +654,7 @@ theorem pairing_subtracted_four_point_abs_bound_13_24
     `|S₄ - S₂(14)S₂(23)| ≤ S₂(12)S₂(34) + S₂(13)S₂(24)`. -/
 theorem pairing_subtracted_four_point_abs_bound_14_23
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -574,7 +682,7 @@ def cumulantFourPoint (params : Phi4Params) (Λ : Rectangle)
 /-- Lebowitz implies nonpositivity of the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_nonpos
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -586,7 +694,7 @@ theorem cumulantFourPoint_nonpos
 /-- GKS-II yields a lower bound on the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_lower_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -600,7 +708,7 @@ theorem cumulantFourPoint_lower_bound
 /-- Absolute-value control of the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_abs_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -618,7 +726,7 @@ theorem cumulantFourPoint_abs_bound
     every GKS-II pairing channel gives a lower bound, and Lebowitz gives the upper bound. -/
 theorem schwinger_four_bounds_all_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -641,7 +749,7 @@ theorem schwinger_four_bounds_all_channels
 /-- Three channel-wise lower bounds on the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_lower_bounds_all_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -667,7 +775,7 @@ theorem cumulantFourPoint_lower_bounds_all_channels
 /-- Alternative absolute-value bound using the `(13)(24)` GKS-II lower channel. -/
 theorem cumulantFourPoint_abs_bound_alt13
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -684,7 +792,7 @@ theorem cumulantFourPoint_abs_bound_alt13
 /-- Alternative absolute-value bound using the `(14)(23)` GKS-II lower channel. -/
 theorem cumulantFourPoint_abs_bound_alt14
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -702,7 +810,7 @@ theorem cumulantFourPoint_abs_bound_alt14
     of the three two-pair channel sums. -/
 theorem cumulantFourPoint_abs_bound_min_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationFourPointModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -732,12 +840,12 @@ for non-negative test functions. -/
     Proof: Dirichlet BC on the smaller region gives a smaller covariance,
     and by GKS-II the 2-point function is monotone in the covariance. -/
 theorem schwinger_two_monotone (params : Phi4Params) (Λ₁ Λ₂ : Rectangle)
-    [CorrelationInequalityModel params]
+    [CorrelationTwoPointModel params]
     (h : Λ₁.toSet ⊆ Λ₂.toSet)
     (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
     (hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0) :
     schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g := by
-  exact CorrelationInequalityModel.schwinger_two_monotone
+  exact CorrelationTwoPointModel.schwinger_two_monotone
     (params := params) Λ₁ Λ₂ h f g hf hg hfΛ hgΛ
 
 end

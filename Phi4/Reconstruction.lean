@@ -71,7 +71,7 @@ private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
 
 /-- Connected 2-point exponential decay at fixed parameters. -/
 abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] : Prop :=
+    [InfiniteVolumeSchwingerModel params] : Prop :=
   ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
     ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
       let g_shifted : TestFun2D := translateTestFun a g
@@ -84,25 +84,28 @@ abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
     cross-parameter OS4 statement. This is intentionally separate from
     `ReconstructionInputModel`, which only carries fixed-`params` data. -/
 class UniformWeakCouplingDecayModel (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] where
+    [InfiniteVolumeSchwingerModel params] where
   phi4_os4_weak_coupling :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p
 
 /-! ## Abstract reconstruction inputs -/
 
-/-- Inputs needed for OS reconstruction beyond the basic OSreconstruction API.
-    In particular, `wightman_reconstruction` is kept as an explicit assumption
-    interface rather than calling a specific external theorem directly. -/
-class ReconstructionInputModel (params : Phi4Params)
-    [InfiniteVolumeLimitModel params]
+/-- Linear-growth input needed at fixed `params` for OS-to-Wightman
+    reconstruction. -/
+class ReconstructionLinearGrowthModel (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params] where
   phi4_linear_growth :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS)
+
+/-- Fixed-`params` weak-coupling decay input, separated from linear-growth data. -/
+class ReconstructionWeakCouplingModel (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params] where
   /-- A canonical weak-coupling threshold for the current parameter set. -/
   weak_coupling_threshold : ℝ
   weak_coupling_threshold_pos : 0 < weak_coupling_threshold
@@ -110,11 +113,28 @@ class ReconstructionInputModel (params : Phi4Params)
     params.coupling < weak_coupling_threshold →
       ConnectedTwoPointDecayAtParams params
 
+/-- Backward-compatible aggregate reconstruction input model. -/
+class ReconstructionInputModel (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    extends ReconstructionLinearGrowthModel params,
+      ReconstructionWeakCouplingModel params
+
+instance (priority := 100) reconstructionInputModel_of_submodels
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    [ReconstructionLinearGrowthModel params]
+    [ReconstructionWeakCouplingModel params] :
+    ReconstructionInputModel params where
+  toReconstructionLinearGrowthModel := inferInstance
+  toReconstructionWeakCouplingModel := inferInstance
+
 /-- Abstract OS-to-Wightman reconstruction backend for fixed `params`.
     Kept separate from `ReconstructionInputModel` so fixed-`params`
     analytic assumptions and reconstruction machinery are not bundled together. -/
 class WightmanReconstructionModel (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] [OSAxiomCoreModel params] where
+    [OSAxiomCoreModel params] where
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -123,9 +143,8 @@ class WightmanReconstructionModel (params : Phi4Params)
 
 /-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
 abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
-    [InfiniteVolumeLimitModel params]
-    [OSAxiomCoreModel params]
-    [ReconstructionInputModel params] : Prop :=
+    [InfiniteVolumeSchwingerModel params]
+    [ReconstructionWeakCouplingModel params] : Prop :=
   ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
     (params.coupling < coupling_bound →
       ConnectedTwoPointDecayAtParams params)
@@ -143,13 +162,13 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem phi4_linear_growth (params : Phi4Params)
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
-    [ReconstructionInputModel params] :
+    [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact ReconstructionInputModel.phi4_linear_growth (params := params)
+  exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
 
 /-! ## OS4: Clustering (for weak coupling) -/
 
@@ -167,24 +186,22 @@ theorem phi4_linear_growth (params : Phi4Params)
     For strong coupling, OS4 requires the phase transition analysis
     and may fail at the critical point. -/
 theorem phi4_os4_weak_coupling (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p := by
-  intro hlim hos hrec
+  intro hlim hrec
   exact UniformWeakCouplingDecayModel.phi4_os4_weak_coupling
     (params := params)
 
 /-- Backward-compatible OS4 weak-coupling form written with explicit Schwinger moments. -/
 theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeLimitModel p] →
+      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
         p.coupling < coupling_bound →
           ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
             ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
@@ -193,7 +210,7 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
                 infiniteVolumeSchwinger p 1 ![f] *
                   infiniteVolumeSchwinger p 1 ![g_shifted]| ≤
                 C * Real.exp (-m_gap * ‖a‖) := by
-  intro hlim hos hrec
+  intro hlim hrec
   rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hdecay⟩
   refine ⟨coupling_bound, hcb_pos, ?_⟩
   intro p hpInst hsmall
@@ -205,54 +222,49 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
 theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
     ConnectedTwoPointDecayThreshold params := by
-  intro hlim hos hrec
-  refine ⟨ReconstructionInputModel.weak_coupling_threshold (params := params),
-    ReconstructionInputModel.weak_coupling_threshold_pos (params := params), ?_⟩
+  intro hlim hrec
+  refine ⟨ReconstructionWeakCouplingModel.weak_coupling_threshold (params := params),
+    ReconstructionWeakCouplingModel.weak_coupling_threshold_pos (params := params), ?_⟩
   intro hsmall
-  exact ReconstructionInputModel.connectedTwoPoint_decay_of_weak_coupling
+  exact ReconstructionWeakCouplingModel.connectedTwoPoint_decay_of_weak_coupling
     (params := params) hsmall
 
 /-- A canonical weak-coupling threshold selected from
     `phi4_connectedTwoPoint_decay_threshold`. -/
 def phi4WeakCouplingThreshold (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
     ℝ := by
-  intro hlim hos hrec
-  exact ReconstructionInputModel.weak_coupling_threshold (params := params)
+  intro hlim hrec
+  exact ReconstructionWeakCouplingModel.weak_coupling_threshold (params := params)
 
 /-- Positivity of the selected weak-coupling threshold. -/
 theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
     0 < phi4WeakCouplingThreshold params := by
-  intro hlim hos hrec
+  intro hlim hrec
   simpa [phi4WeakCouplingThreshold] using
-    ReconstructionInputModel.weak_coupling_threshold_pos (params := params)
+    ReconstructionWeakCouplingModel.weak_coupling_threshold_pos (params := params)
 
 /-- Exponential decay of connected 2-point functions when
     `params.coupling` is below the selected weak-coupling threshold. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ConnectedTwoPointDecayAtParams params := by
-  intro hlim hos hrec hsmall
-  exact ReconstructionInputModel.connectedTwoPoint_decay_of_weak_coupling
+  intro hlim hrec hsmall
+  exact ReconstructionWeakCouplingModel.connectedTwoPoint_decay_of_weak_coupling
     (params := params) hsmall
 
 /-- Explicit-Schwinger version of `phi4_connectedTwoPoint_decay_below_threshold`. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
       ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
@@ -261,7 +273,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
           infiniteVolumeSchwinger params 1 ![f] *
             infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
           C * Real.exp (-m_gap * ‖a‖) := by
-  intro hlim hos hrec hsmall
+  intro hlim hrec hsmall
   rcases phi4_connectedTwoPoint_decay_below_threshold params hsmall with ⟨m_gap, C, hm_gap, hdecay⟩
   refine ⟨m_gap, C, hm_gap, ?_⟩
   intro f g a
@@ -270,25 +282,25 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
 /-- Infinite-volume connected two-point nonnegativity inherited from finite-volume
     FKG positivity. -/
 theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [CorrelationInequalityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFKGModel params] →
     ∀ (f g : TestFun2D), 0 ≤ connectedTwoPoint params f g := by
   intro hlim hcorr f g
   exact connectedTwoPoint_nonneg params f g
 
 /-- Infinite-volume diagonal connected two-point nonnegativity from finite-volume
-    variance positivity and the infinite-volume limit. -/
+    FKG positivity and the infinite-volume limit. -/
 theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFKGModel params] →
     ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f := by
-  intro hlim hint f
-  exact connectedTwoPoint_self_nonneg params f
+  intro hlim hcorr f
+  exact connectedTwoPoint_self_nonneg_of_fkg params f
 
 /-- Infinite-volume connected two-point Cauchy-Schwarz inequality. -/
 theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       (connectedTwoPoint params f g) ^ 2 ≤
         connectedTwoPoint params f f * connectedTwoPoint params g g := by
@@ -297,8 +309,8 @@ theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point geometric-mean bound. -/
 theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       |connectedTwoPoint params f g| ≤
         Real.sqrt (connectedTwoPoint params f f * connectedTwoPoint params g g) := by
@@ -307,8 +319,8 @@ theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point half-diagonal bound. -/
 theorem phi4_connectedTwoPoint_abs_le_half_diag_sum (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       |connectedTwoPoint params f g| ≤
         (connectedTwoPoint params f f + connectedTwoPoint params g g) / 2 := by
@@ -317,8 +329,8 @@ theorem phi4_connectedTwoPoint_abs_le_half_diag_sum (params : Phi4Params) :
 
 /-- Infinite-volume finite-family PSD statement for the connected two-point kernel. -/
 theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InteractionWeightModel params] →
     ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
       0 ≤ Finset.sum s (fun i =>
         c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))) := by
@@ -327,20 +339,340 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
 
 /-- Standard-index-order form of `phi4_connectedTwoPoint_quadratic_nonneg`. -/
 theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
-    [InteractionIntegrabilityModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InfiniteVolumeMeasureModel params] →
+    [InteractionWeightModel params] →
     ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
       0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
         c i * c j * connectedTwoPoint params (f i) (f j))) := by
-  intro hlim hint ι s f c
+  intro hsch hmeas hint ι s f c
   exact connectedTwoPoint_quadratic_nonneg_standard params s f c
+
+/-- Infinite-volume 4-point cumulant nonpositivity inherited from Lebowitz bounds. -/
+theorem phi4_infiniteCumulantFourPoint_nonpos (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ≤ 0 := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteCumulantFourPoint_nonpos params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume absolute bound for the fully connected 4-point cumulant. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteCumulantFourPoint_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Channel-wise lower bounds for the infinite-volume fully connected 4-point
+    cumulant. -/
+theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₃])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ∧
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₃])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ∧
+      -(infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+        infiniteVolumeSchwinger params 2 ![f₂, f₄])
+        ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteCumulantFourPoint_lower_bounds_all_channels
+    params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Alternative absolute-value bound via the `(13)(24)` channel. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13 (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteCumulantFourPoint_abs_bound_alt13 params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Alternative absolute-value bound via the `(14)(23)` channel. -/
+theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14 (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteCumulantFourPoint params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteCumulantFourPoint_abs_bound_alt14 params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume all-channel 4-point bounds (GKS lower channels + Lebowitz upper
+    channel). -/
+theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      max (infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+        infiniteVolumeSchwinger params 2 ![f₃, f₄])
+        (max (infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄])
+          (infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃]))
+        ≤ infiniteVolumeSchwinger params 4 ![f₁, f₂, f₃, f₄] ∧
+      infiniteVolumeSchwinger params 4 ![f₁, f₂, f₃, f₄] ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteSchwinger_four_bounds_all_channels
+    params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume nonnegativity of the `(12)(34)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_nonneg (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint12_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume nonnegativity of the `(13)(24)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_nonneg (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint13_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume nonnegativity of the `(14)(23)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_nonneg (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint14_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume upper bound for the `(12)(34)` pairing-subtracted channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_upper (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint12_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume upper bound for the `(13)(24)` pairing-subtracted channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_upper (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint13_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume upper bound for the `(14)(23)` pairing-subtracted channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_upper (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint14_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume absolute-value bound for the `(12)(34)` pairing-subtracted
+    channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_abs_bound (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint12_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume absolute-value bound for the `(13)(24)` pairing-subtracted
+    channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_abs_bound (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint13_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume absolute-value bound for the `(14)(23)` pairing-subtracted
+    channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_abs_bound (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      |infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄| ≤
+        infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+          infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+        infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+          infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint14_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume two-sided bounds for the `(12)(34)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint12_bounds (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint12_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume two-sided bounds for the `(13)(24)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint13_bounds (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint13_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Infinite-volume two-sided bounds for the `(14)(23)` pairing-subtracted
+    4-point channel. -/
+theorem phi4_infiniteTruncatedFourPoint14_bounds (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint14_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+
+/-- Combined two-sided bounds for all infinite-volume pairing-subtracted
+    4-point channels. -/
+theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [CorrelationFourPointModel params] →
+    ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
+      (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
+      (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
+      0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] ∧
+      0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₄] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₃] ∧
+      0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ∧
+        infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ ≤
+          infiniteVolumeSchwinger params 2 ![f₁, f₂] *
+            infiniteVolumeSchwinger params 2 ![f₃, f₄] +
+          infiniteVolumeSchwinger params 2 ![f₁, f₃] *
+            infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
+  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  exact infiniteTruncatedFourPoint_bounds_all_channels params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume connected two-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
+    [InfiniteVolumeMeasureModel params] →
     ∀ (f g : TestFun2D),
       connectedTwoPoint params f g = connectedTwoPoint params g f := by
-  intro hlim f g
+  intro hsch hmeas f g
   exact connectedTwoPoint_symm params f g
 
 /-! ## Wightman reconstruction -/
@@ -357,15 +689,15 @@ theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
     - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
     - W3: Locality (spacelike commutativity) -/
 theorem phi4_wightman_exists (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hrec hwrec
+  intro hlim hos hrecLinear hwrec
   obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
   rcases hOS_lg with ⟨hS, hlg_nonempty⟩
   rcases hlg_nonempty with ⟨hlg⟩
@@ -380,16 +712,16 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     This is encoded in the `hermitian` field of `WightmanFunctions`,
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hlim hos hrec hwrec
+  intro hlim hos hrecLinear hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -399,14 +731,14 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     This follows from the Wightman reconstruction theorem applied to
     the φ⁴₂ Schwinger functions. -/
 theorem phi4_locality (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hlim hos hrec hwrec
+  intro hlim hos hrecLinear hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
@@ -414,14 +746,14 @@ theorem phi4_locality (params : Phi4Params) :
     U(Λ,a) φ(f) U(Λ,a)⁻¹ = φ((Λ,a)·f) for (Λ,a) ∈ ISO(1,1).
     (Glimm-Jaffe Section 19.5) -/
 theorem phi4_lorentz_covariance (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hlim hos hrec hwrec
+  intro hlim hos hrecLinear hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -433,14 +765,14 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     For strong coupling, vacuum uniqueness is related to the absence of
     phase transitions (or selecting a pure phase). -/
 theorem phi4_unique_vacuum (params : Phi4Params) :
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionInputModel params] →
+    [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hlim hos hrec hwrec
+  intro hlim hos hrecLinear hwrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 

@@ -12,6 +12,20 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - `Phi4/*.lean` `sorry` count: `0`.
 - `Phi4/*.lean` `axiom` declarations: `0`.
 - Build status: `lake build Phi4` succeeds.
+- Pairing/perfect-matching combinatorics has been factored into `Phi4/Combinatorics/PerfectMatchings.lean`.
+- `PairingEnumerationModel` now assumes only the pairing-cardinality formula; finite enumeration is canonical (`Finset.univ`).
+- Boundary covariance assumptions are now layered into kernel/comparison/regularity subinterfaces with compatibility instances from `BoundaryCovarianceModel`.
+- Dirichlet reflection-positivity assumptions now depend on `BoundaryKernelModel` (minimal kernel data) rather than the full boundary covariance bundle.
+- `Phi4ModelBundle` now stores boundary kernel/comparison/regularity components directly, with `BoundaryCovarianceModel` reconstructed by instance.
+- `Phi4/GreenFunction/PeriodicKernel.lean` adds concrete periodic image-sum kernel infrastructure (lattice shifts and truncated torus-image sums).
+- Correlation assumptions are now split into `CorrelationTwoPointModel`, `CorrelationFourPointModel`, and `CorrelationFKGModel`, with compatibility reconstruction to `CorrelationInequalityModel`.
+- `Phi4ModelBundle` now stores these three correlation submodels directly; the full correlation model is reconstructed by instance.
+- Infinite-volume assumptions are now split into `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel`, with reconstruction to `InfiniteVolumeLimitModel`.
+- `InfiniteVolumeLimit.lean` and `Reconstruction.lean` now use `InfiniteVolumeSchwingerModel` as the minimal assumption for inequality/convergence blocks that do not require measure representation.
+- `Phi4ModelBundle` now stores `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel` directly; full `InfiniteVolumeLimitModel` is reconstructed by instance.
+- `MeasureOS3Model` now depends only on the infinite-volume Schwinger+measure subinterfaces (not the full infinite-volume bundle).
+- `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now decoupled from `InfiniteVolumeLimitModel`; they are pure Schwinger-package interfaces.
+- `Reconstruction.lean` now uses `InfiniteVolumeSchwingerModel` (instead of `InfiniteVolumeLimitModel`) for weak-coupling decay and reconstruction interface classes.
 - Several deep analytic/reconstruction steps are currently represented via explicit assumption interfaces (`...Model` classes), not placeholders.
 - Upstream `OSReconstruction` currently emits `sorry` warnings in some modules; this project treats reconstruction as an explicit input assumption at the final handoff point.
 
@@ -30,6 +44,8 @@ Formalize a mathematically sound pipeline for φ⁴₂:
 flowchart TD
   Defs[Phi4.Defs]
   Lattice[Phi4.LatticeApproximation]
+  PMatch[Phi4.Combinatorics.PerfectMatchings]
+  GPer[Phi4.GreenFunction.PeriodicKernel]
   FreeField[Phi4.FreeField]
   BesselK1[Phi4.Bessel.BesselK1]
   BesselK0[Phi4.Bessel.BesselK0]
@@ -52,9 +68,12 @@ flowchart TD
   OSRec[OSReconstruction]
 
   Defs --> Lattice
+  Defs --> PMatch
   Defs --> FreeField
+  FreeField --> GPer
   BesselK1 --> BesselK0 --> CovOps
   FreeField --> CovOps --> Wick
+  PMatch --> Graphs
   Wick --> Graphs
   Wick --> Interaction --> FVM
   FVM --> Corr
@@ -93,9 +112,18 @@ flowchart LR
 
 Some high-complexity components are intentionally exposed as structured assumptions to keep downstream development rigorous and explicit:
 
+- `BoundaryKernelModel`
+- `BoundaryComparisonModel`
+- `BoundaryRegularityModel`
 - `InteractionIntegrabilityModel`
+- `InteractionUVModel`
+- `InteractionWeightModel`
 - `FiniteVolumeComparisonModel`
-- `CorrelationInequalityModel`
+- `CorrelationTwoPointModel`
+- `CorrelationFourPointModel`
+- `CorrelationFKGModel`
+- `InfiniteVolumeSchwingerModel`
+- `InfiniteVolumeMeasureModel`
 - `FreeReflectionPositivityModel`
 - `DirichletReflectionPositivityModel`
 - `InteractingReflectionPositivityModel`
@@ -109,6 +137,11 @@ Some high-complexity components are intentionally exposed as structured assumpti
 - `MeasureOS3Model`
 - `ReconstructionInputModel`
 
+Compatibility instances reconstruct:
+- `CorrelationInequalityModel` from the three correlation submodels.
+- `BoundaryCovarianceModel` from boundary kernel/comparison/regularity submodels.
+- `InfiniteVolumeLimitModel` from Schwinger + measure submodels.
+
 `Phi4.ModelBundle` collects these interfaces into one bundled entrypoint.
 
 ## File Map (Purpose)
@@ -117,6 +150,8 @@ Some high-complexity components are intentionally exposed as structured assumpti
 |------|---------|
 | `Phi4/Defs.lean` | Core types and geometric/setup data |
 | `Phi4/LatticeApproximation.lean` | Rectangular lattice geometry, discretization, and Riemann-sum infrastructure |
+| `Phi4/Combinatorics/PerfectMatchings.lean` | Perfect matching / pairing combinatorics for Wick expansions |
+| `Phi4/GreenFunction/PeriodicKernel.lean` | Periodic method-of-images kernel shifts and truncated lattice sums |
 | `Phi4/FreeField.lean` | Free Gaussian field and covariance CLM infrastructure |
 | `Phi4/Bessel/BesselK1.lean` | Bessel K1 technical lemmas |
 | `Phi4/Bessel/BesselK0.lean` | Bessel K0 definitions and bridge lemmas |

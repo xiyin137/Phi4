@@ -52,7 +52,7 @@ def finiteVolumeMeasure (params : Phi4Params) (Λ : Rectangle) :
 
 /-- The finite-volume measure is a probability measure. -/
 theorem finiteVolumeMeasure_isProbability (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) :
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
   refine ⟨?_⟩
@@ -113,7 +113,7 @@ def schwingerN (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
 /-- Zeroth Schwinger function normalization in finite volume:
     `S_0^Λ = 1` for any choice of the unique `Fin 0 → TestFun2D`. -/
 theorem schwingerN_zero (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f : Fin 0 → TestFun2D) :
     schwingerN params Λ 0 f = 1 := by
   have hprob : IsProbabilityMeasure (finiteVolumeMeasure params Λ) :=
@@ -217,7 +217,7 @@ private theorem freeField_product_memLp
       exact htail.mul' hf0
 
 private theorem finiteVolume_product_integrable
-    (params : Phi4Params) [InteractionIntegrabilityModel params]
+    (params : Phi4Params) [InteractionWeightModel params]
     (Λ : Rectangle) (n : ℕ) (f : Fin n → TestFun2D) :
     Integrable (fun ω : FieldConfig2D => ∏ i, ω (f i)) (finiteVolumeMeasure params Λ) := by
   set μ := freeFieldMeasure params.mass params.mass_pos
@@ -265,7 +265,7 @@ private theorem finiteVolume_product_integrable
 
 /-- Single-field observable is `L²` under the finite-volume interacting measure. -/
 theorem finiteVolume_pairing_memLp_two (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f : TestFun2D) :
     MemLp (fun ω : FieldConfig2D => ω f) (2 : ℝ≥0∞)
       (finiteVolumeMeasure params Λ) := by
@@ -282,7 +282,7 @@ theorem finiteVolume_pairing_memLp_two (params : Phi4Params)
 
 /-- Diagonal connected 2-point positivity (variance form) in finite volume. -/
 theorem connectedSchwingerTwo_self_nonneg (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f : TestFun2D) :
     0 ≤ connectedSchwingerTwo params Λ f f := by
   let μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
@@ -307,7 +307,7 @@ theorem connectedSchwingerTwo_self_nonneg (params : Phi4Params)
     Proof: ω is linear (WeakDual), so the product splits at index i,
     and the integral distributes by linearity. -/
 theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (f g : Fin n → TestFun2D) (c : ℝ) (i : Fin n) :
     schwingerN params Λ n (Function.update f i (c • f i + g i)) =
       c * schwingerN params Λ n f +
@@ -354,7 +354,7 @@ theorem schwingerN_multilinear (params : Phi4Params) (Λ : Rectangle) (n : ℕ)
 
 /-- Additivity of the one-point Schwinger functional. -/
 theorem schwingerOne_add (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f g : TestFun2D) :
     schwingerN params Λ 1 ![f + g] =
       schwingerN params Λ 1 ![f] + schwingerN params Λ 1 ![g] := by
@@ -373,7 +373,7 @@ theorem schwingerOne_add (params : Phi4Params)
 
 /-- Scalar linearity of the one-point Schwinger functional. -/
 theorem schwingerOne_smul (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (c : ℝ) (f : TestFun2D) :
     schwingerN params Λ 1 ![c • f] = c * schwingerN params Λ 1 ![f] := by
   let F : Fin 1 → TestFun2D := ![f]
@@ -398,7 +398,7 @@ theorem schwingerOne_smul (params : Phi4Params)
 
 /-- The one-point Schwinger functional as a linear map. -/
 def schwingerOneLinear (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) : TestFun2D →ₗ[ℝ] ℝ where
   toFun f := schwingerN params Λ 1 ![f]
   map_add' := by
@@ -410,7 +410,7 @@ def schwingerOneLinear (params : Phi4Params)
 
 /-- Additivity in the first argument of the finite-volume two-point function. -/
 theorem schwingerTwo_add_left (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f₁ f₂ g : TestFun2D) :
     schwingerTwo params Λ (f₁ + f₂) g =
       schwingerTwo params Λ f₁ g + schwingerTwo params Λ f₂ g := by
@@ -442,7 +442,7 @@ theorem schwingerTwo_add_left (params : Phi4Params)
 
 /-- Scalar linearity in the first argument of the finite-volume two-point function. -/
 theorem schwingerTwo_smul_left (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (c : ℝ) (f g : TestFun2D) :
     schwingerTwo params Λ (c • f) g = c * schwingerTwo params Λ f g := by
   let F : Fin 2 → TestFun2D := ![f, g]
@@ -475,7 +475,7 @@ theorem schwingerTwo_smul_left (params : Phi4Params)
 
 /-- Additivity in the second argument of the finite-volume two-point function. -/
 theorem schwingerTwo_add_right (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f g₁ g₂ : TestFun2D) :
     schwingerTwo params Λ f (g₁ + g₂) =
       schwingerTwo params Λ f g₁ + schwingerTwo params Λ f g₂ := by
@@ -489,7 +489,7 @@ theorem schwingerTwo_add_right (params : Phi4Params)
 
 /-- Scalar linearity in the second argument of the finite-volume two-point function. -/
 theorem schwingerTwo_smul_right (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (c : ℝ) (f g : TestFun2D) :
     schwingerTwo params Λ f (c • g) = c * schwingerTwo params Λ f g := by
   calc
@@ -500,7 +500,7 @@ theorem schwingerTwo_smul_right (params : Phi4Params)
 
 /-- The finite-volume two-point function packaged as a bilinear map. -/
 def schwingerTwoBilinear (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) :
     TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ where
   toFun f :=
@@ -522,7 +522,7 @@ def schwingerTwoBilinear (params : Phi4Params)
 
 /-- The connected finite-volume two-point function packaged as a bilinear map. -/
 def connectedSchwingerTwoBilinear (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) :
     TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ where
   toFun f :=
@@ -551,7 +551,7 @@ def connectedSchwingerTwoBilinear (params : Phi4Params)
 
 /-- Symmetry of the connected two-point bilinear form. -/
 theorem connectedSchwingerTwoBilinear_symm (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f g : TestFun2D) :
     connectedSchwingerTwoBilinear params Λ f g =
       connectedSchwingerTwoBilinear params Λ g f := by
@@ -560,7 +560,7 @@ theorem connectedSchwingerTwoBilinear_symm (params : Phi4Params)
 
 /-- Diagonal nonnegativity of the connected two-point bilinear form. -/
 theorem connectedSchwingerTwoBilinear_self_nonneg (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) (f : TestFun2D) :
     0 ≤ connectedSchwingerTwoBilinear params Λ f f := by
   simpa [connectedSchwingerTwoBilinear] using
@@ -570,7 +570,7 @@ theorem connectedSchwingerTwoBilinear_self_nonneg (params : Phi4Params)
     the connected two-point kernel is nonnegative on real finite linear combinations. -/
 theorem connectedSchwingerTwo_quadratic_nonneg
     (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle)
     {ι : Type*} (s : Finset ι)
     (f : ι → TestFun2D) (c : ι → ℝ) :
@@ -590,7 +590,7 @@ theorem connectedSchwingerTwo_quadratic_nonneg
 /-- Standard-index-order version of `connectedSchwingerTwo_quadratic_nonneg`. -/
 theorem connectedSchwingerTwo_quadratic_nonneg_standard
     (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle)
     {ι : Type*} (s : Finset ι)
     (f : ι → TestFun2D) (c : ι → ℝ) :
@@ -615,7 +615,7 @@ theorem connectedSchwingerTwo_quadratic_nonneg_standard
     `|Cᶜ(f,g)| ≤ (Cᶜ(f,f) + Cᶜ(g,g)) / 2`. -/
 theorem connectedSchwingerTwo_abs_le_half_diag_sum
     (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle)
     (f g : TestFun2D) :
     |connectedSchwingerTwo params Λ f g| ≤
@@ -663,7 +663,7 @@ theorem connectedSchwingerTwo_abs_le_half_diag_sum
     `(Cᶜ(f,g))² ≤ Cᶜ(f,f) Cᶜ(g,g)`. -/
 theorem connectedSchwingerTwo_sq_le_mul_diag
     (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle)
     (f g : TestFun2D) :
     (connectedSchwingerTwo params Λ f g) ^ 2 ≤
@@ -725,7 +725,7 @@ theorem connectedSchwingerTwo_sq_le_mul_diag
     `|Cᶜ_Λ(f,g)| ≤ √(Cᶜ_Λ(f,f) Cᶜ_Λ(g,g))`. -/
 theorem connectedSchwingerTwo_abs_le_sqrt_diag_mul
     (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle)
     (f g : TestFun2D) :
     |connectedSchwingerTwo params Λ f g| ≤

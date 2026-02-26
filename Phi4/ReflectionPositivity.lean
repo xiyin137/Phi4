@@ -98,7 +98,7 @@ class FreeReflectionPositivityModel (mass : ℝ) (hmass : 0 < mass) where
 /-- Dirichlet covariance reflection positivity on time-symmetric rectangles. -/
 class DirichletReflectionPositivityModel (mass : ℝ) (hmass : 0 < mass) where
   dirichlet_covariance_reflection_positive :
-    ∀ [BoundaryCovarianceModel mass hmass] (Λ : Rectangle),
+    ∀ [BoundaryKernelModel mass hmass] (Λ : Rectangle),
       Λ.IsTimeSymmetric →
       ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
       (∀ i, supportedInPositiveTime (f i)) →
@@ -146,7 +146,7 @@ theorem free_covariance_reflection_positive (mass : ℝ) (hmass : 0 < mass)
 theorem dirichlet_covariance_reflection_positive
     (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric)
     (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryCovarianceModel mass hmass]
+    [BoundaryKernelModel mass hmass]
     [DirichletReflectionPositivityModel mass hmass]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :

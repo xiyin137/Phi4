@@ -135,23 +135,97 @@ class InteractionIntegrabilityModel (params : Phi4Params) where
       MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
         p (freeFieldMeasure params.mass params.mass_pos)
 
+/-- UV/L² interaction input: cutoff moments, UV convergence, and L² control of
+    the limiting interaction. -/
+class InteractionUVModel (params : Phi4Params) where
+  interactionCutoff_in_L2 :
+    ∀ (Λ : Rectangle) (κ : UVCutoff),
+      MemLp (interactionCutoff params Λ κ) 2
+        (freeFieldMeasure params.mass params.mass_pos)
+  interactionCutoff_converges_L2 :
+    ∀ (Λ : Rectangle),
+      Filter.Tendsto
+        (fun (κ : ℝ) => if h : 0 < κ then
+          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+            ∂(freeFieldMeasure params.mass params.mass_pos)
+          else 0)
+        Filter.atTop
+        (nhds 0)
+  interactionCutoff_tendsto_ae :
+    ∀ (Λ : Rectangle),
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+          Filter.atTop
+          (nhds (interaction params Λ ω))
+  interaction_in_L2 :
+    ∀ (Λ : Rectangle),
+      MemLp (interaction params Λ) 2
+        (freeFieldMeasure params.mass params.mass_pos)
+
+/-- Any full interaction-integrability model provides the UV/L² subinterface. -/
+instance (priority := 100) interactionUVModel_of_integrability
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params] :
+    InteractionUVModel params where
+  interactionCutoff_in_L2 :=
+    InteractionIntegrabilityModel.interactionCutoff_in_L2 (params := params)
+  interactionCutoff_converges_L2 :=
+    InteractionIntegrabilityModel.interactionCutoff_converges_L2 (params := params)
+  interactionCutoff_tendsto_ae :=
+    InteractionIntegrabilityModel.interactionCutoff_tendsto_ae (params := params)
+  interaction_in_L2 :=
+    InteractionIntegrabilityModel.interaction_in_L2 (params := params)
+
+/-- Minimal interaction input used by finite-volume measure normalization and
+    moment integrability: integrability of the Boltzmann weight `exp(-V_Λ)` in
+    every finite `Lᵖ`. -/
+class InteractionWeightModel (params : Phi4Params) where
+  exp_interaction_Lp :
+    ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+      MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+        p (freeFieldMeasure params.mass params.mass_pos)
+
+/-- Any full interaction-integrability model provides the weight-integrability
+    subinterface. -/
+instance (priority := 100) interactionWeightModel_of_integrability
+    (params : Phi4Params)
+    [InteractionIntegrabilityModel params] :
+    InteractionWeightModel params where
+  exp_interaction_Lp := InteractionIntegrabilityModel.exp_interaction_Lp (params := params)
+
+/-- The combined UV/L² and weight-integrability subinterfaces reconstruct the
+    original interaction-integrability interface. -/
+instance (priority := 100) interactionIntegrabilityModel_of_uv_weight
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    [InteractionWeightModel params] :
+    InteractionIntegrabilityModel params where
+  interactionCutoff_in_L2 := InteractionUVModel.interactionCutoff_in_L2 (params := params)
+  interactionCutoff_converges_L2 :=
+    InteractionUVModel.interactionCutoff_converges_L2 (params := params)
+  interactionCutoff_tendsto_ae :=
+    InteractionUVModel.interactionCutoff_tendsto_ae (params := params)
+  interaction_in_L2 := InteractionUVModel.interaction_in_L2 (params := params)
+  exp_interaction_Lp := InteractionWeightModel.exp_interaction_Lp (params := params)
+
 /-! ## The interaction is in Lᵖ -/
 
 /-- The UV-regularized interaction V_{Λ,κ} is in L²(dφ_C).
     This follows from the localized Feynman graph bounds (Theorem 8.5.3).
     The bound is uniform in κ. -/
 theorem interactionCutoff_in_L2 (params : Phi4Params) (Λ : Rectangle)
-    [InteractionIntegrabilityModel params]
+    [InteractionUVModel params]
     (κ : UVCutoff) :
     MemLp (interactionCutoff params Λ κ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  exact InteractionIntegrabilityModel.interactionCutoff_in_L2
+  exact InteractionUVModel.interactionCutoff_in_L2
     (params := params) Λ κ
 
 /-- Convergence of V_{Λ,κ} → V_Λ in L² as κ → ∞.
     The limit is taken in the L²(dφ_C) norm:
       ‖V_{Λ,κ} - V_Λ‖_{L²(dφ_C)} → 0 as κ → ∞. -/
 theorem interactionCutoff_converges_L2 (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionUVModel params]
     (Λ : Rectangle) :
     Filter.Tendsto
       (fun (κ : ℝ) => if h : 0 < κ then
@@ -160,27 +234,27 @@ theorem interactionCutoff_converges_L2 (params : Phi4Params)
         else 0)
       Filter.atTop
       (nhds 0) := by
-  exact InteractionIntegrabilityModel.interactionCutoff_converges_L2
+  exact InteractionUVModel.interactionCutoff_converges_L2
     (params := params) Λ
 
 /-- Almost-everywhere pointwise UV convergence `V_{Λ,κ} → V_Λ`. -/
 theorem interactionCutoff_tendsto_ae (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionUVModel params]
     (Λ : Rectangle) :
     ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
       Filter.Tendsto
         (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
         Filter.atTop
         (nhds (interaction params Λ ω)) := by
-  exact InteractionIntegrabilityModel.interactionCutoff_tendsto_ae
+  exact InteractionUVModel.interactionCutoff_tendsto_ae
     (params := params) Λ
 
 /-- The interaction V_Λ is in L²(dφ_C). -/
 theorem interaction_in_L2 (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionUVModel params]
     (Λ : Rectangle) :
     MemLp (interaction params Λ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  exact InteractionIntegrabilityModel.interaction_in_L2
+  exact InteractionUVModel.interaction_in_L2
     (params := params) Λ
 
 /-! ## The exponential of the interaction is in Lᵖ
@@ -203,16 +277,16 @@ The proof has two main steps:
     - Gaussian measure of the "bad set" where :φ⁴: is very negative
 - The fact that this bad set has exponentially small measure -/
 theorem exp_interaction_Lp (params : Phi4Params) (Λ : Rectangle)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     {p : ℝ≥0∞} (hp : p ≠ ⊤) :
     MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
       p (freeFieldMeasure params.mass params.mass_pos) := by
-  exact InteractionIntegrabilityModel.exp_interaction_Lp
+  exact InteractionWeightModel.exp_interaction_Lp
     (params := params) Λ hp
 
 /-- Positivity of the partition function: Z_Λ = ∫ e^{-V_Λ} dφ_C > 0. -/
 theorem partition_function_pos (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) :
     0 < ∫ ω, Real.exp (-(interaction params Λ ω))
         ∂(freeFieldMeasure params.mass params.mass_pos) := by
@@ -229,7 +303,7 @@ theorem partition_function_pos (params : Phi4Params)
 
 /-- Finiteness of the partition function: Z_Λ < ∞ (i.e. the exponential is integrable). -/
 theorem partition_function_integrable (params : Phi4Params)
-    [InteractionIntegrabilityModel params]
+    [InteractionWeightModel params]
     (Λ : Rectangle) :
     Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
         (freeFieldMeasure params.mass params.mass_pos) := by
