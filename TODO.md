@@ -43,6 +43,11 @@
   `ConnectedTwoPointDecayAtParams`, `UniformWeakCouplingDecayModel`,
   `ReconstructionInputModel`, and `WightmanReconstructionModel` on
   `InfiniteVolumeSchwingerModel` rather than `InfiniteVolumeLimitModel`.
+- `ReconstructionInputModel` is now split into
+  `ReconstructionLinearGrowthModel` + `ReconstructionWeakCouplingModel`,
+  with compatibility reconstruction kept for existing APIs.
+- `Phi4/ModelBundle.lean` now stores reconstruction linear-growth and
+  weak-coupling submodels directly.
 - `Phi4/ModelBundle.lean` now carries correlation submodels directly; full
   `CorrelationInequalityModel` is reconstructed by instance.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
@@ -129,8 +134,11 @@ flowchart TD
   OSMC[OSAxiomCoreModel]
   OSMC --> OSE4[OSE4ClusterModel]
   OSMC --> OSE2[OSDistributionE2Model]
-  IVS --> RIM[ReconstructionInputModel]
+  IVS --> RLG[ReconstructionLinearGrowthModel]
+  IVS --> RWC[ReconstructionWeakCouplingModel]
   OSMC --> RIM[ReconstructionInputModel]
+  RLG --> RIM[ReconstructionInputModel]
+  RWC --> RIM[ReconstructionInputModel]
   IVLM --> Bundle[Phi4ModelBundle]
   OSMC --> Bundle
   OSE4 --> Bundle
@@ -220,7 +228,7 @@ Level 4: InfiniteVolumeLimitModel
 Level 5: WickPowersModel, RegularityModel
 Level 6: OSAxiomCoreModel (now IV-limit independent), OSE4ClusterModel,
          OSDistributionE2Model, MeasureOS3Model
-Level 7: ReconstructionInputModel
+Level 7: ReconstructionLinearGrowthModel, ReconstructionWeakCouplingModel, ReconstructionInputModel
 ```
 
 ### Phase 0: Infrastructure Foundation

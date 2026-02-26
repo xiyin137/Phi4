@@ -477,21 +477,44 @@ def connectedTwoPoint (params : Phi4Params)
         infiniteVolumeSchwinger params 1 ![f] *
           infiniteVolumeSchwinger params 1 ![g] := rfl
 
-/-- Symmetry of the infinite-volume 2-point Schwinger function from
-    moment representation. -/
+/-- Symmetry of the infinite-volume 2-point Schwinger function from the
+    finite-volume symmetry and convergence along the exhausting rectangles. -/
 theorem infiniteVolumeSchwinger_two_symm (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params]
     (f g : TestFun2D) :
     infiniteVolumeSchwinger params 2 ![f, g] =
       infiniteVolumeSchwinger params 2 ![g, f] := by
-  simp [infiniteVolumeSchwinger, InfiniteVolumeMeasureModel.infiniteVolumeSchwinger_is_moment,
-    Fin.prod_univ_two, mul_comm]
+  let A : ℕ → ℝ := fun n =>
+    if h : 0 < n then
+      schwingerN params (exhaustingRectangles n h) 2 (![f, g] : Fin 2 → TestFun2D)
+    else 0
+  let B : ℕ → ℝ := fun n =>
+    if h : 0 < n then
+      schwingerN params (exhaustingRectangles n h) 2 (![g, f] : Fin 2 → TestFun2D)
+    else 0
+  have hA : Filter.Tendsto A Filter.atTop
+      (nhds (infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D))) := by
+    simpa [A, infiniteVolumeSchwinger] using
+      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto (params := params)
+        2 (![f, g] : Fin 2 → TestFun2D))
+  have hB : Filter.Tendsto B Filter.atTop
+      (nhds (infiniteVolumeSchwinger params 2 (![g, f] : Fin 2 → TestFun2D))) := by
+    simpa [B, infiniteVolumeSchwinger] using
+      (InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto (params := params)
+        2 (![g, f] : Fin 2 → TestFun2D))
+  have hAB : A = B := by
+    funext n
+    by_cases h : 0 < n
+    · simp [A, B, h, schwingerN_two_eq_schwingerTwo, schwingerTwo_symm]
+    · simp [A, B, h]
+  have hA' : Filter.Tendsto B Filter.atTop
+      (nhds (infiniteVolumeSchwinger params 2 (![f, g] : Fin 2 → TestFun2D))) := by
+    simpa [hAB] using hA
+  exact tendsto_nhds_unique hA' hB
 
 /-- Symmetry of the infinite-volume connected 2-point function. -/
 theorem connectedTwoPoint_symm (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params]
     (f g : TestFun2D) :
     connectedTwoPoint params f g = connectedTwoPoint params g f := by
   unfold connectedTwoPoint
@@ -1431,7 +1454,6 @@ theorem connectedTwoPoint_quadratic_nonneg
 theorem connectedTwoPoint_quadratic_nonneg_standard
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params]
     [InteractionWeightModel params]
     {ι : Type*} (s : Finset ι)
     (f : ι → TestFun2D) (c : ι → ℝ) :

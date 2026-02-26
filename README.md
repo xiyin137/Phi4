@@ -12,6 +12,30 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - `Phi4/*.lean` `sorry` count: `0`.
 - `Phi4/*.lean` `axiom` declarations: `0`.
 - Build status: `lake build Phi4` succeeds.
+- Per-file `sorry` counts (tracked `Phi4/**/*.lean` files):
+
+| File | `sorry` count |
+|---|---:|
+| `Phi4/Bessel/BesselK0.lean` | 0 |
+| `Phi4/Bessel/BesselK1.lean` | 0 |
+| `Phi4/Combinatorics/PerfectMatchings.lean` | 0 |
+| `Phi4/CorrelationInequalities.lean` | 0 |
+| `Phi4/CovarianceOperators.lean` | 0 |
+| `Phi4/Defs.lean` | 0 |
+| `Phi4/FeynmanGraphs.lean` | 0 |
+| `Phi4/FiniteVolumeMeasure.lean` | 0 |
+| `Phi4/FreeField.lean` | 0 |
+| `Phi4/GreenFunction/PeriodicKernel.lean` | 0 |
+| `Phi4/InfiniteVolumeLimit.lean` | 0 |
+| `Phi4/Interaction.lean` | 0 |
+| `Phi4/LatticeApproximation.lean` | 0 |
+| `Phi4/ModelBundle.lean` | 0 |
+| `Phi4/MultipleReflections.lean` | 0 |
+| `Phi4/OSAxioms.lean` | 0 |
+| `Phi4/Reconstruction.lean` | 0 |
+| `Phi4/ReflectionPositivity.lean` | 0 |
+| `Phi4/Regularity.lean` | 0 |
+| `Phi4/WickProduct.lean` | 0 |
 - Pairing/perfect-matching combinatorics has been factored into `Phi4/Combinatorics/PerfectMatchings.lean`.
 - `PairingEnumerationModel` now assumes only the pairing-cardinality formula; finite enumeration is canonical (`Finset.univ`).
 - Boundary covariance assumptions are now layered into kernel/comparison/regularity subinterfaces with compatibility instances from `BoundaryCovarianceModel`.
@@ -26,6 +50,10 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - `MeasureOS3Model` now depends only on the infinite-volume Schwinger+measure subinterfaces (not the full infinite-volume bundle).
 - `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now decoupled from `InfiniteVolumeLimitModel`; they are pure Schwinger-package interfaces.
 - `Reconstruction.lean` now uses `InfiniteVolumeSchwingerModel` (instead of `InfiniteVolumeLimitModel`) for weak-coupling decay and reconstruction interface classes.
+- Reconstruction assumptions are now split into
+  `ReconstructionLinearGrowthModel` and `ReconstructionWeakCouplingModel`
+  (with compatibility reconstruction of `ReconstructionInputModel`).
+- `Phi4ModelBundle` now stores these reconstruction submodels directly.
 - Several deep analytic/reconstruction steps are currently represented via explicit assumption interfaces (`...Model` classes), not placeholders.
 - Upstream `OSReconstruction` currently emits `sorry` warnings in some modules; this project treats reconstruction as an explicit input assumption at the final handoff point.
 
@@ -135,12 +163,15 @@ Some high-complexity components are intentionally exposed as structured assumpti
 - `OSE4ClusterModel`
 - `OSDistributionE2Model`
 - `MeasureOS3Model`
+- `ReconstructionLinearGrowthModel`
+- `ReconstructionWeakCouplingModel`
 - `ReconstructionInputModel`
 
 Compatibility instances reconstruct:
 - `CorrelationInequalityModel` from the three correlation submodels.
 - `BoundaryCovarianceModel` from boundary kernel/comparison/regularity submodels.
 - `InfiniteVolumeLimitModel` from Schwinger + measure submodels.
+- `ReconstructionInputModel` from linear-growth + weak-coupling submodels.
 
 `Phi4.ModelBundle` collects these interfaces into one bundled entrypoint.
 

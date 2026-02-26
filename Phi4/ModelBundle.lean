@@ -46,8 +46,10 @@ class Phi4ModelBundle (params : Phi4Params) where
   osAxiom : OSAxiomCoreModel params
   osE4 : @OSE4ClusterModel params osAxiom
   osE2 : @OSDistributionE2Model params osAxiom
-  reconstructionInput : @ReconstructionInputModel params
+  reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
     infiniteVolumeSchwinger osAxiom
+  reconstructionWeakCoupling : @ReconstructionWeakCouplingModel params
+    infiniteVolumeSchwinger
   wightmanReconstruction : @WightmanReconstructionModel params
     osAxiom
 
@@ -167,14 +169,26 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   exact h.osE2
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    ReconstructionLinearGrowthModel params := by
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : OSAxiomCoreModel params := h.osAxiom
+  exact h.reconstructionLinearGrowth
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    ReconstructionWeakCouplingModel params := by
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  exact h.reconstructionWeakCoupling
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
   letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
-  exact h.reconstructionInput
+  letI : ReconstructionLinearGrowthModel params := h.reconstructionLinearGrowth
+  letI : ReconstructionWeakCouplingModel params := h.reconstructionWeakCoupling
+  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WightmanReconstructionModel params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.wightmanReconstruction
 

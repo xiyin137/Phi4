@@ -340,12 +340,11 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
 /-- Standard-index-order form of `phi4_connectedTwoPoint_quadratic_nonneg`. -/
 theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
-    [InfiniteVolumeMeasureModel params] →
     [InteractionWeightModel params] →
     ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
       0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
         c i * c j * connectedTwoPoint params (f i) (f j))) := by
-  intro hsch hmeas hint ι s f c
+  intro hsch hint ι s f c
   exact connectedTwoPoint_quadratic_nonneg_standard params s f c
 
 /-- Infinite-volume 4-point cumulant nonpositivity inherited from Lebowitz bounds. -/
