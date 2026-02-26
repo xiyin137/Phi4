@@ -271,11 +271,22 @@ theorem isEmpty_odd (n : ℕ) : IsEmpty (Pairing (2 * n + 1)) := by
 
 end Pairing
 
+/-- Any nonempty pairing type `Pairing r` forces `r` even. -/
+theorem pairing_nonempty_implies_even {r : ℕ} (h : Nonempty (Pairing r)) : Even r := by
+  rcases h with ⟨π⟩
+  exact Pairing.even_card π
+
 /-- The canonical pairing `halfSplitPairing n` has exactly `n` pairs. -/
 theorem halfSplitPairing_card (n : ℕ) :
     (halfSplitPairing n).pairs.card = n := by
   simp [halfSplitPairing, halfSplitPairs, Finset.card_image_of_injective,
     halfSplitPair_injective]
+
+/-- On an odd number of labels, there are no pairings. -/
+theorem pairing_card_eq_zero_odd (n : ℕ) :
+    Fintype.card (Pairing (2 * n + 1)) = 0 := by
+  letI : IsEmpty (Pairing (2 * n + 1)) := Pairing.isEmpty_odd n
+  simp
 
 /-! ## Abstract pairing/graph expansion interfaces -/
 
