@@ -178,6 +178,17 @@ theorem num_pairings (n : ℕ) :
   intro hpair
   exact PairingEnumerationModel.num_pairings n
 
+/-- Wick recursion for the free Gaussian field:
+    pair the first insertion with one partner and recurse on the remaining factors. -/
+theorem wicks_recursive (mass : ℝ) (hmass : 0 < mass)
+    (n : ℕ) (f₀ : TestFun2D) (g : Fin (n + 1) → TestFun2D) :
+    ∫ ω, ω f₀ * (∏ i, ω (g i)) ∂(freeFieldMeasure mass hmass) =
+      ∑ j : Fin (n + 1),
+        GaussianField.covariance (freeCovarianceCLM mass hmass) f₀ (g j) *
+          ∫ ω, (∏ i : Fin n, ω (g (Fin.succAbove j i))) ∂(freeFieldMeasure mass hmass) := by
+  simpa [GaussianField.covariance] using
+    (GaussianField.wick_recursive (freeCovarianceCLM mass hmass) n f₀ g)
+
 /-- **Wick's theorem** (Proposition 8.3.1): For the Gaussian measure dφ_C,
     ∫ φ(f₁)⋯φ(f_{2n}) dφ_C = Σ_{pairings π} Π_{(i,j)∈π} C(fᵢ, fⱼ)
     and the integral vanishes for odd numbers of fields. -/
