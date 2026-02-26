@@ -308,6 +308,29 @@ theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
       sobolev_index alpha beta gamma halpha hbeta hgrowth)
 
+/-- Build `ReconstructionLinearGrowthModel` from:
+    1) an interface-level OS package theorem under weak coupling, and
+    2) an explicit seminorm-growth estimate for `phi4SchwingerFunctions`. -/
+theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (sobolev_index : ℕ)
+    (alpha beta gamma : ℝ)
+    (halpha : 0 < alpha)
+    (hbeta : 0 < beta)
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n f‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
+  exact reconstructionLinearGrowthModel_nonempty_of_explicit_bound params OS hS
+    sobolev_index alpha beta gamma halpha hbeta hgrowth
+
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
     |S_n(f)| ≤ α · βⁿ · (n!)^γ · ‖f‖_s
     with γ = 1/2 for the φ⁴ interaction.
@@ -1162,6 +1185,34 @@ theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
       sobolev_index alpha beta gamma halpha hbeta hgrowth)
     (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
+
+/-- Direct weak-coupling + explicit-growth endpoint:
+    if an interface-level OS package exists at weak coupling and
+    `phi4SchwingerFunctions` satisfy an explicit seminorm-growth bound, then
+    Wightman existence follows. -/
+theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
+    (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    [OSDistributionE2Model params] →
+    [OSE4ClusterModel params] →
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) →
+    (sobolev_index : ℕ) →
+    (alpha beta gamma : ℝ) →
+    (halpha : 0 < alpha) →
+    (hbeta : 0 < beta) →
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n f‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS' : OsterwalderSchraderAxioms 1),
+        OS'.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS'.S Wfn.W := by
+  intro hlim hos he2 he4 hsmall sobolev_index alpha beta gamma halpha hbeta hgrowth
+  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
+  exact phi4_wightman_exists_of_explicit_linear_growth_bound params
+    OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
 
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the canonical OS→Wightman theorem. -/
