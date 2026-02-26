@@ -152,6 +152,12 @@ def generatingFunctional (params : Phi4Params) (Λ : Rectangle)
     (g : TestFun2D) : ℝ :=
   ∫ ω, Real.exp (ω g) ∂(finiteVolumeMeasure params Λ)
 
+theorem generatingFunctional_nonneg (params : Phi4Params) (Λ : Rectangle)
+    (g : TestFun2D) :
+    0 ≤ generatingFunctional params Λ g := by
+  unfold generatingFunctional
+  exact integral_nonneg_of_ae (Filter.Eventually.of_forall (fun ω => Real.exp_nonneg (ω g)))
+
 /-! ## Basic properties -/
 
 /-- Symmetry of the 2-point function: S₂(f,g) = S₂(g,f). -/
@@ -262,6 +268,91 @@ private theorem finiteVolume_product_integrable
       (ENNReal.ofReal (partitionFunction params Λ)⁻¹ • (μ.withDensity d)) :=
     hwd.smul_measure hscale_ne_top
   simpa [finiteVolumeMeasure, μ, d] using hscaled
+
+private theorem abs_pow_le_factorial_mul_exp_abs (x : ℝ) (n : ℕ) :
+    |x| ^ n ≤ (Nat.factorial n : ℝ) * Real.exp |x| := by
+  have h0 : 0 ≤ |x| := abs_nonneg x
+  have hpow : |x| ^ n / (Nat.factorial n : ℝ) ≤ Real.exp |x| :=
+    Real.pow_div_factorial_le_exp (x := |x|) h0 n
+  have hfac_pos : 0 < (Nat.factorial n : ℝ) :=
+    Nat.cast_pos.mpr (Nat.factorial_pos n)
+  have hmul : |x| ^ n ≤ Real.exp |x| * (Nat.factorial n : ℝ) :=
+    (div_le_iff₀ hfac_pos).1 hpow
+  simpa [mul_comm] using hmul
+
+private theorem abs_pow_le_factorial_mul_exp_add_exp_neg (x : ℝ) (n : ℕ) :
+    |x| ^ n ≤ (Nat.factorial n : ℝ) * (Real.exp x + Real.exp (-x)) := by
+  calc
+    |x| ^ n ≤ (Nat.factorial n : ℝ) * Real.exp |x| := abs_pow_le_factorial_mul_exp_abs x n
+    _ ≤ (Nat.factorial n : ℝ) * (Real.exp x + Real.exp (-x)) := by
+      exact mul_le_mul_of_nonneg_left (Real.exp_abs_le x) (by positivity)
+
+/-- Diagonal finite-volume Schwinger moments are controlled by two generating
+    functionals at `f` and `-f`:
+    `|S_n^Λ(f,…,f)| ≤ n! (S_Λ{f} + S_Λ{-f})`.
+
+    The hypotheses provide integrability of the two exponential observables
+    under the finite-volume interacting measure. -/
+theorem schwingerN_const_abs_le_factorial_mul_generatingFunctional_pair
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (f : TestFun2D) (n : ℕ)
+    (hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f))
+      (finiteVolumeMeasure params Λ))
+    (hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f)))
+      (finiteVolumeMeasure params Λ)) :
+    |schwingerN params Λ n (fun _ => f)| ≤
+      (Nat.factorial n : ℝ) *
+        (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+  set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hpowInt : Integrable (fun ω : FieldConfig2D => (ω f) ^ n) μ := by
+    have hprod := finiteVolume_product_integrable params Λ n (fun _ => f)
+    refine hprod.congr ?_
+    filter_upwards with ω
+    simp
+  have hnormInt : Integrable (fun ω : FieldConfig2D => |(ω f) ^ n|) μ := hpowInt.norm
+  have hsumInt : Integrable (fun ω : FieldConfig2D => Real.exp (ω f) + Real.exp (-(ω f))) μ :=
+    hExp.add hExpNeg
+  have hrhsInt :
+      Integrable (fun ω : FieldConfig2D =>
+        (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f)))) μ :=
+    hsumInt.const_mul (Nat.factorial n : ℝ)
+  have hpoint :
+      ∀ ω : FieldConfig2D,
+        |(ω f) ^ n| ≤ (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) := by
+    intro ω
+    have hbase := abs_pow_le_factorial_mul_exp_add_exp_neg (ω f) n
+    simpa [abs_pow] using hbase
+  have hmono :
+      ∫ ω, |(ω f) ^ n| ∂μ ≤
+        ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ :=
+    integral_mono_ae hnormInt hrhsInt (Filter.Eventually.of_forall hpoint)
+  have hnorm :
+      |∫ ω, (ω f) ^ n ∂μ| ≤ ∫ ω, |(ω f) ^ n| ∂μ := by
+    simpa [Real.norm_eq_abs] using
+      (norm_integral_le_integral_norm (f := fun ω : FieldConfig2D => (ω f) ^ n))
+  have hrhs_eval :
+      ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ =
+        (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+    calc
+      ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ
+          = (Nat.factorial n : ℝ) * ∫ ω, (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ := by
+              rw [integral_const_mul]
+      _ = (Nat.factorial n : ℝ) *
+            ((∫ ω, Real.exp (ω f) ∂μ) + (∫ ω, Real.exp (-(ω f)) ∂μ)) := by
+            rw [integral_add hExp hExpNeg]
+      _ = (Nat.factorial n : ℝ) *
+            (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+            simp [μ, generatingFunctional]
+  have hsch : schwingerN params Λ n (fun _ => f) = ∫ ω, (ω f) ^ n ∂μ := by
+    simp [schwingerN, μ]
+  calc
+    |schwingerN params Λ n (fun _ => f)|
+        = |∫ ω, (ω f) ^ n ∂μ| := by rw [hsch]
+    _ ≤ ∫ ω, |(ω f) ^ n| ∂μ := hnorm
+    _ ≤ ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ := hmono
+    _ = (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := hrhs_eval
 
 /-- Single-field observable is `L²` under the finite-volume interacting measure. -/
 theorem finiteVolume_pairing_memLp_two (params : Phi4Params)
