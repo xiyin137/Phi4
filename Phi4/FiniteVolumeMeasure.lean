@@ -549,6 +549,23 @@ def connectedSchwingerTwoBilinear (params : Phi4Params)
     simp [connectedSchwingerTwo, schwingerTwo_smul_left, schwingerOne_smul, smul_eq_mul]
     ring_nf
 
+/-- Symmetry of the connected two-point bilinear form. -/
+theorem connectedSchwingerTwoBilinear_symm (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f g : TestFun2D) :
+    connectedSchwingerTwoBilinear params Λ f g =
+      connectedSchwingerTwoBilinear params Λ g f := by
+  simpa [connectedSchwingerTwoBilinear] using
+    connectedSchwingerTwo_symm params Λ f g
+
+/-- Diagonal nonnegativity of the connected two-point bilinear form. -/
+theorem connectedSchwingerTwoBilinear_self_nonneg (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) (f : TestFun2D) :
+    0 ≤ connectedSchwingerTwoBilinear params Λ f f := by
+  simpa [connectedSchwingerTwoBilinear] using
+    connectedSchwingerTwo_self_nonneg params Λ f
+
 /-! ## Finite-volume comparison interface -/
 
 /-- Comparison input controlling interacting two-point functions by the free Gaussian
