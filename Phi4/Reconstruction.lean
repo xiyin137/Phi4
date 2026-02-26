@@ -193,18 +193,18 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
   simpa [connectedTwoPoint] using hbound f g a
 
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
-    This extracts the specialization of `phi4_os4_weak_coupling` at the current
-    parameter set. -/
+    This is the canonical threshold carried by `ReconstructionInputModel`. -/
 theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
     ConnectedTwoPointDecayThreshold params := by
   intro hlim hos hrec
-  rcases phi4_os4_weak_coupling params with ⟨coupling_bound, hcb_pos, hdecay⟩
-  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  refine ⟨ReconstructionInputModel.weak_coupling_threshold (params := params),
+    ReconstructionInputModel.weak_coupling_threshold_pos (params := params), ?_⟩
   intro hsmall
-  exact hdecay params hsmall
+  exact ReconstructionInputModel.connectedTwoPoint_decay_of_weak_coupling
+    (params := params) hsmall
 
 /-- A canonical weak-coupling threshold selected from
     `phi4_connectedTwoPoint_decay_threshold`. -/

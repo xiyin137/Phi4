@@ -47,13 +47,14 @@ def interactionCutoff (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
     (ω : FieldConfig2D) : ℝ :=
   params.coupling * ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x
 
-private def uvSeq (n : ℕ) : UVCutoff :=
+/-- Canonical sequence of UV cutoffs `κ_n = n+1`. -/
+def standardUVCutoffSeq (n : ℕ) : UVCutoff :=
   ⟨n + 1, by exact_mod_cast Nat.succ_pos n⟩
 
 /-- The interaction V_Λ = lim_{κ→∞} V_{Λ,κ} (UV limit with fixed volume cutoff).
     The limit exists in L² by Theorem 8.5.3. -/
 def interaction (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) : ℝ :=
-  Filter.limsup (fun n : ℕ => interactionCutoff params Λ (uvSeq n) ω) Filter.atTop
+  Filter.limsup (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω) Filter.atTop
 
 /-! ## Semiboundedness of the Wick-ordered quartic
 
@@ -117,6 +118,14 @@ class InteractionIntegrabilityModel (params : Phi4Params) where
           else 0)
         Filter.atTop
         (nhds 0)
+  /-- Almost-everywhere pointwise UV convergence toward `interaction`. -/
+  interactionCutoff_tendsto_ae :
+    ∀ (Λ : Rectangle),
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+          Filter.atTop
+          (nhds (interaction params Λ ω))
   interaction_in_L2 :
     ∀ (Λ : Rectangle),
       MemLp (interaction params Λ) 2
@@ -152,6 +161,18 @@ theorem interactionCutoff_converges_L2 (params : Phi4Params)
       Filter.atTop
       (nhds 0) := by
   exact InteractionIntegrabilityModel.interactionCutoff_converges_L2
+    (params := params) Λ
+
+/-- Almost-everywhere pointwise UV convergence `V_{Λ,κ} → V_Λ`. -/
+theorem interactionCutoff_tendsto_ae (params : Phi4Params)
+    [InteractionIntegrabilityModel params]
+    (Λ : Rectangle) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      Filter.Tendsto
+        (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) := by
+  exact InteractionIntegrabilityModel.interactionCutoff_tendsto_ae
     (params := params) Λ
 
 /-- The interaction V_Λ is in L²(dφ_C). -/

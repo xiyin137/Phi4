@@ -50,20 +50,8 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
       ∀ (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
         schwingerFunctions n f = schwingerFunctions n g
-  /-- Measure-level reflection positivity (used in standalone `phi4_os3`).
-      `os3` uses the concrete measure formulation over linear observables,
-      while `e2_reflection_positive` supplies the abstract distributional API
-      required by the OSReconstruction library on Borchers sequences.
-      In this interface they are separate assumptions; no formal bridge between
-      `schwingerFunctions` and `infiniteVolumeMeasure` is included here. -/
-  os3 :
-    ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
-      (∀ i, supportedInPositiveTime (f i)) →
-        0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
-          ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
-            ∂(infiniteVolumeMeasure params)).re
-  /-- Distributional reflection positivity (used in `phi4_satisfies_OS`).
-      See `os3` above for the concrete measure-level version. -/
+  /-- Distributional reflection positivity used by `phi4_satisfies_OS`
+      to feed the OSReconstruction API. -/
   e2_reflection_positive :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
@@ -85,6 +73,18 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
               (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
               ‖schwingerFunctions (n + m) (f.tensorProduct g_a) -
                 schwingerFunctions n f * schwingerFunctions m g‖ < ε
+
+/-- Measure-level reflection positivity for linear observables against
+    `infiniteVolumeMeasure`, kept separate from `OSAxiomModel` so the
+    distributional OS interface does not silently bundle an independent
+    concrete positivity API. -/
+class MeasureOS3Model (params : Phi4Params) [InfiniteVolumeLimitModel params] where
+  os3 :
+    ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
+      (∀ i, supportedInPositiveTime (f i)) →
+        0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+          ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
+            ∂(infiniteVolumeMeasure params)).re
 
 /-! ## Schwinger functions as distributions
 
@@ -181,13 +181,13 @@ theorem phi4_os2_rotation (params : Phi4Params)
     infinite volume limit by the convergence of S_n^Λ → S_n. -/
 theorem phi4_os3 (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
-    [OSAxiomModel params]
+    [MeasureOS3Model params]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)
     (hf : ∀ i, supportedInPositiveTime (f i)) :
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
       ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
         ∂(infiniteVolumeMeasure params)).re := by
-  exact OSAxiomModel.os3 (params := params) n f c hf
+  exact MeasureOS3Model.os3 (params := params) n f c hf
 
 /-! ## Main theorem: OS axioms hold -/
 
@@ -226,7 +226,7 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
     This combines:
     - E0: from `phi4_os0` (temperedness of Schwinger functions)
     - E1: from `phi4_os2_translation` and `phi4_os2_rotation` (Euclidean covariance)
-    - E2: from `phi4_os3` (reflection positivity)
+    - E2: from `OSAxiomModel.e2_reflection_positive` (distributional reflection positivity)
     - E3: from symmetry of the path integral (permutation invariance)
     - E4: from the cluster expansion (Chapter 18, weak coupling)
 

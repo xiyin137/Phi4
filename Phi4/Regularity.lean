@@ -59,21 +59,27 @@ theorem wick_powers_infinite_volume (params : Phi4Params) (j : ℕ)
 
 /-! ## Integration by parts in infinite volume -/
 
-private def uvSeq (n : ℕ) : UVCutoff :=
-  ⟨n + 1, by exact_mod_cast Nat.succ_pos n⟩
-
 /-- The Wick cubic smeared against a test function: ∫ :φ(x)³: f(x) dx
     evaluated in the infinite-volume measure.
     This arises from the functional derivative of V = λ∫:φ⁴:dx. -/
 def wickCubicSmeared (params : Phi4Params) (f : TestFun2D)
     (ω : FieldConfig2D) : ℝ :=
   Filter.limsup
-    (fun n : ℕ => ∫ x, wickPower 3 params.mass (uvSeq n) ω x * f x)
+    (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
     Filter.atTop
 
 /-- Regularity/IBP inputs for the infinite-volume φ⁴₂ theory beyond Wick-power
     existence. -/
 class RegularityModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
+  /-- Almost-everywhere pointwise convergence of the UV-regularized Wick-cubic
+      smearings to `wickCubicSmeared`. -/
+  wickCubicSmeared_tendsto_ae :
+    ∀ (f : TestFun2D),
+      ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+        Filter.Tendsto
+          (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+          Filter.atTop
+          (nhds (wickCubicSmeared params f ω))
   euclidean_equation_of_motion :
     ∀ (f g : TestFun2D),
       ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
@@ -113,6 +119,19 @@ theorem euclidean_equation_of_motion (params : Phi4Params)
         ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params) := by
   exact RegularityModel.euclidean_equation_of_motion
     (params := params) f g
+
+/-- Almost-everywhere pointwise UV convergence for `wickCubicSmeared`. -/
+theorem wickCubicSmeared_tendsto_ae (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [RegularityModel params]
+    (f : TestFun2D) :
+    ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+      Filter.Tendsto
+        (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+        Filter.atTop
+        (nhds (wickCubicSmeared params f ω)) := by
+  exact RegularityModel.wickCubicSmeared_tendsto_ae
+    (params := params) f
 
 /-- Kernel-form rewriting of the Euclidean equation of motion, using the
     explicit covariance bridge `freeCovariance_eq_kernel`. -/
