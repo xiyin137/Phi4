@@ -213,6 +213,52 @@ theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
 
 /-! ## Linear growth condition (E0') -/
 
+/-- Build `OSLinearGrowthCondition` from explicit seminorm-growth constants
+    for a fixed OS package. -/
+theorem osLinearGrowthCondition_nonempty_of_bound
+    (OS : OsterwalderSchraderAxioms 1)
+    (sobolev_index : ℕ)
+    (alpha beta gamma : ℝ)
+    (halpha : 0 < alpha)
+    (hbeta : 0 < beta)
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖OS.S n f‖ ≤ alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+        SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
+    Nonempty (OSLinearGrowthCondition 1 OS) := by
+  refine ⟨{
+    sobolev_index := sobolev_index
+    alpha := alpha
+    beta := beta
+    gamma := gamma
+    alpha_pos := halpha
+    beta_pos := hbeta
+    growth_estimate := hgrowth
+  }⟩
+
+/-- Construct φ⁴ linear-growth witness data from explicit seminorm-growth
+    constants for one OS package matching `phi4SchwingerFunctions`. -/
+theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    (OS : OsterwalderSchraderAxioms 1)
+    (hS : OS.S = phi4SchwingerFunctions params)
+    (sobolev_index : ℕ)
+    (alpha beta gamma : ℝ)
+    (halpha : 0 < alpha)
+    (hbeta : 0 < beta)
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n f‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
+    ∃ OS' : OsterwalderSchraderAxioms 1,
+      OS'.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS') := by
+  refine ⟨OS, hS, ?_⟩
+  refine osLinearGrowthCondition_nonempty_of_bound OS sobolev_index
+    alpha beta gamma halpha hbeta ?_
+  intro n f
+  simpa [hS] using hgrowth n f
+
 /-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
@@ -223,6 +269,27 @@ theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
         Nonempty (OSLinearGrowthCondition 1 OS)) :
     Nonempty (ReconstructionLinearGrowthModel params) := by
   exact ⟨{ phi4_linear_growth := hlinear }⟩
+
+/-- Construct `ReconstructionLinearGrowthModel` from explicit seminorm-growth
+    constants for an OS package matching `phi4SchwingerFunctions`. -/
+theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    (OS : OsterwalderSchraderAxioms 1)
+    (hS : OS.S = phi4SchwingerFunctions params)
+    (sobolev_index : ℕ)
+    (alpha beta gamma : ℝ)
+    (halpha : 0 < alpha)
+    (hbeta : 0 < beta)
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n f‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
+      sobolev_index alpha beta gamma halpha hbeta hgrowth)
 
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
     |S_n(f)| ≤ α · βⁿ · (n!)^γ · ‖f‖_s
@@ -1052,8 +1119,35 @@ theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
   exact wightman_exists_of_linear_growth_and_reconstruction
     (S := phi4SchwingerFunctions params) hlinear hreconstruct
 
-/-- Interface-level Wightman existence from linear-growth and reconstruction
-    backends, without using frontier-gap theorems. -/
+/-- Direct explicit-bound reconstruction endpoint:
+    a concrete seminorm-growth estimate for one OS package matching
+    `phi4SchwingerFunctions` yields Wightman existence. -/
+theorem phi4_wightman_exists_of_explicit_linear_growth_bound
+    (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [OSAxiomCoreModel params] →
+    (OS : OsterwalderSchraderAxioms 1) →
+    (hS : OS.S = phi4SchwingerFunctions params) →
+    (sobolev_index : ℕ) →
+    (alpha beta gamma : ℝ) →
+    (halpha : 0 < alpha) →
+    (hbeta : 0 < beta) →
+    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n f‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS' : OsterwalderSchraderAxioms 1),
+        OS'.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS'.S Wfn.W := by
+  intro hlim hos OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
+  exact phi4_wightman_exists_of_explicit_data params
+    (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
+      sobolev_index alpha beta gamma halpha hbeta hgrowth)
+    (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
+
+/-- Interface-level Wightman existence from linear-growth inputs, routed
+    through the canonical OS→Wightman theorem. -/
 theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
