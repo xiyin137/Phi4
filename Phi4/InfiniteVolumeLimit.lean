@@ -566,6 +566,58 @@ theorem connectedTwoPoint_sq_le_mul_diag
     · simp [A, Df, Dg, h]
   exact le_of_tendsto_of_tendsto' hA_sq hDiag_mul hpointwise
 
+/-- Positive-semidefinite quadratic form statement for finite families in infinite
+    volume: the connected two-point kernel is nonnegative on real finite linear
+    combinations. -/
+theorem connectedTwoPoint_quadratic_nonneg
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    {ι : Type*} (s : Finset ι)
+    (f : ι → TestFun2D) (c : ι → ℝ) :
+    0 ≤ Finset.sum s (fun i =>
+      c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))) := by
+  let A : ℕ → ι → ι → ℝ := fun n j i =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) (f j) (f i) else 0
+  let q : ℕ → ℝ := fun n =>
+    Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * A n j i))
+  have hA_tendsto : ∀ j i,
+      Filter.Tendsto (fun n : ℕ => A n j i) Filter.atTop
+        (nhds (connectedTwoPoint params (f j) (f i))) := by
+    intro j i
+    simpa [A] using connectedSchwingerTwo_tendsto_infinite params (f j) (f i)
+  have hq_tendsto :
+      Filter.Tendsto q Filter.atTop
+        (nhds (Finset.sum s (fun i =>
+          c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))))) := by
+    have hinner : ∀ i,
+        Filter.Tendsto (fun n : ℕ => Finset.sum s (fun j => c j * A n j i))
+          Filter.atTop
+          (nhds (Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i)))) := by
+      intro i
+      refine tendsto_finset_sum _ ?_
+      intro j hj
+      exact (hA_tendsto j i).const_mul (c j)
+    have houter :
+        Filter.Tendsto (fun n : ℕ => Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * A n j i)))
+          Filter.atTop
+          (nhds (Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))))) := by
+      refine tendsto_finset_sum _ ?_
+      intro i hi
+      exact (hinner i).const_mul (c i)
+    simpa [q] using houter
+  have hq_nonneg : ∀ n : ℕ, 0 ≤ q n := by
+    intro n
+    by_cases h : 0 < n
+    · have hfin :
+          0 ≤ Finset.sum s (fun i =>
+            c i * Finset.sum s (fun j => c j *
+              connectedSchwingerTwo params (exhaustingRectangles n h) (f j) (f i))) :=
+        connectedSchwingerTwo_quadratic_nonneg params (exhaustingRectangles n h) s f c
+      simpa [q, A, h] using hfin
+    · simp [q, A, h]
+  exact ge_of_tendsto' hq_tendsto hq_nonneg
+
 /-- Infinite-volume half-diagonal bound:
     `|Cᶜ_∞(f,g)| ≤ (Cᶜ_∞(f,f) + Cᶜ_∞(g,g))/2`. -/
 theorem connectedTwoPoint_abs_le_half_diag_sum
