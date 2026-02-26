@@ -167,6 +167,46 @@ theorem phi4_connectedTwoPoint_self_nonneg_of_bundle (params : Phi4Params)
     ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f :=
   phi4_connectedTwoPoint_self_nonneg params
 
+/-- Bundled wrapper: infinite-volume connected 2-point Cauchy-Schwarz inequality. -/
+theorem phi4_connectedTwoPoint_sq_le_mul_diag_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f g : TestFun2D),
+      (connectedTwoPoint params f g) ^ 2 ≤
+        connectedTwoPoint params f f * connectedTwoPoint params g g :=
+  phi4_connectedTwoPoint_sq_le_mul_diag params
+
+/-- Bundled wrapper: infinite-volume connected 2-point geometric-mean bound. -/
+theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f g : TestFun2D),
+      |connectedTwoPoint params f g| ≤
+        Real.sqrt (connectedTwoPoint params f f * connectedTwoPoint params g g) :=
+  phi4_connectedTwoPoint_abs_le_sqrt_diag_mul params
+
+/-- Bundled wrapper: infinite-volume connected 2-point half-diagonal bound. -/
+theorem phi4_connectedTwoPoint_abs_le_half_diag_sum_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ (f g : TestFun2D),
+      |connectedTwoPoint params f g| ≤
+        (connectedTwoPoint params f f + connectedTwoPoint params g g) / 2 :=
+  phi4_connectedTwoPoint_abs_le_half_diag_sum params
+
+/-- Bundled wrapper: finite-family PSD for the infinite-volume connected 2-point kernel. -/
+theorem phi4_connectedTwoPoint_quadratic_nonneg_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
+      0 ≤ Finset.sum s (fun i =>
+        c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))) :=
+  phi4_connectedTwoPoint_quadratic_nonneg params
+
+/-- Bundled wrapper: standard-index-order form of finite-family PSD. -/
+theorem phi4_connectedTwoPoint_quadratic_nonneg_standard_of_bundle (params : Phi4Params)
+    [Phi4ModelBundle params] :
+    ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
+      0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
+        c i * c j * connectedTwoPoint params (f i) (f j))) :=
+  phi4_connectedTwoPoint_quadratic_nonneg_standard params
+
 /-- Bundled wrapper: infinite-volume connected 2-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :

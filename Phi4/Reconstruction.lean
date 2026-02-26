@@ -285,6 +285,56 @@ theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
   intro hlim hint f
   exact connectedTwoPoint_self_nonneg params f
 
+/-- Infinite-volume connected two-point Cauchy-Schwarz inequality. -/
+theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ (f g : TestFun2D),
+      (connectedTwoPoint params f g) ^ 2 ≤
+        connectedTwoPoint params f f * connectedTwoPoint params g g := by
+  intro hlim hint f g
+  exact connectedTwoPoint_sq_le_mul_diag params f g
+
+/-- Infinite-volume connected two-point geometric-mean bound. -/
+theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ (f g : TestFun2D),
+      |connectedTwoPoint params f g| ≤
+        Real.sqrt (connectedTwoPoint params f f * connectedTwoPoint params g g) := by
+  intro hlim hint f g
+  exact connectedTwoPoint_abs_le_sqrt_diag_mul params f g
+
+/-- Infinite-volume connected two-point half-diagonal bound. -/
+theorem phi4_connectedTwoPoint_abs_le_half_diag_sum (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ (f g : TestFun2D),
+      |connectedTwoPoint params f g| ≤
+        (connectedTwoPoint params f f + connectedTwoPoint params g g) / 2 := by
+  intro hlim hint f g
+  exact connectedTwoPoint_abs_le_half_diag_sum params f g
+
+/-- Infinite-volume finite-family PSD statement for the connected two-point kernel. -/
+theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
+      0 ≤ Finset.sum s (fun i =>
+        c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i))) := by
+  intro hlim hint ι s f c
+  exact connectedTwoPoint_quadratic_nonneg params s f c
+
+/-- Standard-index-order form of `phi4_connectedTwoPoint_quadratic_nonneg`. -/
+theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    [InteractionIntegrabilityModel params] →
+    ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
+      0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
+        c i * c j * connectedTwoPoint params (f i) (f j))) := by
+  intro hlim hint ι s f c
+  exact connectedTwoPoint_quadratic_nonneg_standard params s f c
+
 /-- Infinite-volume connected two-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →

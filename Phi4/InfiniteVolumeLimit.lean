@@ -618,6 +618,60 @@ theorem connectedTwoPoint_quadratic_nonneg
     · simp [q, A, h]
   exact ge_of_tendsto' hq_tendsto hq_nonneg
 
+/-- Standard-index-order form of `connectedTwoPoint_quadratic_nonneg`. -/
+theorem connectedTwoPoint_quadratic_nonneg_standard
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    {ι : Type*} (s : Finset ι)
+    (f : ι → TestFun2D) (c : ι → ℝ) :
+    0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
+      c i * c j * connectedTwoPoint params (f i) (f j))) := by
+  have hbase := connectedTwoPoint_quadratic_nonneg params s f c
+  have hEq :
+      Finset.sum s (fun i =>
+        c i * Finset.sum s (fun j => c j * connectedTwoPoint params (f j) (f i)))
+      =
+      Finset.sum s (fun i => Finset.sum s (fun j =>
+        c i * c j * connectedTwoPoint params (f i) (f j))) := by
+    refine Finset.sum_congr rfl (fun i hi => ?_)
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl (fun j hj => ?_)
+    rw [connectedTwoPoint_symm params (f j) (f i)]
+    ring
+  rw [hEq] at hbase
+  exact hbase
+
+/-- Geometric-mean bound from infinite-volume connected two-point
+    Cauchy-Schwarz:
+    `|Cᶜ_∞(f,g)| ≤ √(Cᶜ_∞(f,f) Cᶜ_∞(g,g))`. -/
+theorem connectedTwoPoint_abs_le_sqrt_diag_mul
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    (f g : TestFun2D) :
+    |connectedTwoPoint params f g| ≤
+      Real.sqrt (connectedTwoPoint params f f * connectedTwoPoint params g g) := by
+  let x : ℝ := connectedTwoPoint params f g
+  let y : ℝ := connectedTwoPoint params f f * connectedTwoPoint params g g
+  have hx2 : x ^ 2 ≤ y := by
+    simpa [x, y] using connectedTwoPoint_sq_le_mul_diag params f g
+  have hy_nonneg : 0 ≤ y := by
+    have hff : 0 ≤ connectedTwoPoint params f f := connectedTwoPoint_self_nonneg params f
+    have hgg : 0 ≤ connectedTwoPoint params g g := connectedTwoPoint_self_nonneg params g
+    exact mul_nonneg hff hgg
+  have hxy_sq : (|x|) ^ 2 ≤ (Real.sqrt y) ^ 2 := by
+    have h1 : |x| ^ 2 ≤ y := by
+      simpa [sq_abs] using hx2
+    have h2 : y = (Real.sqrt y) ^ 2 := by
+      symm
+      exact Real.sq_sqrt hy_nonneg
+    linarith
+  have hxy_abs : |(|x|)| ≤ |Real.sqrt y| := (sq_le_sq).1 hxy_sq
+  have hxy : |x| ≤ Real.sqrt y := by
+    simpa [abs_abs, abs_of_nonneg (Real.sqrt_nonneg y)] using hxy_abs
+  simpa [x, y] using hxy
+
 /-- Infinite-volume half-diagonal bound:
     `|Cᶜ_∞(f,g)| ≤ (Cᶜ_∞(f,f) + Cᶜ_∞(g,g))/2`. -/
 theorem connectedTwoPoint_abs_le_half_diag_sum
