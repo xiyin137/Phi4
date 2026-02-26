@@ -531,6 +531,41 @@ theorem connectedTwoPoint_self_nonneg
     · simp [h]
   exact ge_of_tendsto' hlim hnonneg
 
+/-- Cauchy-Schwarz inequality for the infinite-volume connected two-point function,
+    transferred from finite volume via convergence along the exhausting rectangles. -/
+theorem connectedTwoPoint_sq_le_mul_diag
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionIntegrabilityModel params]
+    (f g : TestFun2D) :
+    (connectedTwoPoint params f g) ^ 2 ≤
+      connectedTwoPoint params f f * connectedTwoPoint params g g := by
+  let A : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) f g else 0
+  let Df : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) f f else 0
+  let Dg : ℕ → ℝ := fun n =>
+    if h : 0 < n then connectedSchwingerTwo params (exhaustingRectangles n h) g g else 0
+  have hA : Filter.Tendsto A Filter.atTop (nhds (connectedTwoPoint params f g)) := by
+    simpa [A] using connectedSchwingerTwo_tendsto_infinite params f g
+  have hDf : Filter.Tendsto Df Filter.atTop (nhds (connectedTwoPoint params f f)) := by
+    simpa [Df] using connectedSchwingerTwo_tendsto_infinite params f f
+  have hDg : Filter.Tendsto Dg Filter.atTop (nhds (connectedTwoPoint params g g)) := by
+    simpa [Dg] using connectedSchwingerTwo_tendsto_infinite params g g
+  have hA_sq : Filter.Tendsto (fun n => (A n) ^ 2) Filter.atTop
+      (nhds ((connectedTwoPoint params f g) ^ 2)) :=
+    hA.pow 2
+  have hDiag_mul : Filter.Tendsto (fun n => Df n * Dg n) Filter.atTop
+      (nhds (connectedTwoPoint params f f * connectedTwoPoint params g g)) :=
+    hDf.mul hDg
+  have hpointwise : ∀ n : ℕ, (A n) ^ 2 ≤ Df n * Dg n := by
+    intro n
+    by_cases h : 0 < n
+    · simpa [A, Df, Dg, h] using
+        (connectedSchwingerTwo_sq_le_mul_diag params (exhaustingRectangles n h) f g)
+    · simp [A, Df, Dg, h]
+  exact le_of_tendsto_of_tendsto' hA_sq hDiag_mul hpointwise
+
 /-- If finite-volume FKG inequalities are available, the infinite-volume connected
     two-point function is nonnegative. -/
 theorem connectedTwoPoint_nonneg
