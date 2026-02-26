@@ -61,6 +61,12 @@ private def halfSplitPair (n : ℕ) (i : Fin n) : Fin (2 * n) × Fin (2 * n) :=
 private def halfSplitPairs (n : ℕ) : Finset (Fin (2 * n) × Fin (2 * n)) :=
   Finset.univ.image (halfSplitPair n)
 
+private lemma halfSplitPair_injective (n : ℕ) : Function.Injective (halfSplitPair n) := by
+  intro i j hij
+  have hfst : pairingLeftIdx n i = pairingLeftIdx n j := congrArg Prod.fst hij
+  have hval : i.1 = j.1 := congrArg (fun t : Fin (2 * n) => t.1) hfst
+  exact Fin.ext hval
+
 private lemma halfSplitPairs_mem_iff
     (n : ℕ) (p : Fin (2 * n) × Fin (2 * n)) :
     p ∈ halfSplitPairs n ↔ ∃ i : Fin n, halfSplitPair n i = p := by
@@ -139,6 +145,12 @@ def halfSplitPairing (n : ℕ) : Pairing (2 * n) where
 /-- Pairings exist on every even number of labels. -/
 theorem pairing_even_exists (n : ℕ) : Nonempty (Pairing (2 * n)) := by
   exact ⟨halfSplitPairing n⟩
+
+/-- The canonical pairing `halfSplitPairing n` has exactly `n` pairs. -/
+theorem halfSplitPairing_card (n : ℕ) :
+    (halfSplitPairing n).pairs.card = n := by
+  simp [halfSplitPairing, halfSplitPairs, Finset.card_image_of_injective,
+    halfSplitPair_injective]
 
 /-! ## Abstract pairing/graph expansion interfaces -/
 
