@@ -65,7 +65,7 @@ negative has exponentially small Gaussian measure. -/
     :φ_κ(x)⁴:_C ≥ -6c_κ(x)² ≥ -const × (ln κ)² for d=2.
     (Proposition 8.6.3 of Glimm-Jaffe)
 
-    The constant C depends only on the mass, not on the field configuration or point. -/
+    For fixed `κ`, the witness constant is uniform in the field configuration and point. -/
 theorem wick_fourth_semibounded (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
     (hκ : 1 < κ.κ) :
     ∃ C : ℝ, ∀ (ω : FieldConfig2D) (x : Spacetime2D),

@@ -114,10 +114,25 @@ theorem euclidean_equation_of_motion (params : Phi4Params)
   exact RegularityModel.euclidean_equation_of_motion
     (params := params) f g
 
+/-- Kernel-form rewriting of the Euclidean equation of motion, using the
+    explicit covariance bridge `freeCovariance_eq_kernel`. -/
+theorem euclidean_equation_of_motion_kernel_form (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [RegularityModel params]
+    [FreeCovarianceKernelModel params.mass params.mass_pos]
+    (f g : TestFun2D) :
+    ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
+      (∫ x, ∫ y, f x * freeCovKernel params.mass x y * g y) -
+      params.coupling *
+        ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params) := by
+  rw [euclidean_equation_of_motion (params := params) f g]
+  rw [freeCovariance_eq_kernel (mass := params.mass) (hmass := params.mass_pos) f g]
+
 /-! ## Generating functional bound (OS1) -/
 
 /-- Norm functional for the generating functional bound.
-    N'(g) = Σⱼ ‖gⱼ‖_{Lⁿ/(ⁿ⁻ʲ)} where n = deg P = 4. -/
+    In the current interface this is taken to be a fixed Schwartz seminorm
+    controlling the growth estimate. -/
 def normFunctional (g : TestFun2D) : ℝ :=
   SchwartzMap.seminorm ℝ 2 2 g
 

@@ -67,6 +67,17 @@ private def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
     (translateMap_antilipschitz (toSpacetime2D a))
     g
 
+/-! ## Weak-coupling decay shape -/
+
+/-- Connected 2-point exponential decay at fixed parameters. -/
+abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] : Prop :=
+  ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
+    ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
+      let g_shifted : TestFun2D := translateTestFun a g
+      |connectedTwoPoint params f g_shifted| ≤
+        C * Real.exp (-m_gap * ‖a‖)
+
 /-! ## Abstract reconstruction inputs -/
 
 /-- Inputs needed for OS reconstruction beyond the basic OSreconstruction API.
@@ -88,20 +99,17 @@ class ReconstructionInputModel (params : Phi4Params)
               let g_shifted : TestFun2D := translateTestFun a g
               |connectedTwoPoint p f g_shifted| ≤
                 C * Real.exp (-m_gap * ‖a‖)
+  /-- A canonical weak-coupling threshold for the current parameter set. -/
+  weak_coupling_threshold : ℝ
+  weak_coupling_threshold_pos : 0 < weak_coupling_threshold
+  connectedTwoPoint_decay_of_weak_coupling :
+    params.coupling < weak_coupling_threshold →
+      ConnectedTwoPointDecayAtParams params
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W
-
-/-- Connected 2-point exponential decay at fixed parameters. -/
-abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
-    [InfiniteVolumeLimitModel params] : Prop :=
-  ∃ (m_gap : ℝ) (C : ℝ), 0 < m_gap ∧
-    ∀ (f g : TestFun2D) (a : Fin 2 → ℝ),
-      let g_shifted : TestFun2D := translateTestFun a g
-      |connectedTwoPoint params f g_shifted| ≤
-        C * Real.exp (-m_gap * ‖a‖)
 
 /-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
 abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
@@ -200,13 +208,13 @@ theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
 
 /-- A canonical weak-coupling threshold selected from
     `phi4_connectedTwoPoint_decay_threshold`. -/
-noncomputable def phi4WeakCouplingThreshold (params : Phi4Params) :
+def phi4WeakCouplingThreshold (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [OSAxiomModel params] →
     [ReconstructionInputModel params] →
     ℝ := by
   intro hlim hos hrec
-  exact Classical.choose (phi4_connectedTwoPoint_decay_threshold params)
+  exact ReconstructionInputModel.weak_coupling_threshold (params := params)
 
 /-- Positivity of the selected weak-coupling threshold. -/
 theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
@@ -215,7 +223,8 @@ theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
     [ReconstructionInputModel params] →
     0 < phi4WeakCouplingThreshold params := by
   intro hlim hos hrec
-  exact (Classical.choose_spec (phi4_connectedTwoPoint_decay_threshold params)).1
+  simpa [phi4WeakCouplingThreshold] using
+    ReconstructionInputModel.weak_coupling_threshold_pos (params := params)
 
 /-- Exponential decay of connected 2-point functions when
     `params.coupling` is below the selected weak-coupling threshold. -/
@@ -226,7 +235,8 @@ theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
     params.coupling < phi4WeakCouplingThreshold params →
     ConnectedTwoPointDecayAtParams params := by
   intro hlim hos hrec hsmall
-  exact (Classical.choose_spec (phi4_connectedTwoPoint_decay_threshold params)).2 hsmall
+  exact ReconstructionInputModel.connectedTwoPoint_decay_of_weak_coupling
+    (params := params) hsmall
 
 /-- Explicit-Schwinger version of `phi4_connectedTwoPoint_decay_below_threshold`. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Params) :

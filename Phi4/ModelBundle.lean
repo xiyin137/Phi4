@@ -18,6 +18,7 @@ open Reconstruction
 
 /-- Bundled development assumptions for the φ⁴₂ pipeline at fixed parameters. -/
 class Phi4ModelBundle (params : Phi4Params) where
+  freeCovarianceKernel : FreeCovarianceKernelModel params.mass params.mass_pos
   boundaryCovariance : BoundaryCovarianceModel params.mass params.mass_pos
   interactionIntegrability : InteractionIntegrabilityModel params
   finiteVolumeComparison : FiniteVolumeComparisonModel params
@@ -31,6 +32,10 @@ class Phi4ModelBundle (params : Phi4Params) where
   regularity : @RegularityModel params infiniteVolume
   osAxiom : @OSAxiomModel params infiniteVolume
   reconstructionInput : @ReconstructionInputModel params infiniteVolume osAxiom
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    FreeCovarianceKernelModel params.mass params.mass_pos :=
+  h.freeCovarianceKernel
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     BoundaryCovarianceModel params.mass params.mass_pos :=

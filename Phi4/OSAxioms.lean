@@ -9,7 +9,8 @@ import OSReconstruction.Wightman.Reconstruction
 # OS Axioms for φ⁴₂
 
 This is the main theorem file. We verify that the infinite-volume φ⁴₂ Schwinger
-functions satisfy the Osterwalder-Schrader axioms E0-E3.
+functions satisfy the Osterwalder-Schrader axioms E0-E3, and package E4 under
+an explicit weak-coupling hypothesis.
 
 **Theorem 12.1.1 (Glimm-Jaffe)**: The generating functional S{f} of the φ⁴₂ theory
 exists and satisfies the Euclidean axioms OS0-OS3. Hence (by the OS reconstruction
@@ -33,7 +34,8 @@ open MeasureTheory Reconstruction
 
 /-! ## Abstract OS-axiom interface -/
 
-/-- Inputs required to package φ⁴₂ Schwinger functions and verify OS0/OS2/OS3. -/
+/-- Inputs required to package φ⁴₂ Schwinger functions and verify OS0/OS2/OS3,
+    together with an E4 cluster statement under weak coupling. -/
 class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
   schwingerFunctions : SchwingerFunctions 1
   os0 :
@@ -48,12 +50,20 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
       ∀ (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
         schwingerFunctions n f = schwingerFunctions n g
+  /-- Measure-level reflection positivity (used in standalone `phi4_os3`).
+      `os3` uses the concrete measure formulation over linear observables,
+      while `e2_reflection_positive` supplies the abstract distributional API
+      required by the OSReconstruction library on Borchers sequences.
+      In this interface they are separate assumptions; no formal bridge between
+      `schwingerFunctions` and `infiniteVolumeMeasure` is included here. -/
   os3 :
     ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
       (∀ i, supportedInPositiveTime (f i)) →
         0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
           ∫ ω, ω (testFunTimeReflect (f i)) * ω (f j)
             ∂(infiniteVolumeMeasure params)).re
+  /-- Distributional reflection positivity (used in `phi4_satisfies_OS`).
+      See `os3` above for the concrete measure-level version. -/
   e2_reflection_positive :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
@@ -63,8 +73,11 @@ class OSAxiomModel (params : Phi4Params) [InfiniteVolumeLimitModel params] where
     ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
       schwingerFunctions n f = schwingerFunctions n g
+  /-- A model-specific weak-coupling threshold below which clustering is available. -/
+  weak_coupling_threshold : ℝ
+  weak_coupling_threshold_pos : 0 < weak_coupling_threshold
   e4_cluster_of_weak_coupling :
-    (∃ coupling_bound : ℝ, 0 < coupling_bound ∧ params.coupling < coupling_bound) →
+    params.coupling < weak_coupling_threshold →
       ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
         ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
           ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
@@ -178,29 +191,57 @@ theorem phi4_os3 (params : Phi4Params)
 
 /-! ## Main theorem: OS axioms hold -/
 
-/-- **Theorem 12.1.1 (Glimm-Jaffe)**: The φ⁴₂ generating functional S{f}
-    satisfies the Euclidean axioms OS0-OS4 for sufficiently weak coupling.
+/-- Canonical weak-coupling threshold carried by `OSAxiomModel`. -/
+def os4WeakCouplingThreshold (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params] : ℝ :=
+  OSAxiomModel.weak_coupling_threshold (params := params)
+
+/-- Positivity of the canonical weak-coupling threshold. -/
+theorem os4WeakCouplingThreshold_pos (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params] :
+    0 < os4WeakCouplingThreshold params := by
+  simpa [os4WeakCouplingThreshold] using
+    OSAxiomModel.weak_coupling_threshold_pos (params := params)
+
+/-- E4 cluster property extracted from `OSAxiomModel` under weak coupling. -/
+theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomModel params]
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
+    ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
+      ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
+        ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
+          ∀ (g_a : SchwartzNPoint 1 m),
+            (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
+            ‖phi4SchwingerFunctions params (n + m) (f.tensorProduct g_a) -
+              phi4SchwingerFunctions params n f * phi4SchwingerFunctions params m g‖ < ε := by
+  simpa [phi4SchwingerFunctions, os4WeakCouplingThreshold] using
+    OSAxiomModel.e4_cluster_of_weak_coupling (params := params) hsmall
+
+/-- **Theorem 12.1.1 (Glimm-Jaffe)**: Under weak coupling, the φ⁴₂ generating
+    functional S{f} satisfies the Euclidean axioms OS0-OS4.
 
     This combines:
     - E0: from `phi4_os0` (temperedness of Schwinger functions)
     - E1: from `phi4_os2_translation` and `phi4_os2_rotation` (Euclidean covariance)
     - E2: from `phi4_os3` (reflection positivity)
     - E3: from symmetry of the path integral (permutation invariance)
-    - E4: from the cluster expansion (Chapter 18, requires weak coupling)
+    - E4: from the cluster expansion (Chapter 18, weak coupling)
 
     The regularity bound (OS1 / E0') follows from `generating_functional_bound`
     (Theorem 12.5.1) and is established separately in `phi4_linear_growth`.
 
-    Note: E4 (clustering) requires sufficiently small coupling constant λ.
-    For strong coupling, clustering may fail at the critical point.
-    Hence this theorem requires a weak coupling hypothesis.
+    Note: E4 (clustering) requires sufficiently small coupling constant λ,
+    represented here by the explicit hypothesis `hsmall`.
 
     Hence by the OS reconstruction theorem (from OSreconstruction), the φ⁴₂ theory
     defines a Wightman quantum field theory satisfying axioms W1-W3. -/
 theorem phi4_satisfies_OS (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
     [OSAxiomModel params]
-    (hsmall : ∃ coupling_bound : ℝ, 0 < coupling_bound ∧ params.coupling < coupling_bound) :
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
   refine ⟨{
@@ -210,7 +251,7 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     E1_rotation_invariant := phi4_os2_rotation params
     E2_reflection_positive := OSAxiomModel.e2_reflection_positive (params := params)
     E3_symmetric := OSAxiomModel.e3_symmetric (params := params)
-    E4_cluster := OSAxiomModel.e4_cluster_of_weak_coupling (params := params) hsmall
+    E4_cluster := phi4_e4_cluster_of_weak_coupling params hsmall
   }, rfl⟩
 
 end
