@@ -430,6 +430,23 @@ def connectedTwoPoint (params : Phi4Params)
         infiniteVolumeSchwinger params 1 ![f] *
           infiniteVolumeSchwinger params 1 ![g] := rfl
 
+/-- Symmetry of the infinite-volume 2-point Schwinger function from
+    moment representation. -/
+theorem infiniteVolumeSchwinger_two_symm (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] (f g : TestFun2D) :
+    infiniteVolumeSchwinger params 2 ![f, g] =
+      infiniteVolumeSchwinger params 2 ![g, f] := by
+  simp [infiniteVolumeSchwinger, InfiniteVolumeLimitModel.infiniteVolumeSchwinger_is_moment,
+    Fin.prod_univ_two, mul_comm]
+
+/-- Symmetry of the infinite-volume connected 2-point function. -/
+theorem connectedTwoPoint_symm (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] (f g : TestFun2D) :
+    connectedTwoPoint params f g = connectedTwoPoint params g f := by
+  unfold connectedTwoPoint
+  rw [infiniteVolumeSchwinger_two_symm]
+  ring
+
 /-- Along the exhausting rectangles, the finite-volume connected two-point
     function converges to the infinite-volume connected two-point function. -/
 theorem connectedSchwingerTwo_tendsto_infinite

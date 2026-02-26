@@ -276,6 +276,14 @@ theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
   intro hlim hcorr f g
   exact connectedTwoPoint_nonneg params f g
 
+/-- Infinite-volume connected two-point symmetry. -/
+theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    ∀ (f g : TestFun2D),
+      connectedTwoPoint params f g = connectedTwoPoint params g f := by
+  intro hlim f g
+  exact connectedTwoPoint_symm params f g
+
 /-! ## Wightman reconstruction -/
 
 /-- **Main Theorem**: The φ⁴₂ theory defines a Wightman quantum field theory.
