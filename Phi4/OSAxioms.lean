@@ -133,8 +133,7 @@ theorem phi4_os0 (params : Phi4Params)
     This is Theorem 12.5.1, the culmination of the integration by parts analysis.
     It is the most technically demanding of the OS axioms to verify. -/
 theorem phi4_os1 (params : Phi4Params)
-    [InfiniteVolumeLimitModel params]
-    [RegularityModel params] :
+    [InfiniteVolumeLimitModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
@@ -240,25 +239,9 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
   simpa [phi4SchwingerFunctions, os4WeakCouplingThreshold] using
     OSE4ClusterModel.e4_cluster_of_weak_coupling (params := params) hsmall
 
-/-- **Theorem 12.1.1 (Glimm-Jaffe)**: Under weak coupling, the φ⁴₂ generating
-    functional S{f} satisfies the Euclidean axioms OS0-OS4.
-
-    This combines:
-    - E0: from `phi4_os0` (temperedness of Schwinger functions)
-    - E1: from `phi4_os2_translation` and `phi4_os2_rotation` (Euclidean covariance)
-    - E2: from `phi4_e2_distributional` (distributional reflection positivity)
-    - E3: from symmetry of the path integral (permutation invariance)
-    - E4: from the cluster expansion (Chapter 18, weak coupling)
-
-    The regularity bound (OS1 / E0') follows from `generating_functional_bound`
-    (Theorem 12.5.1) and is established separately in `phi4_linear_growth`.
-
-    Note: E4 (clustering) requires sufficiently small coupling constant λ,
-    represented here by the explicit hypothesis `hsmall`.
-
-    Hence by the OS reconstruction theorem (from OSreconstruction), the φ⁴₂ theory
-    defines a Wightman quantum field theory satisfying axioms W1-W3. -/
-theorem phi4_satisfies_OS (params : Phi4Params)
+/-- Interface-level OS package theorem: if core/E2/E4 interfaces are provided and
+    weak coupling is available, the packaged Schwinger functions satisfy OS0-OS4. -/
+theorem phi4_satisfies_OS_of_interfaces (params : Phi4Params)
     [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
@@ -274,5 +257,51 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     E3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params)
     E4_cluster := phi4_e4_cluster_of_weak_coupling params hsmall
   }, rfl⟩
+
+/-- Honest frontier: construction of the core Schwinger OS package from
+    infinite-volume data. -/
+theorem gap_osaCoreModel_nonempty (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params] :
+    Nonempty (OSAxiomCoreModel params) := by
+  sorry
+
+/-- Honest frontier: distributional E2 from the OS core package. -/
+theorem gap_osDistributionE2_nonempty (params : Phi4Params)
+    [OSAxiomCoreModel params] :
+    Nonempty (OSDistributionE2Model params) := by
+  sorry
+
+/-- Honest frontier: weak-coupling E4 clustering from the OS core package. -/
+theorem gap_osE4Cluster_nonempty (params : Phi4Params)
+    [OSAxiomCoreModel params] :
+    Nonempty (OSE4ClusterModel params) := by
+  sorry
+
+/-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
+theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    [OSE4ClusterModel params]
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
+    params.coupling < os4WeakCouplingThreshold params := hsmall
+
+/-- **Theorem 12.1.1 (Glimm-Jaffe)**: Under weak coupling, the φ⁴₂ generating
+    functional S{f} satisfies the Euclidean axioms OS0-OS4.
+
+    Current status: this endpoint is exposed honestly through explicit
+    theorem-level frontier gaps (`gap_...`) rather than hidden model assumptions. -/
+theorem phi4_satisfies_OS (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    (core : OSAxiomCoreModel params)
+    (hsmall : ∀ [OSE4ClusterModel params], params.coupling < os4WeakCouplingThreshold params) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = @phi4SchwingerFunctions params core := by
+  classical
+  letI : OSAxiomCoreModel params := core
+  rcases gap_osDistributionE2_nonempty params with ⟨he2⟩
+  letI : OSDistributionE2Model params := he2
+  rcases gap_osE4Cluster_nonempty params with ⟨he4⟩
+  letI : OSE4ClusterModel params := he4
+  exact phi4_satisfies_OS_of_interfaces params
+    (hsmall := os4_weak_coupling_small_of_assumption params hsmall)
 
 end

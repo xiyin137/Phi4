@@ -2,8 +2,10 @@
 
 ## Status Snapshot (2026-02-26)
 
-- `Phi4/*.lean` has `0` `sorry`.
-- `Phi4/*.lean` has `0` `axiom` declarations.
+- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) have `9` theorem-level `sorry` (intentional honest frontiers).
+- Scratch modules (`Phi4/Scratch/**/*.lean`) have `16` theorem-level `sorry`.
+- `Phi4/**/*.lean` has `0` `axiom` declarations.
+- `Phi4/**/*.lean` has `0` `def/abbrev := by sorry`.
 - `lake build Phi4` succeeds.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
@@ -32,6 +34,12 @@
 - Infinite-volume inequality/convergence theorem blocks in
   `Phi4/InfiniteVolumeLimit.lean` and wrappers in `Phi4/Reconstruction.lean`
   now use `InfiniteVolumeSchwingerModel` where measure representation is unused.
+- `Phi4/InfiniteVolumeLimit.lean` now provides constructive two-point
+  exhaustion lemmas sourced from `MultipleReflectionModel`:
+  `schwingerTwo_uniformly_bounded_on_exhaustion`,
+  `schwingerTwo_tendsto_iSup_of_models`,
+  `schwingerTwo_limit_exists_of_models`,
+  with lattice and `schwingerN` (`k = 2`) model-driven variants.
 - `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure
   submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
@@ -50,6 +58,9 @@
   weak-coupling submodels directly.
 - `Phi4/ModelBundle.lean` now carries correlation submodels directly; full
   `CorrelationInequalityModel` is reconstructed by instance.
+- `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
+- FKG-derived connected two-point nonnegativity statements now explicitly
+  require nonnegative test functions (corrected soundness of statement direction).
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Development Rules (Authoritative)
@@ -180,6 +191,10 @@ Goal: reduce `InfiniteVolumeLimitModel` by proving concrete convergence/represen
 Progress:
 - split completed: `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel`
   now isolate convergence/bounds from measure representation.
+- two-point exhaustion convergence now has a constructive route where the
+  absolute bound is derived internally from `MultipleReflectionModel` rather
+  than passed as a separate theorem argument (both `schwingerTwo` and
+  `schwingerN` for `k = 2`, including lattice-bridge variants).
 
 Deliverables:
 - strengthen monotonicity beyond the currently packaged 2-point channel,

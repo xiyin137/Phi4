@@ -52,8 +52,10 @@ class CorrelationInequalityModel (params : Phi4Params) where
   /-- FKG positive-correlation inequality for monotone observables. -/
   fkg_inequality : ∀ (Λ : Rectangle)
       (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
       (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
@@ -107,8 +109,10 @@ class CorrelationFourPointModel (params : Phi4Params) where
 class CorrelationFKGModel (params : Phi4Params) where
   fkg_inequality : ∀ (Λ : Rectangle)
       (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
       (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
@@ -270,8 +274,10 @@ class CorrelationInequalityCoreModel (params : Phi4Params) where
   /-- FKG positive-correlation inequality. -/
   fkg_inequality : ∀ (Λ : Rectangle)
       (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
       (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
@@ -493,8 +499,10 @@ theorem pairing_subtracted_four_point_nonneg_14_23
 theorem fkg_inequality (params : Phi4Params) (Λ : Rectangle)
     [CorrelationFKGModel params]
     (F G : FieldConfig2D → ℝ)
-    (hF_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-    (hG_mono : ∀ ω₁ ω₂ : FieldConfig2D, (∀ f, ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂) :
+    (hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+      (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+    (hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+      (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂) :
     (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
       (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
     ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ) := by
@@ -502,24 +510,25 @@ theorem fkg_inequality (params : Phi4Params) (Λ : Rectangle)
     (params := params) Λ F G hF_mono hG_mono
 
 /-- FKG implies nonnegativity of the connected finite-volume two-point function
-    for linear field observables. -/
+    for nonnegative test functions. -/
 theorem connectedSchwingerTwo_nonneg
     (params : Phi4Params) (Λ : Rectangle)
     [CorrelationFKGModel params]
-    (f g : TestFun2D) :
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
     0 ≤ connectedSchwingerTwo params Λ f g := by
   have hmonoF :
       ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ h : TestFun2D, ω₁ h ≤ ω₂ h) →
+        (∀ h : TestFun2D, (∀ x, 0 ≤ h x) → ω₁ h ≤ ω₂ h) →
         (fun ω : FieldConfig2D => ω f) ω₁ ≤ (fun ω : FieldConfig2D => ω f) ω₂ := by
     intro ω₁ ω₂ hω
-    exact hω f
+    exact hω f hf
   have hmonoG :
       ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ h : TestFun2D, ω₁ h ≤ ω₂ h) →
+        (∀ h : TestFun2D, (∀ x, 0 ≤ h x) → ω₁ h ≤ ω₂ h) →
         (fun ω : FieldConfig2D => ω g) ω₁ ≤ (fun ω : FieldConfig2D => ω g) ω₂ := by
     intro ω₁ ω₂ hω
-    exact hω g
+    exact hω g hg
   have hfkg := fkg_inequality params Λ
     (fun ω : FieldConfig2D => ω f)
     (fun ω : FieldConfig2D => ω g)

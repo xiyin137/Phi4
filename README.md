@@ -9,12 +9,15 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 
 ## Status Snapshot (2026-02-26)
 
-- `Phi4/*.lean` `sorry` count: `0`.
-- `Phi4/*.lean` `axiom` declarations: `0`.
+- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`):
+  - theorem-level `sorry` count: `9`,
+  - `axiom` declarations: `0`,
+  - `def`/`abbrev`-level `sorry`: `0`.
+- Scratch modules (`Phi4/Scratch/**/*.lean`) theorem-level `sorry` count: `16`.
 - Build status: `lake build Phi4` succeeds.
-- Per-file `sorry` counts (tracked `Phi4/**/*.lean` files):
+- Per-file theorem-level `sorry` counts (core tracked files):
 
-| File | `sorry` count |
+| File | theorem-level `sorry` count |
 |---|---:|
 | `Phi4/Bessel/BesselK0.lean` | 0 |
 | `Phi4/Bessel/BesselK1.lean` | 0 |
@@ -26,16 +29,20 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 | `Phi4/FiniteVolumeMeasure.lean` | 0 |
 | `Phi4/FreeField.lean` | 0 |
 | `Phi4/GreenFunction/PeriodicKernel.lean` | 0 |
-| `Phi4/InfiniteVolumeLimit.lean` | 0 |
+| `Phi4/HonestGaps.lean` | 0 |
+| `Phi4/InfiniteVolumeLimit.lean` | 1 |
 | `Phi4/Interaction.lean` | 0 |
 | `Phi4/LatticeApproximation.lean` | 0 |
 | `Phi4/ModelBundle.lean` | 0 |
 | `Phi4/MultipleReflections.lean` | 0 |
-| `Phi4/OSAxioms.lean` | 0 |
-| `Phi4/Reconstruction.lean` | 0 |
+| `Phi4/OSAxioms.lean` | 3 |
+| `Phi4/Reconstruction.lean` | 2 |
 | `Phi4/ReflectionPositivity.lean` | 0 |
-| `Phi4/Regularity.lean` | 0 |
+| `Phi4/Regularity.lean` | 3 |
 | `Phi4/WickProduct.lean` | 0 |
+- Open frontiers are now explicit theorem-level gaps (`gap_...` theorems) rather than `def` placeholders.
+- `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and carries no local `sorry`.
+- FKG-derived connected two-point nonnegativity now requires nonnegative test functions (mathematically correct direction).
 - Pairing/perfect-matching combinatorics has been factored into `Phi4/Combinatorics/PerfectMatchings.lean`.
 - `PairingEnumerationModel` now assumes only the pairing-cardinality formula; finite enumeration is canonical (`Finset.univ`).
 - Boundary covariance assumptions are now layered into kernel/comparison/regularity subinterfaces with compatibility instances from `BoundaryCovarianceModel`.
@@ -46,6 +53,11 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - `Phi4ModelBundle` now stores these three correlation submodels directly; the full correlation model is reconstructed by instance.
 - Infinite-volume assumptions are now split into `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel`, with reconstruction to `InfiniteVolumeLimitModel`.
 - `InfiniteVolumeLimit.lean` and `Reconstruction.lean` now use `InfiniteVolumeSchwingerModel` as the minimal assumption for inequality/convergence blocks that do not require measure representation.
+- `InfiniteVolumeLimit.lean` now includes constructive two-point exhaustion lemmas that discharge the explicit boundedness hypothesis from `MultipleReflectionModel`:
+  `schwingerTwo_uniformly_bounded_on_exhaustion`,
+  `schwingerTwo_tendsto_iSup_of_models`,
+  `schwingerTwo_limit_exists_of_models`,
+  plus lattice and `schwingerN` (`k = 2`) model-driven convergence/existence variants.
 - `Phi4ModelBundle` now stores `InfiniteVolumeSchwingerModel` and `InfiniteVolumeMeasureModel` directly; full `InfiniteVolumeLimitModel` is reconstructed by instance.
 - `MeasureOS3Model` now depends only on the infinite-volume Schwinger+measure subinterfaces (not the full infinite-volume bundle).
 - `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now decoupled from `InfiniteVolumeLimitModel`; they are pure Schwinger-package interfaces.
@@ -211,7 +223,9 @@ lake build Phi4
 ## Trust / Audit Commands
 
 ```bash
-rg -n "\\bsorry\\b|\\bsorryAx\\b|^axiom" Phi4 --glob '*.lean'
+scripts/check_phi4_trust.sh
+rg -n "^[[:space:]]*axiom\\b" Phi4 --glob '*.lean'
+grep -RIn "^[[:space:]]*sorry\\b" Phi4 --include='*.lean'
 lake build Phi4
 ```
 

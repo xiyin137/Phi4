@@ -163,12 +163,21 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem phi4_linear_growth (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
-    [ReconstructionLinearGrowthModel params] :
+    [OSAxiomCoreModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
+  sorry
+
+/-- Explicit reconstruction step from OS + linear growth to Wightman data.
+    This is a currently open frontier and is intentionally recorded as `sorry`. -/
+theorem phi4_wightman_reconstruction_step (params : Phi4Params)
+    [OSAxiomCoreModel params] :
+    ∀ (OS : OsterwalderSchraderAxioms 1),
+      OSLinearGrowthCondition 1 OS →
+        ∃ (Wfn : WightmanFunctions 1),
+          IsWickRotationPair OS.S Wfn.W := by
+  sorry
 
 /-! ## OS4: Clustering (for weak coupling) -/
 
@@ -279,23 +288,24 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
   intro f g a
   simpa [connectedTwoPoint] using hdecay f g a
 
-/-- Infinite-volume connected two-point nonnegativity inherited from finite-volume
-    FKG positivity. -/
+/-- Infinite-volume connected two-point nonnegativity for nonnegative test
+    functions, inherited from finite-volume FKG positivity. -/
 theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [CorrelationFKGModel params] →
-    ∀ (f g : TestFun2D), 0 ≤ connectedTwoPoint params f g := by
-  intro hlim hcorr f g
-  exact connectedTwoPoint_nonneg params f g
+    ∀ (f g : TestFun2D), (∀ x, 0 ≤ f x) → (∀ x, 0 ≤ g x) →
+      0 ≤ connectedTwoPoint params f g := by
+  intro hlim hcorr f g hf hg
+  exact connectedTwoPoint_nonneg params f g hf hg
 
-/-- Infinite-volume diagonal connected two-point nonnegativity from finite-volume
-    FKG positivity and the infinite-volume limit. -/
+/-- Infinite-volume diagonal connected two-point nonnegativity for nonnegative
+    test functions, from finite-volume FKG positivity and the infinite-volume limit. -/
 theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [CorrelationFKGModel params] →
-    ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f := by
-  intro hlim hcorr f
-  exact connectedTwoPoint_self_nonneg_of_fkg params f
+    ∀ (f : TestFun2D), (∀ x, 0 ≤ f x) → 0 ≤ connectedTwoPoint params f f := by
+  intro hlim hcorr f hf
+  exact connectedTwoPoint_self_nonneg_of_fkg params f hf
 
 /-- Infinite-volume connected two-point Cauchy-Schwarz inequality. -/
 theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
@@ -668,10 +678,9 @@ theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params
 /-- Infinite-volume connected two-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
-    [InfiniteVolumeMeasureModel params] →
     ∀ (f g : TestFun2D),
       connectedTwoPoint params f g = connectedTwoPoint params g f := by
-  intro hsch hmeas f g
+  intro hsch f g
   exact connectedTwoPoint_symm params f g
 
 /-! ## Wightman reconstruction -/
@@ -690,18 +699,15 @@ theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
 theorem phi4_wightman_exists (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hrecLinear hwrec
+  intro hlim hos
   obtain ⟨OS, hOS_lg⟩ := phi4_linear_growth params
   rcases hOS_lg with ⟨hS, hlg_nonempty⟩
   rcases hlg_nonempty with ⟨hlg⟩
-  obtain ⟨Wfn, hWR⟩ := WightmanReconstructionModel.wightman_reconstruction
-    (params := params) OS hlg
+  obtain ⟨Wfn, hWR⟩ := phi4_wightman_reconstruction_step (params := params) OS hlg
   exact ⟨Wfn, OS, hS, hWR⟩
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
@@ -713,14 +719,12 @@ theorem phi4_wightman_exists (params : Phi4Params) :
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hlim hos hrecLinear hwrec
+  intro hlim hos
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -732,12 +736,10 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
 theorem phi4_locality (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hlim hos hrecLinear hwrec
+  intro hlim hos
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
@@ -747,12 +749,10 @@ theorem phi4_locality (params : Phi4Params) :
 theorem phi4_lorentz_covariance (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hlim hos hrecLinear hwrec
+  intro hlim hos
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -766,12 +766,10 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
 theorem phi4_unique_vacuum (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hlim hos hrecLinear hwrec
+  intro hlim hos
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 

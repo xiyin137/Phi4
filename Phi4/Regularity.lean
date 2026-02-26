@@ -155,19 +155,9 @@ theorem euclidean_equation_of_motion_kernel_form (params : Phi4Params)
 def normFunctional (g : TestFun2D) : ℝ :=
   SchwartzMap.seminorm ℝ 2 2 g
 
-/-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
-    |S{f}| ≤ exp(c · N'(f))
-    where S{f} = ∫ exp(⟨ω, f⟩) dμ(ω) is the generating functional and
-    N'(f) is the norm functional defined above.
-
-    This is the OS1 regularity axiom (also called "linear growth condition").
-    The bound is uniform in the volume (passed from finite volume via 12.4).
-
-    The proof uses:
-    1. Integration by parts to expand S{f} in powers of f
-    2. Nonlocal φ⁴ bounds (Section 12.3) for each term
-    3. Uniformity in volume (Section 12.4) via multiple reflections -/
-theorem generating_functional_bound (params : Phi4Params) :
+/-- Interface-level generating-functional bound extracted from
+    `RegularityModel`. -/
+theorem generating_functional_bound_of_interface (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [RegularityModel params] →
     ∃ c : ℝ, ∀ f : TestFun2D,
@@ -178,16 +168,32 @@ theorem generating_functional_bound (params : Phi4Params) :
     (RegularityModel.generating_functional_bound
       (params := params))
 
+/-- Honest frontier: generating-functional bound (OS1 / E0') from
+    infinite-volume regularity inputs. -/
+theorem gap_generating_functional_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  sorry
+
+/-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
+    |S{f}| ≤ exp(c · N'(f)).
+
+    Current status: exposed via explicit theorem-level frontier gap
+    `gap_generating_functional_bound`. -/
+theorem generating_functional_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * normFunctional f) := by
+  intro hlim
+  exact gap_generating_functional_bound params
+
 /-! ## Nonlocal φ⁴ bounds -/
 
-/-- **Nonlocal φ⁴ bounds** (Section 12.3 of Glimm-Jaffe):
-    For any test function g supported in a region Λ,
-      |S_Λ{g}| ≤ exp(C₁ · area(Λ) + C₂)
-
-    where C₁, C₂ depend only on the theory parameters (not on Λ or g).
-    The factor area(Λ) arises from the integration by parts and is
-    eliminated in Section 12.5 using the infrared decoupling argument. -/
-theorem nonlocal_phi4_bound (params : Phi4Params) :
+/-- Interface-level nonlocal φ⁴ bound extracted from `RegularityModel`. -/
+theorem nonlocal_phi4_bound_of_interface (params : Phi4Params) :
     [InfiniteVolumeLimitModel params] →
     [RegularityModel params] →
     ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
@@ -197,12 +203,28 @@ theorem nonlocal_phi4_bound (params : Phi4Params) :
   exact RegularityModel.nonlocal_phi4_bound
     (params := params)
 
+/-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3). -/
+theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
+      |generatingFunctional params Λ g| ≤
+        Real.exp (C₁ * Λ.area + C₂) := by
+  sorry
+
+/-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
+theorem nonlocal_phi4_bound (params : Phi4Params) :
+    [InfiniteVolumeLimitModel params] →
+    ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle) (g : TestFun2D),
+      |generatingFunctional params Λ g| ≤
+        Real.exp (C₁ * Λ.area + C₂) := by
+  intro hlim
+  exact gap_nonlocal_phi4_bound params
+
 /-! ## Uniformity in volume -/
 
-/-- **Uniformity of the generating functional bound** (Section 12.4):
-    The bound |S_Λ{f}| ≤ exp(const · N'(f)) holds uniformly in Λ.
-    This is essential for passing to the infinite volume limit. -/
-theorem generating_functional_bound_uniform (params : Phi4Params)
+/-- Interface-level uniform-in-volume generating-functional bound extracted from
+    `RegularityModel`. -/
+theorem generating_functional_bound_uniform_of_interface (params : Phi4Params)
     [InfiniteVolumeLimitModel params]
     [RegularityModel params]
     (f : TestFun2D) :
@@ -211,5 +233,21 @@ theorem generating_functional_bound_uniform (params : Phi4Params)
   simpa [normFunctional] using
     (RegularityModel.generating_functional_bound_uniform
       (params := params) f)
+
+/-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4). -/
+theorem gap_generating_functional_bound_uniform (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (f : TestFun2D) :
+    ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
+  sorry
+
+/-- Public uniformity endpoint via explicit theorem-level frontier gap. -/
+theorem generating_functional_bound_uniform (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    (f : TestFun2D) :
+    ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
+  exact gap_generating_functional_bound_uniform params f
 
 end

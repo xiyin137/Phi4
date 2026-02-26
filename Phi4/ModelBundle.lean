@@ -220,16 +220,19 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_of_bundle (params : Phi4Par
     ConnectedTwoPointDecayAtParams params :=
   phi4_connectedTwoPoint_decay_below_threshold params hsmall
 
-/-- Bundled wrapper: infinite-volume connected 2-point nonnegativity. -/
+/-- Bundled wrapper: infinite-volume connected 2-point nonnegativity for
+    nonnegative test functions. -/
 theorem phi4_connectedTwoPoint_nonneg_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
-    ∀ (f g : TestFun2D), 0 ≤ connectedTwoPoint params f g :=
+    ∀ (f g : TestFun2D), (∀ x, 0 ≤ f x) → (∀ x, 0 ≤ g x) →
+      0 ≤ connectedTwoPoint params f g :=
   phi4_connectedTwoPoint_nonneg params
 
-/-- Bundled wrapper: infinite-volume diagonal connected 2-point nonnegativity. -/
+/-- Bundled wrapper: infinite-volume diagonal connected 2-point nonnegativity
+    for nonnegative test functions. -/
 theorem phi4_connectedTwoPoint_self_nonneg_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
-    ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f :=
+    ∀ (f : TestFun2D), (∀ x, 0 ≤ f x) → 0 ≤ connectedTwoPoint params f f :=
   phi4_connectedTwoPoint_self_nonneg params
 
 /-- Bundled wrapper: infinite-volume connected 2-point Cauchy-Schwarz inequality. -/

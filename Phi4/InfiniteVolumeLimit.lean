@@ -172,6 +172,46 @@ private theorem tendsto_iSup_of_monotone_abs_bounded
     exact le_trans (le_abs_self _) (hC n)
   exact tendsto_atTop_ciSup hmono hbdd
 
+/-- Exhausting rectangles are time-symmetric. -/
+private lemma exhaustingRectangles_isTimeSymmetric
+    (n : ℕ) (hn : 0 < n) :
+    (exhaustingRectangles n hn).IsTimeSymmetric := by
+  simp [Rectangle.IsTimeSymmetric, exhaustingRectangles, Rectangle.symmetric]
+
+/-- Uniform absolute bound for the exhausting-sequence two-point function,
+    obtained from the multiple-reflection uniform bound and support-in-base-volume
+    assumptions. -/
+theorem schwingerTwo_uniformly_bounded_on_exhaustion
+    (params : Phi4Params)
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
+    ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g| ≤ C := by
+  rcases schwinger_uniform_bound params 2 (![f, g] : Fin 2 → TestFun2D) with ⟨C, hC⟩
+  refine ⟨C, ?_⟩
+  intro n
+  let Λn : Rectangle := exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)
+  have hsub0n :
+      (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet ⊆ Λn.toSet := by
+    simpa [Λn] using
+      (exhaustingRectangles_mono_toSet
+        (n0 + 1) (n + n0 + 1)
+        (Nat.succ_pos n0) (Nat.succ_pos (n + n0)) (by omega))
+  have hfsuppn : ∀ x ∉ Λn.toSet, f x = 0 :=
+    support_zero_outside_of_subset f hsub0n hfsupp0
+  have hgsuppn : ∀ x ∉ Λn.toSet, g x = 0 :=
+    support_zero_outside_of_subset g hsub0n hgsupp0
+  have hfgsupp : ∀ i, ∀ x ∉ Λn.toSet, (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
+    intro i x hx
+    fin_cases i
+    · simpa using hfsuppn x hx
+    · simpa using hgsuppn x hx
+  have hboundN := hC Λn (exhaustingRectangles_isTimeSymmetric _ (Nat.succ_pos _)) hfgsupp
+  simpa [Λn, schwingerN_two_eq_schwingerTwo] using hboundN
+
 /-- Convergence of the two-point finite-volume sequence from:
     1. positivity-preserving test functions with support in a base rectangle,
     2. volume monotonicity (`CorrelationTwoPointModel`), and
@@ -217,6 +257,44 @@ theorem schwingerTwo_tendsto_iSup_of_monotone_bounded
     (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
     hmono hbound
 
+/-- Monotone-convergence form for the two-point exhausting sequence, with the
+    absolute bound discharged by `MultipleReflectionModel`. -/
+theorem schwingerTwo_tendsto_iSup_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)) := by
+  have hbound := schwingerTwo_uniformly_bounded_on_exhaustion
+    params n0 f g hfsupp0 hgsupp0
+  exact schwingerTwo_tendsto_iSup_of_monotone_bounded
+    params n0 f g hf hg hfsupp0 hgsupp0 hbound
+
+/-- Existence form of `schwingerTwo_tendsto_iSup_of_models`. -/
+theorem schwingerTwo_limit_exists_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerTwo params
+    (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g, ?_⟩
+  exact schwingerTwo_tendsto_iSup_of_models
+    params n0 f g hf hg hfsupp0 hgsupp0
+
 /-- Lattice-bridge variant of monotone-bounded convergence for the finite-volume
     two-point sequence. -/
 theorem schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
@@ -257,6 +335,44 @@ theorem schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
   exact tendsto_iSup_of_monotone_abs_bounded
     (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
     hmono hbound
+
+/-- Lattice-bridge monotone-convergence form with the absolute bound discharged by
+    `MultipleReflectionModel`. -/
+theorem schwingerTwo_tendsto_iSup_of_lattice_models
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)) := by
+  have hbound := schwingerTwo_uniformly_bounded_on_exhaustion
+    params n0 f g hfsupp0 hgsupp0
+  exact schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded
+    params n0 f g hf hg hfsupp0 hgsupp0 hbound
+
+/-- Existence form of `schwingerTwo_tendsto_iSup_of_lattice_models`. -/
+theorem schwingerTwo_limit_exists_of_lattice_models
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
+    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerTwo params
+    (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g, ?_⟩
+  exact schwingerTwo_tendsto_iSup_of_lattice_models
+    params n0 f g hf hg hfsupp0 hgsupp0
 
 /-- Existence form of `schwingerTwo_tendsto_iSup_of_monotone_bounded`. -/
 theorem schwingerTwo_limit_exists_of_monotone_bounded
@@ -328,6 +444,60 @@ theorem schwingerN_two_tendsto_iSup_of_lattice_monotone_bounded
     params n0 (f 0) (f 1) (hf 0) (hf 1) (hfsupp0 0) (hfsupp0 1) hboundTwo
   simpa [schwingerN_two_eq_schwingerTwo] using hTwo
 
+/-- `schwingerN` (`k = 2`) monotone-convergence form with absolute bounds
+    supplied by `MultipleReflectionModel`. -/
+theorem schwingerN_two_tendsto_iSup_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)) := by
+  have hboundTwo := schwingerTwo_uniformly_bounded_on_exhaustion
+    params n0 (f 0) (f 1) (hfsupp0 0) (hfsupp0 1)
+  have hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f| ≤ C := by
+    rcases hboundTwo with ⟨C, hC⟩
+    refine ⟨C, ?_⟩
+    intro n
+    simpa [schwingerN_two_eq_schwingerTwo] using hC n
+  exact schwingerN_two_tendsto_iSup_of_monotone_bounded
+    params n0 f hf hfsupp0 hbound
+
+/-- Lattice-bridge `schwingerN` (`k = 2`) monotone-convergence form with
+    absolute bounds supplied by `MultipleReflectionModel`. -/
+theorem schwingerN_two_tendsto_iSup_of_lattice_models
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)) := by
+  have hboundTwo := schwingerTwo_uniformly_bounded_on_exhaustion
+    params n0 (f 0) (f 1) (hfsupp0 0) (hfsupp0 1)
+  have hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f| ≤ C := by
+    rcases hboundTwo with ⟨C, hC⟩
+    refine ⟨C, ?_⟩
+    intro n
+    simpa [schwingerN_two_eq_schwingerTwo] using hC n
+  exact schwingerN_two_tendsto_iSup_of_lattice_monotone_bounded
+    params n0 f hf hfsupp0 hbound
+
 /-- Existence form of `schwingerN_two_tendsto_iSup_of_monotone_bounded`. -/
 theorem schwingerN_two_limit_exists_of_monotone_bounded
     (params : Phi4Params)
@@ -345,6 +515,40 @@ theorem schwingerN_two_limit_exists_of_monotone_bounded
         Filter.atTop (nhds S) := by
   refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f, ?_⟩
   exact schwingerN_two_tendsto_iSup_of_monotone_bounded params n0 f hf hfsupp0 hbound
+
+/-- Existence form of `schwingerN_two_tendsto_iSup_of_models`. -/
+theorem schwingerN_two_limit_exists_of_models
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f, ?_⟩
+  exact schwingerN_two_tendsto_iSup_of_models params n0 f hf hfsupp0
+
+/-- Existence form of `schwingerN_two_tendsto_iSup_of_lattice_models`. -/
+theorem schwingerN_two_limit_exists_of_lattice_models
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f : Fin 2 → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f, ?_⟩
+  exact schwingerN_two_tendsto_iSup_of_lattice_models params n0 f hf hfsupp0
 
 /-! ## Uniform upper bounds -/
 
@@ -427,7 +631,7 @@ instance (priority := 100) infiniteVolumeLimitModel_of_submodels
     - Chessboard estimates (multiple reflections) to reduce to unit-square expectations
     - The Lᵖ bounds from Theorem 8.6.2 for each unit square
     - Exponential decay of the propagator for cross-square contributions -/
-theorem schwinger_uniformly_bounded (params : Phi4Params)
+theorem schwinger_uniformly_bounded_of_interface (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
@@ -435,7 +639,41 @@ theorem schwinger_uniformly_bounded (params : Phi4Params)
   exact InfiniteVolumeSchwingerModel.schwinger_uniformly_bounded
     (params := params) k f
 
+/-! ## Honest frontiers for infinite-volume package construction -/
+
+/-- Honest frontier: construct the infinite-volume Schwinger package from
+    correlation inequalities and multiple-reflection bounds. -/
+theorem gap_infiniteVolumeSchwingerModel_nonempty (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    [MultipleReflectionModel params] :
+    Nonempty (InfiniteVolumeSchwingerModel params) := by
+  sorry
+
+/-- Public uniform-bound endpoint via explicit theorem-level frontier gap. -/
+theorem schwinger_uniformly_bounded (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    [MultipleReflectionModel params]
+    (k : ℕ) (f : Fin k → TestFun2D) :
+    ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
+      |schwingerN params (exhaustingRectangles n hn) k f| ≤ C := by
+  classical
+  rcases gap_infiniteVolumeSchwingerModel_nonempty params with ⟨hiv⟩
+  letI : InfiniteVolumeSchwingerModel params := hiv
+  exact schwinger_uniformly_bounded_of_interface params k f
+
 /-! ## Existence of the infinite volume limit -/
+
+/-- Interface-level existence of infinite-volume Schwinger functions from
+    `InfiniteVolumeSchwingerModel`. -/
+theorem infinite_volume_schwinger_exists_of_interface (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    (k : ℕ) (f : Fin k → TestFun2D) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
+      Filter.atTop (nhds S) := by
+  refine ⟨InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger (params := params) k f, ?_⟩
+  exact InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+    (params := params) k f
 
 /-- **Existence of infinite volume Schwinger functions** (Theorem 11.2.1):
     For non-negative test functions, the limit
@@ -445,14 +683,16 @@ theorem schwinger_uniformly_bounded (params : Phi4Params)
     For general (signed) test functions, existence follows by decomposing
     f = f⁺ - f⁻ and using multilinearity. -/
 theorem infinite_volume_schwinger_exists (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [CorrelationInequalityModel params]
+    [MultipleReflectionModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     ∃ S : ℝ, Filter.Tendsto
       (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
       Filter.atTop (nhds S) := by
-  refine ⟨InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger (params := params) k f, ?_⟩
-  exact InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
-    (params := params) k f
+  classical
+  rcases gap_infiniteVolumeSchwingerModel_nonempty params with ⟨hiv⟩
+  letI : InfiniteVolumeSchwingerModel params := hiv
+  exact infinite_volume_schwinger_exists_of_interface params k f
 
 /-- The infinite volume Schwinger function. -/
 def infiniteVolumeSchwinger (params : Phi4Params)
@@ -1341,12 +1581,13 @@ theorem connectedTwoPoint_self_nonneg
   exact ge_of_tendsto' hlim hnonneg
 
 /-- Diagonal connected two-point nonnegativity in infinite volume, obtained
-    directly from finite-volume FKG positivity. -/
+    directly from finite-volume FKG positivity for nonnegative test functions. -/
 theorem connectedTwoPoint_self_nonneg_of_fkg
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [CorrelationFKGModel params]
-    (f : TestFun2D) :
+    (f : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) :
     0 ≤ connectedTwoPoint params f f := by
   have hlim := connectedSchwingerTwo_tendsto_infinite params f f
   have hnonneg : ∀ n : ℕ,
@@ -1356,7 +1597,7 @@ theorem connectedTwoPoint_self_nonneg_of_fkg
         else 0) := by
     intro n
     by_cases h : 0 < n
-    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f f
+    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f f hf hf
       unfold connectedSchwingerTwo at hConn
       simp [h]
       linarith
@@ -1535,12 +1776,13 @@ theorem connectedTwoPoint_abs_le_half_diag_sum
   simpa [x, a, b] using hxbound
 
 /-- If finite-volume FKG inequalities are available, the infinite-volume connected
-    two-point function is nonnegative. -/
+    two-point function is nonnegative for nonnegative test functions. -/
 theorem connectedTwoPoint_nonneg
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [CorrelationFKGModel params]
-    (f g : TestFun2D) :
+    (f g : TestFun2D)
+    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
     0 ≤ connectedTwoPoint params f g := by
   have hlim := connectedSchwingerTwo_tendsto_infinite params f g
   have hnonneg : ∀ n : ℕ,
@@ -1550,7 +1792,7 @@ theorem connectedTwoPoint_nonneg
         else 0) := by
     intro n
     by_cases h : 0 < n
-    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f g
+    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f g hf hg
       unfold connectedSchwingerTwo at hConn
       simp [h]
       linarith
@@ -1589,6 +1831,35 @@ theorem infiniteVolumeSchwinger_is_moment (params : Phi4Params)
 /-- Zeroth infinite-volume Schwinger function normalization:
     `S_0 = 1` for any choice of the unique `Fin 0 → TestFun2D`. -/
 theorem infiniteVolumeSchwinger_zero (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InteractionWeightModel params]
+    (f : Fin 0 → TestFun2D) :
+    infiniteVolumeSchwinger params 0 f = 1 := by
+  have hlim :=
+    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+      (params := params) 0 f
+  have hlim' :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) 0 f else 0)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params 0 f)) := by
+    simpa [infiniteVolumeSchwinger] using hlim
+  have hconst :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) 0 f else 0)
+        Filter.atTop (nhds (1 : ℝ)) := by
+    refine (tendsto_const_nhds :
+      Filter.Tendsto (fun _ : ℕ => (1 : ℝ)) Filter.atTop (nhds (1 : ℝ))).congr' ?_
+    filter_upwards [Filter.eventually_gt_atTop (0 : ℕ)] with n hn
+    have hn' : 0 < n := hn
+    simp [hn', schwingerN_zero params (exhaustingRectangles n hn') f]
+  exact tendsto_nhds_unique hlim' hconst
+
+/-- Measure-representation proof of zeroth infinite-volume Schwinger
+    normalization (`S_0 = 1`). -/
+theorem infiniteVolumeSchwinger_zero_of_moment (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     (f : Fin 0 → TestFun2D) :
