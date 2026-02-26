@@ -88,6 +88,20 @@ theorem schwinger_monotone_in_volume (params : Phi4Params)
     (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
     f g hf hg hfsupp hgsupp
 
+/-- Lattice-bridge variant of two-point monotonicity in volume. -/
+theorem schwinger_monotone_in_volume_from_lattice (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
+    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
+    (hfsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f x = 0)
+    (hgsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, g x = 0) :
+    schwingerTwo params (exhaustingRectangles n₁ hn₁) f g ≤
+      schwingerTwo params (exhaustingRectangles n₂ hn₂) f g := by
+  exact schwinger_two_monotone_from_lattice params
+    (exhaustingRectangles n₁ hn₁) (exhaustingRectangles n₂ hn₂)
+    (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
+    f g hf hg hfsupp hgsupp
+
 /-- Monotonicity of the `n = 2` Schwinger function in `schwingerN` form. -/
 theorem schwingerN_monotone_in_volume_two (params : Phi4Params)
     [CorrelationInequalityModel params]
@@ -97,6 +111,18 @@ theorem schwingerN_monotone_in_volume_two (params : Phi4Params)
     schwingerN params (exhaustingRectangles n₁ hn₁) 2 f ≤
       schwingerN params (exhaustingRectangles n₂ hn₂) 2 f := by
   have hmono := schwinger_monotone_in_volume params n₁ n₂ hn₁ hn₂ h
+    (f 0) (f 1) (hf 0) (hf 1) (hfsupp 0) (hfsupp 1)
+  simpa [schwingerN_two_eq_schwingerTwo] using hmono
+
+/-- Lattice-bridge variant of `k = 2` monotonicity in `schwingerN` form. -/
+theorem schwingerN_monotone_in_volume_two_from_lattice (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
+    (f : Fin 2 → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
+    schwingerN params (exhaustingRectangles n₁ hn₁) 2 f ≤
+      schwingerN params (exhaustingRectangles n₂ hn₂) 2 f := by
+  have hmono := schwinger_monotone_in_volume_from_lattice params n₁ n₂ hn₁ hn₂ h
     (f 0) (f 1) (hf 0) (hf 1) (hfsupp 0) (hfsupp 1)
   simpa [schwingerN_two_eq_schwingerTwo] using hmono
 
@@ -112,6 +138,19 @@ theorem schwingerN_monotone_in_volume (params : Phi4Params)
       schwingerN params (exhaustingRectangles n₂ hn₂) k f := by
   subst hk
   exact schwingerN_monotone_in_volume_two params n₁ n₂ hn₁ hn₂ h f hf hfsupp
+
+/-- Lattice-bridge variant of `schwingerN` monotonicity in the established case `k = 2`. -/
+theorem schwingerN_monotone_in_volume_from_lattice (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params]
+    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
+    (k : ℕ) (f : Fin k → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0)
+    (hk : k = 2) :
+    schwingerN params (exhaustingRectangles n₁ hn₁) k f ≤
+      schwingerN params (exhaustingRectangles n₂ hn₂) k f := by
+  subst hk
+  exact schwingerN_monotone_in_volume_two_from_lattice
+    params n₁ n₂ hn₁ hn₂ h f hf hfsupp
 
 /-! ## Uniform upper bounds -/
 
