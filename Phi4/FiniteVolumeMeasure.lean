@@ -346,6 +346,116 @@ private theorem abs_pow_le_factorial_mul_exp_add_exp_neg (x : ℝ) (n : ℕ) :
     _ ≤ (Nat.factorial n : ℝ) * (Real.exp x + Real.exp (-x)) := by
       exact mul_le_mul_of_nonneg_left (Real.exp_abs_le x) (by positivity)
 
+private theorem abs_prod_le_sum_abs_pow {n : ℕ} (hn : 0 < n)
+    (x : Fin n → ℝ) :
+    |∏ i, x i| ≤ ∑ i, |(x i) ^ n| := by
+  have hw : ∀ i ∈ (Finset.univ : Finset (Fin n)), 0 ≤ (1 : ℝ) := by
+    intro i hi
+    positivity
+  have hwpos : 0 < ∑ i ∈ (Finset.univ : Finset (Fin n)), (1 : ℝ) := by
+    simp [hn]
+  have hz : ∀ i ∈ (Finset.univ : Finset (Fin n)), 0 ≤ (|x i| : ℝ) := by
+    intro i hi
+    positivity
+  have hgeom :=
+    Real.geom_mean_le_arith_mean (s := (Finset.univ : Finset (Fin n)))
+      (w := fun _ => (1 : ℝ)) (z := fun i => (|x i| : ℝ))
+      hw hwpos hz
+  have hgeom' : (∏ i, |x i|) ^ ((n : ℝ)⁻¹) ≤ (∑ i, |x i|) / n := by
+    simpa [Finset.sum_const, Fintype.card_fin, div_eq_mul_inv] using hgeom
+  have hprod_nonneg : 0 ≤ ∏ i, |x i| := by
+    exact Finset.prod_nonneg (by intro i hi; positivity)
+  have hmean_nonneg : 0 ≤ (∑ i, |x i|) / n := by
+    positivity
+  have hn_real_pos : (0 : ℝ) < n := by
+    exact_mod_cast hn
+  have hprod_le_meanpow :
+      ∏ i, |x i| ≤ ((∑ i, |x i|) / n) ^ (n : ℝ) := by
+    exact (Real.rpow_inv_le_iff_of_pos hprod_nonneg hmean_nonneg hn_real_pos).1 hgeom'
+  have hwnonneg : ∀ i ∈ (Finset.univ : Finset (Fin n)), 0 ≤ ((n : ℝ)⁻¹) := by
+    intro i hi
+    positivity
+  have hwsum : ∑ i ∈ (Finset.univ : Finset (Fin n)), ((n : ℝ)⁻¹) = 1 := by
+    have hn0 : (n : ℝ) ≠ 0 := by
+      exact_mod_cast (Nat.ne_of_gt hn)
+    simp [Finset.sum_const, Fintype.card_fin, hn0]
+  have hpowmean :=
+    Real.pow_arith_mean_le_arith_mean_pow
+      (s := (Finset.univ : Finset (Fin n)))
+      (w := fun _ => ((n : ℝ)⁻¹))
+      (z := fun i => (|x i| : ℝ))
+      hwnonneg hwsum hz n
+  have hmeanpow_le :
+      ((∑ i, |x i|) / n) ^ (n : ℝ) ≤ (∑ i, |x i| ^ n) / n := by
+    simpa [Real.rpow_natCast, div_eq_mul_inv, Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+      using hpowmean
+  have hsum_nonneg : 0 ≤ ∑ i, |x i| ^ n := by
+    exact Finset.sum_nonneg (by intro i hi; positivity)
+  have hn_one : (1 : ℝ) ≤ n := by
+    exact_mod_cast (Nat.succ_le_of_lt hn)
+  have hdiv_le : (∑ i, |x i| ^ n) / n ≤ ∑ i, |x i| ^ n := by
+    exact div_le_self hsum_nonneg hn_one
+  have habs : |∏ i, x i| = ∏ i, |x i| := by
+    simpa using (Finset.abs_prod (s := (Finset.univ : Finset (Fin n))) (f := x))
+  calc
+    |∏ i, x i| = ∏ i, |x i| := habs
+    _ ≤ ((∑ i, |x i|) / n) ^ (n : ℝ) := hprod_le_meanpow
+    _ ≤ (∑ i, |x i| ^ n) / n := hmeanpow_le
+    _ ≤ ∑ i, |x i| ^ n := hdiv_le
+    _ = ∑ i, |(x i) ^ n| := by simp [abs_pow]
+
+/-- Absolute `n`-th moment of a single field pairing under the finite-volume
+    interacting measure is controlled by the same factorial-generating-functional
+    expression as in the diagonal Schwinger estimate. -/
+theorem finiteVolume_pairing_abs_moment_le_factorial_mul_generatingFunctional_pair
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (f : TestFun2D) (n : ℕ) :
+    ∫ ω, |(ω f) ^ n| ∂(finiteVolumeMeasure params Λ) ≤
+      (Nat.factorial n : ℝ) *
+        (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+  set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hExp : Integrable (fun ω : FieldConfig2D => Real.exp (ω f)) μ := by
+    simpa [μ] using finiteVolume_pairing_exp_integrable params Λ f 1
+  have hExpNeg : Integrable (fun ω : FieldConfig2D => Real.exp (-(ω f))) μ := by
+    simpa [μ] using finiteVolume_pairing_exp_integrable params Λ f (-1)
+  have hpowInt : Integrable (fun ω : FieldConfig2D => (ω f) ^ n) μ := by
+    have hprod := finiteVolume_product_integrable params Λ n (fun _ => f)
+    refine hprod.congr ?_
+    filter_upwards with ω
+    simp
+  have hnormInt : Integrable (fun ω : FieldConfig2D => |(ω f) ^ n|) μ := hpowInt.norm
+  have hsumInt : Integrable (fun ω : FieldConfig2D => Real.exp (ω f) + Real.exp (-(ω f))) μ :=
+    hExp.add hExpNeg
+  have hrhsInt :
+      Integrable (fun ω : FieldConfig2D =>
+        (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f)))) μ :=
+    hsumInt.const_mul (Nat.factorial n : ℝ)
+  have hpoint :
+      ∀ ω : FieldConfig2D,
+        |(ω f) ^ n| ≤ (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) := by
+    intro ω
+    have hbase := abs_pow_le_factorial_mul_exp_add_exp_neg (ω f) n
+    simpa [abs_pow] using hbase
+  have hmono :
+      ∫ ω, |(ω f) ^ n| ∂μ ≤
+        ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ :=
+    integral_mono_ae hnormInt hrhsInt (Filter.Eventually.of_forall hpoint)
+  have hrhs_eval :
+      ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ =
+        (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+    calc
+      ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ
+          = (Nat.factorial n : ℝ) * ∫ ω, (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ := by
+              rw [integral_const_mul]
+      _ = (Nat.factorial n : ℝ) *
+            ((∫ ω, Real.exp (ω f) ∂μ) + (∫ ω, Real.exp (-(ω f)) ∂μ)) := by
+            rw [integral_add hExp hExpNeg]
+      _ = (Nat.factorial n : ℝ) *
+            (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := by
+            simp [μ, generatingFunctional]
+  exact hmono.trans_eq hrhs_eval
+
 /-- Diagonal finite-volume Schwinger moments are controlled by two generating
     functionals at `f` and `-f`:
     `|S_n^Λ(f,…,f)| ≤ n! (S_Λ{f} + S_Λ{-f})`.
@@ -412,6 +522,79 @@ theorem schwingerN_const_abs_le_factorial_mul_generatingFunctional_pair
     _ ≤ ∫ ω, (Nat.factorial n : ℝ) * (Real.exp (ω f) + Real.exp (-(ω f))) ∂μ := hmono
     _ = (Nat.factorial n : ℝ) *
           (generatingFunctional params Λ f + generatingFunctional params Λ (-f)) := hrhs_eval
+
+/-- Mixed finite-volume `n`-point Schwinger function bound from diagonal
+    absolute-moment control:
+    `|S_n^Λ(f₁,…,fₙ)|` is bounded by the sum of diagonal factorial-generating
+    bounds for each individual argument. -/
+theorem schwingerN_abs_le_sum_factorial_mul_generatingFunctional_pair
+    (params : Phi4Params) [InteractionWeightModel params]
+    (Λ : Rectangle) (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    |schwingerN params Λ n f| ≤
+      ∑ i : Fin n, (Nat.factorial n : ℝ) *
+        (generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i))) := by
+  set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hprodInt : Integrable (fun ω : FieldConfig2D => ∏ i, ω (f i)) μ :=
+    finiteVolume_product_integrable params Λ n f
+  have hpowInt : ∀ i : Fin n, Integrable (fun ω : FieldConfig2D => (ω (f i)) ^ n) μ := by
+    intro i
+    have hprod := finiteVolume_product_integrable params Λ n (fun _ => f i)
+    refine hprod.congr ?_
+    filter_upwards with ω
+    simp
+  have hsumInt :
+      Integrable (fun ω : FieldConfig2D => ∑ i : Fin n, |(ω (f i)) ^ n|) μ := by
+    have hsumInt' :
+        Integrable
+          (fun ω : FieldConfig2D =>
+            ∑ i ∈ (Finset.univ : Finset (Fin n)), |(ω (f i)) ^ n|) μ := by
+      exact MeasureTheory.integrable_finset_sum (s := (Finset.univ : Finset (Fin n)))
+        (fun i hi => (hpowInt i).norm)
+    simpa using hsumInt'
+  have hpoint :
+      ∀ ω : FieldConfig2D, |∏ i, ω (f i)| ≤ ∑ i : Fin n, |(ω (f i)) ^ n| := by
+    intro ω
+    simpa using abs_prod_le_sum_abs_pow hn (fun i : Fin n => ω (f i))
+  have hmono :
+      ∫ ω, |∏ i, ω (f i)| ∂μ ≤
+        ∫ ω, ∑ i : Fin n, |(ω (f i)) ^ n| ∂μ :=
+    integral_mono_ae hprodInt.norm hsumInt (Filter.Eventually.of_forall hpoint)
+  have hsumEval :
+      ∫ ω, ∑ i : Fin n, |(ω (f i)) ^ n| ∂μ =
+        ∑ i : Fin n, ∫ ω, |(ω (f i)) ^ n| ∂μ := by
+    simpa using (MeasureTheory.integral_finset_sum
+      (μ := μ) (s := (Finset.univ : Finset (Fin n)))
+      (f := fun i : Fin n => fun ω : FieldConfig2D => |(ω (f i)) ^ n|)
+      (fun i hi => (hpowInt i).norm))
+  have htermBound :
+      ∀ i : Fin n,
+        ∫ ω, |(ω (f i)) ^ n| ∂μ ≤
+          (Nat.factorial n : ℝ) *
+            (generatingFunctional params Λ (f i) +
+              generatingFunctional params Λ (-(f i))) := by
+    intro i
+    simpa [μ] using
+      finiteVolume_pairing_abs_moment_le_factorial_mul_generatingFunctional_pair
+        params Λ (f i) n
+  have hsumBound :
+      (∑ i : Fin n, ∫ ω, |(ω (f i)) ^ n| ∂μ) ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i))) :=
+    Finset.sum_le_sum (fun i hi => htermBound i)
+  have hnorm :
+      |∫ ω, ∏ i, ω (f i) ∂μ| ≤ ∫ ω, |∏ i, ω (f i)| ∂μ := by
+    simpa [Real.norm_eq_abs, Finset.abs_prod] using
+      (norm_integral_le_integral_norm (f := fun ω : FieldConfig2D => ∏ i, ω (f i)))
+  have hsch : schwingerN params Λ n f = ∫ ω, ∏ i, ω (f i) ∂μ := by
+    simp [schwingerN, μ]
+  calc
+    |schwingerN params Λ n f| = |∫ ω, ∏ i, ω (f i) ∂μ| := by rw [hsch]
+    _ ≤ ∫ ω, |∏ i, ω (f i)| ∂μ := hnorm
+    _ ≤ ∫ ω, ∑ i : Fin n, |(ω (f i)) ^ n| ∂μ := hmono
+    _ = ∑ i : Fin n, ∫ ω, |(ω (f i)) ^ n| ∂μ := hsumEval
+    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i))) :=
+        hsumBound
 
 /-- Single-field observable is `L²` under the finite-volume interacting measure. -/
 theorem finiteVolume_pairing_memLp_two (params : Phi4Params)

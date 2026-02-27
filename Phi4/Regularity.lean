@@ -211,6 +211,65 @@ theorem finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound
   exact finiteVolume_diagonal_moment_bound_of_generating_bound
     params c hc Λ f n
 
+/-- Finite-volume mixed `n`-point moments from a finite-volume generating-functional
+    exponential bound at fixed constant `c`. -/
+theorem finiteVolume_mixed_moment_bound_of_generating_bound
+    (params : Phi4Params) [InteractionWeightModel params]
+    (c : ℝ)
+    (hbound : ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (Λ : Rectangle) (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    |schwingerN params Λ n f| ≤
+      ∑ i : Fin n, (Nat.factorial n : ℝ) *
+        (Real.exp (c * normFunctional (f i)) +
+          Real.exp (c * normFunctional (-(f i)))) := by
+  have hmixed :=
+    schwingerN_abs_le_sum_factorial_mul_generatingFunctional_pair
+      params Λ n hn f
+  have hfac_nonneg : 0 ≤ (Nat.factorial n : ℝ) := by positivity
+  have hsumBound :
+      (∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i)))) ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+    refine Finset.sum_le_sum ?_
+    intro i hi
+    have hgf_nonneg : 0 ≤ generatingFunctional params Λ (f i) :=
+      generatingFunctional_nonneg params Λ (f i)
+    have hgneg_nonneg : 0 ≤ generatingFunctional params Λ (-(f i)) :=
+      generatingFunctional_nonneg params Λ (-(f i))
+    have hgf_le : generatingFunctional params Λ (f i) ≤ Real.exp (c * normFunctional (f i)) := by
+      simpa [abs_of_nonneg hgf_nonneg] using hbound (f i) Λ
+    have hgneg_le :
+        generatingFunctional params Λ (-(f i)) ≤
+          Real.exp (c * normFunctional (-(f i))) := by
+      simpa [abs_of_nonneg hgneg_nonneg] using hbound (-(f i)) Λ
+    have hpair_le :
+        generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i)) ≤
+          Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i))) :=
+      add_le_add hgf_le hgneg_le
+    exact mul_le_mul_of_nonneg_left hpair_le hfac_nonneg
+  exact hmixed.trans hsumBound
+
+/-- Finite-volume mixed `n`-point moments from a global finite-volume
+    generating-functional exponential bound. -/
+theorem finiteVolume_mixed_moment_bound_of_global_uniform_generating_bound
+    (params : Phi4Params) [InteractionWeightModel params]
+    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (Λ : Rectangle) (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    ∃ c : ℝ,
+      |schwingerN params Λ n f| ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  exact finiteVolume_mixed_moment_bound_of_generating_bound
+    params c hc Λ n hn f
+
 /-- Finite-volume two-point bound from a finite-volume generating-functional
     exponential bound, obtained by polarization from diagonal moment bounds. -/
 theorem finiteVolume_twoPoint_bound_of_generating_bound
@@ -401,6 +460,47 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     simpa using hcomp
   exact diagonal_moment_limit_bound_of_exhaustion
     params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim
+
+/-- Infinite-volume mixed `n`-point Schwinger bound from global finite-volume
+    generating-functional control, lifted along exhaustion limits. -/
+theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
+    (params : Phi4Params) [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
+    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    ∃ c : ℝ,
+      |infiniteVolumeSchwinger params n f| ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  let C : ℝ :=
+    ∑ i : Fin n, (Nat.factorial n : ℝ) *
+      (Real.exp (c * normFunctional (f i)) +
+        Real.exp (c * normFunctional (-(f i))))
+  have hraw :
+      Filter.Tendsto
+        (fun m : ℕ => if h : 0 < m then schwingerN params (exhaustingRectangles m h) n f else 0)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params n f)) :=
+    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+      (params := params) n f
+  have hlim :
+      Filter.Tendsto
+        (fun k : ℕ => schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n f)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params n f)) := by
+    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
+    simpa using hcomp
+  have hbound : ∀ k : ℕ,
+      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n f| ≤ C := by
+    intro k
+    simpa [C] using
+      finiteVolume_mixed_moment_bound_of_generating_bound params c hc
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n hn f
+  simpa [C] using abs_limit_le_of_abs_bound hlim hbound
 
 /-- Infinite-volume 2-point Schwinger bound from global finite-volume
     generating-functional control, via polarization and exhaustion limits. -/
