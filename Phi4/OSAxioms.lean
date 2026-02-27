@@ -34,32 +34,39 @@ open MeasureTheory Reconstruction
 
 /-! ## Abstract OS-axiom interfaces -/
 
-/-- Core OS input: Schwinger packaging together with OS0/OS2/E3 data.
-    Weak-coupling E4 clustering is separated into `OSE4ClusterModel`. -/
-class OSAxiomCoreModel (params : Phi4Params) where
+/-- Canonical packaged Schwinger functions used by the OS interfaces. -/
+class SchwingerFunctionModel (params : Phi4Params) where
   schwingerFunctions : SchwingerFunctions 1
+
+/-- Core OS input: OS0/OS2/E3 data over a packaged Schwinger function model.
+    Weak-coupling E4 clustering is separated into `OSE4ClusterModel`. -/
+class OSAxiomCoreModel (params : Phi4Params)
+    extends SchwingerFunctionModel params where
   os0 :
-    ∀ n, Continuous (schwingerFunctions n)
+    ∀ n, Continuous (SchwingerFunctionModel.schwingerFunctions (params := params) n)
   schwinger_linear :
-    ∀ n, IsLinearMap ℂ (schwingerFunctions n)
+    ∀ n, IsLinearMap ℂ (SchwingerFunctionModel.schwingerFunctions (params := params) n)
   os2_translation :
     ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
-      schwingerFunctions n f = schwingerFunctions n g
+      SchwingerFunctionModel.schwingerFunctions (params := params) n f =
+        SchwingerFunctionModel.schwingerFunctions (params := params) n g
   os2_rotation :
     ∀ (n : ℕ) (R : Matrix (Fin 2) (Fin 2) ℝ),
       R.transpose * R = 1 → R.det = 1 →
       ∀ (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
-        schwingerFunctions n f = schwingerFunctions n g
+        SchwingerFunctionModel.schwingerFunctions (params := params) n f =
+          SchwingerFunctionModel.schwingerFunctions (params := params) n g
   e3_symmetric :
     ∀ (n : ℕ) (σ : Equiv.Perm (Fin n)) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
-      schwingerFunctions n f = schwingerFunctions n g
+      SchwingerFunctionModel.schwingerFunctions (params := params) n f =
+        SchwingerFunctionModel.schwingerFunctions (params := params) n g
 
-/-- Weak-coupling E4 cluster input, parameterized over a core OS model. -/
+/-- Weak-coupling E4 cluster input, parameterized over Schwinger packaging only. -/
 class OSE4ClusterModel (params : Phi4Params)
-    [OSAxiomCoreModel params] where
+    [SchwingerFunctionModel params] where
   /-- A model-specific weak-coupling threshold below which clustering is available. -/
   weak_coupling_threshold : ℝ
   weak_coupling_threshold_pos : 0 < weak_coupling_threshold
@@ -67,12 +74,13 @@ class OSE4ClusterModel (params : Phi4Params)
     params.coupling < weak_coupling_threshold →
       ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
         ∀ ε : ℝ, ε > 0 → ∃ R : ℝ, R > 0 ∧
-          ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
+            ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
             ∀ (g_a : SchwartzNPoint 1 m),
               (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
-              ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
-                OSAxiomCoreModel.schwingerFunctions (params := params) n f *
-                  OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε
+              ‖SchwingerFunctionModel.schwingerFunctions (params := params) (n + m)
+                  (f.tensorProduct g_a) -
+                SchwingerFunctionModel.schwingerFunctions (params := params) n f *
+                  SchwingerFunctionModel.schwingerFunctions (params := params) m g‖ < ε
 
 /-- Measure-level reflection positivity for linear observables against
     `infiniteVolumeMeasure`, kept separate from core Schwinger packaging so the
@@ -91,12 +99,12 @@ class MeasureOS3Model (params : Phi4Params)
     Kept separate from core OS packaging so Schwinger-function data and E2
     positivity are explicitly decoupled assumptions. -/
 class OSDistributionE2Model (params : Phi4Params)
-    [OSAxiomCoreModel params] where
+    [SchwingerFunctionModel params] where
   e2_reflection_positive :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
         (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
-      (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0
+      (OSInnerProduct 1 (SchwingerFunctionModel.schwingerFunctions (params := params)) F F).re ≥ 0
 
 /-! ## Schwinger functions as distributions
 
@@ -108,9 +116,9 @@ The infinite volume Schwinger functions define tempered distributions on S(ℝ^{
     S_n : S(ℝ^{n×2}) → ℂ is defined by:
       S_n(f) = ∫ φ(x₁)⋯φ(xₙ) f(x₁,...,xₙ) dx₁⋯dxₙ dμ(φ) -/
 def phi4SchwingerFunctions (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [SchwingerFunctionModel params] :
     SchwingerFunctions 1 :=
-  OSAxiomCoreModel.schwingerFunctions (params := params)
+  SchwingerFunctionModel.schwingerFunctions (params := params)
 
 /-! ## OS0: Temperedness -/
 
@@ -217,7 +225,7 @@ theorem phi4_os3 (params : Phi4Params)
 
 /-- Distributional E2 reflection positivity for the packaged φ⁴₂ Schwinger functions. -/
 theorem phi4_e2_distributional (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [OSDistributionE2Model params] :
     ∀ (F : BorchersSequence 1),
       (∀ n, ∀ x : NPointDomain 1 n,
@@ -231,13 +239,13 @@ theorem phi4_e2_distributional (params : Phi4Params)
 
 /-- Canonical weak-coupling threshold carried by `OSE4ClusterModel`. -/
 def os4WeakCouplingThreshold (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [OSE4ClusterModel params] : ℝ :=
   OSE4ClusterModel.weak_coupling_threshold (params := params)
 
 /-- Positivity of the canonical weak-coupling threshold. -/
 theorem os4WeakCouplingThreshold_pos (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [OSE4ClusterModel params] :
     0 < os4WeakCouplingThreshold params := by
   simpa [os4WeakCouplingThreshold] using
@@ -245,7 +253,7 @@ theorem os4WeakCouplingThreshold_pos (params : Phi4Params)
 
 /-- E4 cluster property extracted from `OSE4ClusterModel` under weak coupling. -/
 theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∀ (n m : ℕ) (f : SchwartzNPoint 1 n) (g : SchwartzNPoint 1 m),
@@ -299,7 +307,7 @@ theorem osaCoreModel_nonempty_of_data (params : Phi4Params)
         S n f = S n g) :
     Nonempty (OSAxiomCoreModel params) := by
   refine ⟨{
-    schwingerFunctions := S
+    toSchwingerFunctionModel := { schwingerFunctions := S }
     os0 := hos0
     schwinger_linear := hos0_linear
     os2_translation := hos2_translation
@@ -333,29 +341,29 @@ theorem gap_osaCoreModel_nonempty (params : Phi4Params)
 
 /-- Honest frontier: distributional E2 from the OS core package. -/
 theorem osDistributionE2Model_nonempty_of_data (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (he2 :
       ∀ (F : BorchersSequence 1),
         (∀ n, ∀ x : NPointDomain 1 n,
           (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
-        (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
+        (OSInnerProduct 1 (SchwingerFunctionModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
     Nonempty (OSDistributionE2Model params) := by
   exact ⟨{ e2_reflection_positive := he2 }⟩
 
 /-- Honest frontier: distributional E2 from explicit reflection-positivity data. -/
 theorem gap_osDistributionE2_nonempty (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (he2 :
       ∀ (F : BorchersSequence 1),
         (∀ n, ∀ x : NPointDomain 1 n,
           (F.funcs n).toFun x ≠ 0 → x ∈ PositiveTimeRegion 1 n) →
-        (OSInnerProduct 1 (OSAxiomCoreModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
+        (OSInnerProduct 1 (SchwingerFunctionModel.schwingerFunctions (params := params)) F F).re ≥ 0) :
     Nonempty (OSDistributionE2Model params) := by
   exact osDistributionE2Model_nonempty_of_data params he2
 
 /-- Honest frontier: weak-coupling E4 clustering from the OS core package. -/
 theorem osE4ClusterModel_nonempty_of_data (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (threshold : ℝ)
     (hthreshold_pos : 0 < threshold)
     (hcluster :
@@ -365,9 +373,10 @@ theorem osE4ClusterModel_nonempty_of_data (params : Phi4Params)
             ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
               ∀ (g_a : SchwartzNPoint 1 m),
                 (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
-                ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
-                  OSAxiomCoreModel.schwingerFunctions (params := params) n f *
-                    OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε) :
+                ‖SchwingerFunctionModel.schwingerFunctions (params := params) (n + m)
+                    (f.tensorProduct g_a) -
+                  SchwingerFunctionModel.schwingerFunctions (params := params) n f *
+                    SchwingerFunctionModel.schwingerFunctions (params := params) m g‖ < ε) :
     Nonempty (OSE4ClusterModel params) := by
   exact ⟨{
     weak_coupling_threshold := threshold
@@ -377,7 +386,7 @@ theorem osE4ClusterModel_nonempty_of_data (params : Phi4Params)
 
 /-- Honest frontier: weak-coupling E4 clustering from explicit cluster data. -/
 theorem gap_osE4Cluster_nonempty (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (threshold : ℝ)
     (hthreshold_pos : 0 < threshold)
     (hcluster :
@@ -387,9 +396,10 @@ theorem gap_osE4Cluster_nonempty (params : Phi4Params)
             ∀ a : SpacetimeDim 1, a 0 = 0 → (∑ i : Fin 1, (a (Fin.succ i))^2) > R^2 →
               ∀ (g_a : SchwartzNPoint 1 m),
                 (∀ x : NPointDomain 1 m, g_a x = g (fun i => x i - a)) →
-                ‖OSAxiomCoreModel.schwingerFunctions (params := params) (n + m) (f.tensorProduct g_a) -
-                  OSAxiomCoreModel.schwingerFunctions (params := params) n f *
-                    OSAxiomCoreModel.schwingerFunctions (params := params) m g‖ < ε) :
+                ‖SchwingerFunctionModel.schwingerFunctions (params := params) (n + m)
+                    (f.tensorProduct g_a) -
+                  SchwingerFunctionModel.schwingerFunctions (params := params) n f *
+                    SchwingerFunctionModel.schwingerFunctions (params := params) m g‖ < ε) :
     Nonempty (OSE4ClusterModel params) := by
   exact osE4ClusterModel_nonempty_of_data params threshold hthreshold_pos hcluster
 
@@ -432,7 +442,7 @@ theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = S := by
   let core : OSAxiomCoreModel params := {
-    schwingerFunctions := S
+    toSchwingerFunctionModel := { schwingerFunctions := S }
     os0 := hos0
     schwinger_linear := hos0_linear
     os2_translation := hos2_translation
@@ -462,7 +472,7 @@ theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
 
 /-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
 theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     params.coupling < os4WeakCouplingThreshold params := hsmall
@@ -478,12 +488,12 @@ theorem phi4_satisfies_OS (params : Phi4Params)
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
-      OS.S = @phi4SchwingerFunctions params core := by
+      OS.S = @phi4SchwingerFunctions params core.toSchwingerFunctionModel := by
   letI : OSAxiomCoreModel params := core
   have hsmall' : params.coupling < OSE4ClusterModel.weak_coupling_threshold (params := params) := by
     simpa [os4WeakCouplingThreshold] using hsmall
   rcases phi4_satisfies_OS_of_explicit_data params
-      (S := OSAxiomCoreModel.schwingerFunctions (params := params))
+      (S := SchwingerFunctionModel.schwingerFunctions (params := params))
       (hos0 := OSAxiomCoreModel.os0 (params := params))
       (hos0_linear := OSAxiomCoreModel.schwinger_linear (params := params))
       (hos2_translation := OSAxiomCoreModel.os2_translation (params := params))
