@@ -825,44 +825,6 @@ theorem phi4_productTensor_approx_family_of_dense_range
   intro n hn g
   exact phi4_productTensor_approx_of_dense_range hn g (hdense n hn)
 
-/-- Construct φ⁴ linear-growth witness data from:
-    1) interface-level product-tensor positive-order bounds (via `RegularityModel`),
-    2) dense image of product tensors in each positive-order Schwartz `n`-point space,
-    3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`. -/
-theorem phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
-    [RegularityModel params]
-    [OSAxiomCoreModel params]
-    (OS : OsterwalderSchraderAxioms 1)
-    (hS : OS.S = phi4SchwingerFunctions params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (hdense :
-      ∀ (n : ℕ) (_hn : 0 < n),
-        DenseRange (fun f : Fin n → TestFun2D =>
-          schwartzProductTensorFromTestFamily f)) :
-    ∃ OS' : OsterwalderSchraderAxioms 1,
-      OS'.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS') := by
-  exact phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma hbeta
-    hcompat hreduce
-    (phi4_productTensor_approx_family_of_dense_range hdense)
-
 /-! ## Linear growth condition (E0') -/
 
 /-- Build `OSLinearGrowthCondition` from explicit seminorm-growth constants
@@ -1994,9 +1956,9 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
   intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
     hbeta hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
-  have hlinear := phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
+  have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
     params OS hS alpha beta gamma hbeta
-    hcompat hreduce hdense
+    hcompat hreduce (phi4_productTensor_approx_family_of_dense_range hdense)
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
     (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
