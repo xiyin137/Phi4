@@ -986,14 +986,14 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
   intro a
   simpa [connectedTwoPoint] using hfg a
 
-/-- Fixed-`params` specialization of
-    `phi4_os4_weak_coupling_explicit`: under a global weak-coupling threshold,
-    explicit Schwinger-moment exponential connected 2-point decay is available
-    for the current parameter set. -/
+/-- Fixed-`params` explicit weak-coupling connected 2-point decay threshold:
+    from the fixed-parameter reconstruction weak-coupling interface, obtain a
+    positive coupling threshold giving explicit Schwinger-moment exponential
+    decay at the current parameters. -/
 theorem phi4_os4_weak_coupling_explicit_at_params (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
-    [UniformWeakCouplingDecayModel params] →
-    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+    [ReconstructionWeakCouplingModel params] →
+  ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       (params.coupling < coupling_bound →
         ∃ m_gap : ℝ, 0 < m_gap ∧
           ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
@@ -1004,10 +1004,19 @@ theorem phi4_os4_weak_coupling_explicit_at_params (params : Phi4Params) :
                   infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
                 Cfg * Real.exp (-m_gap * ‖a‖)) := by
   intro hlim hrec
-  rcases phi4_os4_weak_coupling_explicit params with ⟨coupling_bound, hcb_pos, hglobal⟩
+  let coupling_bound := ReconstructionWeakCouplingModel.weak_coupling_threshold (params := params)
+  have hcb_pos : 0 < coupling_bound :=
+    ReconstructionWeakCouplingModel.weak_coupling_threshold_pos (params := params)
   refine ⟨coupling_bound, hcb_pos, ?_⟩
   intro hsmall
-  exact hglobal params hsmall
+  rcases ReconstructionWeakCouplingModel.connectedTwoPoint_decay_of_weak_coupling
+      (params := params) hsmall with ⟨m_gap, hm_gap, hfg⟩
+  refine ⟨m_gap, hm_gap, ?_⟩
+  intro f g
+  rcases hfg f g with ⟨Cfg, hCfg_nonneg, hbound⟩
+  refine ⟨Cfg, hCfg_nonneg, ?_⟩
+  intro a
+  simpa [connectedTwoPoint] using hbound a
 
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
@@ -1202,14 +1211,14 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit (params : Phi4Params) :
   intro a ha
   simpa [connectedTwoPoint] using hR a ha
 
-/-- Fixed-`params` specialization of
-    `phi4_os4_weak_coupling_eventually_small_explicit`: under a global
-    weak-coupling threshold, explicit-Schwinger `ε`-`R` clustering holds for
-    connected 2-point functions at the current parameters. -/
+/-- Fixed-`params` explicit weak-coupling `ε`-`R` clustering threshold:
+    from the fixed-parameter reconstruction weak-coupling interface, obtain a
+    positive coupling threshold under which explicit-Schwinger connected 2-point
+    clustering holds at the current parameters. -/
 theorem phi4_os4_weak_coupling_eventually_small_explicit_at_params
     (params : Phi4Params) :
     [InfiniteVolumeSchwingerModel params] →
-    [UniformWeakCouplingDecayModel params] →
+    [ReconstructionWeakCouplingModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       (params.coupling < coupling_bound →
         ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
@@ -1218,12 +1227,21 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit_at_params
             |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
               infiniteVolumeSchwinger params 1 ![f] *
                 infiniteVolumeSchwinger params 1 ![g_shifted]| < ε) := by
-  intro hlim hdecay
-  rcases phi4_os4_weak_coupling_eventually_small_explicit params with
-    ⟨coupling_bound, hcb_pos, hglobal⟩
+  intro hlim hrec
+  let coupling_bound := ReconstructionWeakCouplingModel.weak_coupling_threshold (params := params)
+  have hcb_pos : 0 < coupling_bound :=
+    ReconstructionWeakCouplingModel.weak_coupling_threshold_pos (params := params)
   refine ⟨coupling_bound, hcb_pos, ?_⟩
-  intro hsmall
-  exact hglobal params hsmall
+  intro hsmall f g ε hε
+  have hdecay :
+      ConnectedTwoPointDecayAtParams params :=
+    ReconstructionWeakCouplingModel.connectedTwoPoint_decay_of_weak_coupling
+      (params := params) hsmall
+  rcases connectedTwoPoint_decay_eventually_small params hdecay f g ε hε with
+      ⟨R, hRpos, hR⟩
+  refine ⟨R, hRpos, ?_⟩
+  intro a ha
+  simpa [connectedTwoPoint] using hR a ha
 
 /-- Infinite-volume connected two-point nonnegativity for nonnegative test
     functions, inherited from finite-volume FKG positivity. -/
