@@ -331,3 +331,65 @@ theorem vertex_factorial_weighted_prod_le_total_factorial_pow_lines
 end FeynmanGraph
 
 end GraphLineSpecialized
+
+section DegreeBound
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+private theorem factorial_le_pow_factorial_of_le
+    {k d : ℕ} (hk : k ≤ d) :
+    Nat.factorial k ≤ (Nat.factorial d) ^ k := by
+  cases k with
+  | zero =>
+      simp
+  | succ n =>
+      have hmono : Nat.factorial (n + 1) ≤ Nat.factorial d :=
+        Nat.factorial_le hk
+      have hbase : 1 ≤ Nat.factorial d := Nat.succ_le_of_lt (Nat.factorial_pos d)
+      have hpow :
+          Nat.factorial d ≤ (Nat.factorial d) ^ (n + 1) := by
+        calc
+          Nat.factorial d = Nat.factorial d * 1 := by simp
+          _ ≤ Nat.factorial d * (Nat.factorial d) ^ n := by
+                gcongr
+                exact one_le_pow_of_one_le' hbase n
+          _ = (Nat.factorial d) ^ (n + 1) := by
+                simp [pow_succ, Nat.mul_comm]
+      exact hmono.trans hpow
+
+/-- With a uniform leg bound `legs(v) ≤ d`, vertex factorial products are
+    bounded by a pure power with exponent `Σ legs(v)`. -/
+theorem vertex_factorial_prod_le_degree_factorial_pow_total_legs
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d) :
+    (∏ v : Fin r, Nat.factorial (G.legs v)) ≤
+      (Nat.factorial d) ^ (∑ v : Fin r, G.legs v) := by
+  have hpoint :
+      ∀ v : Fin r, Nat.factorial (G.legs v) ≤ (Nat.factorial d) ^ (G.legs v) := by
+    intro v
+    exact factorial_le_pow_factorial_of_le (hdeg v)
+  calc
+    (∏ v : Fin r, Nat.factorial (G.legs v))
+        ≤ ∏ v : Fin r, (Nat.factorial d) ^ (G.legs v) := by
+          exact Finset.prod_le_prod' (fun v _ => hpoint v)
+    _ = (Nat.factorial d) ^ (∑ v : Fin r, G.legs v) := by
+          simp [Finset.prod_pow_eq_pow_sum]
+
+/-- Degree-bounded vertex factorial control rewritten in pure line-count form. -/
+theorem vertex_factorial_prod_le_degree_factorial_pow_lines
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d) :
+    (∏ v : Fin r, Nat.factorial (G.legs v)) ≤
+      ((Nat.factorial d) ^ 2) ^ G.lines.card := by
+  calc
+    (∏ v : Fin r, Nat.factorial (G.legs v))
+        ≤ (Nat.factorial d) ^ (∑ v : Fin r, G.legs v) :=
+          vertex_factorial_prod_le_degree_factorial_pow_total_legs G d hdeg
+    _ = (Nat.factorial d) ^ (2 * G.lines.card) := by
+          simp [total_legs_eq_two_mul_lines_card (G := G)]
+    _ = ((Nat.factorial d) ^ 2) ^ G.lines.card := by
+          simp [pow_mul]
+
+end FeynmanGraph
+
+end DegreeBound

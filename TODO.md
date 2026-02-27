@@ -44,6 +44,11 @@ the local Glimm-Jaffe objective.
   factorial/power bounds in pure line-count form (e.g. powers indexed by
   `Σ legs` converted to powers indexed by `|lines|`), further reducing the
   remaining combinatorial debt for Theorem 8.5.5.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now adds bounded-degree graph
+  controls turning `∏_v (legs(v)!)` into pure power bounds in `Σ legs(v)` and
+  `|lines|` (`vertex_factorial_prod_le_degree_factorial_pow_total_legs`,
+  `vertex_factorial_prod_le_degree_factorial_pow_lines`), which is a key bridge
+  toward `const ^ |lines|` localized estimates under degree caps (e.g. φ⁴).
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
