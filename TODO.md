@@ -164,6 +164,9 @@ the local Glimm-Jaffe objective.
   atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
   (not full 4-point monotonicity) when monotonicity data is unused;
   `CorrelationFourPointInequalityModel` is reconstructed by compatibility.
+- The public finite-volume 4-point monotonicity endpoint
+  `schwinger_four_monotone` now depends on the minimal interface
+  `SchwingerNMonotoneModel params 4` (not `CorrelationFourPointModel`).
 - `Phi4/InfiniteVolumeLimit.lean` now includes generic `k`-point monotone
   convergence/existence infrastructure:
   `schwingerN_monotone_in_volume_of_model`,

@@ -1756,14 +1756,14 @@ for non-negative test functions. -/
 /-- **Dirichlet monotonicity of 4-point function** under domain inclusion for
     nonnegative test-function inputs supported in the smaller volume. -/
 theorem schwinger_four_monotone (params : Phi4Params) (Λ₁ Λ₂ : Rectangle)
-    [CorrelationFourPointModel params]
+    [SchwingerNMonotoneModel params 4]
     (h : Λ₁.toSet ⊆ Λ₂.toSet)
     (f : Fin 4 → TestFun2D)
     (hf : ∀ i, ∀ x, 0 ≤ f i x)
     (hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0) :
     schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f := by
-  exact CorrelationFourPointModel.schwinger_four_monotone
-    (params := params) Λ₁ Λ₂ h f hf hfΛ
+  exact SchwingerNMonotoneModel.schwingerN_monotone
+    (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
 
 /-- **Dirichlet monotonicity of 2-point function**: For Λ₁ ⊂ Λ₂,
     S₂^{Λ₁}(f,g) ≤ S₂^{Λ₂}(f,g) for f, g ≥ 0.

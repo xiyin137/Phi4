@@ -272,6 +272,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
      where monotonicity data is unused (with compatibility reconstruction of
      `CorrelationFourPointInequalityModel`)
+   - public finite-volume 4-point monotonicity theorem
+     `schwinger_four_monotone` now depends only on
+     `SchwingerNMonotoneModel params 4`
    - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
    - infinite-volume permutation symmetry transfer:
      `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)
