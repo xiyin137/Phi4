@@ -40,6 +40,10 @@ the local Glimm-Jaffe objective.
   `Phi4/FeynmanGraphs/LocalizedBounds.lean` now proves exact leg-line counting
   identities (`2 * |lines| = Σ legs`, parity, and half-count corollary), which
   are concrete prerequisites for localized graph bounds in the WP1 chain.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also rewrites vertex-occupancy
+  factorial/power bounds in pure line-count form (e.g. powers indexed by
+  `Σ legs` converted to powers indexed by `|lines|`), further reducing the
+  remaining combinatorial debt for Theorem 8.5.5.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
@@ -292,6 +296,12 @@ the local Glimm-Jaffe objective.
 
 These are the mathematically blocking items for proving 2D `phi^4` satisfies OS
 axioms (not interface-shape work):
+
+Distance-to-goal assessment:
+- Not close yet: the two deepest Glimm-Jaffe analytic blockers are still WP1
+  interaction integrability and WP1 localized graph bounds (Theorem 8.5.5).
+- Downstream `gap_*` frontiers are mostly handoff points that cannot be closed
+  honestly until those WP1/WP2 analytic inputs are grounded constructively.
 
 1. `WP1` interaction integrability (`exp(-V_Λ) ∈ L^p`) is not constructively grounded.
 2. `WP1` localized graph bound (GJ Theorem 8.5.5) is not yet proved in production.

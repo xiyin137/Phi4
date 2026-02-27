@@ -277,3 +277,57 @@ theorem lines_card_eq_total_legs_half (G : FeynmanGraph r) :
 end FeynmanGraph
 
 end GraphCounting
+
+section GraphLineSpecialized
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- Rewrite powers indexed by total vertex legs as powers indexed by line count. -/
+theorem total_legs_pow_eq_pow_lines (G : FeynmanGraph r) (A : ℝ) :
+    A ^ (∑ v : Fin r, G.legs v) = (A ^ 2) ^ G.lines.card := by
+  calc
+    A ^ (∑ v : Fin r, G.legs v) = A ^ (2 * G.lines.card) := by
+      simp [total_legs_eq_two_mul_lines_card (G := G)]
+    _ = (A ^ 2) ^ G.lines.card := by
+      simp [pow_mul]
+
+/-- Vertex factorial product bound rewritten with line count. -/
+theorem vertex_factorial_prod_le_factorial_two_mul_lines_card
+    (G : FeynmanGraph r) :
+    (∏ v : Fin r, Nat.factorial (G.legs v)) ≤
+      Nat.factorial (2 * G.lines.card) := by
+  calc
+    (∏ v : Fin r, Nat.factorial (G.legs v))
+        ≤ Nat.factorial (∑ v : Fin r, G.legs v) :=
+          graph_vertex_factorial_prod_le_total_factorial G
+    _ = Nat.factorial (2 * G.lines.card) := by
+          simp [total_legs_eq_two_mul_lines_card (G := G)]
+
+/-- Real-cast line-count form of the vertex factorial product bound. -/
+theorem vertex_factorial_prod_le_factorial_two_mul_lines_card_real
+    (G : FeynmanGraph r) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
+      (Nat.factorial (2 * G.lines.card) : ℝ) := by
+  exact_mod_cast vertex_factorial_prod_le_factorial_two_mul_lines_card (G := G)
+
+/-- Weighted vertex occupancy bound rewritten entirely in line-count form. -/
+theorem vertex_factorial_weighted_prod_le_total_factorial_pow_lines
+    (G : FeynmanGraph r) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+      (Nat.factorial (2 * G.lines.card) : ℝ) * (A ^ 2) ^ G.lines.card := by
+  calc
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v))
+        ≤ (Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) *
+            A ^ (∑ v : Fin r, G.legs v) :=
+          graph_vertex_factorial_weighted_prod_le_total_factorial_pow
+            (G := G) A hA
+    _ = (Nat.factorial (2 * G.lines.card) : ℝ) * A ^ (∑ v : Fin r, G.legs v) := by
+          simp [total_legs_eq_two_mul_lines_card (G := G)]
+    _ = (Nat.factorial (2 * G.lines.card) : ℝ) * (A ^ 2) ^ G.lines.card := by
+          simp [total_legs_pow_eq_pow_lines (G := G)]
+
+end FeynmanGraph
+
+end GraphLineSpecialized
