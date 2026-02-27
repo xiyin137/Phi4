@@ -72,7 +72,7 @@ def translateTestFun (a : Fin 2 → ℝ) (g : TestFun2D) : TestFun2D :=
 /-- Connected 2-point exponential decay at fixed parameters:
     one uniform mass gap with pair-dependent amplitudes. -/
 abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params] : Prop :=
+    [SchwingerLimitModel params] : Prop :=
   ∃ m_gap : ℝ, 0 < m_gap ∧
     ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
       ∀ (a : Fin 2 → ℝ),
@@ -86,10 +86,10 @@ abbrev ConnectedTwoPointDecayAtParams (params : Phi4Params)
     cross-parameter OS4 statement. This is intentionally separate from
     `ReconstructionInputModel`, which only carries fixed-`params` data. -/
 class UniformWeakCouplingDecayModel (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params] where
+    [SchwingerLimitModel params] where
   phi4_os4_weak_coupling :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p
 
@@ -116,7 +116,7 @@ theorem ReconstructionLinearGrowthModel.phi4_linear_growth (params : Phi4Params)
 
 /-- Fixed-`params` weak-coupling decay input, separated from linear-growth data. -/
 class ReconstructionWeakCouplingModel (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params] where
+    [SchwingerLimitModel params] where
   /-- A canonical weak-coupling threshold for the current parameter set. -/
   weak_coupling_threshold : ℝ
   weak_coupling_threshold_pos : 0 < weak_coupling_threshold
@@ -128,7 +128,7 @@ class ReconstructionWeakCouplingModel (params : Phi4Params)
     weak-coupling threshold model by specialization to `params`. -/
 instance (priority := 90) reconstructionWeakCouplingModel_of_uniform
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [UniformWeakCouplingDecayModel params] :
     ReconstructionWeakCouplingModel params where
   weak_coupling_threshold :=
@@ -143,14 +143,14 @@ instance (priority := 90) reconstructionWeakCouplingModel_of_uniform
 
 /-- Backward-compatible aggregate reconstruction input model. -/
 class ReconstructionInputModel (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     extends ReconstructionLinearGrowthModel params,
       ReconstructionWeakCouplingModel params
 
 instance (priority := 100) reconstructionInputModel_of_submodels
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params]
     [ReconstructionWeakCouplingModel params] :
@@ -171,7 +171,7 @@ class WightmanReconstructionModel (params : Phi4Params)
 
 /-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
 abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [ReconstructionWeakCouplingModel params] : Prop :=
   ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
     (params.coupling < coupling_bound →
@@ -247,7 +247,7 @@ def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
     `infiniteVolumeSchwinger`. -/
 theorem phi4_productTensor_zero_of_compat
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [InteractionWeightModel params]
     [SchwingerFunctionModel params]
     (hcompat :
@@ -292,7 +292,7 @@ theorem phi4_productTensor_zero_of_compat_of_moment
 theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -326,7 +326,7 @@ theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
 theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -361,7 +361,7 @@ theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
 theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
@@ -397,7 +397,7 @@ theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
 theorem phi4_productTensor_linear_growth_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
@@ -506,7 +506,7 @@ theorem phi4_positive_order_linear_growth_of_productTensor_approx
     3) an explicit order-zero growth bound. -/
 theorem phi4_linear_growth_of_productTensor_approx_and_zero
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     [OSTemperedModel params]
     (OS : OsterwalderSchraderAxioms 1)
@@ -586,7 +586,7 @@ theorem phi4_zero_linear_growth_of_normalized_order0
 theorem phi4_normalized_order0_of_linear_and_compat
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     [OSTemperedModel params]
     (hcompat :
@@ -655,7 +655,7 @@ theorem phi4_normalized_order0_of_linear_and_compat_of_moment
 theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [SchwingerFunctionModel params]
     [OSTemperedModel params]
     (OS : OsterwalderSchraderAxioms 1)
@@ -853,10 +853,7 @@ theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     2) an explicit seminorm-growth estimate for `phi4SchwingerFunctions`. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
     (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    [OSEuclideanCovarianceModel params]
-    [OSE3SymmetryModel params]
+    [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params)
@@ -953,10 +950,10 @@ theorem phi4_wightman_reconstruction_step (params : Phi4Params)
     For strong coupling, OS4 requires the phase transition analysis
     and may fail at the critical point. -/
 theorem phi4_os4_weak_coupling (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p := by
   intro hlim hrec
@@ -965,10 +962,10 @@ theorem phi4_os4_weak_coupling (params : Phi4Params) :
 
 /-- Backward-compatible OS4 weak-coupling form written with explicit Schwinger moments. -/
 theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∃ m_gap : ℝ, 0 < m_gap ∧
             ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
@@ -995,7 +992,7 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
     positive coupling threshold giving explicit Schwinger-moment exponential
     decay at the current parameters. -/
 theorem phi4_os4_weak_coupling_explicit_at_params (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
   ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       (params.coupling < coupling_bound →
@@ -1025,7 +1022,7 @@ theorem phi4_os4_weak_coupling_explicit_at_params (params : Phi4Params) :
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
 theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     ConnectedTwoPointDecayThreshold params := by
   intro hlim hrec
@@ -1038,7 +1035,7 @@ theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
 /-- A canonical weak-coupling threshold selected from
     `phi4_connectedTwoPoint_decay_threshold`. -/
 def phi4WeakCouplingThreshold (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     ℝ := by
   intro hlim hrec
@@ -1046,7 +1043,7 @@ def phi4WeakCouplingThreshold (params : Phi4Params) :
 
 /-- Positivity of the selected weak-coupling threshold. -/
 theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     0 < phi4WeakCouplingThreshold params := by
   intro hlim hrec
@@ -1056,7 +1053,7 @@ theorem phi4WeakCouplingThreshold_pos (params : Phi4Params) :
 /-- Exponential decay of connected 2-point functions when
     `params.coupling` is below the selected weak-coupling threshold. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ConnectedTwoPointDecayAtParams params := by
@@ -1066,7 +1063,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold (params : Phi4Params) :
 
 /-- Explicit-Schwinger version of `phi4_connectedTwoPoint_decay_below_threshold`. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ∃ m_gap : ℝ, 0 < m_gap ∧
@@ -1092,7 +1089,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_explicit (params : Phi4Para
     for each fixed pair of test functions. -/
 theorem connectedTwoPoint_decay_eventually_small
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     (hdecay : ConnectedTwoPointDecayAtParams params)
     (f g : TestFun2D) :
     ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
@@ -1144,7 +1141,7 @@ theorem connectedTwoPoint_decay_eventually_small
 /-- `ε`-`R` clustering form under the selected weak-coupling threshold. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small
     (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ∀ (f g : TestFun2D), ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
@@ -1159,7 +1156,7 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small
     weak-coupling threshold. -/
 theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit
     (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     params.coupling < phi4WeakCouplingThreshold params →
     ∀ (f g : TestFun2D), ∀ ε : ℝ, 0 < ε → ∃ R : ℝ, 0 < R ∧
@@ -1177,10 +1174,10 @@ theorem phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit
 
 /-- Global weak-coupling `ε`-`R` clustering form for connected 2-point functions. -/
 theorem phi4_os4_weak_coupling_eventually_small (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
             ∀ a : Fin 2 → ℝ, R < ‖a‖ →
@@ -1194,10 +1191,10 @@ theorem phi4_os4_weak_coupling_eventually_small (params : Phi4Params) :
 
 /-- Explicit-Schwinger global weak-coupling `ε`-`R` clustering form. -/
 theorem phi4_os4_weak_coupling_eventually_small_explicit (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [UniformWeakCouplingDecayModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
             ∀ a : Fin 2 → ℝ, R < ‖a‖ →
@@ -1221,7 +1218,7 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit (params : Phi4Params) :
     clustering holds at the current parameters. -/
 theorem phi4_os4_weak_coupling_eventually_small_explicit_at_params
     (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [ReconstructionWeakCouplingModel params] →
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
       (params.coupling < coupling_bound →
@@ -1250,7 +1247,7 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit_at_params
 /-- Infinite-volume connected two-point nonnegativity for nonnegative test
     functions, inherited from finite-volume FKG positivity. -/
 theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [CorrelationFKGModel params] →
     ∀ (f g : TestFun2D), (∀ x, 0 ≤ f x) → (∀ x, 0 ≤ g x) →
       0 ≤ connectedTwoPoint params f g := by
@@ -1260,7 +1257,7 @@ theorem phi4_connectedTwoPoint_nonneg (params : Phi4Params) :
 /-- Infinite-volume diagonal connected two-point nonnegativity for nonnegative
     test functions, from finite-volume FKG positivity and the infinite-volume limit. -/
 theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [CorrelationFKGModel params] →
     ∀ (f : TestFun2D), (∀ x, 0 ≤ f x) → 0 ≤ connectedTwoPoint params f f := by
   intro hlim hcorr f hf
@@ -1269,7 +1266,7 @@ theorem phi4_connectedTwoPoint_self_nonneg (params : Phi4Params) :
 /-- Infinite-volume diagonal connected two-point nonnegativity (variance form),
     without sign restrictions on test functions. -/
 theorem phi4_connectedTwoPoint_self_nonneg_variance (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f : TestFun2D), 0 ≤ connectedTwoPoint params f f := by
   intro hlim hint f
@@ -1278,7 +1275,7 @@ theorem phi4_connectedTwoPoint_self_nonneg_variance (params : Phi4Params) :
 /-- Additivity in the first argument of the infinite-volume connected two-point
     function. -/
 theorem phi4_connectedTwoPoint_add_left (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f₁ f₂ g : TestFun2D),
       connectedTwoPoint params (f₁ + f₂) g =
@@ -1289,7 +1286,7 @@ theorem phi4_connectedTwoPoint_add_left (params : Phi4Params) :
 /-- Scalar linearity in the first argument of the infinite-volume connected
     two-point function. -/
 theorem phi4_connectedTwoPoint_smul_left (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (c : ℝ) (f g : TestFun2D),
       connectedTwoPoint params (c • f) g = c * connectedTwoPoint params f g := by
@@ -1299,7 +1296,7 @@ theorem phi4_connectedTwoPoint_smul_left (params : Phi4Params) :
 /-- Additivity in the second argument of the infinite-volume connected two-point
     function. -/
 theorem phi4_connectedTwoPoint_add_right (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f g₁ g₂ : TestFun2D),
       connectedTwoPoint params f (g₁ + g₂) =
@@ -1310,7 +1307,7 @@ theorem phi4_connectedTwoPoint_add_right (params : Phi4Params) :
 /-- Scalar linearity in the second argument of the infinite-volume connected
     two-point function. -/
 theorem phi4_connectedTwoPoint_smul_right (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (c : ℝ) (f g : TestFun2D),
       connectedTwoPoint params f (c • g) = c * connectedTwoPoint params f g := by
@@ -1319,7 +1316,7 @@ theorem phi4_connectedTwoPoint_smul_right (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point function as a bilinear map. -/
 def phi4_connectedTwoPoint_bilinear (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     TestFun2D →ₗ[ℝ] TestFun2D →ₗ[ℝ] ℝ := by
   intro hlim hint
@@ -1327,7 +1324,7 @@ def phi4_connectedTwoPoint_bilinear (params : Phi4Params) :
 
 /-- Symmetry of the infinite-volume connected two-point bilinear form. -/
 theorem phi4_connectedTwoPoint_bilinear_symm (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       connectedTwoPointBilinear params f g =
@@ -1338,7 +1335,7 @@ theorem phi4_connectedTwoPoint_bilinear_symm (params : Phi4Params) :
 /-- Diagonal nonnegativity of the infinite-volume connected two-point bilinear
     form. -/
 theorem phi4_connectedTwoPoint_bilinear_self_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f : TestFun2D), 0 ≤ connectedTwoPointBilinear params f f := by
   intro hlim hint f
@@ -1346,7 +1343,7 @@ theorem phi4_connectedTwoPoint_bilinear_self_nonneg (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point Cauchy-Schwarz inequality. -/
 theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       (connectedTwoPoint params f g) ^ 2 ≤
@@ -1356,7 +1353,7 @@ theorem phi4_connectedTwoPoint_sq_le_mul_diag (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point geometric-mean bound. -/
 theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       |connectedTwoPoint params f g| ≤
@@ -1366,7 +1363,7 @@ theorem phi4_connectedTwoPoint_abs_le_sqrt_diag_mul (params : Phi4Params) :
 
 /-- Infinite-volume connected two-point half-diagonal bound. -/
 theorem phi4_connectedTwoPoint_abs_le_half_diag_sum (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ (f g : TestFun2D),
       |connectedTwoPoint params f g| ≤
@@ -1376,7 +1373,7 @@ theorem phi4_connectedTwoPoint_abs_le_half_diag_sum (params : Phi4Params) :
 
 /-- Infinite-volume finite-family PSD statement for the connected two-point kernel. -/
 theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
       0 ≤ Finset.sum s (fun i =>
@@ -1386,7 +1383,7 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg (params : Phi4Params) :
 
 /-- Standard-index-order form of `phi4_connectedTwoPoint_quadratic_nonneg`. -/
 theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     [InteractionWeightModel params] →
     ∀ {ι : Type*} (s : Finset ι) (f : ι → TestFun2D) (c : ι → ℝ),
       0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
@@ -1396,8 +1393,8 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
 
 /-- Infinite-volume 4-point cumulant nonpositivity inherited from Lebowitz bounds. -/
 theorem phi4_infiniteCumulantFourPoint_nonpos (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1407,8 +1404,8 @@ theorem phi4_infiniteCumulantFourPoint_nonpos (params : Phi4Params) :
 
 /-- Infinite-volume absolute bound for the fully connected 4-point cumulant. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1423,8 +1420,8 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound (params : Phi4Params) :
 /-- Channel-wise lower bounds for the infinite-volume fully connected 4-point
     cumulant. -/
 theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1449,8 +1446,8 @@ theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels (params : Phi4P
 
 /-- Alternative absolute-value bound via the `(13)(24)` channel. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13 (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1464,8 +1461,8 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13 (params : Phi4Params) :
 
 /-- Alternative absolute-value bound via the `(14)(23)` channel. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14 (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1480,8 +1477,8 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14 (params : Phi4Params) :
 /-- Infinite-volume all-channel 4-point bounds (GKS lower channels + Lebowitz upper
     channel). -/
 theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1506,8 +1503,8 @@ theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
 /-- Infinite-volume nonnegativity of the `(12)(34)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1518,8 +1515,8 @@ theorem phi4_infiniteTruncatedFourPoint12_nonneg (params : Phi4Params) :
 /-- Infinite-volume nonnegativity of the `(13)(24)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1530,8 +1527,8 @@ theorem phi4_infiniteTruncatedFourPoint13_nonneg (params : Phi4Params) :
 /-- Infinite-volume nonnegativity of the `(14)(23)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_nonneg (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1541,8 +1538,8 @@ theorem phi4_infiniteTruncatedFourPoint14_nonneg (params : Phi4Params) :
 
 /-- Infinite-volume upper bound for the `(12)(34)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_upper (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1556,8 +1553,8 @@ theorem phi4_infiniteTruncatedFourPoint12_upper (params : Phi4Params) :
 
 /-- Infinite-volume upper bound for the `(13)(24)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_upper (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1571,8 +1568,8 @@ theorem phi4_infiniteTruncatedFourPoint13_upper (params : Phi4Params) :
 
 /-- Infinite-volume upper bound for the `(14)(23)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_upper (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1587,8 +1584,8 @@ theorem phi4_infiniteTruncatedFourPoint14_upper (params : Phi4Params) :
 /-- Infinite-volume absolute-value bound for the `(12)(34)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_abs_bound (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1603,8 +1600,8 @@ theorem phi4_infiniteTruncatedFourPoint12_abs_bound (params : Phi4Params) :
 /-- Infinite-volume absolute-value bound for the `(13)(24)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_abs_bound (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1619,8 +1616,8 @@ theorem phi4_infiniteTruncatedFourPoint13_abs_bound (params : Phi4Params) :
 /-- Infinite-volume absolute-value bound for the `(14)(23)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_abs_bound (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1635,8 +1632,8 @@ theorem phi4_infiniteTruncatedFourPoint14_abs_bound (params : Phi4Params) :
 /-- Infinite-volume two-sided bounds for the `(12)(34)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_bounds (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1652,8 +1649,8 @@ theorem phi4_infiniteTruncatedFourPoint12_bounds (params : Phi4Params) :
 /-- Infinite-volume two-sided bounds for the `(13)(24)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_bounds (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1669,8 +1666,8 @@ theorem phi4_infiniteTruncatedFourPoint13_bounds (params : Phi4Params) :
 /-- Infinite-volume two-sided bounds for the `(14)(23)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_bounds (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1686,8 +1683,8 @@ theorem phi4_infiniteTruncatedFourPoint14_bounds (params : Phi4Params) :
 /-- Combined two-sided bounds for all infinite-volume pairing-subtracted
     4-point channels. -/
 theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
-    [CorrelationFourPointModel params] →
+    [SchwingerLimitModel params] →
+    [CorrelationFourPointInequalityModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1714,7 +1711,7 @@ theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params
 
 /-- Infinite-volume connected two-point symmetry. -/
 theorem phi4_connectedTwoPoint_symm (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
+    [SchwingerLimitModel params] →
     ∀ (f g : TestFun2D),
       connectedTwoPoint params f g = connectedTwoPoint params g f := by
   intro hsch f g
@@ -1793,10 +1790,7 @@ theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     Wightman existence follows. -/
 theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
     (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [OSTemperedModel params] →
-    [OSEuclideanCovarianceModel params] →
-    [OSE3SymmetryModel params] →
+    [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1813,7 +1807,7 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hsch htemp heuc he3 hrec he2 he4 hsmall
+  intro _hcore _hrec _he2 _he4 hsmall
     sobolev_index alpha beta gamma halpha hbeta hgrowth
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   exact phi4_wightman_exists_of_explicit_linear_growth_bound params
@@ -1826,11 +1820,8 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeSchwingerModel params] →
-    [SchwingerFunctionModel params] →
-    [OSTemperedModel params] →
-    [OSEuclideanCovarianceModel params] →
-    [OSE3SymmetryModel params] →
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1867,7 +1858,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+  intro hweight hlimit _hcore _hrec _he2 _he4 hsmall
     sobolev_index alpha beta gamma halpha hbeta huniform hcompat hreduce happrox hzero
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hprod := phi4_productTensor_linear_growth_of_uniform_generating_bound
@@ -1888,11 +1879,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeSchwingerModel params] →
-    [SchwingerFunctionModel params] →
-    [OSTemperedModel params] →
-    [OSEuclideanCovarianceModel params] →
-    [OSE3SymmetryModel params] →
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1922,7 +1910,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+  intro hweight hlimit _hcore _hrec _he2 _he4 hsmall
     alpha beta gamma hbeta huniform hcompat hreduce happrox
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
@@ -1940,11 +1928,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
 theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeSchwingerModel params] →
-    [SchwingerFunctionModel params] →
-    [OSTemperedModel params] →
-    [OSEuclideanCovarianceModel params] →
-    [OSE3SymmetryModel params] →
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1973,7 +1958,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+  intro hweight hlimit _hcore _hrec _he2 _he4 hsmall
     alpha beta gamma hbeta huniform hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
@@ -1985,70 +1970,65 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
 
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the abstract reconstruction backend interface. -/
-theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_wightman_exists_of_interfaces (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hos hlg hrec
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := phi4_linear_growth_of_interface params)
     (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
 
 /-- Interface-level self-adjointness corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
-theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
 /-- Interface-level locality corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
-theorem phi4_locality_of_interfaces (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_locality_of_interfaces (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
 /-- Interface-level Lorentz-covariance corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
-theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
 /-- Interface-level positive-definite/vacuum corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
-theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
@@ -2063,15 +2043,14 @@ theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
     - W1: Covariant fields under the Poincaré group ISO(1,1)
     - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
     - W3: Locality (spacelike commutativity) -/
-theorem phi4_wightman_exists (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_wightman_exists (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hos hlin hrec
   exact phi4_wightman_exists_of_interfaces params
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
@@ -2080,16 +2059,15 @@ theorem phi4_wightman_exists (params : Phi4Params) :
 
     This is encoded in the `hermitian` field of `WightmanFunctions`,
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
-theorem phi4_selfadjoint_fields (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_selfadjoint_fields (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -2098,28 +2076,26 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     (Glimm-Jaffe Section 19.6)
     This follows from the Wightman reconstruction theorem applied to
     the φ⁴₂ Schwinger functions. -/
-theorem phi4_locality (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_locality (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
 /-- The φ⁴₂ QFT has Lorentz covariance.
     U(Λ,a) φ(f) U(Λ,a)⁻¹ = φ((Λ,a)·f) for (Λ,a) ∈ ISO(1,1).
     (Glimm-Jaffe Section 19.5) -/
-theorem phi4_lorentz_covariance (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_lorentz_covariance (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -2130,14 +2106,13 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     For weak coupling, this follows from the cluster property (OS4).
     For strong coupling, vacuum uniqueness is related to the absence of
     phase transitions (or selecting a pure phase). -/
-theorem phi4_unique_vacuum (params : Phi4Params) :
-    [SchwingerFunctionModel params] →
-    [ReconstructionLinearGrowthModel params] →
-    [WightmanReconstructionModel params] →
+theorem phi4_unique_vacuum (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 

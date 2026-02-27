@@ -110,9 +110,9 @@ These are the key endpoint theorems and their remaining assumptions:
 
 ## 3. Interface Inventory (Current Assumption Surface)
 
-The codebase currently tracks `43` pipeline-relevant `...Model` interfaces in
+The codebase currently tracks `44` pipeline-relevant `...Model` interfaces in
 this ledger, including `Phi4ModelBundle` (an aggregator). Excluding the bundle
-aggregator, this is `42`
+aggregator, this is `43`
 assumption interfaces.
 
 ### 3.1 Finite-volume / combinatorics / interaction
@@ -134,6 +134,7 @@ assumption interfaces.
 - `BoundaryRegularityModel`
 - `CorrelationInequalityModel`
 - `CorrelationTwoPointModel`
+- `CorrelationFourPointInequalityModel`
 - `SchwingerNMonotoneModel`
 - `SchwingerNNonnegModel`
 - `SchwingerNMonotoneFamilyModel`
@@ -192,9 +193,11 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
 
 3. Correlation split/recombine
    - `correlationTwoPointModel_of_full`
+   - `correlationFourPointInequalityModel_nonempty_of_data`
    - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
    - `correlationInequalityModel_of_submodels`
+   - `correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone`
    - `schwingerNMonotoneModel_four_of_correlationFourPoint`
    - `schwingerNNonnegModel_two_of_correlationTwoPoint`
    - `schwingerNMonotoneModel_of_family`
@@ -242,6 +245,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - specialized existence wrappers now depend on minimal monotonicity
      interfaces (`SchwingerNMonotoneModel params 2/4`) instead of stronger
      correlation bundles where unused
+   - four-point inequality transport/bound theorem blocks in
+     `InfiniteVolumeLimit.lean` and `Reconstruction.lean` now depend on
+     `CorrelationFourPointInequalityModel` where monotonicity data is unused
    - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
    - infinite-volume permutation symmetry transfer:
      `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)

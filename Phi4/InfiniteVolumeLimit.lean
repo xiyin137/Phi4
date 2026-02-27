@@ -373,6 +373,73 @@ theorem schwingerN_limit_exists_if_exhaustion_of_models
     (Filter.tendsto_add_atTop_iff_nat (f := a) 1).1 hshiftA
   exact ⟨S, ha⟩
 
+/-- Convergence of the interface-shaped exhausting sequence
+    `if h : 0 < n then S_k^{Λₙ}(f) else 0`, from:
+    1. finite-volume monotonicity (`SchwingerNMonotoneModel params k`),
+    2. finite-volume nonnegativity (`SchwingerNNonnegModel params k`), and
+    3. uniform bounds from `MultipleReflectionModel params`. -/
+theorem schwingerN_tendsto_if_exhaustion_of_models
+    (params : Phi4Params)
+    (k : ℕ)
+    [SchwingerNMonotoneModel params k]
+    [SchwingerNNonnegModel params k]
+    [MultipleReflectionModel params]
+    (f : Fin k → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f i x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)) := by
+  let a : ℕ → ℝ := fun n =>
+    if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0
+  have hmono : Monotone a := by
+    intro n m hnm
+    by_cases hn : 0 < n
+    · have hm : 0 < m := lt_of_lt_of_le hn hnm
+      have hsub :
+          (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet ⊆
+            (exhaustingRectangles n hn).toSet :=
+        exhaustingRectangles_mono_toSet 1 n (Nat.succ_pos 0) hn hn
+      have hfsuppn :
+          ∀ i, ∀ x ∉ (exhaustingRectangles n hn).toSet, f i x = 0 := by
+        intro i x hx
+        exact support_zero_outside_of_subset (f i) hsub (hfsupp i) x hx
+      have hmono_nm := schwingerN_monotone_in_volume_of_model
+        (params := params) (k := k) n m hn hm hnm f hf hfsuppn
+      simpa [a, hn, hm] using hmono_nm
+    · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
+      by_cases hm : 0 < m
+      · have hnonneg :
+            0 ≤ schwingerN params (exhaustingRectangles m hm) k f :=
+          SchwingerNNonnegModel.schwingerN_nonneg
+            (params := params) (k := k) (exhaustingRectangles m hm) f hf
+        simpa [a, hn0, hm] using hnonneg
+      · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
+        subst hn0
+        subst hm0
+        simp [a]
+  rcases schwingerN_uniformly_bounded_on_exhaustion
+      params 0 k f hfsupp with ⟨C, hC⟩
+  let Cmax : ℝ := max C 0
+  have hbound : ∀ n : ℕ, |a n| ≤ Cmax := by
+    intro n
+    by_cases hn : 0 < n
+    · rcases Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hn) with ⟨m, rfl⟩
+      have hm : |schwingerN params (exhaustingRectangles (m + 1) (Nat.succ_pos m)) k f| ≤ C := hC m
+      have hm' : |a (m + 1)| ≤ C := by simpa [a] using hm
+      exact le_trans hm' (le_max_left _ _)
+    · have hzero : a n = 0 := by simp [a, hn]
+      rw [hzero]
+      have hCmax_nonneg : 0 ≤ Cmax := le_trans (le_refl 0) (le_max_right C 0)
+      simpa [abs_of_nonneg hCmax_nonneg]
+  have hbdd : BddAbove (Set.range a) := by
+    refine ⟨Cmax, ?_⟩
+    rintro y ⟨n, rfl⟩
+    exact le_trans (le_abs_self _) (hbound n)
+  exact tendsto_atTop_ciSup hmono hbdd
+
 /-- Uniform absolute bound for the exhausting-sequence two-point function,
     obtained from the multiple-reflection uniform bound and support-in-base-volume
     assumptions. -/
@@ -522,61 +589,22 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_models
       (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
       Filter.atTop
       (nhds (⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)) := by
-  let a : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
   have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
     intro i x
     fin_cases i
     · simpa using hf x
     · simpa using hg x
-  have hmono : Monotone a := by
-    intro n m hnm
-    by_cases hn : 0 < n
-    · have hm : 0 < m := lt_of_lt_of_le hn hnm
-      have hsub :
-          (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet ⊆
-            (exhaustingRectangles n hn).toSet :=
-        exhaustingRectangles_mono_toSet 1 n (Nat.succ_pos 0) hn hn
-      have hfsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, f x = 0 :=
-        support_zero_outside_of_subset f hsub hfsupp
-      have hgsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, g x = 0 :=
-        support_zero_outside_of_subset g hsub hgsupp
-      have hmono_nm := schwinger_monotone_in_volume params n m hn hm hnm f g hf hg hfsuppn hgsuppn
-      simpa [a, hn, hm] using hmono_nm
-    · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
-      by_cases hm : 0 < m
-      · have hnonnegN :
-            0 ≤ schwingerN params (exhaustingRectangles m hm) 2
-              (![f, g] : Fin 2 → TestFun2D) :=
-          SchwingerNNonnegModel.schwingerN_nonneg
-            (params := params) (k := 2)
-            (exhaustingRectangles m hm) (![f, g] : Fin 2 → TestFun2D) hfvec
-        have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g := by
-          simpa [schwingerN_two_eq_schwingerTwo] using hnonnegN
-        simpa [a, hn0, hm] using hnonneg
-      · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
-        subst hn0
-        subst hm0
-        simp [a]
-  rcases schwingerTwo_uniformly_bounded_on_exhaustion
-      params 0 f g hfsupp hgsupp with ⟨C, hC⟩
-  let Cmax : ℝ := max C 0
-  have hbound : ∀ n : ℕ, |a n| ≤ Cmax := by
-    intro n
-    by_cases hn : 0 < n
-    · rcases Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hn) with ⟨k, rfl⟩
-      have hk : |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := hC k
-      have hk' : |a (k + 1)| ≤ C := by simpa [a] using hk
-      exact le_trans hk' (le_max_left _ _)
-    · have hzero : a n = 0 := by simp [a, hn]
-      rw [hzero]
-      have hCmax_nonneg : 0 ≤ Cmax := le_trans (le_refl 0) (le_max_right C 0)
-      simpa [abs_of_nonneg hCmax_nonneg]
-  have hbdd : BddAbove (Set.range a) := by
-    refine ⟨Cmax, ?_⟩
-    rintro y ⟨n, rfl⟩
-    exact le_trans (le_abs_self _) (hbound n)
-  exact tendsto_atTop_ciSup hmono hbdd
+  have hsuppvec :
+      ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet,
+        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
+    intro i x hx
+    fin_cases i
+    · simpa using hfsupp x hx
+    · simpa using hgsupp x hx
+  have hlim := schwingerN_tendsto_if_exhaustion_of_models
+    (params := params) (k := 2) (![f, g] : Fin 2 → TestFun2D)
+    hfvec hsuppvec
+  simpa [schwingerN_two_eq_schwingerTwo] using hlim
 
 /-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
 theorem schwingerTwo_limit_exists_if_exhaustion_of_models
@@ -681,19 +709,21 @@ theorem schwingerN_two_tendsto_if_exhaustion_of_models
       (nhds (⨆ n : ℕ,
         if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
           (![f, g] : Fin 2 → TestFun2D) else 0)) := by
-  let a : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
-  let b : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
-      (![f, g] : Fin 2 → TestFun2D) else 0
-  have hab : a = b := by
-    funext n
-    by_cases h : 0 < n
-    · simp [a, b, h, schwingerN_two_eq_schwingerTwo]
-    · simp [a, b, h]
-  have hlimA := schwingerTwo_tendsto_if_exhaustion_of_models
-    params f g hf hg hfsupp hgsupp
-  simpa [a, b, hab] using hlimA
+  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
+    intro i x
+    fin_cases i
+    · simpa using hf x
+    · simpa using hg x
+  have hsuppvec :
+      ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet,
+        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
+    intro i x hx
+    fin_cases i
+    · simpa using hfsupp x hx
+    · simpa using hgsupp x hx
+  exact schwingerN_tendsto_if_exhaustion_of_models
+    (params := params) (k := 2) (![f, g] : Fin 2 → TestFun2D)
+    hfvec hsuppvec
 
 /-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_models`. -/
 theorem schwingerN_two_limit_exists_if_exhaustion_of_models
@@ -1683,7 +1713,7 @@ theorem cumulantFourPoint_tendsto_infinite
 theorem infiniteCumulantFourPoint_nonpos
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1706,7 +1736,7 @@ theorem infiniteCumulantFourPoint_nonpos
 theorem infiniteCumulantFourPoint_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1766,7 +1796,7 @@ theorem infiniteCumulantFourPoint_abs_bound
 theorem infiniteCumulantFourPoint_lower_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1937,7 +1967,7 @@ theorem infiniteCumulantFourPoint_lower_bounds_all_channels
 theorem infiniteCumulantFourPoint_abs_bound_alt13
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1958,7 +1988,7 @@ theorem infiniteCumulantFourPoint_abs_bound_alt13
 theorem infiniteCumulantFourPoint_abs_bound_alt14
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1979,7 +2009,7 @@ theorem infiniteCumulantFourPoint_abs_bound_alt14
 theorem infiniteSchwinger_four_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2066,7 +2096,7 @@ def infiniteTruncatedFourPoint14 (params : Phi4Params)
 theorem infiniteTruncatedFourPoint12_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2082,7 +2112,7 @@ theorem infiniteTruncatedFourPoint12_nonneg
 theorem infiniteTruncatedFourPoint13_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2098,7 +2128,7 @@ theorem infiniteTruncatedFourPoint13_nonneg
 theorem infiniteTruncatedFourPoint14_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2114,7 +2144,7 @@ theorem infiniteTruncatedFourPoint14_nonneg
 theorem infiniteTruncatedFourPoint12_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2133,7 +2163,7 @@ theorem infiniteTruncatedFourPoint12_upper
 theorem infiniteTruncatedFourPoint13_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2152,7 +2182,7 @@ theorem infiniteTruncatedFourPoint13_upper
 theorem infiniteTruncatedFourPoint14_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2172,7 +2202,7 @@ theorem infiniteTruncatedFourPoint14_upper
 theorem infiniteTruncatedFourPoint12_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2190,7 +2220,7 @@ theorem infiniteTruncatedFourPoint12_abs_bound
 theorem infiniteTruncatedFourPoint13_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2208,7 +2238,7 @@ theorem infiniteTruncatedFourPoint13_abs_bound
 theorem infiniteTruncatedFourPoint14_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2226,7 +2256,7 @@ theorem infiniteTruncatedFourPoint14_abs_bound
 theorem infiniteTruncatedFourPoint12_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2245,7 +2275,7 @@ theorem infiniteTruncatedFourPoint12_bounds
 theorem infiniteTruncatedFourPoint13_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2264,7 +2294,7 @@ theorem infiniteTruncatedFourPoint13_bounds
 theorem infiniteTruncatedFourPoint14_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2283,7 +2313,7 @@ theorem infiniteTruncatedFourPoint14_bounds
 theorem infiniteTruncatedFourPoint_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointModel params]
+    [CorrelationFourPointInequalityModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :

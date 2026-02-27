@@ -87,7 +87,8 @@ the local Glimm-Jaffe objective.
 - `Phi4/CorrelationInequalities.lean` now includes lattice-to-continuum
   bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer,
   and now exposes correlation subinterfaces
-  (`CorrelationTwoPointModel`, `CorrelationFourPointModel`, `CorrelationFKGModel`).
+  (`CorrelationTwoPointModel`, `CorrelationFourPointInequalityModel`,
+  `CorrelationFourPointModel`, `CorrelationFKGModel`).
 - Constructor scaffolds were added for explicit interface instantiation in
   `FreeField.lean`, `CovarianceOperators.lean`, and `CorrelationInequalities.lean`
   (`*_nonempty_of_data` theorems), so WP2/WP3 proof data can be ported into
@@ -137,9 +138,15 @@ the local Glimm-Jaffe objective.
   plus family-level interfaces
   `SchwingerNMonotoneFamilyModel` / `LatticeSchwingerNMonotoneFamilyModel`
   with compatibility bridges from family assumptions to fixed-arity interfaces;
-  `CorrelationFourPointModel` now also carries explicit 4-point volume
+  `CorrelationFourPointInequalityModel` now isolates GKS-II/Lebowitz
+  assumptions from monotonicity, while `CorrelationFourPointModel` carries
+  explicit 4-point volume
   monotonicity (`schwinger_four_monotone`), inducing
   `SchwingerNMonotoneModel params 4`.
+- Four-point inequality theorem blocks in `Phi4/InfiniteVolumeLimit.lean` and
+  `Phi4/Reconstruction.lean` now depend on
+  `CorrelationFourPointInequalityModel` (not full 4-point monotonicity) when
+  monotonicity data is unused.
 - `Phi4/InfiniteVolumeLimit.lean` now includes generic `k`-point monotone
   convergence/existence infrastructure:
   `schwingerN_monotone_in_volume_of_model`,
@@ -147,6 +154,7 @@ the local Glimm-Jaffe objective.
   `schwingerN_limit_exists_of_monotone_bounded`,
   `schwingerN_tendsto_iSup_of_models`,
   `schwingerN_limit_exists_of_models`,
+  `schwingerN_tendsto_if_exhaustion_of_models`,
   `schwingerN_limit_exists_if_exhaustion_of_models`,
   `infinite_volume_schwinger_exists_k_of_models`,
   `infinite_volume_schwinger_exists_all_k_of_family_models`,
@@ -163,7 +171,8 @@ the local Glimm-Jaffe objective.
   `schwingerTwo_limit_exists_of_models`) now follow the same minimal interface;
   non-shifted `if h : 0 < n then ... else 0` two-point forms are now expressed
   via `SchwingerNMonotoneModel params 2` plus
-  `SchwingerNNonnegModel params 2` for the `n = 0` positivity branch.
+  `SchwingerNNonnegModel params 2` for the `n = 0` positivity branch, by
+  specialization of generic non-shifted `k`-point convergence.
 - In `Phi4/InfiniteVolumeLimit.lean`, lattice iSup-form two-point convergence
   theorems now use shifted exhaustion sequences `(n + 1)` and no longer require
   `LatticeGriffithsFirstModel`
