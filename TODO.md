@@ -60,6 +60,10 @@ the local Glimm-Jaffe objective.
   weighted occupancy bound in pure line-count form
   (`vertex_factorial_weighted_prod_le_degree_const_pow_lines`), i.e.
   `∏ (legs! * A^legs) ≤ (((d!)^2 * A^2) ^ |lines|)` for `A ≥ 0`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now includes a direct bridge from
+  weighted occupancy estimates to pure `C^|lines|` graph-integral bounds under
+  degree caps:
+  `graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

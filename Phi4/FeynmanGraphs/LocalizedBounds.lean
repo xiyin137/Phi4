@@ -520,3 +520,50 @@ theorem two_mul_lines_card_eq_four_mul_vertices_of_phi4
 end FeynmanGraph
 
 end ConstantValence
+
+section GraphIntegralBridge
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- Bridge from weighted occupancy control to a pure `C^{|lines|}` graph-integral
+    bound under a degree cap.
+
+    This isolates the combinatorial part of localized graph bounds: once an
+    analytic estimate supplies
+    `|I(G)| ≤ (∏ (legs! * A^legs)) * B^{|lines|}`, the degree-capped occupancy
+    lemmas collapse it to `|I(G)| ≤ C^{|lines|}`. -/
+theorem graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
+    (G : FeynmanGraph r) (mass : ℝ)
+    (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) ^ G.lines.card) := by
+  have hocc :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+        ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) ^ G.lines.card) :=
+    vertex_factorial_weighted_prod_le_degree_const_pow_lines G d hdeg A hA
+  have hmul :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card ≤
+        ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) ^ G.lines.card) *
+          B ^ G.lines.card :=
+    mul_le_mul_of_nonneg_right hocc (pow_nonneg hB _)
+  calc
+    |graphIntegral G mass|
+        ≤ (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card := hbound
+    _ ≤ ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) ^ G.lines.card) *
+          B ^ G.lines.card := hmul
+    _ = (((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) ^ G.lines.card) := by
+          simpa using
+            (mul_pow (((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) B G.lines.card).symm
+
+end FeynmanGraph
+
+end GraphIntegralBridge
