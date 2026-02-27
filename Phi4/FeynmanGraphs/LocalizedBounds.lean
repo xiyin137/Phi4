@@ -714,6 +714,70 @@ theorem uniform_graphIntegral_abs_le_pos_const_pow_lines_of_phi4_weighted_family
 
 end FeynmanGraph
 
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- For φ⁴ graphs, `C^{|lines|}` rewrites as `(C^2)^{|V|}`. -/
+theorem pow_lines_eq_pow_vertices_of_phi4
+    (G : FeynmanGraph r) (C : ℝ) (hphi4 : ∀ v : Fin r, G.legs v = 4) :
+    C ^ G.lines.card = (C ^ 2) ^ r := by
+  calc
+    C ^ G.lines.card = C ^ (2 * r) := by
+      simp [lines_card_eq_two_mul_vertices_of_phi4 (G := G) hphi4]
+    _ = (C ^ 2) ^ r := by
+      simp [pow_mul]
+
+/-- Convert any line-count bound into a vertex-count bound for φ⁴ graphs. -/
+theorem graphIntegral_abs_le_const_pow_vertices_of_phi4
+    (G : FeynmanGraph r) (mass C : ℝ)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound : |graphIntegral G mass| ≤ C ^ G.lines.card) :
+    |graphIntegral G mass| ≤ (C ^ 2) ^ r := by
+  simpa [pow_lines_eq_pow_vertices_of_phi4 (G := G) (C := C) hphi4] using hbound
+
+/-- Weighted φ⁴ single-graph bound in vertex-count form. -/
+theorem graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound
+    (G : FeynmanGraph r) (mass : ℝ)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      ((((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B) ^ 2) ^ r) := by
+  have hlines :
+      |graphIntegral G mass| ≤
+        (((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B) ^ G.lines.card) :=
+    graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound
+      (G := G) (mass := mass) (A := A) (B := B) hA hB hphi4 hbound
+  exact graphIntegral_abs_le_const_pow_vertices_of_phi4
+    (G := G) (mass := mass)
+    (C := ((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B))
+    hphi4 hlines
+
+/-- Uniform local φ⁴ weighted family bound in vertex-count form:
+    `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/
+theorem uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local
+    (mass : ℝ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤ K ^ r := by
+  rcases uniform_graphIntegral_abs_le_pos_const_pow_lines_of_phi4_weighted_family_local
+      (mass := mass) (A := A) (B := B) hA hB hweighted with ⟨C, hCpos, hCbound⟩
+  refine ⟨C ^ 2, by positivity, ?_⟩
+  intro r G hphi4
+  exact graphIntegral_abs_le_const_pow_vertices_of_phi4
+    (G := G) (mass := mass) (C := C) hphi4 (hCbound G hphi4)
+
+end FeynmanGraph
+
 /-- φ⁴-specialized localized graph bound from weighted-family assumptions
     and a global valence-4 constraint. -/
 theorem localized_graph_bound_of_phi4_weighted_family

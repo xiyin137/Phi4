@@ -82,6 +82,13 @@ the local Glimm-Jaffe objective.
   valence assumptions):
   `graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound` and
   `uniform_graphIntegral_abs_le_pos_const_pow_lines_of_phi4_weighted_family_local`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also converts φ⁴ line-count
+  bounds to vertex-count bounds:
+  `pow_lines_eq_pow_vertices_of_phi4`,
+  `graphIntegral_abs_le_const_pow_vertices_of_phi4`,
+  `graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound`,
+  and
+  `uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
