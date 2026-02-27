@@ -35,8 +35,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   infiniteVolumeMeasure : InfiniteVolumeMeasureModel params
   infiniteVolumeMoment : @InfiniteVolumeMomentModel params
     infiniteVolumeSchwinger infiniteVolumeMeasure
-  uniformWeakCoupling : @UniformWeakCouplingDecayModel params
-    infiniteVolumeSchwinger
+  uniformWeakCoupling : UniformWeakCouplingDecayModel params
   wickPowers : @WickPowersModel params infiniteVolumeMeasure
   wickCubicConvergence : @WickCubicConvergenceModel params
     infiniteVolumeMeasure
@@ -93,6 +92,10 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationFourPointModel params :=
   h.correlationFourPoint
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    SchwingerNMonotoneModel params 4 :=
+  schwingerNMonotoneModel_four_of_correlationFourPoint (params := params)
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationFKGModel params :=
@@ -217,14 +220,7 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   letI : OSTemperedModel params := h.osTempered
   letI : OSEuclideanCovarianceModel params := h.osEuclideanCovariance
   letI : OSE3SymmetryModel params := h.osE3Symmetry
-  exact {
-    toSchwingerFunctionModel := h.schwingerFunctions
-    os0 := OSTemperedModel.os0 (params := params)
-    schwinger_linear := OSTemperedModel.schwinger_linear (params := params)
-    os2_translation := OSEuclideanCovarianceModel.os2_translation (params := params)
-    os2_rotation := OSEuclideanCovarianceModel.os2_rotation (params := params)
-    e3_symmetric := OSE3SymmetryModel.e3_symmetric (params := params)
-  }
+  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSE4ClusterModel params := by
@@ -357,7 +353,7 @@ theorem phi4_connectedTwoPoint_decay_threshold_of_bundle (params : Phi4Params)
 theorem phi4_os4_weak_coupling_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ConnectedTwoPointDecayAtParams p :=
   phi4_os4_weak_coupling params
@@ -367,7 +363,7 @@ theorem phi4_os4_weak_coupling_of_bundle (params : Phi4Params)
 theorem phi4_os4_weak_coupling_explicit_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∃ m_gap : ℝ, 0 < m_gap ∧
             ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
@@ -400,7 +396,7 @@ theorem phi4_os4_weak_coupling_explicit_at_params_of_bundle (params : Phi4Params
 theorem phi4_os4_weak_coupling_eventually_small_of_bundle (params : Phi4Params)
     [Phi4ModelBundle params] :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
             ∀ a : Fin 2 → ℝ, R < ‖a‖ →
@@ -414,7 +410,7 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit_of_bundle
     (params : Phi4Params)
     [Phi4ModelBundle params] :
     ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
-      ∀ p : Phi4Params, [InfiniteVolumeSchwingerModel p] →
+      ∀ p : Phi4Params, [SchwingerLimitModel p] →
         p.coupling < coupling_bound →
           ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
             ∀ a : Fin 2 → ℝ, R < ‖a‖ →

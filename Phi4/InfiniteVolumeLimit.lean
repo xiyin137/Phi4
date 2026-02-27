@@ -502,10 +502,9 @@ theorem schwingerTwo_limit_exists_if_exhaustion_of_models
   refine ⟨⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0, ?_⟩
   exact schwingerTwo_tendsto_if_exhaustion_of_models params f g hf hg hfsupp hgsupp
 
-/-- Lattice-bridge version of `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
+/-- Lattice-bridge `n + 1`-shifted exhaustion form of two-point convergence. -/
 theorem schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     (params : Phi4Params)
-    [LatticeGriffithsFirstModel params]
     [LatticeSchwingerTwoMonotoneModel params]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
@@ -513,54 +512,29 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
     (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
     Filter.Tendsto
-      (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
+      (fun n : ℕ =>
+        schwingerTwo params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) f g)
       Filter.atTop
-      (nhds (⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)) := by
-  let a : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
-  have hmono : Monotone a := by
-    intro n m hnm
-    by_cases hn : 0 < n
-    · have hm : 0 < m := lt_of_lt_of_le hn hnm
-      have hsub :
-          (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet ⊆
-            (exhaustingRectangles n hn).toSet :=
-        exhaustingRectangles_mono_toSet 1 n (Nat.succ_pos 0) hn hn
-      have hfsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, f x = 0 :=
-        support_zero_outside_of_subset f hsub hfsupp
-      have hgsuppn : ∀ x ∉ (exhaustingRectangles n hn).toSet, g x = 0 :=
-        support_zero_outside_of_subset g hsub hgsupp
-      have hmono_nm := schwinger_monotone_in_volume_from_lattice
-        params n m hn hm hnm f g hf hg hfsuppn hgsuppn
-      simpa [a, hn, hm] using hmono_nm
-    · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
-      by_cases hm : 0 < m
-      · have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g :=
-          griffiths_first_from_lattice params (exhaustingRectangles m hm) f g hf hg
-        simpa [a, hn0, hm] using hnonneg
-      · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
-        subst hn0
-        subst hm0
-        simp [a]
-  rcases schwingerTwo_uniformly_bounded_on_exhaustion
-      params 0 f g hfsupp hgsupp with ⟨C, hC⟩
-  let Cmax : ℝ := max C 0
-  have hbound : ∀ n : ℕ, |a n| ≤ Cmax := by
-    intro n
-    by_cases hn : 0 < n
-    · rcases Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt hn) with ⟨k, rfl⟩
-      have hk : |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := hC k
-      have hk' : |a (k + 1)| ≤ C := by simpa [a] using hk
-      exact le_trans hk' (le_max_left _ _)
-    · have hzero : a n = 0 := by simp [a, hn]
-      rw [hzero]
-      have hCmax_nonneg : 0 ≤ Cmax := le_trans (le_refl 0) (le_max_right C 0)
-      simpa [abs_of_nonneg hCmax_nonneg]
-  have hbdd : BddAbove (Set.range a) := by
-    refine ⟨Cmax, ?_⟩
-    rintro y ⟨n, rfl⟩
-    exact le_trans (le_abs_self _) (hbound n)
-  exact tendsto_atTop_ciSup hmono hbdd
+      (nhds (⨆ n : ℕ,
+        schwingerTwo params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) f g)) := by
+  rcases schwingerNMonotoneModel_two_nonempty_of_lattice (params := params) with ⟨hmono⟩
+  letI : SchwingerNMonotoneModel params 2 := hmono
+  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
+    intro i x
+    fin_cases i
+    · simpa using hf x
+    · simpa using hg x
+  have hsuppvec :
+      ∀ i, ∀ x ∉ (exhaustingRectangles (0 + 1) (Nat.succ_pos 0)).toSet,
+        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
+    intro i x hx
+    fin_cases i
+    · simpa using hfsupp x hx
+    · simpa using hgsupp x hx
+  have hlim := schwingerN_tendsto_iSup_of_models
+    (params := params) (k := 2) (n0 := 0) (![f, g] : Fin 2 → TestFun2D)
+    hfvec hsuppvec
+  simpa [schwingerN_two_eq_schwingerTwo] using hlim
 
 /-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`. -/
 theorem schwingerTwo_limit_exists_if_exhaustion_of_lattice_models
@@ -648,11 +622,9 @@ theorem schwingerN_two_limit_exists_if_exhaustion_of_models
   exact schwingerN_two_tendsto_if_exhaustion_of_models
     params f g hf hg hfsupp hgsupp
 
-/-- Lattice-bridge `schwingerN` (`k = 2`) form of
-    `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`. -/
+/-- Lattice-bridge `schwingerN` (`k = 2`) shifted-exhaustion convergence form. -/
 theorem schwingerN_two_tendsto_if_exhaustion_of_lattice_models
     (params : Phi4Params)
-    [LatticeGriffithsFirstModel params]
     [LatticeSchwingerTwoMonotoneModel params]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
@@ -661,25 +633,15 @@ theorem schwingerN_two_tendsto_if_exhaustion_of_lattice_models
     (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
     Filter.Tendsto
       (fun n : ℕ =>
-        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
-          (![f, g] : Fin 2 → TestFun2D) else 0)
+        schwingerN params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) 2
+          (![f, g] : Fin 2 → TestFun2D))
       Filter.atTop
       (nhds (⨆ n : ℕ,
-        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
-          (![f, g] : Fin 2 → TestFun2D) else 0)) := by
-  let a : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
-  let b : ℕ → ℝ := fun n =>
-    if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
-      (![f, g] : Fin 2 → TestFun2D) else 0
-  have hab : a = b := by
-    funext n
-    by_cases h : 0 < n
-    · simp [a, b, h, schwingerN_two_eq_schwingerTwo]
-    · simp [a, b, h]
+        schwingerN params (exhaustingRectangles (n + 1) (Nat.succ_pos n)) 2
+          (![f, g] : Fin 2 → TestFun2D))) := by
   have hlimA := schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     params f g hf hg hfsupp hgsupp
-  simpa [a, b, hab] using hlimA
+  simpa [schwingerN_two_eq_schwingerTwo] using hlimA
 
 /-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`. -/
 theorem schwingerN_two_limit_exists_if_exhaustion_of_lattice_models
@@ -1255,6 +1217,40 @@ theorem infinite_volume_schwinger_exists_k_of_models (params : Phi4Params)
   exact schwingerN_limit_exists_if_exhaustion_of_models
     (params := params) (k := k) f hf hfsupp
 
+/-- All-arity existence endpoint under family-level monotonicity and
+    multiple-reflection bounds. -/
+theorem infinite_volume_schwinger_exists_all_k_of_family_models
+    (params : Phi4Params)
+    [SchwingerNMonotoneFamilyModel params]
+    [MultipleReflectionModel params] :
+    ∀ (k : ℕ) (f : Fin k → TestFun2D),
+      (∀ i, ∀ x, 0 ≤ f i x) →
+      (∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f i x = 0) →
+      ∃ S : ℝ, Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
+        Filter.atTop (nhds S) := by
+  intro k f hf hfsupp
+  exact infinite_volume_schwinger_exists_k_of_models
+    (params := params) (k := k) f hf hfsupp
+
+/-- All-arity existence endpoint from family-level lattice monotonicity and
+    multiple-reflection bounds. -/
+theorem infinite_volume_schwinger_exists_all_k_of_lattice_family_models
+    (params : Phi4Params)
+    [LatticeSchwingerNMonotoneFamilyModel params]
+    [MultipleReflectionModel params] :
+    ∀ (k : ℕ) (f : Fin k → TestFun2D),
+      (∀ i, ∀ x, 0 ≤ f i x) →
+      (∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f i x = 0) →
+      ∃ S : ℝ, Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
+        Filter.atTop (nhds S) := by
+  intro k f hf hfsupp
+  exact infinite_volume_schwinger_exists_k_of_models
+    (params := params) (k := k) f hf hfsupp
+
 /-- Constructive infinite-volume Schwinger existence in interface-sequence form
     for fixed arity `k`, from lattice `k`-point monotonicity infrastructure and
     multiple-reflection bounds. -/
@@ -1271,6 +1267,76 @@ theorem infinite_volume_schwinger_exists_k_of_lattice_models (params : Phi4Param
       Filter.atTop (nhds S) := by
   exact infinite_volume_schwinger_exists_k_of_models
     (params := params) (k := k) f hf hfsupp
+
+/-- Constructive `k = 4` infinite-volume Schwinger existence in the
+    interface sequence form `if h : 0 < n then ... else 0`, from explicit
+    four-point monotonicity and multiple-reflection bounds. -/
+theorem infinite_volume_schwinger_exists_four_of_models (params : Phi4Params)
+    [CorrelationFourPointModel params]
+    [MultipleReflectionModel params]
+    (f₁ f₂ f₃ f₄ : TestFun2D)
+    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
+    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x)
+    (hf₁supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₁ x = 0)
+    (hf₂supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₂ x = 0)
+    (hf₃supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₃ x = 0)
+    (hf₄supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₄ x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
+          (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  exact infinite_volume_schwinger_exists_k_of_models
+    (params := params) (k := 4) (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D)
+    (by
+      intro i x
+      fin_cases i
+      · exact hf₁ x
+      · exact hf₂ x
+      · exact hf₃ x
+      · exact hf₄ x)
+    (by
+      intro i x hx
+      fin_cases i
+      · simpa using hf₁supp x hx
+      · simpa using hf₂supp x hx
+      · simpa using hf₃supp x hx
+      · simpa using hf₄supp x hx)
+
+/-- Lattice-bridge counterpart of
+    `infinite_volume_schwinger_exists_four_of_models`. -/
+theorem infinite_volume_schwinger_exists_four_of_lattice_models
+    (params : Phi4Params)
+    [LatticeSchwingerNMonotoneModel params 4]
+    [MultipleReflectionModel params]
+    (f₁ f₂ f₃ f₄ : TestFun2D)
+    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
+    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x)
+    (hf₁supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₁ x = 0)
+    (hf₂supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₂ x = 0)
+    (hf₃supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₃ x = 0)
+    (hf₄supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₄ x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
+          (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  exact infinite_volume_schwinger_exists_k_of_lattice_models
+    (params := params) (k := 4) (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D)
+    (by
+      intro i x
+      fin_cases i
+      · exact hf₁ x
+      · exact hf₂ x
+      · exact hf₃ x
+      · exact hf₄ x)
+    (by
+      intro i x hx
+      fin_cases i
+      · simpa using hf₁supp x hx
+      · simpa using hf₂supp x hx
+      · simpa using hf₃supp x hx
+      · simpa using hf₄supp x hx)
 
 /-- Constructive `k = 2` infinite-volume Schwinger existence in the
     interface sequence form `if h : 0 < n then ... else 0`, under explicit

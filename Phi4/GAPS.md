@@ -6,6 +6,17 @@ This file makes the proof boundary explicit: what is fully formalized in `Phi4`,
 what is still represented as assumption interfaces, and where theorem-level
 `sorry` frontiers remain open.
 
+## Canonical Goal And Architecture (Authoritative)
+
+Gap reporting in this file is tied to one objective: the Glimm-Jaffe `φ⁴₂`
+construction to OS axioms, then OS-to-Wightman reconstruction. Reported gaps
+and interfaces must be interpreted as obligations in that architecture:
+
+1. finite volume,
+2. infinite-volume limit,
+3. OS packaging (including weak-coupling OS4),
+4. reconstruction.
+
 ## 1. Trust Snapshot
 
 - Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) currently have `0` theorem-level `sorry`.
@@ -99,8 +110,9 @@ These are the key endpoint theorems and their remaining assumptions:
 
 ## 3. Interface Inventory (Current Assumption Surface)
 
-The codebase currently declares `38` `...Model` classes in `Phi4`, including
-`Phi4ModelBundle` (an aggregator). Excluding the bundle aggregator, this is `37`
+The codebase currently tracks `42` pipeline-relevant `...Model` interfaces in
+this ledger, including `Phi4ModelBundle` (an aggregator). Excluding the bundle
+aggregator, this is `41`
 assumption interfaces.
 
 ### 3.1 Finite-volume / combinatorics / interaction
@@ -122,11 +134,15 @@ assumption interfaces.
 - `BoundaryRegularityModel`
 - `CorrelationInequalityModel`
 - `CorrelationTwoPointModel`
+- `SchwingerNMonotoneModel`
+- `SchwingerNMonotoneFamilyModel`
 - `CorrelationFourPointModel`
 - `CorrelationFKGModel`
 - `CorrelationInequalityCoreModel`
 - `LatticeGriffithsFirstModel`
 - `LatticeSchwingerTwoMonotoneModel`
+- `LatticeSchwingerNMonotoneModel`
+- `LatticeSchwingerNMonotoneFamilyModel`
 - `FreeReflectionPositivityModel`
 - `DirichletReflectionPositivityModel`
 - `InteractingReflectionPositivityModel`
@@ -178,9 +194,18 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
    - `correlationInequalityModel_of_submodels`
+   - `schwingerNMonotoneModel_four_of_correlationFourPoint`
+   - `schwingerNMonotoneModel_of_family`
+   - `schwingerNMonotoneFamilyModel_of_latticeFamily`
    - constructors:
      `latticeGriffithsFirstModel_nonempty_of_data`,
      `latticeSchwingerTwoMonotoneModel_nonempty_of_data`,
+     `latticeSchwingerNMonotoneModel_nonempty_of_data`,
+     `latticeSchwingerNMonotoneFamilyModel_nonempty_of_data`,
+     `latticeSchwingerNMonotoneFamilyModel_nonempty_of_models`,
+     `schwingerNMonotoneModel_nonempty_of_data`,
+     `schwingerNMonotoneFamilyModel_nonempty_of_data`,
+     `schwingerNMonotoneFamilyModel_nonempty_of_models`,
      `correlationInequalityCoreModel_nonempty_of_data`
    - in `Phi4/CorrelationInequalities.lean`
 
@@ -194,6 +219,10 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `schwingerTwo_tendsto_iSup_of_models`
    - `schwingerTwo_limit_exists_of_models`
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
+   - lattice iSup-form shifted-sequence variants no longer require
+     `LatticeGriffithsFirstModel`:
+     `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`,
+     `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`
    - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
    - infinite-volume permutation symmetry transfer:
      `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)

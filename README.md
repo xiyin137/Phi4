@@ -7,13 +7,32 @@ A Lean 4 formalization of constructive 2D φ⁴ Euclidean QFT, with the end goal
 
 Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of View* (2nd ed.).
 
+## Canonical Goal And Architecture (Authoritative)
+
+All local development and documentation in this repository is organized around one target:
+
+1. formalize the Glimm-Jaffe construction of 2D `φ⁴` in infinite volume,
+2. prove OS axioms (OS0-OS4, with explicit weak-coupling handling for OS4),
+3. reconstruct the corresponding Wightman theory.
+
+Architecture is interpreted in this order:
+
+1. finite-volume construction and estimates,
+2. infinite-volume limit and moment/measure bridges,
+3. OS packaging and weak-coupling cluster input,
+4. reconstruction to Wightman.
+
+`...Model` interfaces are explicit proof-debt boundaries for this pipeline. Any
+upstream `OSReconstruction` blocker triage is secondary support work, not the
+project objective.
+
 ## Status Snapshot (2026-02-27)
 
 - Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`):
   - theorem-level `sorry` count: `0`,
   - `axiom` declarations: `0`,
   - `def`/`abbrev`-level `sorry`: `0`.
-- Scratch modules (`Phi4/Scratch/**/*.lean`) theorem-level `sorry` count: `16`.
+- Scratch modules (`Phi4/Scratch/**/*.lean`) theorem-level `sorry` count: `0`.
 - Build status: `lake build Phi4` succeeds.
 - Trust audit script checks:
   - no explicit axioms,
@@ -47,6 +66,24 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
   `Phi4/CorrelationInequalities.lean` include `*_nonempty_of_data` constructors
   so constructive proof data can be attached to interfaces without ad hoc
   instance boilerplate.
+- `Phi4/CorrelationInequalities.lean` now also includes all-arity monotonicity
+  family interfaces and lattice-family bridge interfaces:
+  `SchwingerNMonotoneFamilyModel` and
+  `LatticeSchwingerNMonotoneFamilyModel`, with compatibility instances from
+  family-level assumptions to fixed-arity `k` assumptions.
+- `Phi4/InfiniteVolumeLimit.lean` now includes all-arity existence endpoints
+  driven by these family assumptions:
+  `infinite_volume_schwinger_exists_all_k_of_family_models` and
+  `infinite_volume_schwinger_exists_all_k_of_lattice_family_models`.
+- `CorrelationFourPointModel` now explicitly carries
+  `schwinger_four_monotone`; this induces
+  `SchwingerNMonotoneModel params 4` directly and supports dedicated
+  `k = 4` infinite-volume endpoints:
+  `infinite_volume_schwinger_exists_four_of_models` and
+  `infinite_volume_schwinger_exists_four_of_lattice_models`.
+- Lattice iSup-form two-point convergence endpoints in
+  `Phi4/InfiniteVolumeLimit.lean` now use shifted exhaustion sequences
+  `(n + 1)` and no longer depend on `LatticeGriffithsFirstModel`.
 - `Phi4/FreeField.lean` now also includes
   `freeCovarianceKernelModel_nonempty_of_two_point_kernel`, a direct bridge
   from a free two-point kernel identity to `FreeCovarianceKernelModel`.
@@ -62,6 +99,13 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - Correlation assumptions are split into
   `CorrelationTwoPointModel` / `CorrelationFourPointModel` /
   `CorrelationFKGModel`, with compatibility reconstruction.
+- Finite-volume `k`-point monotonicity assumptions are also split into fixed-
+  arity and family-level interfaces
+  (`SchwingerNMonotoneModel` / `SchwingerNMonotoneFamilyModel`), with lattice
+  counterparts and compatibility reconstruction.
+- Lattice interfaces are kept as optional bridge assumptions for proving
+  continuum statements; continuum Schwinger/OS/reconstruction objects remain
+  canonical.
 - Boundary covariance assumptions are split into
   `BoundaryKernelModel` / `BoundaryComparisonModel` /
   `BoundaryRegularityModel`, with compatibility reconstruction.
@@ -234,6 +278,28 @@ rg -n "^[[:space:]]*axiom\\b" Phi4 --glob '*.lean'
 grep -RIn "^[[:space:]]*sorry\\b" Phi4 --include='*.lean'
 lake build Phi4
 ```
+
+## Upstream Blocker Workflow
+
+Systematic infrastructure for upstream `OSReconstruction` blocker closure:
+
+```bash
+# Recompute blocker inventory + ranked queues + status merge
+scripts/upstream_blockers_scan.sh
+
+# Recompute and sync TODO inventory block
+scripts/sync_upstream_blockers_todo.sh
+
+# Queue operations (list, claim-next, set, stats)
+scripts/upstream_blockers_status.sh list open 20
+
+# Generate declaration prompt and top-N workpack
+scripts/upstream_blockers_prompt.sh "Wightman/Reconstruction/WickRotation/OSToWightman.lean" theorem full_analytic_continuation
+scripts/upstream_blockers_workpack.sh 10 open
+```
+
+Outputs are written under `docs/upstream_blockers/generated/`, and persistent
+declaration statuses are tracked in `docs/upstream_blockers/status.tsv`.
 
 ## Planning Docs
 
