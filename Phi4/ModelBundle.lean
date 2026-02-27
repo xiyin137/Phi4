@@ -45,7 +45,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   osE4 : @OSE4ClusterModel params osAxiom
   osE2 : @OSDistributionE2Model params osAxiom
   reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
-    infiniteVolumeSchwinger osAxiom
+    osAxiom
   wightmanReconstruction : @WightmanReconstructionModel params osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
@@ -163,7 +163,6 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionLinearGrowthModel params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.reconstructionLinearGrowth
 

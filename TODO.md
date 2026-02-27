@@ -117,6 +117,12 @@
 - `ReconstructionInputModel` is now split into
   `ReconstructionLinearGrowthModel` + `ReconstructionWeakCouplingModel`,
   with compatibility reconstruction kept for existing APIs.
+- `ReconstructionLinearGrowthModel` is now decoupled from
+  `InfiniteVolumeSchwingerModel`; linear-growth/Wightman interface endpoints now
+  depend only on OS-package + E0' data where Schwinger-limit inputs are not used.
+- `phi4_satisfies_OS` and fixed-parameter Wightman interface corollaries were
+  further trimmed to remove unused `InfiniteVolumeSchwingerModel` assumptions in
+  their signatures, tightening the non-smuggled dependency surface.
 - `WickPowersModel` and `RegularityModel` now depend only on
   `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel` (rather than
   `InfiniteVolumeLimitModel`), reducing model-surface coupling and avoiding

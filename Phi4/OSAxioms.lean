@@ -476,7 +476,6 @@ theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
     Current status: this endpoint is exposed honestly through explicit
     theorem-level frontier gaps (`gap_...`) rather than hidden model assumptions. -/
 theorem phi4_satisfies_OS (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     (core : OSAxiomCoreModel params)
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]

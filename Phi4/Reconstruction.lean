@@ -98,7 +98,6 @@ class UniformWeakCouplingDecayModel (params : Phi4Params)
 /-- Linear-growth input needed at fixed `params` for OS-to-Wightman
     reconstruction. -/
 class ReconstructionLinearGrowthModel (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params] where
   os_package : OsterwalderSchraderAxioms 1
   os_package_eq : os_package.S = phi4SchwingerFunctions params
@@ -106,7 +105,6 @@ class ReconstructionLinearGrowthModel (params : Phi4Params)
 
 /-- Backward-compatible existential view of `ReconstructionLinearGrowthModel`. -/
 theorem ReconstructionLinearGrowthModel.phi4_linear_growth (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
@@ -183,7 +181,6 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
 
 /-- Linear-growth input extracted from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth_of_interface (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
@@ -194,7 +191,6 @@ theorem phi4_linear_growth_of_interface (params : Phi4Params)
 /-- Explicit linear-growth constants extracted from
     `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth_constants_of_interface (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ (sobolev_index : ℕ) (alpha beta gamma : ℝ),
@@ -790,7 +786,6 @@ theorem osLinearGrowthCondition_nonempty_of_bound
 /-- Construct φ⁴ linear-growth witness data from explicit seminorm-growth
     constants for one OS package matching `phi4SchwingerFunctions`. -/
 theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
@@ -813,7 +808,6 @@ theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
 
 /-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (hlinear :
       ∃ OS : OsterwalderSchraderAxioms 1,
@@ -832,7 +826,6 @@ theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
     constants for an OS package matching `phi4SchwingerFunctions`. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
@@ -854,7 +847,6 @@ theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     2) an explicit seminorm-growth estimate for `phi4SchwingerFunctions`. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
     (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
@@ -883,7 +875,6 @@ theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem gap_phi4_linear_growth (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (hlinear :
       ∃ OS : OsterwalderSchraderAxioms 1,
@@ -896,7 +887,6 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
 
 /-- Public linear-growth endpoint from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
@@ -1684,7 +1674,6 @@ theorem wightman_exists_of_linear_growth_and_reconstruction
 /-- Construct Wightman existence from explicit linear-growth and reconstruction
     rule data at fixed `params`. -/
 theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     (hlinear : ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -1697,7 +1686,7 @@ theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hlinear hreconstruct
+  intro hos hlinear hreconstruct
   exact wightman_exists_of_linear_growth_and_reconstruction
     (S := phi4SchwingerFunctions params) hlinear hreconstruct
 
@@ -1706,7 +1695,6 @@ theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
     `phi4SchwingerFunctions` yields Wightman existence. -/
 theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     (OS : OsterwalderSchraderAxioms 1) →
@@ -1723,7 +1711,7 @@ theorem phi4_wightman_exists_of_explicit_linear_growth_bound
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hlim hos hrec OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
+  intro hos hrec OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
       sobolev_index alpha beta gamma halpha hbeta hgrowth)
@@ -1735,7 +1723,6 @@ theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     Wightman existence follows. -/
 theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
     (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1753,7 +1740,7 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hlim hos hrec he2 he4 hsmall sobolev_index alpha beta gamma halpha hbeta hgrowth
+  intro hos hrec he2 he4 hsmall sobolev_index alpha beta gamma halpha hbeta hgrowth
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   exact phi4_wightman_exists_of_explicit_linear_growth_bound params
     OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
@@ -1916,7 +1903,6 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the abstract reconstruction backend interface. -/
 theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
@@ -1924,7 +1910,7 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hlg hrec
+  intro hos hlg hrec
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := phi4_linear_growth_of_interface params)
     (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
@@ -1932,7 +1918,6 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
 /-- Interface-level self-adjointness corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
@@ -1941,49 +1926,46 @@ theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
 /-- Interface-level locality corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_locality_of_interfaces (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
 /-- Interface-level Lorentz-covariance corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
 /-- Interface-level positive-definite/vacuum corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists_of_interfaces params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
@@ -1999,7 +1981,6 @@ theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
     - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
     - W3: Locality (spacelike commutativity) -/
 theorem phi4_wightman_exists (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
@@ -2007,7 +1988,7 @@ theorem phi4_wightman_exists (params : Phi4Params) :
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   exact phi4_wightman_exists_of_interfaces params
 
 /-- The φ⁴₂ QFT has hermitian field operators (self-adjointness).
@@ -2017,7 +1998,6 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     This is encoded in the `hermitian` field of `WightmanFunctions`,
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
@@ -2026,7 +2006,7 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
       (∀ (n : ℕ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = starRingEnd ℂ (f.toFun (fun i => x (Fin.rev i)))) →
         Wfn.W n g = starRingEnd ℂ (Wfn.W n f)) := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.hermitian⟩
 
@@ -2036,14 +2016,13 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     This follows from the Wightman reconstruction theorem applied to
     the φ⁴₂ Schwinger functions. -/
 theorem phi4_locality (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLocallyCommutativeWeak 1 Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.locally_commutative⟩
 
@@ -2051,14 +2030,13 @@ theorem phi4_locality (params : Phi4Params) :
     U(Λ,a) φ(f) U(Λ,a)⁻¹ = φ((Λ,a)·f) for (Λ,a) ∈ ISO(1,1).
     (Glimm-Jaffe Section 19.5) -/
 theorem phi4_lorentz_covariance (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W ∧
       IsLorentzCovariantWeak 1 Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, hS ▸ hWR, Wfn.lorentz_covariant⟩
 
@@ -2070,14 +2048,13 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     For strong coupling, vacuum uniqueness is related to the absence of
     phase transitions (or selecting a pure phase). -/
 theorem phi4_unique_vacuum (params : Phi4Params) :
-    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
       IsPositiveDefinite 1 Wfn.W ∧
       IsWickRotationPair (phi4SchwingerFunctions params) Wfn.W := by
-  intro hlim hos hlin hrec
+  intro hos hlin hrec
   obtain ⟨Wfn, OS, hS, hWR⟩ := phi4_wightman_exists params
   exact ⟨Wfn, Wfn.positive_definite, hS ▸ hWR⟩
 
