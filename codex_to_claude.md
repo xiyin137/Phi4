@@ -1,101 +1,86 @@
-# Codex -> Claude: Next Proof Workpack
+# Codex -> Claude: Focused Upstream Blocker Workpack
 
 Date: 2026-02-27
 Repo: `/Users/xiyin/Phi4`
 
 ## Primary Goal (Authoritative)
 
-Formalize Glimm-Jaffe `phi^4_2` in Lean with canonical continuum objects:
-
+Formalize the Glimm-Jaffe `phi^4_2` continuum pipeline:
 1. infinite-volume Schwinger construction,
-2. OS axioms (OS0-OS4, weak-coupling OS4 explicit),
-3. reconstruction to Wightman.
+2. OS axioms,
+3. OS -> Wightman reconstruction.
 
-## Architecture Constraints (Non-Negotiable)
+## Non-Negotiable Constraints
 
-- Continuum definitions are canonical.
-- Lattice interfaces are optional proof-transport bridges only.
 - No axioms/placeholders/weakened theorem statements.
+- Keep architecture and imports stable unless strictly necessary.
 - A simplified definition is a wrong definition.
-- Prefer reusable infrastructure lemmas over brittle wrappers.
+- Prefer reusable bridge lemmas over one-off term hacks.
 
-## Already Merged (for context)
+## Current Active Blocker
 
-The previous blocker tasks are now merged on `main`:
+- Queue item: `ComplexLieGroups/Connectedness.lean`
+- Declaration: `iterated_eow_permutation_extension`
+- Status: `in_progress` (owner `codex`)
 
-- `CorrelationFourPointModel` now has `schwinger_four_monotone`.
-- Instance exists:
-  `schwingerNMonotoneModel_four_of_correlationFourPoint`.
-- Added:
-  `infinite_volume_schwinger_exists_four_of_models`,
-  `infinite_volume_schwinger_exists_four_of_lattice_models`.
-- Lattice iSup two-point convergence theorems now use shifted `(n+1)` sequences
-  and no longer require `LatticeGriffithsFirstModel`.
+### Target Declaration
 
-## Current Blocking Direction
+```
+private theorem iterated_eow_permutation_extension ...
+```
 
-Infrastructure is now broad enough. The blocker is proving/constructing concrete
-assumption instances, especially 4-point monotonicity data, and then consuming
-that to reduce frontier assumptions.
+at approximately line 2173 in:
 
-## Requested Work (Proof Tasks)
+`/Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/ComplexLieGroups/Connectedness.lean`
 
-### Task 1: Constructive source for `schwinger_four_monotone`
+## Local Findings (Important)
 
-Target file:
-- `Phi4/CorrelationInequalities.lean` (or scratch first)
+1. There is already a powerful helper:
+   - `permutation_extension_from_invariance` (same file, around line 2029)
+   - It constructs the exact `(U_σ, F_σ)` extension package from an invariance
+     hypothesis `hperm`.
+2. The hard obstruction is obtaining `hperm` for arbitrary `σ` from local swap
+   data (`hF_local`) without circular dependence.
+3. Current cycle:
+   - `eow_chain_adj_swap` uses `iterated_eow_permutation_extension`,
+   - `F_permutation_invariance` uses `eow_chain_adj_swap`,
+   - so `iterated_eow_permutation_extension` cannot be discharged by invoking
+     current `F_permutation_invariance` as-is.
+4. Gemini consultation suggested subgroup/generation route and warned the
+   unrestricted statement may be false for `d = 1`; this is unverified and must
+   not be adopted blindly.
 
-Target outcome:
-- Provide a mathematically sound derivation path for the new field
-  `schwinger_four_monotone`.
-- Preferred endpoint is one of:
-  1. a theorem that supplies the field from explicit lattice approximation-order
-     data (then usable via `correlationFourPointModel_nonempty_of_data`), or
-  2. a theorem from continuum assumptions that are strictly weaker/more explicit
-     than introducing the field directly.
+## Requested Work
 
-Constraint:
-- Do not claim derivation from GKS-II + Lebowitz sandwich alone.
+Provide 2-3 concrete, code-level solution paths for closing
+`iterated_eow_permutation_extension`, ranked by feasibility, with explicit
+attention to breaking the cycle above.
 
-### Task 2: Concrete instance package for 4-point channel
+For the top path, include exact steps:
 
-Target file:
-- `Phi4/CorrelationInequalities.lean`
+1. which intermediate lemmas to add (names + statements),
+2. where they should be placed in `Connectedness.lean`,
+3. how they avoid circular use of `iterated_eow_permutation_extension`,
+4. likely type mismatches and term-shape pitfalls (especially around
+   permutation composition order and `complexLorentzAction` commutation).
 
-Target outcome:
-- Build a reusable constructor theorem (or a minimal class split if needed)
-  that makes constructing `CorrelationFourPointModel` instances practical in
-  downstream modules, with the new monotonicity requirement explicit and clear.
-- If class split is proposed, keep compatibility instance and avoid API breakage.
+If the current theorem statement is genuinely too strong, provide:
 
-### Task 3: Push one frontier toward closure
+1. a minimal, concrete counterexample strategy,
+2. a strictly intermediate corrected lemma that is provable now and useful
+   downstream,
+3. and a migration strategy that does not introduce placeholders.
 
-Target file:
-- `Phi4/InfiniteVolumeLimit.lean` (preferred) or `Phi4/Regularity.lean`
+## Validation Target
 
-Target outcome:
-- Use the existing generic convergence/existence infrastructure to reduce one
-  honest frontier dependency surface (not via workaround).
-- Preferred candidates:
-  1. strengthen construction path around `gap_infiniteVolumeSchwingerModel_nonempty`,
-  2. or reduce assumptions in a currently frontier-adjacent theorem by proving a
-     reusable bridge lemma.
+Run and report:
 
-## Acceptance Criteria
+1. `lake build OSReconstruction.ComplexLieGroups.Connectedness`
+2. `rg -n "sorry" /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/ComplexLieGroups/Connectedness.lean`
 
-1. Build succeeds:
-   - `lake build Phi4.CorrelationInequalities Phi4.InfiniteVolumeLimit Phi4.Reconstruction Phi4.ModelBundle`
-2. Trust checks pass:
-   - `scripts/check_phi4_trust.sh`
-3. No new theorem-level `sorry`, no new `axiom`.
-4. Any new assumptions are explicit, named, and auditable.
+## Report Format
 
-## Reporting Back
-
-For each task, report:
-
-1. what was attempted,
-2. what was proved/added,
-3. what failed and exact blocker,
-4. exact declaration names and file locations,
-5. compile/check results.
+1. Attempt summary.
+2. Added/modified declarations (exact names).
+3. Compile results.
+4. Remaining blocker (if any) with exact failing goal shape.
