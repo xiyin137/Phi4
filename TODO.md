@@ -36,6 +36,10 @@ the local Glimm-Jaffe objective.
 - `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides weighted occupancy
   inequalities (`∏ (N! * A^N) ≤ (∑ N)! * A^(∑ N)`) and graph-specialized forms
   for vertex leg counts.
+- `FeynmanGraph` now enforces endpoint validity (`line_valid`) and
+  `Phi4/FeynmanGraphs/LocalizedBounds.lean` now proves exact leg-line counting
+  identities (`2 * |lines| = Σ legs`, parity, and half-count corollary), which
+  are concrete prerequisites for localized graph bounds in the WP1 chain.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
@@ -283,6 +287,27 @@ the local Glimm-Jaffe objective.
 - FKG-derived connected two-point nonnegativity statements now explicitly
   require nonnegative test functions (corrected soundness of statement direction).
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
+
+## Main Blocking Gaps (2026-02-27)
+
+These are the mathematically blocking items for proving 2D `phi^4` satisfies OS
+axioms (not interface-shape work):
+
+1. `WP1` interaction integrability (`exp(-V_Λ) ∈ L^p`) is not constructively grounded.
+2. `WP1` localized graph bound (GJ Theorem 8.5.5) is not yet proved in production.
+3. `gap_infiniteVolumeSchwingerModel_nonempty` in `Phi4/InfiniteVolumeLimit.lean`.
+4. `gap_generating_functional_bound` in `Phi4/Regularity.lean`.
+5. `gap_generating_functional_bound_uniform` in `Phi4/Regularity.lean`.
+6. `gap_nonlocal_phi4_bound` in `Phi4/Regularity.lean`.
+7. `gap_osaCoreModel_nonempty` in `Phi4/OSAxioms.lean`.
+8. `gap_osDistributionE2_nonempty` in `Phi4/OSAxioms.lean`.
+9. `gap_osE4Cluster_nonempty` in `Phi4/OSAxioms.lean`.
+10. `gap_phi4_linear_growth` in `Phi4/Reconstruction.lean`.
+11. `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean`.
+
+Current execution policy:
+- Freeze additional interface splitting unless it is required by a concrete proof.
+- Prioritize bottom-up grounding of WP1 bounds and then propagate closure upward.
 
 ## Development Rules (Authoritative)
 

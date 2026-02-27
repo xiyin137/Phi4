@@ -113,6 +113,9 @@ structure FeynmanGraph (r : ℕ) where
   legs : Fin r → ℕ
   /-- The lines: pairs of (vertex, leg_index). -/
   lines : Finset ((Fin r × ℕ) × (Fin r × ℕ))
+  /-- Every line endpoint is an actual leg of its vertex. -/
+  line_valid : ∀ p ∈ lines,
+    p.1.2 < legs p.1.1 ∧ p.2.2 < legs p.2.1
   /-- Each leg appears in exactly one line. -/
   covering : ∀ (v : Fin r) (l : ℕ), l < legs v →
     ∃! p ∈ lines, (p.1 = (v, l) ∨ p.2 = (v, l))
