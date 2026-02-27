@@ -103,10 +103,16 @@ the local Glimm-Jaffe objective.
   `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`
   and the lattice-specialized
   `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`;
+  atomic-subinterface constructors are also available via
+  `correlationInequalityCoreModel_nonempty_of_models` and
+  `correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone`;
   full correlation model constructors from lattice bridge data plus
   GKS-II/FKG/Lebowitz inputs are now available via
   `correlationInequalityModel_nonempty_of_lattice_and_core_data` and
-  `correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice_monotone`.
+  `correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice_monotone`,
+  with model-level (non-data) lattice assembly variants
+  `correlationInequalityModel_nonempty_of_lattice_and_core_models` and
+  `correlationInequalityModel_nonempty_of_lattice_and_core_models_and_lattice_monotone`.
 - `Phi4/InfiniteVolumeLimit.lean` and `Phi4/Reconstruction.lean` now use
   minimal correlation assumptions by theorem block (two-point/four-point/FKG).
 - `Phi4/InfiniteVolumeLimit.lean` now exposes

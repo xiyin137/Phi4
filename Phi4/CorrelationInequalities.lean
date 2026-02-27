@@ -438,6 +438,32 @@ instance (priority := 100) correlationInequalityModel_of_submodels
   schwinger_four_monotone := CorrelationFourPointModel.schwinger_four_monotone (params := params)
   schwinger_two_monotone := CorrelationTwoPointModel.schwinger_two_monotone (params := params)
 
+/-- Construct `CorrelationInequalityModel` from the three correlation
+    subinterfaces directly. -/
+theorem correlationInequalityModel_nonempty_of_submodels
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [CorrelationFourPointModel params]
+    [CorrelationFKGModel params] :
+    Nonempty (CorrelationInequalityModel params) := by
+  exact ⟨inferInstance⟩
+
+/-- Construct `CorrelationInequalityModel` from:
+    1. two-point and FKG subinterfaces,
+    2. four-point inequality subinterface, and
+    3. explicit `k = 4` Schwinger-moment monotonicity. -/
+theorem correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [CorrelationFourPointInequalityModel params]
+    [CorrelationFKGModel params]
+    [SchwingerNMonotoneModel params 4] :
+    Nonempty (CorrelationInequalityModel params) := by
+  rcases correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
+      (params := params) with ⟨hfour⟩
+  letI : CorrelationFourPointModel params := hfour
+  exact correlationInequalityModel_nonempty_of_submodels params
+
 /-! ## Lattice-to-continuum bridge for GKS-I -/
 
 /-- Real-analysis helper: if `x` can be approximated arbitrarily well by
@@ -838,6 +864,23 @@ theorem correlationInequalityCoreModel_nonempty_of_data
     schwinger_four_monotone := hfour_mono
   }⟩
 
+/-- Construct `CorrelationInequalityCoreModel` from atomic subinterfaces plus
+    explicit `k = 4` Schwinger-moment monotonicity. -/
+theorem correlationInequalityCoreModel_nonempty_of_models
+    (params : Phi4Params)
+    [CorrelationFourPointInequalityModel params]
+    [CorrelationFKGModel params]
+    [SchwingerNMonotoneModel params 4] :
+    Nonempty (CorrelationInequalityCoreModel params) := by
+  exact ⟨{
+    toCorrelationFourPointInequalityModel := inferInstance
+    toCorrelationFKGModel := inferInstance
+    schwinger_four_monotone := by
+      intro Λ₁ Λ₂ h f hf hfΛ
+      exact SchwingerNMonotoneModel.schwingerN_monotone
+        (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
+  }⟩
+
 /-- Construct `CorrelationInequalityCoreModel` from GKS-II/FKG/Lebowitz data
     plus a pre-existing `k = 4` Schwinger-moment monotonicity interface. -/
 theorem correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone
@@ -1005,6 +1048,38 @@ theorem correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice
     Nonempty (CorrelationInequalityModel params) := by
   exact correlationInequalityModel_nonempty_of_lattice_and_core_data
     params hgriffiths_second hfkg hlebowitz
+
+/-- Construct `CorrelationInequalityModel` from:
+    1. lattice GKS-I/two-point monotonicity bridges, and
+    2. atomic four-point inequality/FKG interfaces plus explicit
+       `k = 4` Schwinger-moment monotonicity. -/
+theorem correlationInequalityModel_nonempty_of_lattice_and_core_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationFourPointInequalityModel params]
+    [CorrelationFKGModel params]
+    [SchwingerNMonotoneModel params 4] :
+    Nonempty (CorrelationInequalityModel params) := by
+  rcases correlationInequalityCoreModel_nonempty_of_models
+      (params := params) with ⟨hcore⟩
+  letI : CorrelationInequalityCoreModel params := hcore
+  exact correlationInequalityModel_nonempty_of_lattice params
+
+/-- Lattice-monotonicity specialization of
+    `correlationInequalityModel_nonempty_of_lattice_and_core_models`. -/
+theorem correlationInequalityModel_nonempty_of_lattice_and_core_models_and_lattice_monotone
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationFourPointInequalityModel params]
+    [CorrelationFKGModel params]
+    [LatticeSchwingerNMonotoneModel params 4] :
+    Nonempty (CorrelationInequalityModel params) := by
+  letI : SchwingerNMonotoneModel params 4 :=
+    schwingerNMonotoneModel_of_lattice (params := params) (k := 4)
+  exact correlationInequalityModel_nonempty_of_lattice_and_core_models
+    (params := params)
 
 /-- Low-priority instance: if lattice bridge data and the remaining core
     inequalities are available, synthesize the full correlation-inequality model. -/
