@@ -41,11 +41,14 @@ class Phi4ModelBundle (params : Phi4Params) where
   regularity : @RegularityModel params infiniteVolumeMeasure
   measureOS3 : @MeasureOS3Model params
     infiniteVolumeMeasure
-  osAxiom : OSAxiomCoreModel params
-  osE4 : @OSE4ClusterModel params osAxiom.toSchwingerFunctionModel
-  osE2 : @OSDistributionE2Model params osAxiom.toSchwingerFunctionModel
+  schwingerFunctions : SchwingerFunctionModel params
+  osTempered : @OSTemperedModel params schwingerFunctions
+  osEuclideanCovariance : @OSEuclideanCovarianceModel params schwingerFunctions
+  osE3Symmetry : @OSE3SymmetryModel params schwingerFunctions
+  osE4 : @OSE4ClusterModel params schwingerFunctions
+  osE2 : @OSDistributionE2Model params schwingerFunctions
   reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
-    osAxiom.toSchwingerFunctionModel
+    schwingerFunctions
   wightmanReconstruction : WightmanReconstructionModel params
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
@@ -151,22 +154,52 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   exact h.measureOS3
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    SchwingerFunctionModel params := by
+  exact h.schwingerFunctions
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    OSTemperedModel params := by
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
+  exact h.osTempered
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    OSEuclideanCovarianceModel params := by
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
+  exact h.osEuclideanCovariance
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    OSE3SymmetryModel params := by
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
+  exact h.osE3Symmetry
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSAxiomCoreModel params := by
-  exact h.osAxiom
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
+  letI : OSTemperedModel params := h.osTempered
+  letI : OSEuclideanCovarianceModel params := h.osEuclideanCovariance
+  letI : OSE3SymmetryModel params := h.osE3Symmetry
+  exact {
+    toSchwingerFunctionModel := h.schwingerFunctions
+    os0 := OSTemperedModel.os0 (params := params)
+    schwinger_linear := OSTemperedModel.schwinger_linear (params := params)
+    os2_translation := OSEuclideanCovarianceModel.os2_translation (params := params)
+    os2_rotation := OSEuclideanCovarianceModel.os2_rotation (params := params)
+    e3_symmetric := OSE3SymmetryModel.e3_symmetric (params := params)
+  }
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSE4ClusterModel params := by
-  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
   exact h.osE4
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     OSDistributionE2Model params := by
-  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
   exact h.osE2
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionLinearGrowthModel params := by
-  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
   exact h.reconstructionLinearGrowth
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
@@ -182,7 +215,7 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
   letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
-  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
+  letI : SchwingerFunctionModel params := h.schwingerFunctions
   letI : ReconstructionLinearGrowthModel params := h.reconstructionLinearGrowth
   letI : ReconstructionWeakCouplingModel params := inferInstance
   infer_instance
