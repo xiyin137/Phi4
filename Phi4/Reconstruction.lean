@@ -986,6 +986,29 @@ theorem phi4_os4_weak_coupling_explicit (params : Phi4Params) :
   intro a
   simpa [connectedTwoPoint] using hfg a
 
+/-- Fixed-`params` specialization of
+    `phi4_os4_weak_coupling_explicit`: under a global weak-coupling threshold,
+    explicit Schwinger-moment exponential connected 2-point decay is available
+    for the current parameter set. -/
+theorem phi4_os4_weak_coupling_explicit_at_params (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [UniformWeakCouplingDecayModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      (params.coupling < coupling_bound →
+        ∃ m_gap : ℝ, 0 < m_gap ∧
+          ∀ (f g : TestFun2D), ∃ Cfg : ℝ, 0 ≤ Cfg ∧
+            ∀ (a : Fin 2 → ℝ),
+              let g_shifted : TestFun2D := translateTestFun a g
+              |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
+                infiniteVolumeSchwinger params 1 ![f] *
+                  infiniteVolumeSchwinger params 1 ![g_shifted]| ≤
+                Cfg * Real.exp (-m_gap * ‖a‖)) := by
+  intro hlim hrec
+  rcases phi4_os4_weak_coupling_explicit params with ⟨coupling_bound, hcb_pos, hglobal⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro hsmall
+  exact hglobal params hsmall
+
 /-- Fixed-`params` weak-coupling decay threshold for connected 2-point functions.
     This is the canonical threshold carried by `ReconstructionInputModel`. -/
 theorem phi4_connectedTwoPoint_decay_threshold (params : Phi4Params) :
@@ -1178,6 +1201,29 @@ theorem phi4_os4_weak_coupling_eventually_small_explicit (params : Phi4Params) :
   refine ⟨R, hRpos, ?_⟩
   intro a ha
   simpa [connectedTwoPoint] using hR a ha
+
+/-- Fixed-`params` specialization of
+    `phi4_os4_weak_coupling_eventually_small_explicit`: under a global
+    weak-coupling threshold, explicit-Schwinger `ε`-`R` clustering holds for
+    connected 2-point functions at the current parameters. -/
+theorem phi4_os4_weak_coupling_eventually_small_explicit_at_params
+    (params : Phi4Params) :
+    [InfiniteVolumeSchwingerModel params] →
+    [UniformWeakCouplingDecayModel params] →
+    ∃ coupling_bound : ℝ, 0 < coupling_bound ∧
+      (params.coupling < coupling_bound →
+        ∀ (f g : TestFun2D) (ε : ℝ), 0 < ε → ∃ R : ℝ, 0 < R ∧
+          ∀ a : Fin 2 → ℝ, R < ‖a‖ →
+            let g_shifted : TestFun2D := translateTestFun a g
+            |infiniteVolumeSchwinger params 2 ![f, g_shifted] -
+              infiniteVolumeSchwinger params 1 ![f] *
+                infiniteVolumeSchwinger params 1 ![g_shifted]| < ε) := by
+  intro hlim hdecay
+  rcases phi4_os4_weak_coupling_eventually_small_explicit params with
+    ⟨coupling_bound, hcb_pos, hglobal⟩
+  refine ⟨coupling_bound, hcb_pos, ?_⟩
+  intro hsmall
+  exact hglobal params hsmall
 
 /-- Infinite-volume connected two-point nonnegativity for nonnegative test
     functions, inherited from finite-volume FKG positivity. -/
