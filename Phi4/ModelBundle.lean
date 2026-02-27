@@ -48,6 +48,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   osE2 : @OSDistributionE2Model params osAxiom
   reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
     infiniteVolumeSchwinger osAxiom
+  wightmanReconstruction : @WightmanReconstructionModel params osAxiom
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeCovarianceKernelModel params.mass params.mass_pos :=
@@ -169,6 +170,11 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : OSAxiomCoreModel params := h.osAxiom
   exact h.reconstructionLinearGrowth
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    WightmanReconstructionModel params := by
+  letI : OSAxiomCoreModel params := h.osAxiom
+  exact h.wightmanReconstruction
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionWeakCouplingModel params := by

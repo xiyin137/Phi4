@@ -47,7 +47,8 @@ theorem gap_phi4_satisfies_OS (params : Phi4Params)
 theorem gap_phi4_wightman_exists (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
-    [ReconstructionLinearGrowthModel params] :
+    [ReconstructionLinearGrowthModel params]
+    [WightmanReconstructionModel params] :
     ∃ (Wfn : WightmanFunctions 1),
       ∃ (OS : OsterwalderSchraderAxioms 1),
         OS.S = phi4SchwingerFunctions params ∧
