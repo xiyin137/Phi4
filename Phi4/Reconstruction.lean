@@ -378,6 +378,166 @@ theorem phi4_productTensor_mixed_bound_of_interface
     (RegularityModel.generating_functional_bound_uniform (params := params))
     hcompat n hn f
 
+/-- Product-tensor linear-growth estimate from:
+    1) a global finite-volume uniform generating-functional bound,
+    2) compatibility with `infiniteVolumeSchwinger`, and
+    3) an explicit reduction of the mixed exponential-sum bound to one
+       Schwartz seminorm on product tensors. -/
+theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
+    (params : Phi4Params)
+    [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomCoreModel params]
+    (sobolev_index : ℕ) (alpha beta gamma : ℝ)
+    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+              (schwartzProductTensorFromTestFamily f)) :
+    ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+            (schwartzProductTensorFromTestFamily f) := by
+  intro n hn f
+  have hmixed := phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
+    params hglobal hcompat n hn f
+  rcases hmixed with ⟨c, hc⟩
+  exact hc.trans (hreduce c n hn f)
+
+/-- Positive-order linear growth on all `SchwartzNPoint` test functions from:
+    1) product-tensor linear-growth bounds, and
+    2) an explicit approximation scheme by product tensors with convergence of
+       both test functions and the chosen seminorm values. -/
+theorem phi4_positive_order_linear_growth_of_productTensor_approx
+    (params : Phi4Params)
+    [OSAxiomCoreModel params]
+    (sobolev_index : ℕ) (alpha beta gamma : ℝ)
+    (hprod :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+              (schwartzProductTensorFromTestFamily f))
+    (happrox :
+      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
+        ∃ u : ℕ → Fin n → TestFun2D,
+          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
+            Filter.atTop (nhds g) ∧
+          Filter.Tendsto
+            (fun k =>
+              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+                (schwartzProductTensorFromTestFamily (u k)))
+            Filter.atTop
+            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g))) :
+    ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
+      ‖phi4SchwingerFunctions params n g‖ ≤
+        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index g := by
+  intro n hn g
+  rcases happrox n hn g with ⟨u, hu_tendsto, hseminorm_tendsto⟩
+  let Cn : ℝ := alpha * beta ^ n * (n.factorial : ℝ) ^ gamma
+  have hS_cont : Continuous (phi4SchwingerFunctions params n) := phi4_os0 params n
+  have hS_tendsto :
+      Filter.Tendsto
+        (fun k => phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily (u k)))
+        Filter.atTop
+        (nhds (phi4SchwingerFunctions params n g)) :=
+    (hS_cont.tendsto g).comp hu_tendsto
+  have hnorm_tendsto :
+      Filter.Tendsto
+        (fun k => ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily (u k))‖)
+        Filter.atTop
+        (nhds ‖phi4SchwingerFunctions params n g‖) := by
+    exact hS_tendsto.norm
+  have hbound_tendsto :
+      Filter.Tendsto
+        (fun k =>
+          Cn * SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+            (schwartzProductTensorFromTestFamily (u k)))
+        Filter.atTop
+        (nhds (Cn * SchwartzMap.seminorm ℝ sobolev_index sobolev_index g)) := by
+    exact (tendsto_const_nhds.mul hseminorm_tendsto)
+  have hpointwise :
+      ∀ k,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily (u k))‖ ≤
+          Cn * SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+            (schwartzProductTensorFromTestFamily (u k)) := by
+    intro k
+    simpa [Cn] using hprod n hn (u k)
+  have hle :=
+    le_of_tendsto_of_tendsto hnorm_tendsto hbound_tendsto
+      (Filter.Eventually.of_forall hpointwise)
+  simpa [Cn] using hle
+
+/-- Construct φ⁴ linear-growth witness data from:
+    1) explicit product-tensor linear-growth bounds for positive orders,
+    2) explicit product-tensor approximation of general Schwartz `n`-point tests
+       for `n > 0` (with seminorm convergence),
+    3) an explicit order-zero growth bound. -/
+theorem phi4_linear_growth_of_productTensor_approx_and_zero
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [OSAxiomCoreModel params]
+    (OS : OsterwalderSchraderAxioms 1)
+    (hS : OS.S = phi4SchwingerFunctions params)
+    (sobolev_index : ℕ)
+    (alpha beta gamma : ℝ)
+    (halpha : 0 < alpha)
+    (hbeta : 0 < beta)
+    (hprod :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+              (schwartzProductTensorFromTestFamily f))
+    (happrox :
+      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
+        ∃ u : ℕ → Fin n → TestFun2D,
+          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
+            Filter.atTop (nhds g) ∧
+          Filter.Tendsto
+            (fun k =>
+              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+                (schwartzProductTensorFromTestFamily (u k)))
+            Filter.atTop
+            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g)))
+    (hzero :
+      ∀ g : SchwartzNPoint 1 0,
+        ‖phi4SchwingerFunctions params 0 g‖ ≤
+          alpha * beta ^ 0 * (Nat.factorial 0 : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ sobolev_index sobolev_index g) :
+    ∃ OS' : OsterwalderSchraderAxioms 1,
+      OS'.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS') := by
+  refine ⟨OS, hS, ?_⟩
+  refine ⟨{
+    sobolev_index := sobolev_index
+    alpha := alpha
+    beta := beta
+    gamma := gamma
+    alpha_pos := halpha
+    beta_pos := hbeta
+    growth_estimate := ?_
+  }⟩
+  intro n g
+  by_cases hn : 0 < n
+  · simpa [hS] using
+      (phi4_positive_order_linear_growth_of_productTensor_approx
+        params sobolev_index alpha beta gamma hprod happrox n hn g)
+  · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
+    subst hn0
+    simpa [hS] using hzero g
+
 /-! ## Linear growth condition (E0') -/
 
 /-- Build `OSLinearGrowthCondition` from explicit seminorm-growth constants
