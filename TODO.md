@@ -130,7 +130,10 @@ the local Glimm-Jaffe objective.
   plus the direct graph-integral bridge
   `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound`
   and its canonical-image form
-  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image`.
+  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image`;
+  additionally, φ⁴-localized per-cell rewriting is now explicit via
+  `graphIntegral_abs_le_cell_occupancy_weighted_of_phi4_vertex_weighted_bound`
+  (occupancies `4 * #(vertices in cell)` and line factor `B^(2|V|)`).
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

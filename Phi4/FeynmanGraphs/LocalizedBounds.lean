@@ -888,6 +888,78 @@ theorem graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound
   exact graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
     (G := G) (mass := mass) (d := 4) hdeg A B hA hB hbound
 
+/-- φ⁴-localized per-cell bound:
+    under `legs(v)=4`, a vertex-weighted bound rewrites to a per-cell occupancy
+    form with explicit occupancies `4 * #(vertices in cell)` and
+    `B^(2|V|)` from `|lines| = 2|V|`. -/
+theorem graphIntegral_abs_le_cell_occupancy_weighted_of_phi4_vertex_weighted_bound
+    {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (mass : ℝ) (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (∏ c ∈ cells,
+        (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+          A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+        B ^ (2 * r) := by
+  have hbase :
+      |graphIntegral G mass| ≤
+        (∏ c ∈ cells,
+          (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+            A ^ (∑ v : Fin r with loc v = c, G.legs v)) *
+          B ^ G.lines.card :=
+    graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound
+      (G := G) (mass := mass) (cells := cells) (loc := loc) hloc
+      (A := A) (B := B) hA hB hbound
+  have hsum :
+      ∀ c : β,
+        (∑ v : Fin r with loc v = c, G.legs v) =
+          4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card) := by
+    intro c
+    calc
+      (∑ v : Fin r with loc v = c, G.legs v)
+          = ∑ v : Fin r with loc v = c, 4 := by
+              refine Finset.sum_congr rfl ?_
+              intro v hv
+              simp [hphi4 v]
+      _ = ((Finset.univ.filter fun v : Fin r => loc v = c).card) * 4 := by
+            simp
+      _ = 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card) := by
+            simp [Nat.mul_comm]
+  have hcells :
+      (∏ c ∈ cells,
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+          A ^ (∑ v : Fin r with loc v = c, G.legs v)) =
+      (∏ c ∈ cells,
+        (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+          A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) := by
+    refine Finset.prod_congr rfl ?_
+    intro c hc
+    simp [hsum c]
+  have hlines : B ^ G.lines.card = B ^ (2 * r) := by
+    simp [lines_card_eq_two_mul_vertices_of_phi4 (G := G) hphi4]
+  calc
+    |graphIntegral G mass|
+        ≤ (∏ c ∈ cells,
+            (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+              A ^ (∑ v : Fin r with loc v = c, G.legs v)) *
+            B ^ G.lines.card := hbase
+    _ = (∏ c ∈ cells,
+          (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+            A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+          B ^ G.lines.card := by
+            simp [hcells]
+    _ = (∏ c ∈ cells,
+          (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+            A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+          B ^ (2 * r) := by
+            simp [hlines]
+
 /-- Family-level local φ⁴ specialization:
     weighted bounds for each valence-4 graph imply a uniform positive
     `C^{|lines|}` control on all such graphs. -/
