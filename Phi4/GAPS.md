@@ -206,7 +206,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `schwingerNMonotoneModel_nonempty_of_data`,
      `schwingerNMonotoneFamilyModel_nonempty_of_data`,
      `schwingerNMonotoneFamilyModel_nonempty_of_models`,
-     `correlationInequalityCoreModel_nonempty_of_data`
+     `correlationInequalityCoreModel_nonempty_of_data`,
+     `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`,
+     `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`
    - in `Phi4/CorrelationInequalities.lean`
 
 4. Infinite-volume split/recombine

@@ -92,6 +92,11 @@ the local Glimm-Jaffe objective.
   `FreeField.lean`, `CovarianceOperators.lean`, and `CorrelationInequalities.lean`
   (`*_nonempty_of_data` theorems), so WP2/WP3 proof data can be ported into
   stable class instances without ad hoc wrapper code.
+- `Phi4/CorrelationInequalities.lean` now also provides core constructor bridges
+  that source 4-point monotonicity from monotone-moment interfaces:
+  `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`
+  and the lattice-specialized
+  `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`.
 - `Phi4/InfiniteVolumeLimit.lean` and `Phi4/Reconstruction.lean` now use
   minimal correlation assumptions by theorem block (two-point/four-point/FKG).
 - `Phi4/InfiniteVolumeLimit.lean` now exposes
