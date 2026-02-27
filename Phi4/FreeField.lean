@@ -313,6 +313,97 @@ theorem abs_freeCovKernel_le_besselK1_offDiagonal
   rw [abs_of_nonneg hnonneg]
   exact freeCovKernel_le_besselK1_offDiagonal mass hmass x y hxy
 
+/-- Exponential off-diagonal decay of the free covariance kernel:
+    `|C(x,y)| ≤ C₁ * exp(-C₂ * ‖x-y‖)` for `‖x-y‖ ≥ 1`. -/
+theorem freeCovKernel_exponential_decay (mass : ℝ) (hmass : 0 < mass) :
+    ∃ C₁ C₂ : ℝ, 0 < C₂ ∧
+      ∀ x y : Spacetime2D, 1 ≤ ‖x - y‖ →
+        |freeCovKernel mass x y| ≤ C₁ * Real.exp (-C₂ * ‖x - y‖) := by
+  let C₂ : ℝ := mass
+  let A : ℝ := (2 * Real.pi)⁻¹ * (Real.sinh 1 + 2)
+  let B0 : ℝ := (2 * Real.pi)⁻¹ * ((Real.cosh 1 + 2) / mass)
+  let B : ℝ := B0 * Real.exp 1
+  let C₁ : ℝ := max A B
+  refine ⟨C₁, C₂, by simpa [C₂] using hmass, ?_⟩
+  intro x y hxy1
+  have hxy_pos : 0 < ‖x - y‖ := lt_of_lt_of_le zero_lt_one hxy1
+  have hrepr := freeCovKernel_eq_besselK0 mass hmass x y hxy_pos
+  have hnonneg : 0 ≤ freeCovKernel mass x y :=
+    freeCovKernel_nonneg_offDiagonal mass hmass x y hxy_pos
+  rw [abs_of_nonneg hnonneg, hrepr]
+  by_cases hlarge : 1 ≤ mass * ‖x - y‖
+  · have hK0_le : besselK0 (mass * ‖x - y‖) ≤
+        (Real.sinh 1 + 2) * Real.exp (-(mass * ‖x - y‖)) := by
+      calc
+        besselK0 (mass * ‖x - y‖) ≤ besselK1 (mass * ‖x - y‖) :=
+          besselK0_le_besselK1 _ (mul_pos hmass hxy_pos)
+        _ ≤ (Real.sinh 1 + 2) * Real.exp (-(mass * ‖x - y‖)) :=
+          besselK1_asymptotic _ hlarge
+    have hmain : (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) ≤
+        A * Real.exp (-(mass * ‖x - y‖)) := by
+      calc
+        (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖)
+            ≤ (2 * Real.pi)⁻¹ * ((Real.sinh 1 + 2) * Real.exp (-(mass * ‖x - y‖))) :=
+              mul_le_mul_of_nonneg_left hK0_le (by positivity)
+        _ = A * Real.exp (-(mass * ‖x - y‖)) := by
+              unfold A
+              ring
+    have hC1A : A ≤ C₁ := by
+      unfold C₁
+      exact le_max_left A B
+    have hC1exp : A * Real.exp (-(mass * ‖x - y‖)) ≤
+        C₁ * Real.exp (-(mass * ‖x - y‖)) :=
+      mul_le_mul_of_nonneg_right hC1A (Real.exp_nonneg _)
+    simpa [C₂] using le_trans hmain hC1exp
+  · have hsmall : mass * ‖x - y‖ ≤ 1 := le_of_not_ge hlarge
+    have hmxy_pos : 0 < mass * ‖x - y‖ := mul_pos hmass hxy_pos
+    have hK1_near : besselK1 (mass * ‖x - y‖) ≤
+        (Real.cosh 1 + 2) / (mass * ‖x - y‖) :=
+      besselK1_near_origin_bound _ hmxy_pos hsmall
+    have hK0_bound : besselK0 (mass * ‖x - y‖) ≤
+        (Real.cosh 1 + 2) / (mass * ‖x - y‖) :=
+      le_trans (besselK0_le_besselK1 _ hmxy_pos) hK1_near
+    have hmr_ge_m : mass ≤ mass * ‖x - y‖ := by
+      nlinarith [hmass, hxy1]
+    have h_inv_norm : 1 / (mass * ‖x - y‖) ≤ 1 / mass :=
+      one_div_le_one_div_of_le hmass hmr_ge_m
+    have hK0_B0 : (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) ≤ B0 := by
+      calc
+        (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖)
+            ≤ (2 * Real.pi)⁻¹ * ((Real.cosh 1 + 2) / (mass * ‖x - y‖)) :=
+              mul_le_mul_of_nonneg_left hK0_bound (by positivity)
+        _ = (2 * Real.pi)⁻¹ * (Real.cosh 1 + 2) * (1 / (mass * ‖x - y‖)) := by ring
+        _ ≤ (2 * Real.pi)⁻¹ * (Real.cosh 1 + 2) * (1 / mass) :=
+              mul_le_mul_of_nonneg_left h_inv_norm (by positivity)
+        _ = B0 := by
+              unfold B0
+              ring
+    have harg_nonneg : 0 ≤ 1 - mass * ‖x - y‖ := by linarith
+    have hExp_ge_one : (1 : ℝ) ≤ Real.exp 1 * Real.exp (-(mass * ‖x - y‖)) := by
+      calc
+        (1 : ℝ) ≤ Real.exp (1 - mass * ‖x - y‖) := by
+          exact (Real.one_le_exp_iff).2 harg_nonneg
+        _ = Real.exp 1 * Real.exp (-(mass * ‖x - y‖)) := by
+          rw [← Real.exp_add]
+          ring
+    have hBexp : B0 ≤ B * Real.exp (-(mass * ‖x - y‖)) := by
+      unfold B
+      calc
+        B0 = B0 * 1 := by ring
+        _ ≤ B0 * (Real.exp 1 * Real.exp (-(mass * ‖x - y‖))) :=
+              mul_le_mul_of_nonneg_left hExp_ge_one (by positivity)
+        _ = B * Real.exp (-(mass * ‖x - y‖)) := by ring
+    have hC1B : B ≤ C₁ := by
+      unfold C₁
+      exact le_max_right A B
+    have hC1exp : B * Real.exp (-(mass * ‖x - y‖)) ≤
+        C₁ * Real.exp (-(mass * ‖x - y‖)) :=
+      mul_le_mul_of_nonneg_right hC1B (Real.exp_nonneg _)
+    have hfinal : (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) ≤
+        C₁ * Real.exp (-(mass * ‖x - y‖)) :=
+      le_trans hK0_B0 (le_trans hBexp hC1exp)
+    simpa [C₂] using hfinal
+
 /-- Positivity of the free covariance as a smeared quadratic form.
     This is the mathematically sound positivity statement used by the Gaussian
     construction: for any finite family of test functions, the covariance matrix
