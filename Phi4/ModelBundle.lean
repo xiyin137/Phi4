@@ -38,7 +38,16 @@ class Phi4ModelBundle (params : Phi4Params) where
   uniformWeakCoupling : @UniformWeakCouplingDecayModel params
     infiniteVolumeSchwinger
   wickPowers : @WickPowersModel params infiniteVolumeMeasure
-  regularity : @RegularityModel params infiniteVolumeMeasure
+  wickCubicConvergence : @WickCubicConvergenceModel params
+    infiniteVolumeMeasure
+  euclideanEquation : @EuclideanEquationModel params
+    infiniteVolumeMeasure
+  generatingFunctionalBound : @GeneratingFunctionalBoundModel params
+    infiniteVolumeMeasure
+  nonlocalPhi4Bound : @NonlocalPhi4BoundModel params
+    infiniteVolumeMeasure
+  uniformGeneratingFunctionalBound : @UniformGeneratingFunctionalBoundModel params
+    infiniteVolumeMeasure
   measureOS3 : @MeasureOS3Model params
     infiniteVolumeMeasure
   schwingerFunctions : SchwingerFunctionModel params
@@ -144,9 +153,39 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   exact h.wickPowers
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    WickCubicConvergenceModel params := by
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.wickCubicConvergence
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    EuclideanEquationModel params := by
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.euclideanEquation
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    GeneratingFunctionalBoundModel params := by
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.generatingFunctionalBound
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    NonlocalPhi4BoundModel params := by
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.nonlocalPhi4Bound
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    UniformGeneratingFunctionalBoundModel params := by
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.uniformGeneratingFunctionalBound
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     RegularityModel params := by
   letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
-  exact h.regularity
+  letI : WickCubicConvergenceModel params := h.wickCubicConvergence
+  letI : EuclideanEquationModel params := h.euclideanEquation
+  letI : GeneratingFunctionalBoundModel params := h.generatingFunctionalBound
+  letI : NonlocalPhi4BoundModel params := h.nonlocalPhi4Bound
+  letI : UniformGeneratingFunctionalBoundModel params := h.uniformGeneratingFunctionalBound
+  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     MeasureOS3Model params := by

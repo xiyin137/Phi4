@@ -188,6 +188,68 @@ instance (priority := 100) uniformGeneratingFunctionalBoundModel_of_regularity
   generating_functional_bound_uniform :=
     RegularityModel.generating_functional_bound_uniform (params := params)
 
+/-- The five regularity subinterfaces reconstruct `RegularityModel`. -/
+instance (priority := 100) regularityModel_of_submodels
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [WickCubicConvergenceModel params]
+    [EuclideanEquationModel params]
+    [GeneratingFunctionalBoundModel params]
+    [NonlocalPhi4BoundModel params]
+    [UniformGeneratingFunctionalBoundModel params] :
+    RegularityModel params where
+  wickCubicSmeared_tendsto_ae :=
+    WickCubicConvergenceModel.wickCubicSmeared_tendsto_ae (params := params)
+  euclidean_equation_of_motion :=
+    EuclideanEquationModel.euclidean_equation_of_motion (params := params)
+  generating_functional_bound :=
+    GeneratingFunctionalBoundModel.generating_functional_bound (params := params)
+  nonlocal_phi4_bound :=
+    NonlocalPhi4BoundModel.nonlocal_phi4_bound (params := params)
+  generating_functional_bound_uniform :=
+    UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
+      (params := params)
+
+/-- Construct `RegularityModel` directly from explicit data for its five
+    subinterfaces. -/
+theorem regularityModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hwick_cubic :
+      ∀ (f : TestFun2D),
+        ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+          Filter.Tendsto
+            (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+            Filter.atTop
+            (nhds (wickCubicSmeared params f ω)))
+    (heom :
+      ∀ (f g : TestFun2D),
+        ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
+          GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
+          params.coupling *
+            ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params))
+    (hgf :
+      ∃ c : ℝ, ∀ f : TestFun2D,
+        |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+          Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f))
+    (hnonlocal :
+      ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
+        |generatingFunctional params Λ g| ≤
+          Real.exp (C₁ * Λ.area + C₂))
+    (huniform :
+      ∀ (f : TestFun2D),
+        ∃ c : ℝ, ∀ Λ : Rectangle,
+          |generatingFunctional params Λ f| ≤
+            Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)) :
+    Nonempty (RegularityModel params) := by
+  exact ⟨{
+    wickCubicSmeared_tendsto_ae := hwick_cubic
+    euclidean_equation_of_motion := heom
+    generating_functional_bound := hgf
+    nonlocal_phi4_bound := hnonlocal
+    generating_functional_bound_uniform := huniform
+  }⟩
+
 /-- **Euclidean equation of motion** (Glimm-Jaffe 12.1.1):
     For the infinite volume φ⁴₂ theory,
       ⟨φ(f)φ(g)⟩ = C(f,g) - λ ⟨(:φ³: · f) φ(g)⟩
