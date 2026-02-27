@@ -1,4 +1,4 @@
-# Codex -> Claude: Proof Construction Workpack
+# Codex -> Claude: Next Proof Workpack
 
 Date: 2026-02-27
 Repo: `/Users/xiyin/Phi4`
@@ -17,67 +17,69 @@ Formalize Glimm-Jaffe `phi^4_2` in Lean with canonical continuum objects:
 - Lattice interfaces are optional proof-transport bridges only.
 - No axioms/placeholders/weakened theorem statements.
 - A simplified definition is a wrong definition.
-- Prefer reusable infrastructure lemmas over one-off wrappers.
+- Prefer reusable infrastructure lemmas over brittle wrappers.
+
+## Already Merged (for context)
+
+The previous blocker tasks are now merged on `main`:
+
+- `CorrelationFourPointModel` now has `schwinger_four_monotone`.
+- Instance exists:
+  `schwingerNMonotoneModel_four_of_correlationFourPoint`.
+- Added:
+  `infinite_volume_schwinger_exists_four_of_models`,
+  `infinite_volume_schwinger_exists_four_of_lattice_models`.
+- Lattice iSup two-point convergence theorems now use shifted `(n+1)` sequences
+  and no longer require `LatticeGriffithsFirstModel`.
 
 ## Current Blocking Direction
 
-We now have generic monotonicity infrastructure in place:
-
-- `SchwingerNMonotoneModel` in `Phi4/CorrelationInequalities.lean`
-- `LatticeSchwingerNMonotoneModel` in `Phi4/CorrelationInequalities.lean`
-- generic `k`-point convergence/existence paths in `Phi4/InfiniteVolumeLimit.lean`:
-  - `schwingerN_tendsto_iSup_of_models`
-  - `schwingerN_limit_exists_if_exhaustion_of_models`
-  - `infinite_volume_schwinger_exists_k_of_models`
-  - `infinite_volume_schwinger_exists_k_of_lattice_models`
-
-The blocker is no longer infrastructure shape; it is constructing concrete
-`k > 2` monotonicity instances/proofs and using them to unlock higher-arity
-infinite-volume existence.
+Infrastructure is now broad enough. The blocker is proving/constructing concrete
+assumption instances, especially 4-point monotonicity data, and then consuming
+that to reduce frontier assumptions.
 
 ## Requested Work (Proof Tasks)
 
-### Task 1: Constructive `k=4` monotonicity bridge instance
+### Task 1: Constructive source for `schwinger_four_monotone`
+
+Target file:
+- `Phi4/CorrelationInequalities.lean` (or scratch first)
+
+Target outcome:
+- Provide a mathematically sound derivation path for the new field
+  `schwinger_four_monotone`.
+- Preferred endpoint is one of:
+  1. a theorem that supplies the field from explicit lattice approximation-order
+     data (then usable via `correlationFourPointModel_nonempty_of_data`), or
+  2. a theorem from continuum assumptions that are strictly weaker/more explicit
+     than introducing the field directly.
+
+Constraint:
+- Do not claim derivation from GKS-II + Lebowitz sandwich alone.
+
+### Task 2: Concrete instance package for 4-point channel
 
 Target file:
 - `Phi4/CorrelationInequalities.lean`
 
 Target outcome:
-- Provide a concrete theorem/instance path to obtain
-  `SchwingerNMonotoneModel params 4` from auditable assumptions that match the
-  current architecture (continuum target, lattice bridge optional).
+- Build a reusable constructor theorem (or a minimal class split if needed)
+  that makes constructing `CorrelationFourPointModel` instances practical in
+  downstream modules, with the new monotonicity requirement explicit and clear.
+- If class split is proposed, keep compatibility instance and avoid API breakage.
 
-Preferred shape:
-- Either build a concrete `Nonempty (LatticeSchwingerNMonotoneModel params 4)`
-  from explicit approximation-order data, then infer
-  `SchwingerNMonotoneModel params 4`, or
-- build `SchwingerNMonotoneModel params 4` directly from continuum assumptions
-  if available.
-
-### Task 2: Use `k=4` monotonicity in IV existence endpoint
+### Task 3: Push one frontier toward closure
 
 Target file:
-- `Phi4/InfiniteVolumeLimit.lean`
+- `Phi4/InfiniteVolumeLimit.lean` (preferred) or `Phi4/Regularity.lean`
 
 Target outcome:
-- Add a concrete `k=4` infinite-volume existence theorem in interface-sequence form,
-  using existing generic infrastructure:
-  - expected style:
-    `∃ S, Tendsto (fun n => if h : 0 < n then schwingerN ... 4 ... else 0) atTop (nhds S)`
-
-The theorem should route through generic lemmas, not duplicate old two-point proofs.
-
-### Task 3: Reduce lattice assumptions where unnecessary
-
-Target file:
-- `Phi4/InfiniteVolumeLimit.lean`
-
-Target outcome:
-- Audit lattice-specific two-point convergence signatures and drop any redundant
-  assumptions that are no longer needed due to the generic monotonicity framework.
-- Specifically check whether `LatticeGriffithsFirstModel` is still required in
-  lattice `if`-exhaustion convergence paths, or whether monotonicity+uniform-bound
-  routes suffice.
+- Use the existing generic convergence/existence infrastructure to reduce one
+  honest frontier dependency surface (not via workaround).
+- Preferred candidates:
+  1. strengthen construction path around `gap_infiniteVolumeSchwingerModel_nonempty`,
+  2. or reduce assumptions in a currently frontier-adjacent theorem by proving a
+     reusable bridge lemma.
 
 ## Acceptance Criteria
 
@@ -86,7 +88,7 @@ Target outcome:
 2. Trust checks pass:
    - `scripts/check_phi4_trust.sh`
 3. No new theorem-level `sorry`, no new `axiom`.
-4. Documentation/comments make continuum-vs-lattice role explicit where edited.
+4. Any new assumptions are explicit, named, and auditable.
 
 ## Reporting Back
 
