@@ -538,7 +538,7 @@ theorem diagonal_moment_limit_bound_of_exhaustion
     generating-functional bound. -/
 theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
     (f : TestFun2D) (n : ℕ) :
@@ -569,7 +569,7 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     generating-functional control, lifted along exhaustion limits. -/
 theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
@@ -610,7 +610,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
     uniform finite-volume generating-functional control. -/
 theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :

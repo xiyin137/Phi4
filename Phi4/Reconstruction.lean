@@ -264,7 +264,7 @@ def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
     `infiniteVolumeSchwinger`. -/
 theorem phi4_productTensor_zero_of_compat
     (params : Phi4Params)
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [InteractionWeightModel params]
     [OSAxiomCoreModel params]
     (hcompat :
@@ -286,7 +286,7 @@ theorem phi4_productTensor_zero_of_compat
 theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -320,7 +320,7 @@ theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
 theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -355,7 +355,7 @@ theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
 theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
@@ -391,7 +391,7 @@ theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
 theorem phi4_productTensor_linear_growth_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
@@ -578,7 +578,7 @@ theorem phi4_zero_linear_growth_of_normalized_order0
 theorem phi4_normalized_order0_of_linear_and_compat
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
@@ -612,7 +612,7 @@ theorem phi4_normalized_order0_of_linear_and_compat
 theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
     (params : Phi4Params)
     [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     [OSAxiomCoreModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
@@ -1723,7 +1723,7 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1782,7 +1782,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1831,7 +1831,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
 theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
-    [InfiniteVolumeLimitModel params] →
+    [InfiniteVolumeSchwingerModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
