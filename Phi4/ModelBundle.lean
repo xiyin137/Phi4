@@ -100,16 +100,8 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   h.correlationLebowitz
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    CorrelationFourPointInequalityModel params := by
-  infer_instance
-
-instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     SchwingerNMonotoneModel params 4 :=
   h.schwingerFourMonotone
-
-instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    CorrelationFourPointModel params := by
-  infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationFKGModel params :=
