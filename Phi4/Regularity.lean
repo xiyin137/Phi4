@@ -668,7 +668,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_interface
     generating-functional control, via polarization and exhaustion limits. -/
 theorem infiniteVolume_twoPoint_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeLimitModel params]
+    [InfiniteVolumeSchwingerModel params]
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (f g : TestFun2D) :
