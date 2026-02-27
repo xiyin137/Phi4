@@ -4,7 +4,6 @@ Released under Apache 2.0 license.
 -/
 import Phi4.OSAxioms
 import OSReconstruction.Wightman.Reconstruction
-import OSReconstruction.Wightman.Reconstruction.WickRotation.OSToWightman
 
 /-!
 # Wightman Reconstruction for φ⁴₂
@@ -171,17 +170,6 @@ class WightmanReconstructionModel (params : Phi4Params)
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W
-
-/-- Canonical OS→Wightman reconstruction rule from the upstream
-    `os_to_wightman` theorem. -/
-theorem wightman_reconstruction_of_os_to_wightman (params : Phi4Params)
-    [OSAxiomCoreModel params] :
-    ∀ (OS : OsterwalderSchraderAxioms 1),
-      OSLinearGrowthCondition 1 OS →
-        ∃ (Wfn : WightmanFunctions 1),
-          IsWickRotationPair OS.S Wfn.W := by
-  intro OS hlg
-  exact os_to_wightman_full OS hlg
 
 /-- Existence of a weak-coupling threshold guaranteeing connected 2-point decay. -/
 abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)

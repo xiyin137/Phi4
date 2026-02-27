@@ -2,6 +2,11 @@
 
 Date: 2026-02-26
 
+Update (2026-02-27):
+- Automated trust audit now reports theorem-level `sorry` count (core): `0`.
+- Trusted interface/bundle endpoints remain `sorryAx`-free.
+- The OS→Wightman upstream adapter is isolated in `Phi4/ReconstructionUpstream.lean`.
+
 ## Scope
 
 - Audited all Lean files under `Phi4/`.
@@ -52,7 +57,7 @@ local `sorry`.
 1. FKG monotonicity statements were tightened in this audit pass: connected two-point nonnegativity now explicitly requires nonnegative test functions (`f, g ≥ 0`), removing an over-strong earlier statement.
 2. `ConnectedTwoPointDecayAtParams` was strengthened for soundness: decay now has a uniform positive mass gap with pair-dependent amplitudes (`C_{f,g}`), avoiding an unrealistically strong single global amplitude constant across all test-function pairs.
 3. The monotonicity order used in FKG interfaces is still abstract and not yet identified with a fully internalized lattice/field order construction; this remains a closure task.
-4. Upstream OS reconstruction bridge theorem `os_to_wightman` (OSReconstruction) currently depends on `sorryAx`; by project policy it cannot be used to discharge `phi4_wightman_reconstruction_step` yet.
+4. Upstream OS reconstruction bridge theorem `os_to_wightman` (OSReconstruction) currently depends on `sorryAx`; by project policy it cannot be used to discharge `phi4_wightman_reconstruction_step` yet. This dependency is now isolated in `Phi4/ReconstructionUpstream.lean` rather than core `Phi4/Reconstruction.lean`.
 5. New constructive infrastructure was added in `InfiniteVolumeLimit.lean` for exhausting-sequence convergence in the two-point channel (including lattice and `k = 2` `schwingerN` variants, plus interface-style `if h : 0 < n then ... else 0` endpoints), removing a previously external boundedness hypothesis in that local convergence path.
 6. `Reconstruction.lean` now exposes a trusted interface-level endpoint
    `phi4_wightman_exists_of_interfaces`; bundled reconstruction

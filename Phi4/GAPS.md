@@ -1,6 +1,6 @@
 # Phi4 Proof-Gap Ledger
 
-Date: 2026-02-26
+Date: 2026-02-27
 
 This file makes the proof boundary explicit: what is fully formalized in `Phi4`,
 what is still represented as assumption interfaces, and where theorem-level
@@ -8,11 +8,14 @@ what is still represented as assumption interfaces, and where theorem-level
 
 ## 1. Trust Snapshot
 
-- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) currently have `9` theorem-level `sorry`.
+- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) currently have `0` theorem-level `sorry`.
 - Scratch modules (`Phi4/Scratch/**/*.lean`) currently have `16` theorem-level `sorry`.
 - `Phi4/**/*.lean` currently has `0` `axiom` declarations.
 - `Phi4/**/*.lean` currently has `0` `def/abbrev := by sorry`.
 - Main theorems are still conditional on `...Model` assumptions.
+- The upstream OS→Wightman adapter now lives in `Phi4/ReconstructionUpstream.lean`;
+  core `Phi4/Reconstruction.lean` remains backend-abstract via
+  `WightmanReconstructionModel`.
 
 So the project is logically honest about open frontiers (theorem-level `sorry`)
 and has no explicit axiom smuggling, but it is not yet assumption-free for the
@@ -210,7 +213,10 @@ remaining debt to close for a full formal Glimm-Jaffe construction.
 5. Internalize regularity (OS1) from proved nonlocal bounds + Schwinger-Dyson chain.
 6. Reduce OS interfaces (`OSAxiomCoreModel`, `OSDistributionE2Model`, `OSE4ClusterModel`) to proved results.
 7. Keep reconstruction step conditional only on fully proved upstream OS assumptions (or finish OSReconstruction dependencies that currently carry `sorry` upstream).
-   - Current check: `os_to_wightman` / `os_to_wightman_full` in OSReconstruction depend on `sorryAx`, so they are not admissible closure tools under project policy.
+   - Current check: trusted Phi4 interface/bundle endpoints are `sorryAx`-free under
+     `scripts/check_phi4_trust.sh`.
+   - Upstream `os_to_wightman` / `os_to_wightman_full` remain outside the trusted
+     closure path and are isolated in `Phi4/ReconstructionUpstream.lean`.
 
 ## 7. Audit Commands
 

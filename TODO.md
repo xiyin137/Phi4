@@ -1,14 +1,20 @@
 # TODO: 2D φ⁴ Project Development Plan
 
-## Status Snapshot (2026-02-26)
+## Status Snapshot (2026-02-27)
 
-- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) have `9` theorem-level `sorry` (intentional honest frontiers).
+- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) have `0` theorem-level `sorry` (intentional honest frontiers remain as theorem-level gaps via `gap_*` endpoints).
 - Scratch modules (`Phi4/Scratch/**/*.lean`) have `16` theorem-level `sorry`.
 - `Phi4/**/*.lean` has `0` `axiom` declarations.
 - `Phi4/**/*.lean` has `0` `def/abbrev := by sorry`.
 - `lake build Phi4` succeeds.
 - `scripts/check_phi4_trust.sh` now also enforces that selected trusted
   interface/bundle endpoints are free of `sorryAx` dependencies (`#print axioms` check).
+- Upstream OS→Wightman bridge is isolated in `Phi4/ReconstructionUpstream.lean`;
+  core reconstruction remains backend-abstract (`WightmanReconstructionModel`).
+- New WP1 infrastructure module `Phi4/FeynmanGraphs/LocalizedBounds.lean` adds
+  reusable factorial occupancy bounds for localized graph estimates.
+- `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
+  issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
 - `Phi4/Combinatorics/PerfectMatchings.lean` now centralizes pairing/perfect-matching
