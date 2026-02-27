@@ -33,13 +33,16 @@ theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
 
 /-- Honest gap placeholder for weak-coupling clustering/OS package closure. -/
 theorem gap_phi4_satisfies_OS (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    [OSEuclideanCovarianceModel params]
+    [OSE3SymmetryModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params := by
-  exact phi4_satisfies_OS params (core := inferInstance) hsmall
+  exact phi4_satisfies_OS_of_interfaces params hsmall
 
 /-- Honest gap placeholder for Wightman existence at fixed parameters. -/
 theorem gap_phi4_wightman_exists (params : Phi4Params)

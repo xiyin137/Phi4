@@ -249,7 +249,7 @@ theorem phi4_productTensor_zero_of_compat
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InteractionWeightModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -270,7 +270,7 @@ theorem phi4_productTensor_zero_of_compat_of_moment
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     [InfiniteVolumeMomentModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -293,7 +293,7 @@ theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (hcompat :
@@ -327,7 +327,7 @@ theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (hcompat :
@@ -362,7 +362,7 @@ theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -398,7 +398,7 @@ theorem phi4_productTensor_linear_growth_of_uniform_generating_bound
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
@@ -431,7 +431,8 @@ theorem phi4_productTensor_linear_growth_of_uniform_generating_bound
        both test functions and the chosen seminorm values. -/
 theorem phi4_positive_order_linear_growth_of_productTensor_approx
     (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
     (sobolev_index : ℕ) (alpha beta gamma : ℝ)
     (hprod :
       ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
@@ -506,7 +507,8 @@ theorem phi4_positive_order_linear_growth_of_productTensor_approx
 theorem phi4_linear_growth_of_productTensor_approx_and_zero
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (sobolev_index : ℕ)
@@ -555,7 +557,7 @@ theorem phi4_linear_growth_of_productTensor_approx_and_zero
     `S₀(g) = g(0)` and `alpha ≥ 1`. -/
 theorem phi4_zero_linear_growth_of_normalized_order0
     (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (alpha beta gamma : ℝ)
     (halpha_one : 1 ≤ alpha)
     (hnormalized :
@@ -585,7 +587,8 @@ theorem phi4_normalized_order0_of_linear_and_compat
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -618,7 +621,8 @@ theorem phi4_normalized_order0_of_linear_and_compat_of_moment
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     [InfiniteVolumeMomentModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -652,7 +656,8 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
@@ -1788,7 +1793,10 @@ theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     Wightman existence follows. -/
 theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
     (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
+    [OSTemperedModel params] →
+    [OSEuclideanCovarianceModel params] →
+    [OSE3SymmetryModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1805,7 +1813,8 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hos hrec he2 he4 hsmall sobolev_index alpha beta gamma halpha hbeta hgrowth
+  intro hsch htemp heuc he3 hrec he2 he4 hsmall
+    sobolev_index alpha beta gamma halpha hbeta hgrowth
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   exact phi4_wightman_exists_of_explicit_linear_growth_bound params
     OS hS sobolev_index alpha beta gamma halpha hbeta hgrowth
@@ -1818,7 +1827,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeSchwingerModel params] →
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
+    [OSTemperedModel params] →
+    [OSEuclideanCovarianceModel params] →
+    [OSE3SymmetryModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1855,8 +1867,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hos hrec he2 he4 hsmall sobolev_index alpha beta gamma
-    halpha hbeta huniform hcompat hreduce happrox hzero
+  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+    sobolev_index alpha beta gamma halpha hbeta huniform hcompat hreduce happrox hzero
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hprod := phi4_productTensor_linear_growth_of_uniform_generating_bound
     params sobolev_index alpha beta gamma
@@ -1877,7 +1889,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeSchwingerModel params] →
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
+    [OSTemperedModel params] →
+    [OSEuclideanCovarianceModel params] →
+    [OSE3SymmetryModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1907,8 +1922,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hos hrec he2 he4 hsmall alpha beta gamma
-    hbeta huniform hcompat hreduce happrox
+  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+    alpha beta gamma hbeta huniform hcompat hreduce happrox
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
     params OS hS alpha beta gamma hbeta huniform
@@ -1926,7 +1941,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeSchwingerModel params] →
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
+    [OSTemperedModel params] →
+    [OSEuclideanCovarianceModel params] →
+    [OSE3SymmetryModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
     [OSE4ClusterModel params] →
@@ -1955,8 +1973,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hos hrec he2 he4 hsmall alpha beta gamma
-    hbeta huniform hcompat hreduce hdense
+  intro hweight hlimit hsch htemp heuc he3 hrec he2 he4 hsmall
+    alpha beta gamma hbeta huniform hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
     params OS hS alpha beta gamma hbeta huniform
