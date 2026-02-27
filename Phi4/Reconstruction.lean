@@ -712,9 +712,9 @@ theorem phi4_normalized_order0_of_linear_and_compat
             exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
     _ = g 0 := by simp [hone]
 
-/-- Order-zero normalization from:
-    1) core homogeneity of `phi4SchwingerFunctions params 0`,
-    2) compatibility with `infiniteVolumeSchwinger` on product tensors. -/
+/-- Compatibility alias of
+    `phi4_normalized_order0_of_linear_and_compat`. With core linearity in
+    `OSAxiomCoreModel`, homogeneity is automatic. -/
 theorem phi4_normalized_order0_of_smul_and_compat
     (params : Phi4Params)
     [InteractionWeightModel params]
@@ -725,28 +725,7 @@ theorem phi4_normalized_order0_of_smul_and_compat
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
           (infiniteVolumeSchwinger params n f : ℂ)) :
     ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 := by
-  have hsmul0 :
-      ∀ (z : ℂ) (g : SchwartzNPoint 1 0),
-        phi4SchwingerFunctions params 0 (z • g) =
-          z * phi4SchwingerFunctions params 0 g := by
-    intro z g
-    exact ((phi4_os0_linear params 0).mk' _).map_smul z g
-  intro g
-  let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
-  have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
-    phi4_productTensor_zero_of_compat params hcompat f0
-  have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
-    ext x
-    have hx : x = 0 := Subsingleton.elim x 0
-    subst hx
-    simp [schwartzProductTensorFromTestFamily]
-  calc
-    phi4SchwingerFunctions params 0 g
-        = phi4SchwingerFunctions params 0 ((g 0) • schwartzProductTensorFromTestFamily f0) := by
-            exact congrArg (phi4SchwingerFunctions params 0) hdecomp
-    _ = (g 0) * phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) := by
-            exact hsmul0 (g 0) (schwartzProductTensorFromTestFamily f0)
-    _ = g 0 := by simp [hone]
+  exact phi4_normalized_order0_of_linear_and_compat params hcompat
 
 /-- Construct φ⁴ linear-growth witness data from:
     1) interface-level product-tensor positive-order bounds (via `RegularityModel`),
@@ -943,12 +922,10 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0
     params OS hS alpha beta gamma hbeta
     hcompat hreduce hdense hnormalized
 
-/-- Construct φ⁴ linear-growth witness data from:
-    1) interface-level product-tensor positive-order bounds (via `RegularityModel`),
-    2) dense image of product tensors in each positive-order Schwartz `n`-point space,
-    3) core homogeneity at order zero and product-tensor compatibility
-       (yielding normalization),
-       using Sobolev index `0`. -/
+/-- Compatibility alias of
+    `phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0`.
+    With core linearity in `OSAxiomCoreModel`, order-zero homogeneity is
+    automatic. -/
 theorem phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
     (params : Phi4Params)
     [InteractionWeightModel params]
@@ -978,11 +955,8 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
     ∃ OS' : OsterwalderSchraderAxioms 1,
       OS'.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS') := by
-  have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
-    phi4_normalized_order0_of_smul_and_compat params hcompat
-  exact phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
-    params OS hS alpha beta gamma hbeta
-    hcompat hreduce hdense hnormalized
+  exact phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0
+    params OS hS alpha beta gamma hbeta hcompat hreduce hdense
 
 /-! ## Linear growth condition (E0') -/
 
@@ -2174,13 +2148,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_linear_order0
     (hlinear := hlinear)
     (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
 
-/-- Direct weak-coupling endpoint from:
-    1) interface-level OS package data under weak coupling,
-    2) interface-level product-tensor positive-order growth input (via `RegularityModel`),
-    3) dense image of product tensors in each positive-order Schwartz `n`-point space,
-    4) core homogeneity at order zero and product-tensor compatibility
-       (yielding normalization),
-       using Sobolev index `0`. -/
+/-- Compatibility alias of
+    `phi4_wightman_exists_of_os_and_productTensor_dense_and_linear_order0`.
+    With core linearity in `OSAxiomCoreModel`, order-zero homogeneity is
+    automatic. -/
 theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_smul_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
@@ -2212,15 +2183,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_smul_order0
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
-    hbeta hcompat hreduce hdense
-  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
-  have hlinear := phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
-    params OS hS alpha beta gamma hbeta
-    hcompat hreduce hdense
-  exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := hlinear)
-    (hreconstruct := wightman_reconstruction_of_os_to_wightman params)
+  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_linear_order0 params
 
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the canonical OS→Wightman theorem. -/
