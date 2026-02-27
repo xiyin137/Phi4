@@ -37,10 +37,8 @@ class Phi4ModelBundle (params : Phi4Params) where
     infiniteVolumeSchwinger infiniteVolumeMeasure
   uniformWeakCoupling : @UniformWeakCouplingDecayModel params
     infiniteVolumeSchwinger
-  wickPowers : @WickPowersModel params
-    infiniteVolumeSchwinger infiniteVolumeMeasure
-  regularity : @RegularityModel params
-    infiniteVolumeSchwinger infiniteVolumeMeasure
+  wickPowers : @WickPowersModel params infiniteVolumeMeasure
+  regularity : @RegularityModel params infiniteVolumeMeasure
   measureOS3 : @MeasureOS3Model params
     infiniteVolumeMeasure
   osAxiom : OSAxiomCoreModel params
@@ -139,13 +137,11 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WickPowersModel params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
   exact h.wickPowers
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     RegularityModel params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
   exact h.regularity
 

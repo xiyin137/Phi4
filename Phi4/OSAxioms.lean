@@ -138,7 +138,6 @@ theorem phi4_os0_linear (params : Phi4Params)
     when `RegularityModel` is available, the generating-functional bound is
     obtained directly from interface data (without frontier-gap wrappers). -/
 theorem phi4_os1_of_interface (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     [RegularityModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,
@@ -152,7 +151,6 @@ theorem phi4_os1_of_interface (params : Phi4Params)
     This is Theorem 12.5.1, the culmination of the integration by parts analysis.
     It is the most technically demanding of the OS axioms to verify. -/
 theorem phi4_os1 (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     [RegularityModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,

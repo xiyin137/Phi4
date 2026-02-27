@@ -100,10 +100,10 @@
   `connectedTwoPointBilinear`, `connectedTwoPointBilinear_symm`,
   `connectedTwoPointBilinear_self_nonneg`; and
   `connectedTwoPoint_quadratic_nonneg` now uses this bilinear route.
-- `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure
+- `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure/moment
   submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
-  Schwinger+measure assumptions, and `phi4_os3` follows this reduced interface.
+  measure-only assumptions, and `phi4_os3` follows this reduced interface.
 - `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now
   decoupled from `InfiniteVolumeLimitModel`; `phi4_satisfies_OS` now depends on
   the OS-package interfaces directly rather than a separate IV-limit hypothesis.
@@ -131,9 +131,9 @@
   `InfiniteVolumeMeasureModel`), removing an unnecessary Schwinger-package
   dependency from OS3 reflection-positivity assumptions.
 - `WickPowersModel` and `RegularityModel` now depend only on
-  `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel` (rather than
-  `InfiniteVolumeLimitModel`), reducing model-surface coupling and avoiding
-  assumption smuggling through the larger package.
+  `InfiniteVolumeMeasureModel` (rather than `InfiniteVolumeLimitModel`),
+  reducing model-surface coupling and avoiding assumption smuggling through the
+  larger package.
 - `ReconstructionWeakCouplingModel` is now derivable from
   `UniformWeakCouplingDecayModel` via
   `reconstructionWeakCouplingModel_of_uniform`, reducing duplicated

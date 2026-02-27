@@ -29,7 +29,7 @@ Each line item is actionable, testable, and tied to concrete files/modules.
 | CTC-A-01 | Core reconstruction mixed with upstream adapter | Split adapter into `Phi4/ReconstructionUpstream.lean` | done |
 | CTC-A-02 | Need reusable infrastructure, not one-off theorem wrappers | Add reusable localized combinatorial lemmas for graph bounds | done |
 | CTC-A-03 | Keep model-class surface from expanding | No new model classes unless mathematically distinct obligation | done |
-| CTC-A-04 | Preserve compatibility split/recombine pattern | Continue `_of_submodels`/`nonempty_of_data` architecture when grounding; reduced Regularity/Wick interfaces from `InfiniteVolumeLimitModel` to Schwinger+measure subinterfaces, decoupled `ReconstructionLinearGrowthModel` and fixed-parameter Wightman interface endpoints from unnecessary Schwinger package assumptions, trimmed `phi4_satisfies_OS` to OS-core assumptions, split measure-vs-moment data (`InfiniteVolumeMeasureModel` vs `InfiniteVolumeMomentModel`), and made `MeasureOS3Model` purely measure-level | in_progress |
+| CTC-A-04 | Preserve compatibility split/recombine pattern | Continue `_of_submodels`/`nonempty_of_data` architecture when grounding; reduced Regularity/Wick interfaces from `InfiniteVolumeLimitModel` to measure-only subinterfaces, decoupled `ReconstructionLinearGrowthModel` and fixed-parameter Wightman interface endpoints from unnecessary Schwinger package assumptions, trimmed `phi4_satisfies_OS` to OS-core assumptions, split measure-vs-moment data (`InfiniteVolumeMeasureModel` vs `InfiniteVolumeMomentModel`), and made `MeasureOS3Model` purely measure-level | in_progress |
 
 ## Work Package Issues (Sections 5 and 9)
 
