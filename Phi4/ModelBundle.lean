@@ -42,7 +42,7 @@ class Phi4ModelBundle (params : Phi4Params) where
   regularity : @RegularityModel params
     infiniteVolumeSchwinger infiniteVolumeMeasure
   measureOS3 : @MeasureOS3Model params
-    infiniteVolumeSchwinger infiniteVolumeMeasure
+    infiniteVolumeMeasure
   osAxiom : OSAxiomCoreModel params
   osE4 : @OSE4ClusterModel params osAxiom
   osE2 : @OSDistributionE2Model params osAxiom
@@ -151,7 +151,6 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     MeasureOS3Model params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
   exact h.measureOS3
 

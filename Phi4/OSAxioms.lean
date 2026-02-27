@@ -79,7 +79,6 @@ class OSE4ClusterModel (params : Phi4Params)
     distributional OS interface does not silently bundle an independent
     concrete positivity API. -/
 class MeasureOS3Model (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params] where
   os3 :
     ∀ (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ),
@@ -208,7 +207,6 @@ theorem phi4_os2_rotation (params : Phi4Params)
     (Theorem 10.4 / ReflectionPositivity.lean) and passes to the
     infinite volume limit by the convergence of S_n^Λ → S_n. -/
 theorem phi4_os3 (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
     [MeasureOS3Model params]
     (n : ℕ) (f : Fin n → TestFun2D) (c : Fin n → ℂ)

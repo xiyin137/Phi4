@@ -127,6 +127,9 @@
   Schwinger moment representation split into `InfiniteVolumeMomentModel`; the
   `InfiniteVolumeLimitModel` reconstruction instance now requires this explicit
   moment bridge instead of bundling it into the measure interface.
+- `MeasureOS3Model` is now explicitly measure-level (depends only on
+  `InfiniteVolumeMeasureModel`), removing an unnecessary Schwinger-package
+  dependency from OS3 reflection-positivity assumptions.
 - `WickPowersModel` and `RegularityModel` now depend only on
   `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel` (rather than
   `InfiniteVolumeLimitModel`), reducing model-surface coupling and avoiding
