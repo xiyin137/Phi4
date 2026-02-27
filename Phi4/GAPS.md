@@ -222,11 +222,17 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `schwingerTwo_uniformly_bounded_on_exhaustion`
    - `schwingerTwo_tendsto_iSup_of_models`
    - `schwingerTwo_limit_exists_of_models`
+   - generic bounded-monotone `k`-point counterparts:
+     `schwingerN_tendsto_iSup_of_monotone_bounded`,
+     `schwingerN_limit_exists_of_monotone_bounded`
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
    - lattice iSup-form shifted-sequence variants no longer require
      `LatticeGriffithsFirstModel`:
      `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`,
      `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`
+   - specialized existence wrappers now depend on minimal monotonicity
+     interfaces (`SchwingerNMonotoneModel params 2/4`) instead of stronger
+     correlation bundles where unused
    - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
    - infinite-volume permutation symmetry transfer:
      `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)

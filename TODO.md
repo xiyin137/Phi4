@@ -141,6 +141,8 @@ the local Glimm-Jaffe objective.
 - `Phi4/InfiniteVolumeLimit.lean` now includes generic `k`-point monotone
   convergence/existence infrastructure:
   `schwingerN_monotone_in_volume_of_model`,
+  `schwingerN_tendsto_iSup_of_monotone_bounded`,
+  `schwingerN_limit_exists_of_monotone_bounded`,
   `schwingerN_tendsto_iSup_of_models`,
   `schwingerN_limit_exists_of_models`,
   `schwingerN_limit_exists_if_exhaustion_of_models`,
@@ -149,7 +151,10 @@ the local Glimm-Jaffe objective.
   `infinite_volume_schwinger_exists_all_k_of_lattice_family_models`,
   `infinite_volume_schwinger_exists_four_of_models`,
   `infinite_volume_schwinger_exists_four_of_lattice_models`,
-  and routes two-point endpoints through these generic theorems.
+  and routes two-point endpoints through these generic theorems; the
+  specialized `k = 2` / `k = 4` existence wrappers now use the minimal
+  monotonicity assumptions (`SchwingerNMonotoneModel params 2/4`) rather than
+  stronger correlation bundles.
 - In `Phi4/InfiniteVolumeLimit.lean`, lattice iSup-form two-point convergence
   theorems now use shifted exhaustion sequences `(n + 1)` and no longer require
   `LatticeGriffithsFirstModel`

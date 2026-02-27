@@ -119,7 +119,7 @@ theorem schwingerN_monotone_in_volume_of_model (params : Phi4Params)
 
 /-- Monotonicity of the `n = 2` Schwinger function in `schwingerN` form. -/
 theorem schwingerN_monotone_in_volume_two (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
     (f : Fin 2 → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
     (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
@@ -144,7 +144,7 @@ theorem schwingerN_monotone_in_volume_two_from_lattice (params : Phi4Params)
 /-- Monotonicity for `schwingerN` in the currently established case `k = 2`,
     reduced to `schwinger_monotone_in_volume`. -/
 theorem schwingerN_monotone_in_volume (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
     (k : ℕ) (f : Fin k → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
     (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0)
@@ -221,26 +221,25 @@ theorem schwingerN_uniformly_bounded_on_exhaustion
     exact support_zero_outside_of_subset (f i) hsub0n (hfsupp0 i) x hx
   exact hC Λn (exhaustingRectangles_isTimeSymmetric _ (Nat.succ_pos _)) hfsuppn
 
-/-- Monotone-convergence form for finite-volume `k`-point moments along the
-    exhausting rectangles, under:
-    1. `SchwingerNMonotoneModel params k` for volume monotonicity, and
-    2. `MultipleReflectionModel params` for uniform absolute bounds. -/
-theorem schwingerN_tendsto_iSup_of_models
+/-- Convergence of finite-volume `k`-point Schwinger moments from:
+    1. volume monotonicity (`SchwingerNMonotoneModel params k`), and
+    2. an explicit uniform absolute bound along the shifted exhaustion. -/
+theorem schwingerN_tendsto_iSup_of_monotone_bounded
     (params : Phi4Params)
     (k : ℕ)
     [SchwingerNMonotoneModel params k]
-    [MultipleReflectionModel params]
     (n0 : ℕ)
     (f : Fin k → TestFun2D)
     (hf : ∀ i, ∀ x, 0 ≤ f i x)
     (hfsupp0 : ∀ i,
-      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f| ≤ C) :
     Filter.Tendsto
       (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
       Filter.atTop
       (nhds (⨆ n : ℕ,
         schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)) := by
-  have hbound := schwingerN_uniformly_bounded_on_exhaustion params n0 k f hfsupp0
   have hmono : Monotone (fun n : ℕ =>
       schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f) := by
     intro n m hnm
@@ -265,6 +264,49 @@ theorem schwingerN_tendsto_iSup_of_models
   exact tendsto_iSup_of_monotone_abs_bounded
     (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
     hmono hbound
+
+/-- Existence form of `schwingerN_tendsto_iSup_of_monotone_bounded`. -/
+theorem schwingerN_limit_exists_of_monotone_bounded
+    (params : Phi4Params)
+    (k : ℕ)
+    [SchwingerNMonotoneModel params k]
+    (n0 : ℕ)
+    (f : Fin k → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
+    (hbound : ∃ C : ℝ, ∀ n : ℕ,
+      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f| ≤ C) :
+    ∃ S : ℝ,
+      Filter.Tendsto
+        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
+        Filter.atTop (nhds S) := by
+  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f, ?_⟩
+  exact schwingerN_tendsto_iSup_of_monotone_bounded
+    params k n0 f hf hfsupp0 hbound
+
+/-- Monotone-convergence form for finite-volume `k`-point moments along the
+    exhausting rectangles, under:
+    1. `SchwingerNMonotoneModel params k` for volume monotonicity, and
+    2. `MultipleReflectionModel params` for uniform absolute bounds. -/
+theorem schwingerN_tendsto_iSup_of_models
+    (params : Phi4Params)
+    (k : ℕ)
+    [SchwingerNMonotoneModel params k]
+    [MultipleReflectionModel params]
+    (n0 : ℕ)
+    (f : Fin k → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfsupp0 : ∀ i,
+      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
+    Filter.Tendsto
+      (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
+      Filter.atTop
+      (nhds (⨆ n : ℕ,
+        schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)) := by
+  have hbound := schwingerN_uniformly_bounded_on_exhaustion params n0 k f hfsupp0
+  exact schwingerN_tendsto_iSup_of_monotone_bounded
+    params k n0 f hf hfsupp0 hbound
 
 /-- Existence form of `schwingerN_tendsto_iSup_of_models`. -/
 theorem schwingerN_limit_exists_of_models
@@ -775,7 +817,7 @@ theorem schwingerTwo_limit_exists_of_monotone_bounded
 /-- `schwingerN` (`k = 2`) form of monotone-bounded convergence. -/
 theorem schwingerN_two_tendsto_iSup_of_monotone_bounded
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     (n0 : ℕ)
     (f : Fin 2 → TestFun2D)
     (hf : ∀ i, ∀ x, 0 ≤ f i x)
@@ -788,15 +830,8 @@ theorem schwingerN_two_tendsto_iSup_of_monotone_bounded
       Filter.atTop
       (nhds (⨆ n : ℕ,
         schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) 2 f)) := by
-  have hboundTwo : ∃ C : ℝ, ∀ n : ℕ,
-      |schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) (f 0) (f 1)| ≤ C := by
-    rcases hbound with ⟨C, hC⟩
-    refine ⟨C, ?_⟩
-    intro n
-    simpa [schwingerN_two_eq_schwingerTwo] using hC n
-  have hTwo := schwingerTwo_tendsto_iSup_of_monotone_bounded
-    params n0 (f 0) (f 1) (hf 0) (hf 1) (hfsupp0 0) (hfsupp0 1) hboundTwo
-  simpa [schwingerN_two_eq_schwingerTwo] using hTwo
+  exact schwingerN_tendsto_iSup_of_monotone_bounded
+    (params := params) (k := 2) n0 f hf hfsupp0 hbound
 
 /-- Lattice-bridge `schwingerN` (`k = 2`) form of monotone-bounded convergence. -/
 theorem schwingerN_two_tendsto_iSup_of_lattice_monotone_bounded
@@ -828,7 +863,7 @@ theorem schwingerN_two_tendsto_iSup_of_lattice_monotone_bounded
     supplied by `MultipleReflectionModel`. -/
 theorem schwingerN_two_tendsto_iSup_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     [MultipleReflectionModel params]
     (n0 : ℕ)
     (f : Fin 2 → TestFun2D)
@@ -867,7 +902,7 @@ theorem schwingerN_two_tendsto_iSup_of_lattice_models
 /-- Existence form of `schwingerN_two_tendsto_iSup_of_monotone_bounded`. -/
 theorem schwingerN_two_limit_exists_of_monotone_bounded
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     (n0 : ℕ)
     (f : Fin 2 → TestFun2D)
     (hf : ∀ i, ∀ x, 0 ≤ f i x)
@@ -885,7 +920,7 @@ theorem schwingerN_two_limit_exists_of_monotone_bounded
 /-- Existence form of `schwingerN_two_tendsto_iSup_of_models`. -/
 theorem schwingerN_two_limit_exists_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     [MultipleReflectionModel params]
     (n0 : ℕ)
     (f : Fin 2 → TestFun2D)
@@ -1272,7 +1307,7 @@ theorem infinite_volume_schwinger_exists_k_of_lattice_models (params : Phi4Param
     interface sequence form `if h : 0 < n then ... else 0`, from explicit
     four-point monotonicity and multiple-reflection bounds. -/
 theorem infinite_volume_schwinger_exists_four_of_models (params : Phi4Params)
-    [CorrelationFourPointModel params]
+    [SchwingerNMonotoneModel params 4]
     [MultipleReflectionModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
@@ -1342,7 +1377,7 @@ theorem infinite_volume_schwinger_exists_four_of_lattice_models
     interface sequence form `if h : 0 < n then ... else 0`, under explicit
     two-point monotonicity and multiple-reflection bounds. -/
 theorem infinite_volume_schwinger_exists_two_of_models (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
     (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
