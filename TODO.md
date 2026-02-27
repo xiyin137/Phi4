@@ -20,6 +20,11 @@
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
   semiboundedness/tail bounds to `exp(-V_Λ) ∈ Lᵖ`.
+- `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
+  lemmas and direct constructors
+  (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds`)
+  so constructive cutoff bounds can instantiate the Chapter 8 interfaces directly.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,

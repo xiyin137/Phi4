@@ -487,6 +487,41 @@ theorem exp_interaction_Lp_of_cutoff_seq_lower_bounds
     (B := B) ?_
   exact interaction_ae_lower_bound_of_cutoff_seq params Λ B hcutoff_ae
 
+/-- Construct `InteractionWeightModel` from per-volume cutoff-sequence
+    almost-everywhere lower bounds. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hcutoff_ae Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_lower_bounds
+    (params := params) (Λ := Λ) (B := B) hB
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume cutoff-sequence lower bounds (sufficient for
+       Boltzmann-weight `Lᵖ` integrability). -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
+      (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
 /-- **Theorem 8.6.2 (Glimm-Jaffe)**: e^{-V_Λ} ∈ Lᵖ(dφ_C) for all p < ∞.
     This is the key estimate for existence of the finite-volume measure in d=2.
 
