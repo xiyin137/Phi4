@@ -231,6 +231,36 @@ theorem graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted
       simpa using hloc v)
     A hA
 
+/-- Canonical-image variant of
+    `graph_vertex_factorial_prod_le_cell_occupancy_real`. -/
+theorem graph_vertex_factorial_prod_le_cell_occupancy_real_image
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (loc : Fin r → β) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
+      ∏ c ∈ (Finset.univ.image loc),
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) := by
+  exact graph_vertex_factorial_prod_le_cell_occupancy_real
+    (G := G) (cells := Finset.univ.image loc) (loc := loc)
+    (hloc := by
+      intro v
+      exact Finset.mem_image.mpr ⟨v, by simp, rfl⟩)
+
+/-- Canonical-image variant of
+    `graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted`. -/
+theorem graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted_image
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (loc : Fin r → β) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+      ∏ c ∈ (Finset.univ.image loc),
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+          A ^ (∑ v : Fin r with loc v = c, G.legs v) := by
+  exact graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted
+    (G := G) (cells := Finset.univ.image loc) (loc := loc)
+    (hloc := by
+      intro v
+      exact Finset.mem_image.mpr ⟨v, by simp, rfl⟩)
+    A hA
+
 /-- Transfer a vertex-weighted graph-integral bound to a per-cell weighted form
     using a localization map `loc : vertices → cells`. -/
 theorem graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound
@@ -263,6 +293,28 @@ theorem graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound
           B ^ G.lines.card := by
     exact mul_le_mul_of_nonneg_right hocc (pow_nonneg hB _)
   exact hbound.trans hmul
+
+/-- Canonical-image variant of
+    `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound`. -/
+theorem graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (mass : ℝ) (loc : Fin r → β)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (∏ c ∈ (Finset.univ.image loc),
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+          A ^ (∑ v : Fin r with loc v = c, G.legs v)) *
+        B ^ G.lines.card := by
+  exact graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound
+    (G := G) (mass := mass) (cells := Finset.univ.image loc) (loc := loc)
+    (hloc := by
+      intro v
+      exact Finset.mem_image.mpr ⟨v, by simp, rfl⟩)
+    (A := A) (B := B) hA hB hbound
 
 end GraphSpecialized
 

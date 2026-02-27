@@ -124,8 +124,13 @@ the local Glimm-Jaffe objective.
   and graph-specialized vertex-to-cell transfer lemmas
   `graph_vertex_factorial_prod_le_cell_occupancy_real`,
   `graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted`,
+  their canonical-image corollaries
+  (`graph_vertex_factorial_prod_le_cell_occupancy_real_image`,
+   `graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted_image`),
   plus the direct graph-integral bridge
-  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound`.
+  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound`
+  and its canonical-image form
+  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
