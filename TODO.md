@@ -87,13 +87,14 @@ the local Glimm-Jaffe objective.
 - `Phi4/CorrelationInequalities.lean` now includes lattice-to-continuum
   bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer,
   and now exposes correlation subinterfaces
-  (`CorrelationTwoPointModel`, `CorrelationFourPointInequalityModel`,
+  (`CorrelationTwoPointModel`, `CorrelationGKSSecondModel`,
+  `CorrelationLebowitzModel`, `CorrelationFourPointInequalityModel`,
   `CorrelationFourPointModel`, `CorrelationFKGModel`).
 - `CorrelationInequalityCoreModel` now extends
-  `CorrelationFourPointInequalityModel` and `CorrelationFKGModel` directly,
-  with only 4-point volume monotonicity remaining as an extra core field;
-  this removes duplicated core inequality fields and keeps core assumptions
-  explicitly atomic.
+  `CorrelationGKSSecondModel`, `CorrelationLebowitzModel`, and
+  `CorrelationFKGModel` directly, with only 4-point volume monotonicity
+  remaining as an extra core field; this removes duplicated core inequality
+  fields and keeps core assumptions explicitly atomic.
 - Constructor scaffolds were added for explicit interface instantiation in
   `FreeField.lean`, `CovarianceOperators.lean`, and `CorrelationInequalities.lean`
   (`*_nonempty_of_data` theorems), so WP2/WP3 proof data can be ported into
@@ -261,10 +262,11 @@ the local Glimm-Jaffe objective.
 - `OSAxioms.lean` now includes trusted OS1 theorem
   `phi4_os1_of_interface`; `ModelBundle.lean` now exposes `phi4_os1_of_bundle`.
 - `Phi4/ModelBundle.lean` now carries correlation inputs in atomic form
-  (`CorrelationTwoPointModel`, `CorrelationFourPointInequalityModel`,
-  `SchwingerNMonotoneModel params 4`, `CorrelationFKGModel`); full
-  `CorrelationFourPointModel` / `CorrelationInequalityModel` are reconstructed
-  by instance.
+  (`CorrelationTwoPointModel`, `CorrelationGKSSecondModel`,
+  `CorrelationLebowitzModel`, `SchwingerNMonotoneModel params 4`,
+  `CorrelationFKGModel`); full `CorrelationFourPointInequalityModel`,
+  `CorrelationFourPointModel`, and `CorrelationInequalityModel` are
+  reconstructed by instance.
 - `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
 - FKG-derived connected two-point nonnegativity statements now explicitly
   require nonnegative test functions (corrected soundness of statement direction).

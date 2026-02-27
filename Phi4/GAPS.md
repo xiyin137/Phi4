@@ -134,6 +134,8 @@ assumption interfaces.
 - `BoundaryRegularityModel`
 - `CorrelationInequalityModel`
 - `CorrelationTwoPointModel`
+- `CorrelationGKSSecondModel`
+- `CorrelationLebowitzModel`
 - `CorrelationFourPointInequalityModel`
 - `SchwingerNMonotoneModel`
 - `SchwingerNNonnegModel`
@@ -193,12 +195,16 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
 
 3. Correlation split/recombine
    - `correlationTwoPointModel_of_full`
+   - `correlationGKSSecondModel_nonempty_of_data`
+   - `correlationLebowitzModel_nonempty_of_data`
+   - `correlationFourPointInequalityModel_nonempty_of_models`
    - `correlationFourPointInequalityModel_nonempty_of_data`
    - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
    - `CorrelationInequalityCoreModel` now extends
-     `CorrelationFourPointInequalityModel` + `CorrelationFKGModel` with
-     only explicit 4-point monotonicity as additional core data
+     `CorrelationGKSSecondModel` + `CorrelationLebowitzModel` +
+     `CorrelationFKGModel` with only explicit 4-point monotonicity as
+     additional core data
    - `correlationInequalityModel_of_submodels`
    - `correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone`
    - `schwingerNMonotoneModel_four_of_correlationFourPoint`
@@ -228,8 +234,10 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `correlationInequalityModel_nonempty_of_lattice_and_core_models`,
      `correlationInequalityModel_nonempty_of_lattice_and_core_models_and_lattice_monotone`
    - bundle correlation assembly now uses atomic four-point inputs
-     (`CorrelationFourPointInequalityModel` + `SchwingerNMonotoneModel params 4`)
-     and reconstructs full `CorrelationFourPointModel` / `CorrelationInequalityModel`
+     (`CorrelationGKSSecondModel` + `CorrelationLebowitzModel` +
+     `SchwingerNMonotoneModel params 4`) and reconstructs full
+     `CorrelationFourPointInequalityModel` / `CorrelationFourPointModel` /
+     `CorrelationInequalityModel`
    - in `Phi4/CorrelationInequalities.lean`
 
 4. Infinite-volume split/recombine

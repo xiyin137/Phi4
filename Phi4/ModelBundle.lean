@@ -25,7 +25,8 @@ class Phi4ModelBundle (params : Phi4Params) where
   interactionWeight : InteractionWeightModel params
   finiteVolumeComparison : FiniteVolumeComparisonModel params
   correlationTwoPoint : CorrelationTwoPointModel params
-  correlationFourPointInequality : CorrelationFourPointInequalityModel params
+  correlationGKSSecond : CorrelationGKSSecondModel params
+  correlationLebowitz : CorrelationLebowitzModel params
   schwingerFourMonotone : SchwingerNMonotoneModel params 4
   correlationFKG : CorrelationFKGModel params
   freeRP : FreeReflectionPositivityModel params.mass params.mass_pos
@@ -91,8 +92,17 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   h.correlationTwoPoint
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    CorrelationFourPointInequalityModel params :=
-  h.correlationFourPointInequality
+    CorrelationGKSSecondModel params :=
+  h.correlationGKSSecond
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationLebowitzModel params :=
+  h.correlationLebowitz
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationFourPointInequalityModel params where
+  griffiths_second := CorrelationGKSSecondModel.griffiths_second (params := params)
+  lebowitz_inequality := CorrelationLebowitzModel.lebowitz_inequality (params := params)
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     SchwingerNMonotoneModel params 4 :=
@@ -100,7 +110,7 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationFourPointModel params := by
-  letI : CorrelationFourPointInequalityModel params := h.correlationFourPointInequality
+  letI : CorrelationFourPointInequalityModel params := inferInstance
   letI : SchwingerNMonotoneModel params 4 := h.schwingerFourMonotone
   rcases correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
       (params := params) with ⟨hfour⟩
@@ -113,7 +123,12 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationInequalityModel params := by
   letI : CorrelationTwoPointModel params := h.correlationTwoPoint
-  letI : CorrelationFourPointInequalityModel params := h.correlationFourPointInequality
+  letI : CorrelationGKSSecondModel params := h.correlationGKSSecond
+  letI : CorrelationLebowitzModel params := h.correlationLebowitz
+  letI : CorrelationFourPointInequalityModel params := {
+    griffiths_second := CorrelationGKSSecondModel.griffiths_second (params := params)
+    lebowitz_inequality := CorrelationLebowitzModel.lebowitz_inequality (params := params)
+  }
   letI : SchwingerNMonotoneModel params 4 := h.schwingerFourMonotone
   letI : CorrelationFourPointModel params := by
     rcases correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
