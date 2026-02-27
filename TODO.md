@@ -94,6 +94,11 @@ the local Glimm-Jaffe objective.
   `vertex_factorial_weighted_prod_eq_const_pow_vertices_of_phi4` and
   `graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp`
   (yielding `|I(G)| ≤ (((4! * A^4) * B^2)^|V|)` under the weighted hypothesis).
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also controls finite φ⁴ graph
+  expansions in sharp vertex-count form:
+  `sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp`
+  and
+  `feynman_expansion_abs_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

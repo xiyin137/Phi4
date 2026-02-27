@@ -792,6 +792,61 @@ theorem graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp
     _ = ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
           simpa using (mul_pow ((Nat.factorial 4 : ℝ) * A ^ 4) (B ^ 2) r).symm
 
+/-- Finite φ⁴ graph-family control:
+    the sum of absolute graph integrals is bounded by graph count times the
+    sharp per-vertex constant. -/
+theorem sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (A B : ℝ)
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      ∀ G ∈ graphs, |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+      graphs.card * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
+  have hsum :
+      Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+        Finset.sum graphs (fun _ => ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r)) := by
+    refine Finset.sum_le_sum ?_
+    intro G hG
+    exact graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp
+      (G := G) (mass := mass) (A := A) (B := B)
+      (hphi4 := hphi4 G hG) (hbound := hbound G hG)
+  calc
+    Finset.sum graphs (fun G => |graphIntegral G mass|)
+        ≤ Finset.sum graphs (fun _ => ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r)) := hsum
+    _ = graphs.card * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
+          simp [Finset.sum_const, nsmul_eq_mul]
+
+/-- Finite φ⁴ expansion control:
+    if an expansion uses a finite graph family, then the absolute value of the
+    expansion is bounded by graph count times the sharp per-vertex constant. -/
+theorem feynman_expansion_abs_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      ∀ G ∈ graphs, |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      graphs.card * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
+  rw [hexp]
+  have habs :
+      |Finset.sum graphs (fun G => graphIntegral G mass)| ≤
+        Finset.sum graphs (fun G => |graphIntegral G mass|) := by
+    simpa using
+      (Finset.abs_sum_le_sum_abs
+        (f := fun G : FeynmanGraph r => graphIntegral G mass)
+        (s := graphs))
+  exact habs.trans
+    (sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp
+      (graphs := graphs) (mass := mass) (A := A) (B := B) hphi4 hbound)
+
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/
 theorem uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local
