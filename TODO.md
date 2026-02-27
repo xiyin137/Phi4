@@ -154,7 +154,11 @@ the local Glimm-Jaffe objective.
   and routes two-point endpoints through these generic theorems; the
   specialized `k = 2` / `k = 4` existence wrappers now use the minimal
   monotonicity assumptions (`SchwingerNMonotoneModel params 2/4`) rather than
-  stronger correlation bundles.
+  stronger correlation bundles, and the shifted two-point `iSup` convergence/
+  existence wrappers (`schwingerTwo_tendsto_iSup_of_monotone_bounded`,
+  `schwingerTwo_tendsto_iSup_of_models`,
+  `schwingerTwo_limit_exists_of_monotone_bounded`,
+  `schwingerTwo_limit_exists_of_models`) now follow the same minimal interface.
 - In `Phi4/InfiniteVolumeLimit.lean`, lattice iSup-form two-point convergence
   theorems now use shifted exhaustion sequences `(n + 1)` and no longer require
   `LatticeGriffithsFirstModel`

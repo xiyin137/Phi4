@@ -225,6 +225,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - generic bounded-monotone `k`-point counterparts:
      `schwingerN_tendsto_iSup_of_monotone_bounded`,
      `schwingerN_limit_exists_of_monotone_bounded`
+   - shifted two-point `iSup` convergence/existence wrappers now also use
+     `SchwingerNMonotoneModel params 2` directly (instead of
+     `CorrelationTwoPointModel`) where only monotonicity is used
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
    - lattice iSup-form shifted-sequence variants no longer require
      `LatticeGriffithsFirstModel`:
