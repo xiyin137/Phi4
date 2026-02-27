@@ -228,6 +228,8 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - shifted two-point `iSup` convergence/existence wrappers now also use
      `SchwingerNMonotoneModel params 2` directly (instead of
      `CorrelationTwoPointModel`) where only monotonicity is used
+   - remaining non-shifted `if h : 0 < n then ... else 0` two-point forms keep
+     `CorrelationTwoPointModel` specifically for the `n = 0` positivity step
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
    - lattice iSup-form shifted-sequence variants no longer require
      `LatticeGriffithsFirstModel`:

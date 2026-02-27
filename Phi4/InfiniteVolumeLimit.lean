@@ -76,17 +76,30 @@ private lemma exhaustingRectangles_mono_toSet
     increasing the covariance) with GKS-II (the 2-point function is
     monotone in the covariance for the φ⁴ interaction). -/
 theorem schwinger_monotone_in_volume (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
     (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
     (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
     (hfsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f x = 0)
     (hgsupp : ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, g x = 0) :
     schwingerTwo params (exhaustingRectangles n₁ hn₁) f g ≤
       schwingerTwo params (exhaustingRectangles n₂ hn₂) f g := by
-  exact schwinger_two_monotone params
+  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
+    intro i x
+    fin_cases i
+    · simpa using hf x
+    · simpa using hg x
+  have hsuppvec :
+      ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet,
+        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
+    intro i x hx
+    fin_cases i
+    · simpa using hfsupp x hx
+    · simpa using hgsupp x hx
+  have hmonoN := schwingerN_monotone_of_interface params 2
     (exhaustingRectangles n₁ hn₁) (exhaustingRectangles n₂ hn₂)
     (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
-    f g hf hg hfsupp hgsupp
+    (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec
+  simpa [schwingerN_two_eq_schwingerTwo] using hmonoN
 
 /-- Lattice-bridge variant of two-point monotonicity in volume. -/
 theorem schwinger_monotone_in_volume_from_lattice (params : Phi4Params)

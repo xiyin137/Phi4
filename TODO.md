@@ -158,7 +158,9 @@ the local Glimm-Jaffe objective.
   existence wrappers (`schwingerTwo_tendsto_iSup_of_monotone_bounded`,
   `schwingerTwo_tendsto_iSup_of_models`,
   `schwingerTwo_limit_exists_of_monotone_bounded`,
-  `schwingerTwo_limit_exists_of_models`) now follow the same minimal interface.
+  `schwingerTwo_limit_exists_of_models`) now follow the same minimal interface;
+  only the non-shifted `if h : 0 < n then ... else 0` two-point forms keep
+  `CorrelationTwoPointModel` for the `n = 0` positivity branch.
 - In `Phi4/InfiniteVolumeLimit.lean`, lattice iSup-form two-point convergence
   theorems now use shifted exhaustion sequences `(n + 1)` and no longer require
   `LatticeGriffithsFirstModel`
