@@ -32,7 +32,9 @@ class Phi4ModelBundle (params : Phi4Params) where
   interactingRP : InteractingReflectionPositivityModel params
   multipleReflection : MultipleReflectionModel params
   infiniteVolumeSchwinger : InfiniteVolumeSchwingerModel params
-  infiniteVolumeMeasure : @InfiniteVolumeMeasureModel params infiniteVolumeSchwinger
+  infiniteVolumeMeasure : InfiniteVolumeMeasureModel params
+  infiniteVolumeMoment : @InfiniteVolumeMomentModel params
+    infiniteVolumeSchwinger infiniteVolumeMeasure
   uniformWeakCoupling : @UniformWeakCouplingDecayModel params
     infiniteVolumeSchwinger
   wickPowers : @WickPowersModel params
@@ -115,13 +117,19 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     InfiniteVolumeMeasureModel params := by
-  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   exact h.infiniteVolumeMeasure
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    InfiniteVolumeMomentModel params := by
+  letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
+  letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  exact h.infiniteVolumeMoment
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     InfiniteVolumeLimitModel params := by
   letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
   letI : InfiniteVolumeMeasureModel params := h.infiniteVolumeMeasure
+  letI : InfiniteVolumeMomentModel params := h.infiniteVolumeMoment
   infer_instance
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :

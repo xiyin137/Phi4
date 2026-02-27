@@ -123,6 +123,10 @@
 - `phi4_satisfies_OS` and fixed-parameter Wightman interface corollaries were
   further trimmed to remove unused `InfiniteVolumeSchwingerModel` assumptions in
   their signatures, tightening the non-smuggled dependency surface.
+- `InfiniteVolumeMeasureModel` now carries only measure/probability data, with
+  Schwinger moment representation split into `InfiniteVolumeMomentModel`; the
+  `InfiniteVolumeLimitModel` reconstruction instance now requires this explicit
+  moment bridge instead of bundling it into the measure interface.
 - `WickPowersModel` and `RegularityModel` now depend only on
   `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel` (rather than
   `InfiniteVolumeLimitModel`), reducing model-surface coupling and avoiding

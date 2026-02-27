@@ -829,17 +829,22 @@ class InfiniteVolumeSchwingerModel (params : Phi4Params) where
         Filter.atTop
         (nhds (infiniteVolumeSchwinger k f))
 
-/-- Infinite-volume measure representation of Schwinger moments. -/
-class InfiniteVolumeMeasureModel (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params] where
+/-- Infinite-volume measure representation data (measure + probability). -/
+class InfiniteVolumeMeasureModel (params : Phi4Params) where
   infiniteVolumeMeasure :
     @Measure FieldConfig2D GaussianField.instMeasurableSpaceConfiguration
   infiniteVolumeMeasure_isProbability :
     IsProbabilityMeasure infiniteVolumeMeasure
+
+/-- Infinite-volume moment representation linking Schwinger functions to
+    moments of `infiniteVolumeMeasure`. -/
+class InfiniteVolumeMomentModel (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InfiniteVolumeMeasureModel params] where
   infiniteVolumeSchwinger_is_moment :
     ∀ (k : ℕ) (f : Fin k → TestFun2D),
       InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger (params := params) k f =
-        ∫ ω, (∏ i, ω (f i)) ∂infiniteVolumeMeasure
+        ∫ ω, (∏ i, ω (f i)) ∂(InfiniteVolumeMeasureModel.infiniteVolumeMeasure (params := params))
 
 /-- Model of infinite-volume existence data: Schwinger convergence/bounds and a
     representing probability measure. -/
@@ -862,6 +867,12 @@ instance (priority := 100) infiniteVolumeMeasureModel_of_limit
   infiniteVolumeMeasure := InfiniteVolumeLimitModel.infiniteVolumeMeasure (params := params)
   infiniteVolumeMeasure_isProbability :=
     InfiniteVolumeLimitModel.infiniteVolumeMeasure_isProbability (params := params)
+
+/-- Any full infinite-volume model provides the moment-representation subinterface. -/
+instance (priority := 100) infiniteVolumeMomentModel_of_limit
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params] :
+    InfiniteVolumeMomentModel params where
   infiniteVolumeSchwinger_is_moment :=
     InfiniteVolumeLimitModel.infiniteVolumeSchwinger_is_moment (params := params)
 
@@ -869,7 +880,8 @@ instance (priority := 100) infiniteVolumeMeasureModel_of_limit
 instance (priority := 100) infiniteVolumeLimitModel_of_submodels
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params] :
+    [InfiniteVolumeMeasureModel params]
+    [InfiniteVolumeMomentModel params] :
     InfiniteVolumeLimitModel params where
   schwinger_uniformly_bounded :=
     InfiniteVolumeSchwingerModel.schwinger_uniformly_bounded (params := params)
@@ -882,7 +894,7 @@ instance (priority := 100) infiniteVolumeLimitModel_of_submodels
   infiniteVolumeMeasure_isProbability :=
     InfiniteVolumeMeasureModel.infiniteVolumeMeasure_isProbability (params := params)
   infiniteVolumeSchwinger_is_moment :=
-    InfiniteVolumeMeasureModel.infiniteVolumeSchwinger_is_moment (params := params)
+    InfiniteVolumeMomentModel.infiniteVolumeSchwinger_is_moment (params := params)
 
 /-- **Uniform upper bound**: The Schwinger functions are bounded uniformly in Λ:
     |S_n^Λ(f₁,...,fₙ)| ≤ C(f₁,...,fₙ)
@@ -2277,14 +2289,12 @@ theorem connectedTwoPoint_nonneg
 /-- The infinite volume φ⁴₂ probability measure on S'(ℝ²).
     This is the weak limit of dμ_{Λₙ} as Λₙ ↗ ℝ². -/
 def infiniteVolumeMeasure (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params] :
     @Measure FieldConfig2D GaussianField.instMeasurableSpaceConfiguration :=
   InfiniteVolumeMeasureModel.infiniteVolumeMeasure (params := params)
 
 /-- The infinite volume measure is a probability measure. -/
 theorem infiniteVolumeMeasure_isProbability (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params] :
     IsProbabilityMeasure (infiniteVolumeMeasure params) := by
   simpa [infiniteVolumeMeasure] using
@@ -2296,11 +2306,12 @@ theorem infiniteVolumeMeasure_isProbability (params : Phi4Params)
 theorem infiniteVolumeSchwinger_is_moment (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
+    [InfiniteVolumeMomentModel params]
     (k : ℕ) (f : Fin k → TestFun2D) :
     infiniteVolumeSchwinger params k f =
       ∫ ω, (∏ i, ω (f i)) ∂(infiniteVolumeMeasure params) := by
   simpa [infiniteVolumeSchwinger, infiniteVolumeMeasure] using
-    (InfiniteVolumeMeasureModel.infiniteVolumeSchwinger_is_moment
+    (InfiniteVolumeMomentModel.infiniteVolumeSchwinger_is_moment
       (params := params) k f)
 
 /-- Zeroth infinite-volume Schwinger function normalization:
@@ -2337,6 +2348,7 @@ theorem infiniteVolumeSchwinger_zero (params : Phi4Params)
 theorem infiniteVolumeSchwinger_zero_of_moment (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
+    [InfiniteVolumeMomentModel params]
     (f : Fin 0 → TestFun2D) :
     infiniteVolumeSchwinger params 0 f = 1 := by
   have hprob : IsProbabilityMeasure (infiniteVolumeMeasure params) :=

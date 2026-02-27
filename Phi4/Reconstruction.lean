@@ -270,6 +270,7 @@ theorem phi4_productTensor_zero_of_compat_of_moment
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
+    [InfiniteVolumeMomentModel params]
     [OSAxiomCoreModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
@@ -617,6 +618,7 @@ theorem phi4_normalized_order0_of_linear_and_compat_of_moment
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
+    [InfiniteVolumeMomentModel params]
     [OSAxiomCoreModel params]
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
