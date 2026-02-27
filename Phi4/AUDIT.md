@@ -23,8 +23,8 @@ Policy basis (from `agent.md`):
 
 - `axiom` declarations in `Phi4/**/*.lean`: **0**
 - `def/abbrev := by sorry` in `Phi4/**/*.lean`: **0**
-- theorem-level `sorry` count (core): **9**
-- theorem-level `sorry` count (scratch): **16**
+- theorem-level `sorry` count (core): **0**
+- theorem-level `sorry` count (scratch): **0**
 - `class ...Model` declarations in `Phi4/**/*.lean`: **38**
 
 ## Core Theorem-Level Gap Inventory
@@ -151,7 +151,7 @@ Columns:
 - `93` scratch files audited.
 - `axiom`: `0`.
 - `def := by sorry`: `0`.
-- theorem-level `sorry`: `16`.
+- theorem-level `sorry`: `0`.
 
 ## Verification Commands
 

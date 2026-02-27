@@ -9,7 +9,7 @@ what is still represented as assumption interfaces, and where theorem-level
 ## 1. Trust Snapshot
 
 - Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) currently have `0` theorem-level `sorry`.
-- Scratch modules (`Phi4/Scratch/**/*.lean`) currently have `16` theorem-level `sorry`.
+- Scratch modules (`Phi4/Scratch/**/*.lean`) currently have `0` theorem-level `sorry`.
 - `Phi4/**/*.lean` currently has `0` `axiom` declarations.
 - `Phi4/**/*.lean` currently has `0` `def/abbrev := by sorry`.
 - Main theorems are still conditional on `...Model` assumptions.
@@ -17,9 +17,9 @@ what is still represented as assumption interfaces, and where theorem-level
   core `Phi4/Reconstruction.lean` remains backend-abstract via
   `WightmanReconstructionModel`.
 
-So the project is logically honest about open frontiers (theorem-level `sorry`)
-and has no explicit axiom smuggling, but it is not yet assumption-free for the
-full constructive QFT pipeline.
+So the project has no theorem-level `sorry` frontiers and no explicit axiom
+smuggling, but it is not yet assumption-free for the full constructive QFT
+pipeline because key steps remain interface-conditional.
 
 `Phi4/HonestGaps.lean` now forwards to canonical frontier theorems and carries
 no local `sorry` declarations.
@@ -209,10 +209,11 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `reconstructionWeakCouplingModel_of_uniform`
    - in `Phi4/Reconstruction.lean`
 
-## 5. What Current `sorry` Means Here
+## 5. What Current Gap Encoding Means Here
 
 - Good: no explicit `axiom` declarations and no `def/abbrev := by sorry` placeholders.
-- Honest gap boundary: unresolved major analytic steps are surfaced as theorem-level `sorry`.
+- Honest gap boundary: unresolved major analytic steps are surfaced as explicit
+  interface assumptions and theorem frontiers, not hidden placeholders.
 - Not yet complete: major steps are still represented by explicit hypotheses (`...Model`) and theorem frontiers.
 
 This is acceptable as a staging architecture, but these interfaces are exactly the
