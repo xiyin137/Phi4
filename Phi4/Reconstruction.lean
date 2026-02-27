@@ -242,6 +242,64 @@ theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
   intro OS hlg
   exact wightman_reconstruction_of_os_to_wightman params OS hlg
 
+/-! ## Product-Tensor Bridge Towards E0' -/
+
+/-- Complexification of a real-valued 2D test function. -/
+def testFunToComplex (f : TestFun2D) : TestFunℂ2D where
+  toFun x := Complex.ofRealCLM (f x)
+  smooth' := Complex.ofRealCLM.contDiff.comp f.smooth'
+  decay' k n := by
+    rcases f.decay' k n with ⟨C, hC⟩
+    refine ⟨C, ?_⟩
+    intro x
+    have heq : (fun x => Complex.ofRealCLM (f x)) = Complex.ofRealLI ∘ ⇑f := rfl
+    rw [heq, Complex.ofRealLI.norm_iteratedFDeriv_comp_left
+      (f.smooth ⊤).contDiffAt (mod_cast le_top)]
+    exact hC x
+
+/-- Reindex a complex 2D test function to OS-reconstruction spacetime coordinates. -/
+def testFunToSchwartzSpacetime (f : TestFun2D) : SchwartzSpacetime 1 :=
+  (SchwartzMap.compCLMOfContinuousLinearEquiv ℂ
+    (EuclideanSpace.equiv (Fin 2) ℝ).symm) (testFunToComplex f)
+
+/-- Product-tensor lift from finite families of real test functions to
+    `SchwartzNPoint 1 n`. -/
+def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
+    SchwartzNPoint 1 n :=
+  SchwartzMap.productTensor (fun i => testFunToSchwartzSpacetime (f i))
+
+/-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
+    obtained from the infinite-volume mixed bound plus an explicit compatibility
+    bridge to `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_mixed_bound_of_interface
+    (params : Phi4Params)
+    [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    [RegularityModel params]
+    [OSAxiomCoreModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    ∃ c : ℝ,
+      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+  rcases infiniteVolumeSchwinger_mixed_bound_of_interface
+      (params := params) n hn f with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  calc
+    ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖
+        = ‖(infiniteVolumeSchwinger params n f : ℂ)‖ := by
+          simp [hcompat n f]
+    _ = |infiniteVolumeSchwinger params n f| := by
+          simp
+    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := hc
+
 /-! ## Linear growth condition (E0') -/
 
 /-- Build `OSLinearGrowthCondition` from explicit seminorm-growth constants
