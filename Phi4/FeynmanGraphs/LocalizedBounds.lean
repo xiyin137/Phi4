@@ -887,6 +887,36 @@ theorem feynman_expansion_abs_le_card_mul_const_pow_vertices
     (sum_abs_graphIntegral_le_card_mul_const_pow_vertices
       (graphs := graphs) (mass := mass) (K := K) hbound)
 
+/-- If the number of graphs is itself exponentially bounded in `|V|`,
+    then finite expansion bounds collapse to a pure exponential in `|V|`. -/
+theorem feynman_expansion_abs_le_const_pow_vertices_of_card_bound
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (K : ℝ) (hK : 0 ≤ K)
+    (hbound : ∀ G ∈ graphs, |graphIntegral G mass| ≤ K ^ r)
+    (N : ℕ) (hcard : graphs.card ≤ N ^ r) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      (((N : ℝ) * K) ^ r) := by
+  have hbase :
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        graphs.card * (K ^ r) :=
+    feynman_expansion_abs_le_card_mul_const_pow_vertices
+      (graphs := graphs) (mass := mass) (hmass := hmass) (f := f) hexp (K := K) hbound
+  have hcardR : (graphs.card : ℝ) ≤ (N : ℝ) ^ r := by
+    exact_mod_cast hcard
+  have hmul :
+      (graphs.card : ℝ) * (K ^ r) ≤ ((N : ℝ) ^ r) * (K ^ r) := by
+    exact mul_le_mul_of_nonneg_right hcardR (pow_nonneg hK _)
+  calc
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)|
+        ≤ (graphs.card : ℝ) * (K ^ r) := hbase
+    _ ≤ ((N : ℝ) ^ r) * (K ^ r) := hmul
+    _ = (((N : ℝ) * K) ^ r) := by
+          simpa using (mul_pow (N : ℝ) K r).symm
+
 /-- Finite φ⁴ expansion control via the local weighted-family infrastructure:
     extract a positive `K`, then bound by `#graphs * K^{|V|}`. -/
 theorem feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local
@@ -924,6 +954,42 @@ theorem feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_wei
       have hpow : K0 ^ r ≤ (K0 + 1) ^ r := by
         exact pow_le_pow_left₀ hK0_nonneg (le_add_of_nonneg_right zero_le_one) _
       exact hsharp.trans hpow)
+
+/-- Local φ⁴ weighted-family expansion control in pure exponential form, using
+    an explicit graph-count growth bound `#graphs ≤ N^{|V|}`. -/
+theorem feynman_expansion_abs_le_uniform_const_pow_vertices_of_phi4_weighted_family_local
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (N : ℕ) (hcard : graphs.card ≤ N ^ r) :
+    ∃ K : ℝ, 0 < K ∧
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        (((N : ℝ) * K) ^ r) := by
+  rcases feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local
+      (graphs := graphs) (mass := mass) (hmass := hmass)
+      (A := A) (B := B) hA hB (f := f) hexp hphi4 hweighted with
+    ⟨K, hKpos, hbound⟩
+  refine ⟨K, hKpos, ?_⟩
+  have hcardR : (graphs.card : ℝ) ≤ (N : ℝ) ^ r := by
+    exact_mod_cast hcard
+  have hmul :
+      (graphs.card : ℝ) * (K ^ r) ≤ ((N : ℝ) ^ r) * (K ^ r) := by
+    exact mul_le_mul_of_nonneg_right hcardR (pow_nonneg hKpos.le _)
+  calc
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)|
+        ≤ (graphs.card : ℝ) * (K ^ r) := hbound
+    _ ≤ ((N : ℝ) ^ r) * (K ^ r) := hmul
+    _ = (((N : ℝ) * K) ^ r) := by
+          simpa using (mul_pow (N : ℝ) K r).symm
 
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/

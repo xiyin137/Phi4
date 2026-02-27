@@ -106,6 +106,11 @@ the local Glimm-Jaffe objective.
   weighted-family corollary that extracts `K > 0` and applies it to a concrete
   expansion:
   `feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also adds cardinality-growth
+  reduction to pure exponential form when `#graphs ≤ N^|V|`:
+  `feynman_expansion_abs_le_const_pow_vertices_of_card_bound` and
+  the local φ⁴ weighted-family corollary
+  `feynman_expansion_abs_le_uniform_const_pow_vertices_of_phi4_weighted_family_local`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
