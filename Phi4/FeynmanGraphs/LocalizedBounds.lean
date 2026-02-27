@@ -657,6 +657,62 @@ end EstimateModelBridge
 section Phi4Specialization
 
 open MeasureTheory
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- Local φ⁴ specialization for a single graph:
+    if `legs(v)=4` for this graph and a weighted bound is available, then
+    `|I(G)| ≤ C^{|lines|}` with explicit `C` from the degree-4 bridge. -/
+theorem graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound
+    (G : FeynmanGraph r) (mass : ℝ)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B) ^ G.lines.card) := by
+  have hdeg : ∀ v : Fin r, G.legs v ≤ 4 := by
+    intro v
+    simp [hphi4 v]
+  exact graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
+    (G := G) (mass := mass) (d := 4) hdeg A B hA hB hbound
+
+/-- Family-level local φ⁴ specialization:
+    weighted bounds for each valence-4 graph imply a uniform positive
+    `C^{|lines|}` control on all such graphs. -/
+theorem uniform_graphIntegral_abs_le_pos_const_pow_lines_of_phi4_weighted_family_local
+    (mass : ℝ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤ C ^ G.lines.card := by
+  let C0 : ℝ := (((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B
+  have hfact_nonneg : 0 ≤ (Nat.factorial 4 : ℝ) := by
+    exact_mod_cast (Nat.zero_le (Nat.factorial 4))
+  have hC0_nonneg : 0 ≤ C0 := by
+    dsimp [C0]
+    exact mul_nonneg
+      (mul_nonneg (pow_nonneg hfact_nonneg 2) (pow_nonneg hA 2))
+      hB
+  refine ⟨C0 + 1, by linarith, ?_⟩
+  intro r G hphi4
+  have hbase : |graphIntegral G mass| ≤ C0 ^ G.lines.card := by
+    have hG := hweighted G hphi4
+    simpa [C0] using
+      graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound
+        (G := G) (mass := mass) (A := A) (B := B) hA hB hphi4 hG
+  have hpow : C0 ^ G.lines.card ≤ (C0 + 1) ^ G.lines.card := by
+    exact pow_le_pow_left₀ hC0_nonneg (le_add_of_nonneg_right zero_le_one) _
+  exact hbase.trans hpow
+
+end FeynmanGraph
 
 /-- φ⁴-specialized localized graph bound from weighted-family assumptions
     and a global valence-4 constraint. -/

@@ -77,6 +77,11 @@ the local Glimm-Jaffe objective.
   bridge wrappers (`d = 4`):
   `localized_graph_bound_of_phi4_weighted_family` and
   `feynmanGraphEstimateModel_nonempty_of_expansion_and_phi4_weighted`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also includes **local** φ⁴
+  weighted-bound bridges (per-graph/per-family hypotheses, without global
+  valence assumptions):
+  `graphIntegral_abs_le_const_pow_lines_of_phi4_weighted_bound` and
+  `uniform_graphIntegral_abs_le_pos_const_pow_lines_of_phi4_weighted_family_local`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
