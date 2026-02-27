@@ -106,6 +106,14 @@ class SchwingerNMonotoneModel (params : Phi4Params) (k : ℕ) where
       (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
       schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f
 
+/-- Positivity interface for finite-volume `k`-point Schwinger moments on
+    nonnegative test-function inputs. -/
+class SchwingerNNonnegModel (params : Phi4Params) (k : ℕ) where
+  schwingerN_nonneg : ∀ (Λ : Rectangle)
+      (f : Fin k → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x),
+      0 ≤ schwingerN params Λ k f
+
 /-- Family-level monotonicity interface: provides finite-volume Schwinger
     monotonicity under domain inclusion for every arity `k`. -/
 class SchwingerNMonotoneFamilyModel (params : Phi4Params) where
@@ -167,6 +175,17 @@ theorem schwingerNMonotoneModel_nonempty_of_data
     Nonempty (SchwingerNMonotoneModel params k) := by
   exact ⟨{ schwingerN_monotone := hmono }⟩
 
+/-- Construct `SchwingerNNonnegModel` from explicit `k`-point nonnegativity
+    data. -/
+theorem schwingerNNonnegModel_nonempty_of_data
+    (params : Phi4Params) (k : ℕ)
+    (hnonneg : ∀ (Λ : Rectangle)
+      (f : Fin k → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x),
+      0 ≤ schwingerN params Λ k f) :
+    Nonempty (SchwingerNNonnegModel params k) := by
+  exact ⟨{ schwingerN_nonneg := hnonneg }⟩
+
 /-- Interface-level access to finite-volume `k`-point monotonicity. -/
 theorem schwingerN_monotone_of_interface
     (params : Phi4Params) (k : ℕ)
@@ -179,6 +198,17 @@ theorem schwingerN_monotone_of_interface
     schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f := by
   exact SchwingerNMonotoneModel.schwingerN_monotone
     (params := params) Λ₁ Λ₂ h f hf hfΛ
+
+/-- Interface-level access to finite-volume `k`-point nonnegativity. -/
+theorem schwingerN_nonneg_of_interface
+    (params : Phi4Params) (k : ℕ)
+    [SchwingerNNonnegModel params k]
+    (Λ : Rectangle)
+    (f : Fin k → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x) :
+    0 ≤ schwingerN params Λ k f := by
+  exact SchwingerNNonnegModel.schwingerN_nonneg
+    (params := params) Λ f hf
 
 /-- Interface-level access to finite-volume monotonicity from the family-level
     monotonicity interface. -/
@@ -203,6 +233,16 @@ instance (priority := 100) schwingerNMonotoneModel_two_of_correlationTwoPoint
     have hmono := CorrelationTwoPointModel.schwinger_two_monotone
       (params := params) Λ₁ Λ₂ h (f 0) (f 1) (hf 0) (hf 1) (hfΛ 0) (hfΛ 1)
     simpa [schwingerN_two_eq_schwingerTwo] using hmono
+
+/-- GKS-I two-point positivity implies `k = 2` Schwinger-moment nonnegativity. -/
+instance (priority := 100) schwingerNNonnegModel_two_of_correlationTwoPoint
+    (params : Phi4Params) [CorrelationTwoPointModel params] :
+    SchwingerNNonnegModel params 2 where
+  schwingerN_nonneg := by
+    intro Λ f hf
+    have hnonneg := CorrelationTwoPointModel.griffiths_first
+      (params := params) Λ (f 0) (f 1) (hf 0) (hf 1)
+    simpa [schwingerN_two_eq_schwingerTwo] using hnonneg
 
 /-- Four-point correlation inequality input: one GKS-II pairing channel and the
     Lebowitz four-point upper bound. -/

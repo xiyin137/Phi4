@@ -110,9 +110,9 @@ These are the key endpoint theorems and their remaining assumptions:
 
 ## 3. Interface Inventory (Current Assumption Surface)
 
-The codebase currently tracks `42` pipeline-relevant `...Model` interfaces in
+The codebase currently tracks `43` pipeline-relevant `...Model` interfaces in
 this ledger, including `Phi4ModelBundle` (an aggregator). Excluding the bundle
-aggregator, this is `41`
+aggregator, this is `42`
 assumption interfaces.
 
 ### 3.1 Finite-volume / combinatorics / interaction
@@ -135,6 +135,7 @@ assumption interfaces.
 - `CorrelationInequalityModel`
 - `CorrelationTwoPointModel`
 - `SchwingerNMonotoneModel`
+- `SchwingerNNonnegModel`
 - `SchwingerNMonotoneFamilyModel`
 - `CorrelationFourPointModel`
 - `CorrelationFKGModel`
@@ -195,6 +196,7 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `correlationFKGModel_of_full`
    - `correlationInequalityModel_of_submodels`
    - `schwingerNMonotoneModel_four_of_correlationFourPoint`
+   - `schwingerNNonnegModel_two_of_correlationTwoPoint`
    - `schwingerNMonotoneModel_of_family`
    - `schwingerNMonotoneFamilyModel_of_latticeFamily`
    - constructors:
@@ -204,6 +206,7 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `latticeSchwingerNMonotoneFamilyModel_nonempty_of_data`,
      `latticeSchwingerNMonotoneFamilyModel_nonempty_of_models`,
      `schwingerNMonotoneModel_nonempty_of_data`,
+     `schwingerNNonnegModel_nonempty_of_data`,
      `schwingerNMonotoneFamilyModel_nonempty_of_data`,
      `schwingerNMonotoneFamilyModel_nonempty_of_models`,
      `correlationInequalityCoreModel_nonempty_of_data`,
@@ -228,8 +231,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - shifted two-point `iSup` convergence/existence wrappers now also use
      `SchwingerNMonotoneModel params 2` directly (instead of
      `CorrelationTwoPointModel`) where only monotonicity is used
-   - remaining non-shifted `if h : 0 < n then ... else 0` two-point forms keep
-     `CorrelationTwoPointModel` specifically for the `n = 0` positivity step
+   - non-shifted `if h : 0 < n then ... else 0` two-point forms now use
+     `SchwingerNMonotoneModel params 2` plus
+     `SchwingerNNonnegModel params 2` for the `n = 0` positivity step
    - lattice-model variants and `schwingerN` (`k = 2`) model variants
    - lattice iSup-form shifted-sequence variants no longer require
      `LatticeGriffithsFirstModel`:

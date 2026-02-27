@@ -507,10 +507,12 @@ theorem schwingerTwo_limit_exists_of_models
 
 /-- Convergence of the interface-shaped exhausting sequence
     `if h : 0 < n then S₂^{Λₙ}(f,g) else 0`, with monotonicity from
-    `CorrelationTwoPointModel` and absolute bounds from `MultipleReflectionModel`. -/
+    `SchwingerNMonotoneModel params 2`, `SchwingerNNonnegModel params 2`,
+    and absolute bounds from `MultipleReflectionModel`. -/
 theorem schwingerTwo_tendsto_if_exhaustion_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
+    [SchwingerNNonnegModel params 2]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
     (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
@@ -522,6 +524,11 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_models
       (nhds (⨆ n : ℕ, if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)) := by
   let a : ℕ → ℝ := fun n =>
     if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0
+  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
+    intro i x
+    fin_cases i
+    · simpa using hf x
+    · simpa using hg x
   have hmono : Monotone a := by
     intro n m hnm
     by_cases hn : 0 < n
@@ -538,8 +545,14 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_models
       simpa [a, hn, hm] using hmono_nm
     · have hn0 : n = 0 := Nat.eq_zero_of_not_pos hn
       by_cases hm : 0 < m
-      · have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g :=
-          griffiths_first params (exhaustingRectangles m hm) f g hf hg
+      · have hnonnegN :
+            0 ≤ schwingerN params (exhaustingRectangles m hm) 2
+              (![f, g] : Fin 2 → TestFun2D) :=
+          SchwingerNNonnegModel.schwingerN_nonneg
+            (params := params) (k := 2)
+            (exhaustingRectangles m hm) (![f, g] : Fin 2 → TestFun2D) hfvec
+        have hnonneg : 0 ≤ schwingerTwo params (exhaustingRectangles m hm) f g := by
+          simpa [schwingerN_two_eq_schwingerTwo] using hnonnegN
         simpa [a, hn0, hm] using hnonneg
       · have hm0 : m = 0 := Nat.eq_zero_of_not_pos hm
         subst hn0
@@ -568,7 +581,8 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_models
 /-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
 theorem schwingerTwo_limit_exists_if_exhaustion_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
+    [SchwingerNNonnegModel params 2]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
     (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
@@ -652,7 +666,8 @@ theorem schwingerTwo_limit_exists_if_exhaustion_of_lattice_models
     `schwingerTwo_tendsto_if_exhaustion_of_models`. -/
 theorem schwingerN_two_tendsto_if_exhaustion_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
+    [SchwingerNNonnegModel params 2]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
     (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
@@ -683,7 +698,8 @@ theorem schwingerN_two_tendsto_if_exhaustion_of_models
 /-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_models`. -/
 theorem schwingerN_two_limit_exists_if_exhaustion_of_models
     (params : Phi4Params)
-    [CorrelationTwoPointModel params]
+    [SchwingerNMonotoneModel params 2]
+    [SchwingerNNonnegModel params 2]
     [MultipleReflectionModel params]
     (f g : TestFun2D)
     (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
