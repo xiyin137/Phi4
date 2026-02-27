@@ -117,6 +117,10 @@
 - `ReconstructionInputModel` is now split into
   `ReconstructionLinearGrowthModel` + `ReconstructionWeakCouplingModel`,
   with compatibility reconstruction kept for existing APIs.
+- `WickPowersModel` and `RegularityModel` now depend only on
+  `InfiniteVolumeSchwingerModel` + `InfiniteVolumeMeasureModel` (rather than
+  `InfiniteVolumeLimitModel`), reducing model-surface coupling and avoiding
+  assumption smuggling through the larger package.
 - `ReconstructionWeakCouplingModel` is now derivable from
   `UniformWeakCouplingDecayModel` via
   `reconstructionWeakCouplingModel_of_uniform`, reducing duplicated
