@@ -135,11 +135,12 @@ theorem phi4_os0_linear (params : Phi4Params)
 /-! ## OS1: Regularity (Linear Growth) -/
 
 /-- **OS1 (Regularity), trusted interface path**:
-    when `RegularityModel` is available, the generating-functional bound is
-    obtained directly from interface data (without frontier-gap wrappers). -/
+    when the dedicated OS1 generating-functional bound interface is available,
+    the generating-functional bound is obtained directly from interface data
+    (without frontier-gap wrappers). -/
 theorem phi4_os1_of_interface (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params] :
+    [GeneratingFunctionalBoundModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
@@ -152,7 +153,7 @@ theorem phi4_os1_of_interface (params : Phi4Params)
     It is the most technically demanding of the OS axioms to verify. -/
 theorem phi4_os1 (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params] :
+    [GeneratingFunctionalBoundModel params] :
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by

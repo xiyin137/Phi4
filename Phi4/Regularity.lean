@@ -101,6 +101,93 @@ class RegularityModel (params : Phi4Params)
       ∃ c : ℝ, ∀ Λ : Rectangle,
         |generatingFunctional params Λ f| ≤ Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)
 
+/-- Pointwise UV Wick-cubic convergence input extracted from `RegularityModel`. -/
+class WickCubicConvergenceModel (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params] where
+  wickCubicSmeared_tendsto_ae :
+    ∀ (f : TestFun2D),
+      ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+        Filter.Tendsto
+          (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+          Filter.atTop
+          (nhds (wickCubicSmeared params f ω))
+
+/-- Euclidean equation-of-motion input extracted from `RegularityModel`. -/
+class EuclideanEquationModel (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params] where
+  euclidean_equation_of_motion :
+    ∀ (f g : TestFun2D),
+      ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
+        GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
+        params.coupling *
+          ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params)
+
+/-- Infinite-volume OS1 generating-functional bound input extracted from
+    `RegularityModel`. -/
+class GeneratingFunctionalBoundModel (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params] where
+  generating_functional_bound :
+    ∃ c : ℝ, ∀ f : TestFun2D,
+      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+        Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)
+
+/-- Nonlocal finite-volume φ⁴ bound input extracted from `RegularityModel`. -/
+class NonlocalPhi4BoundModel (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params] where
+  nonlocal_phi4_bound :
+    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
+      |generatingFunctional params Λ g| ≤
+        Real.exp (C₁ * Λ.area + C₂)
+
+/-- Pointwise-in-`f` uniform finite-volume generating-functional bound input
+    extracted from `RegularityModel`. -/
+class UniformGeneratingFunctionalBoundModel (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params] where
+  generating_functional_bound_uniform :
+    ∀ (f : TestFun2D),
+      ∃ c : ℝ, ∀ Λ : Rectangle,
+        |generatingFunctional params Λ f| ≤ Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)
+
+instance (priority := 100) wickCubicConvergenceModel_of_regularity
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [RegularityModel params] :
+    WickCubicConvergenceModel params where
+  wickCubicSmeared_tendsto_ae :=
+    RegularityModel.wickCubicSmeared_tendsto_ae (params := params)
+
+instance (priority := 100) euclideanEquationModel_of_regularity
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [RegularityModel params] :
+    EuclideanEquationModel params where
+  euclidean_equation_of_motion :=
+    RegularityModel.euclidean_equation_of_motion (params := params)
+
+instance (priority := 100) generatingFunctionalBoundModel_of_regularity
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [RegularityModel params] :
+    GeneratingFunctionalBoundModel params where
+  generating_functional_bound :=
+    RegularityModel.generating_functional_bound (params := params)
+
+instance (priority := 100) nonlocalPhi4BoundModel_of_regularity
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [RegularityModel params] :
+    NonlocalPhi4BoundModel params where
+  nonlocal_phi4_bound :=
+    RegularityModel.nonlocal_phi4_bound (params := params)
+
+instance (priority := 100) uniformGeneratingFunctionalBoundModel_of_regularity
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    [RegularityModel params] :
+    UniformGeneratingFunctionalBoundModel params where
+  generating_functional_bound_uniform :=
+    RegularityModel.generating_functional_bound_uniform (params := params)
+
 /-- **Euclidean equation of motion** (Glimm-Jaffe 12.1.1):
     For the infinite volume φ⁴₂ theory,
       ⟨φ(f)φ(g)⟩ = C(f,g) - λ ⟨(:φ³: · f) φ(g)⟩
@@ -113,33 +200,33 @@ class RegularityModel (params : Phi4Params)
       (-□ + m²) φ(x) + λ :φ(x)³: = 0 -/
 theorem euclidean_equation_of_motion (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [EuclideanEquationModel params]
     (f g : TestFun2D) :
     ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
       GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
       params.coupling *
         ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params) := by
-  exact RegularityModel.euclidean_equation_of_motion
+  exact EuclideanEquationModel.euclidean_equation_of_motion
     (params := params) f g
 
 /-- Almost-everywhere pointwise UV convergence for `wickCubicSmeared`. -/
 theorem wickCubicSmeared_tendsto_ae (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [WickCubicConvergenceModel params]
     (f : TestFun2D) :
     ∀ᵐ ω ∂(infiniteVolumeMeasure params),
       Filter.Tendsto
         (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
         Filter.atTop
         (nhds (wickCubicSmeared params f ω)) := by
-  exact RegularityModel.wickCubicSmeared_tendsto_ae
+  exact WickCubicConvergenceModel.wickCubicSmeared_tendsto_ae
     (params := params) f
 
 /-- Kernel-form rewriting of the Euclidean equation of motion, using the
     explicit covariance bridge `freeCovariance_eq_kernel`. -/
 theorem euclidean_equation_of_motion_kernel_form (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [EuclideanEquationModel params]
     [FreeCovarianceKernelModel params.mass params.mass_pos]
     (f g : TestFun2D) :
     ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
@@ -655,7 +742,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_interface
     (params : Phi4Params) [InteractionWeightModel params]
     [InfiniteVolumeSchwingerModel params]
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [UniformGeneratingFunctionalBoundModel params]
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
     ∃ c : ℝ,
       |infiniteVolumeSchwinger params n f| ≤
@@ -664,7 +751,8 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_interface
             Real.exp (c * normFunctional (-(f i)))) := by
   exact infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     params
-    (RegularityModel.generating_functional_bound_uniform (params := params))
+    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
+      (params := params))
     n hn f
 
 /-- Infinite-volume 2-point Schwinger bound from global finite-volume
@@ -778,13 +866,13 @@ theorem generating_functional_pointwise_bound_of_exhaustion_limit
     `RegularityModel`. -/
 theorem generating_functional_bound_of_interface (params : Phi4Params) :
     [InfiniteVolumeMeasureModel params] →
-    [RegularityModel params] →
+    [GeneratingFunctionalBoundModel params] →
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
   intro hmeas hreg
   simpa [normFunctional] using
-    (RegularityModel.generating_functional_bound
+    (GeneratingFunctionalBoundModel.generating_functional_bound
       (params := params))
 
 /-- Honest frontier: generating-functional bound (OS1 / E0') from
@@ -809,7 +897,7 @@ theorem gap_generating_functional_bound (params : Phi4Params) :
     Public endpoint routed through the regularity interface. -/
 theorem generating_functional_bound (params : Phi4Params) :
     [InfiniteVolumeMeasureModel params] →
-    [RegularityModel params] →
+    [GeneratingFunctionalBoundModel params] →
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
@@ -821,12 +909,12 @@ theorem generating_functional_bound (params : Phi4Params) :
 /-- Interface-level nonlocal φ⁴ bound extracted from `RegularityModel`. -/
 theorem nonlocal_phi4_bound_of_interface (params : Phi4Params) :
     [InfiniteVolumeMeasureModel params] →
-    [RegularityModel params] →
+    [NonlocalPhi4BoundModel params] →
     ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
   intro hmeas hreg
-  exact RegularityModel.nonlocal_phi4_bound
+  exact NonlocalPhi4BoundModel.nonlocal_phi4_bound
     (params := params)
 
 /-! ## Uniformity in volume -/
@@ -835,12 +923,12 @@ theorem nonlocal_phi4_bound_of_interface (params : Phi4Params) :
     `RegularityModel`. -/
 theorem generating_functional_bound_uniform_of_interface (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [UniformGeneratingFunctionalBoundModel params]
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
   simpa [normFunctional] using
-    (RegularityModel.generating_functional_bound_uniform
+    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
       (params := params) f)
 
 /-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4)
@@ -857,7 +945,7 @@ theorem gap_generating_functional_bound_uniform (params : Phi4Params)
 /-- Public uniformity endpoint via explicit theorem-level frontier gap. -/
 theorem generating_functional_bound_uniform (params : Phi4Params)
     [InfiniteVolumeMeasureModel params]
-    [RegularityModel params]
+    [UniformGeneratingFunctionalBoundModel params]
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
@@ -883,7 +971,7 @@ theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
 /-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
 theorem nonlocal_phi4_bound (params : Phi4Params) :
     [InfiniteVolumeMeasureModel params] →
-    [RegularityModel params] →
+    [NonlocalPhi4BoundModel params] →
     ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
