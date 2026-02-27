@@ -49,6 +49,13 @@ the local Glimm-Jaffe objective.
   `|lines|` (`vertex_factorial_prod_le_degree_factorial_pow_total_legs`,
   `vertex_factorial_prod_le_degree_factorial_pow_lines`), which is a key bridge
   toward `const ^ |lines|` localized estimates under degree caps (e.g. φ⁴).
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also includes cardinality
+  consequences of degree/valence data:
+  `total_legs_le_mul_card_of_degree_le`,
+  `two_mul_lines_card_le_mul_card_of_degree_le`,
+  constant-valence exact formulas, and φ⁴-specialized identities
+  (`lines_card_eq_two_mul_vertices_of_phi4`,
+  `two_mul_lines_card_eq_four_mul_vertices_of_phi4`).
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

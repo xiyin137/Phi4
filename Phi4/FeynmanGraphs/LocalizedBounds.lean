@@ -393,3 +393,86 @@ theorem vertex_factorial_prod_le_degree_factorial_pow_lines
 end FeynmanGraph
 
 end DegreeBound
+
+section DegreeCardinality
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- A uniform degree cap controls total leg count by `|V| * d`. -/
+theorem total_legs_le_mul_card_of_degree_le
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d) :
+    (∑ v : Fin r, G.legs v) ≤ r * d := by
+  have hsum : (∑ v : Fin r, G.legs v) ≤ ∑ v : Fin r, d := by
+    exact Finset.sum_le_sum (fun v _ => hdeg v)
+  simpa using hsum
+
+/-- Under a uniform degree cap, doubled line count is bounded by `|V| * d`. -/
+theorem two_mul_lines_card_le_mul_card_of_degree_le
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d) :
+    2 * G.lines.card ≤ r * d := by
+  calc
+    2 * G.lines.card = ∑ v : Fin r, G.legs v := two_mul_lines_card_eq_total_legs G
+    _ ≤ r * d := total_legs_le_mul_card_of_degree_le G d hdeg
+
+end FeynmanGraph
+
+end DegreeCardinality
+
+section ConstantValence
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- Constant valence `d` gives exact total leg count `|V| * d`. -/
+theorem total_legs_eq_mul_card_of_const_legs
+    (G : FeynmanGraph r) (d : ℕ) (hconst : ∀ v : Fin r, G.legs v = d) :
+    (∑ v : Fin r, G.legs v) = r * d := by
+  simp [hconst]
+
+/-- Constant valence `d` gives exact doubled line count `|V| * d`. -/
+theorem two_mul_lines_card_eq_mul_card_of_const_legs
+    (G : FeynmanGraph r) (d : ℕ) (hconst : ∀ v : Fin r, G.legs v = d) :
+    2 * G.lines.card = r * d := by
+  calc
+    2 * G.lines.card = ∑ v : Fin r, G.legs v := two_mul_lines_card_eq_total_legs G
+    _ = r * d := total_legs_eq_mul_card_of_const_legs G d hconst
+
+/-- If every vertex has valence `2e`, then `|lines| = |V| * e`. -/
+theorem lines_card_eq_mul_card_of_const_legs_even
+    (G : FeynmanGraph r) (e : ℕ) (hconst : ∀ v : Fin r, G.legs v = 2 * e) :
+    G.lines.card = r * e := by
+  have hmul : 2 * G.lines.card = 2 * (r * e) := by
+    calc
+      2 * G.lines.card = r * (2 * e) :=
+        two_mul_lines_card_eq_mul_card_of_const_legs G (2 * e) hconst
+      _ = 2 * (r * e) := by
+        simp [Nat.mul_assoc, Nat.mul_comm]
+  exact Nat.eq_of_mul_eq_mul_left (by decide : 0 < 2) hmul
+
+/-- φ⁴ valence condition (`legs(v)=4`) implies `|lines| = 2|V|`. -/
+theorem lines_card_eq_two_mul_vertices_of_phi4
+    (G : FeynmanGraph r) (hphi4 : ∀ v : Fin r, G.legs v = 4) :
+    G.lines.card = 2 * r := by
+  calc
+    G.lines.card = r * 2 := by
+      simpa [Nat.mul_comm] using
+        lines_card_eq_mul_card_of_const_legs_even G 2 (by
+          intro v
+          simpa [two_mul] using hphi4 v)
+    _ = 2 * r := by simp [Nat.mul_comm]
+
+/-- φ⁴ valence condition (`legs(v)=4`) implies `2|lines| = 4|V|`. -/
+theorem two_mul_lines_card_eq_four_mul_vertices_of_phi4
+    (G : FeynmanGraph r) (hphi4 : ∀ v : Fin r, G.legs v = 4) :
+    2 * G.lines.card = 4 * r := by
+  calc
+    2 * G.lines.card = r * 4 :=
+      two_mul_lines_card_eq_mul_card_of_const_legs G 4 hphi4
+    _ = 4 * r := by simp [Nat.mul_comm]
+
+end FeynmanGraph
+
+end ConstantValence
