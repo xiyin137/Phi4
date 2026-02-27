@@ -530,6 +530,54 @@ theorem exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (B := B) ?_
   exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ae
 
+/-- If per-cutoff lower bounds use a varying constant `Bₙ`, and `Bₙ ≤ B`
+    eventually, then the cutoff sequence is eventually bounded below by `-B`
+    almost surely. -/
+theorem cutoff_seq_eventually_uniform_lower_bound_of_pointwise_bounds
+    (params : Phi4Params) (Λ : Rectangle)
+    (Bseq : ℕ → ℝ) (B : ℝ)
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+    (hB : ∀ᶠ n in Filter.atTop, Bseq n ≤ B) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  have hall :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ n : ℕ, -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+    rw [eventually_countable_forall]
+    intro n
+    exact hcutoff_ae n
+  filter_upwards [hall] with ω hω
+  exact hB.mono (fun n hn => by
+    have hωn : -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := hω n
+    linarith)
+
+/-- `Lᵖ` integrability of the Boltzmann weight from variable per-cutoff
+    lower bounds `-Bₙ`, provided `Bₙ` is eventually bounded above by a fixed `B`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_variable_lower_bounds
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (Bseq : ℕ → ℝ) (B : ℝ)
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+    (hB : ∀ᶠ n in Filter.atTop, Bseq n ≤ B)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_uniform_lower_bound_of_pointwise_bounds
+      params Λ Bseq B hcutoff_ae hB
+  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
+    (params := params) (Λ := Λ) (B := B) hcutoff_ev
+
 /-- Construct `InteractionWeightModel` from per-volume cutoff-sequence
     almost-everywhere lower bounds. -/
 theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
@@ -564,6 +612,24 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hB
 
+/-- Construct `InteractionWeightModel` from per-volume variable cutoff constants
+    `Bₙ`, assuming eventual uniform control `Bₙ ≤ B`. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_variable_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ Bseq : ℕ → ℝ, ∃ B : ℝ,
+        (∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) ∧
+        (∀ᶠ n in Filter.atTop, Bseq n ≤ B)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hcutoff_ae Λ with ⟨Bseq, B, hseq, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_variable_lower_bounds
+    (params := params) (Λ := Λ) (Bseq := Bseq) (B := B) hseq hB
+
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence lower bounds (sufficient for
@@ -596,6 +662,25 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_eventually_lower
             -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
+      (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume variable cutoff constants with eventual uniform control
+       (`Bₙ ≤ B` eventually). -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_variable_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ Bseq : ℕ → ℝ, ∃ B : ℝ,
+        (∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -Bseq n ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) ∧
+        (∀ᶠ n in Filter.atTop, Bseq n ≤ B)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_variable_lower_bounds
       (params := params) hcutoff_ae with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩
