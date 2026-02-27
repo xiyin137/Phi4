@@ -757,6 +757,41 @@ theorem graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound
     (C := ((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B))
     hphi4 hlines
 
+/-- Exact simplification of weighted vertex occupancy factors in φ⁴:
+    each vertex contributes the same factor `(4! * A^4)`. -/
+theorem vertex_factorial_weighted_prod_eq_const_pow_vertices_of_phi4
+    (G : FeynmanGraph r) (A : ℝ)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) =
+      ((Nat.factorial 4 : ℝ) * A ^ 4) ^ r := by
+  simp [hphi4]
+
+/-- Sharp φ⁴ weighted bound in vertex-count form, obtained by exact
+    simplification (`|lines| = 2|V|` and constant per-vertex occupancy factor). -/
+theorem graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp
+    (G : FeynmanGraph r) (mass : ℝ)
+    (A B : ℝ)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
+  calc
+    |graphIntegral G mass|
+        ≤ (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card := hbound
+    _ = (((Nat.factorial 4 : ℝ) * A ^ 4) ^ r) * B ^ G.lines.card := by
+          simp [vertex_factorial_weighted_prod_eq_const_pow_vertices_of_phi4
+            (G := G) (A := A) hphi4]
+    _ = (((Nat.factorial 4 : ℝ) * A ^ 4) ^ r) * B ^ (2 * r) := by
+          simp [lines_card_eq_two_mul_vertices_of_phi4 (G := G) hphi4]
+    _ = (((Nat.factorial 4 : ℝ) * A ^ 4) ^ r) * (B ^ 2) ^ r := by
+          simp [pow_mul]
+    _ = ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)) ^ r) := by
+          simpa using (mul_pow ((Nat.factorial 4 : ℝ) * A ^ 4) (B ^ 2) r).symm
+
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/
 theorem uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local

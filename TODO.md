@@ -89,6 +89,11 @@ the local Glimm-Jaffe objective.
   `graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound`,
   and
   `uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also includes exact/sharp φ⁴
+  weighted simplifications:
+  `vertex_factorial_weighted_prod_eq_const_pow_vertices_of_phi4` and
+  `graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp`
+  (yielding `|I(G)| ≤ (((4! * A^4) * B^2)^|V|)` under the weighted hypothesis).
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
