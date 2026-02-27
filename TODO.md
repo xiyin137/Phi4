@@ -96,7 +96,11 @@ the local Glimm-Jaffe objective.
   that source 4-point monotonicity from monotone-moment interfaces:
   `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`
   and the lattice-specialized
-  `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`.
+  `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`;
+  full correlation model constructors from lattice bridge data plus
+  GKS-II/FKG/Lebowitz inputs are now available via
+  `correlationInequalityModel_nonempty_of_lattice_and_core_data` and
+  `correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice_monotone`.
 - `Phi4/InfiniteVolumeLimit.lean` and `Phi4/Reconstruction.lean` now use
   minimal correlation assumptions by theorem block (two-point/four-point/FKG).
 - `Phi4/InfiniteVolumeLimit.lean` now exposes
