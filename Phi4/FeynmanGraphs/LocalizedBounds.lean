@@ -73,6 +73,96 @@ theorem factorial_weighted_prod_le_factorial_sum_pow
     (factorial_prod_le_factorial_sum_real (s := s) N)
     (pow_nonneg hA _)
 
+/-- Fiberwise occupancy control:
+    if indices `s` are assigned to cells `t` via `loc`, then the product of
+    per-index factorials is bounded by the product of factorials of per-cell
+    occupancies. -/
+theorem factorial_prod_le_factorial_sum_fiberwise
+    {β : Type*} [DecidableEq β]
+    (s : Finset α) (t : Finset β) (loc : α → β) (N : α → ℕ)
+    (hmap : ∀ i ∈ s, loc i ∈ t) :
+    (∏ i ∈ s, Nat.factorial (N i)) ≤
+      ∏ b ∈ t, Nat.factorial (∑ i ∈ s with loc i = b, N i) := by
+  have hpartition :
+      (∏ b ∈ t, ∏ i ∈ s with loc i = b, Nat.factorial (N i)) =
+        ∏ i ∈ s, Nat.factorial (N i) := by
+    simpa using
+      (Finset.prod_fiberwise_of_maps_to (s := s) (t := t) (g := loc)
+        (h := hmap) (f := fun i => Nat.factorial (N i)))
+  have hcell :
+      ∀ b ∈ t,
+        (∏ i ∈ s with loc i = b, Nat.factorial (N i)) ≤
+          Nat.factorial (∑ i ∈ s with loc i = b, N i) := by
+    intro b hb
+    exact factorial_prod_le_factorial_sum (s := s.filter fun i => loc i = b) N
+  have hprod :
+      (∏ b ∈ t, ∏ i ∈ s with loc i = b, Nat.factorial (N i)) ≤
+        ∏ b ∈ t, Nat.factorial (∑ i ∈ s with loc i = b, N i) := by
+    exact Finset.prod_le_prod
+      (fun b hb => Nat.zero_le _)
+      (fun b hb => hcell b hb)
+  calc
+    (∏ i ∈ s, Nat.factorial (N i))
+        = ∏ b ∈ t, ∏ i ∈ s with loc i = b, Nat.factorial (N i) := by
+          simpa using hpartition.symm
+    _ ≤ ∏ b ∈ t, Nat.factorial (∑ i ∈ s with loc i = b, N i) := hprod
+
+/-- Real-cast variant of `factorial_prod_le_factorial_sum_fiberwise`. -/
+theorem factorial_prod_le_factorial_sum_fiberwise_real
+    {β : Type*} [DecidableEq β]
+    (s : Finset α) (t : Finset β) (loc : α → β) (N : α → ℕ)
+    (hmap : ∀ i ∈ s, loc i ∈ t) :
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ)) ≤
+      ∏ b ∈ t, (Nat.factorial (∑ i ∈ s with loc i = b, N i) : ℝ) := by
+  exact_mod_cast factorial_prod_le_factorial_sum_fiberwise
+    (s := s) (t := t) (loc := loc) (N := N) hmap
+
+/-- Fiberwise weighted occupancy control:
+    `∏ (N(i)! * A^{N(i)})` is bounded by the product of per-cell weighted
+    occupancy factors, for any localization map `loc` into a finite cell set. -/
+theorem factorial_weighted_prod_le_factorial_sum_pow_fiberwise
+    {β : Type*} [DecidableEq β]
+    (s : Finset α) (t : Finset β) (loc : α → β) (N : α → ℕ)
+    (hmap : ∀ i ∈ s, loc i ∈ t) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i)) ≤
+      ∏ b ∈ t,
+        (Nat.factorial (∑ i ∈ s with loc i = b, N i) : ℝ) *
+          A ^ (∑ i ∈ s with loc i = b, N i) := by
+  have hpartition :
+      (∏ b ∈ t, ∏ i ∈ s with loc i = b, (Nat.factorial (N i) : ℝ) * A ^ (N i)) =
+        ∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i) := by
+    simpa using
+      (Finset.prod_fiberwise_of_maps_to (s := s) (t := t) (g := loc)
+        (h := hmap) (f := fun i => (Nat.factorial (N i) : ℝ) * A ^ (N i)))
+  have hcell :
+      ∀ b ∈ t,
+        (∏ i ∈ s with loc i = b, (Nat.factorial (N i) : ℝ) * A ^ (N i)) ≤
+          (Nat.factorial (∑ i ∈ s with loc i = b, N i) : ℝ) *
+            A ^ (∑ i ∈ s with loc i = b, N i) := by
+    intro b hb
+    exact factorial_weighted_prod_le_factorial_sum_pow
+      (s := s.filter fun i => loc i = b) (N := N) A hA
+  have hnonneg :
+      ∀ b ∈ t, 0 ≤ ∏ i ∈ s with loc i = b, (Nat.factorial (N i) : ℝ) * A ^ (N i) := by
+    intro b hb
+    exact Finset.prod_nonneg (fun i hi =>
+      mul_nonneg
+        (by exact_mod_cast (Nat.zero_le (Nat.factorial (N i))))
+        (pow_nonneg hA _))
+  have hprod :
+      (∏ b ∈ t, ∏ i ∈ s with loc i = b, (Nat.factorial (N i) : ℝ) * A ^ (N i)) ≤
+        ∏ b ∈ t,
+          (Nat.factorial (∑ i ∈ s with loc i = b, N i) : ℝ) *
+            A ^ (∑ i ∈ s with loc i = b, N i) := by
+    exact Finset.prod_le_prod hnonneg hcell
+  calc
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i))
+        = ∏ b ∈ t, ∏ i ∈ s with loc i = b, (Nat.factorial (N i) : ℝ) * A ^ (N i) := by
+          simpa using hpartition.symm
+    _ ≤ ∏ b ∈ t,
+          (Nat.factorial (∑ i ∈ s with loc i = b, N i) : ℝ) *
+            A ^ (∑ i ∈ s with loc i = b, N i) := hprod
+
 end Factorial
 
 section GraphSpecialized
@@ -107,6 +197,72 @@ theorem graph_vertex_factorial_weighted_prod_le_total_factorial_pow
         A ^ (∑ v : Fin r, G.legs v) := by
   simpa using factorial_weighted_prod_le_factorial_sum_pow
     (s := (Finset.univ : Finset (Fin r))) (N := G.legs) A hA
+
+/-- Vertex-to-cell occupancy transfer (unweighted):
+    localization `loc` groups vertex legs into cell occupancies, and the product
+    of vertex factorials is bounded by the product of cell-occupancy factorials. -/
+theorem graph_vertex_factorial_prod_le_cell_occupancy_real
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
+      ∏ c ∈ cells, (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) := by
+  exact factorial_prod_le_factorial_sum_fiberwise_real
+    (s := (Finset.univ : Finset (Fin r))) (t := cells) (loc := loc) (N := G.legs)
+    (hmap := by
+      intro v hv
+      simpa using hloc v)
+
+/-- Vertex-to-cell occupancy transfer (weighted):
+    localization `loc` groups vertex legs into cell occupancies, and the weighted
+    vertex occupancy product is bounded by weighted per-cell occupancies. -/
+theorem graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+      ∏ c ∈ cells,
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+          A ^ (∑ v : Fin r with loc v = c, G.legs v) := by
+  exact factorial_weighted_prod_le_factorial_sum_pow_fiberwise
+    (s := (Finset.univ : Finset (Fin r))) (t := cells) (loc := loc) (N := G.legs)
+    (hmap := by
+      intro v hv
+      simpa using hloc v)
+    A hA
+
+/-- Transfer a vertex-weighted graph-integral bound to a per-cell weighted form
+    using a localization map `loc : vertices → cells`. -/
+theorem graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound
+    {r : ℕ} {β : Type*} [DecidableEq β]
+    (G : FeynmanGraph r) (mass : ℝ) (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (∏ c ∈ cells,
+        (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+          A ^ (∑ v : Fin r with loc v = c, G.legs v)) *
+        B ^ G.lines.card := by
+  have hocc :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+        ∏ c ∈ cells,
+          (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+            A ^ (∑ v : Fin r with loc v = c, G.legs v) :=
+    graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted
+      (G := G) (cells := cells) (loc := loc) hloc A hA
+  have hmul :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card ≤
+        (∏ c ∈ cells,
+          (Nat.factorial (∑ v : Fin r with loc v = c, G.legs v) : ℝ) *
+            A ^ (∑ v : Fin r with loc v = c, G.legs v)) *
+          B ^ G.lines.card := by
+    exact mul_le_mul_of_nonneg_right hocc (pow_nonneg hB _)
+  exact hbound.trans hmul
 
 end GraphSpecialized
 
@@ -990,6 +1146,84 @@ theorem feynman_expansion_abs_le_uniform_const_pow_vertices_of_phi4_weighted_fam
     _ ≤ ((N : ℝ) ^ r) * (K ^ r) := hmul
     _ = (((N : ℝ) * K) ^ r) := by
           simpa using (mul_pow (N : ℝ) K r).symm
+
+/-- Explicit local φ⁴ weighted-family finite expansion bound with concrete
+    constant `K0 = (4! * A^4) * B^2`. -/
+theorem feynman_expansion_abs_le_card_mul_explicit_const_pow_vertices_of_phi4_weighted_family_local
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      graphs.card * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) := by
+  let K0 : ℝ := ((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)
+  have hK0_nonneg : 0 ≤ K0 := by
+    dsimp [K0]
+    have hfact_nonneg : 0 ≤ (Nat.factorial 4 : ℝ) := by
+      exact_mod_cast (Nat.zero_le (Nat.factorial 4))
+    exact mul_nonneg (mul_nonneg hfact_nonneg (pow_nonneg hA 4)) (pow_nonneg hB 2)
+  have hgraph :
+      ∀ G ∈ graphs, |graphIntegral G mass| ≤ (K0 + 1) ^ r := by
+    intro G hG
+    have hsharp : |graphIntegral G mass| ≤ K0 ^ r := by
+      dsimp [K0]
+      exact graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp
+        (G := G) (mass := mass) (A := A) (B := B)
+        (hphi4 := hphi4 G hG) (hbound := hweighted G (hphi4 G hG))
+    have hpow : K0 ^ r ≤ (K0 + 1) ^ r := by
+      exact pow_le_pow_left₀ hK0_nonneg (le_add_of_nonneg_right zero_le_one) _
+    exact hsharp.trans hpow
+  simpa [K0] using
+    feynman_expansion_abs_le_card_mul_const_pow_vertices
+      (graphs := graphs) (mass := mass) (hmass := hmass) (f := f) hexp
+      (K := K0 + 1) hgraph
+
+/-- Explicit local φ⁴ weighted-family finite expansion bound in pure
+    exponential form under graph-count growth `#graphs ≤ N^{|V|}`. -/
+theorem feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_phi4_weighted_family_local
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (N : ℕ) (hcard : graphs.card ≤ N ^ r) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      (((N : ℝ) * (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1)) ^ r) := by
+  have hbase :
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        graphs.card * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) :=
+    feynman_expansion_abs_le_card_mul_explicit_const_pow_vertices_of_phi4_weighted_family_local
+      (graphs := graphs) (mass := mass) (hmass := hmass)
+      (A := A) (B := B) hA hB (f := f) hexp hphi4 hweighted
+  have hcardR : (graphs.card : ℝ) ≤ (N : ℝ) ^ r := by
+    exact_mod_cast hcard
+  have hmul :
+      (graphs.card : ℝ) * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) ≤
+        ((N : ℝ) ^ r) * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) := by
+    exact mul_le_mul_of_nonneg_right hcardR
+      (pow_nonneg (by positivity) _)
+  calc
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)|
+        ≤ (graphs.card : ℝ) * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) := hbase
+    _ ≤ ((N : ℝ) ^ r) * ((((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) ^ r) := hmul
+    _ = (((N : ℝ) * (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1)) ^ r) := by
+          simpa using
+            (mul_pow (N : ℝ) (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) r).symm
 
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/

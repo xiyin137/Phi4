@@ -111,6 +111,21 @@ the local Glimm-Jaffe objective.
   `feynman_expansion_abs_le_const_pow_vertices_of_card_bound` and
   the local φ⁴ weighted-family corollary
   `feynman_expansion_abs_le_uniform_const_pow_vertices_of_phi4_weighted_family_local`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also includes explicit
+  non-existential local φ⁴ weighted expansion constants:
+  `feynman_expansion_abs_le_card_mul_explicit_const_pow_vertices_of_phi4_weighted_family_local`
+  and
+  `feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_phi4_weighted_family_local`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides localization-map
+  (per-cell/per-square style) occupancy infrastructure:
+  `factorial_prod_le_factorial_sum_fiberwise`,
+  `factorial_prod_le_factorial_sum_fiberwise_real`,
+  `factorial_weighted_prod_le_factorial_sum_pow_fiberwise`,
+  and graph-specialized vertex-to-cell transfer lemmas
+  `graph_vertex_factorial_prod_le_cell_occupancy_real`,
+  `graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted`,
+  plus the direct graph-integral bridge
+  `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
