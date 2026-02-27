@@ -34,6 +34,9 @@
   (`Bₙ`) with eventual uniform control (`Bₙ ≤ B` eventually) via
   `exp_interaction_Lp_of_cutoff_seq_variable_lower_bounds` and matching
   weight/integrability constructors.
+- `Phi4/Interaction.lean` now also supports Borel-Cantelli transfer from
+  summable cutoff bad-event tails to eventual almost-sure cutoff lower bounds,
+  with corresponding `exp_interaction_Lp` and weight/integrability constructors.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,

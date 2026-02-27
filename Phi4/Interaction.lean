@@ -3,6 +3,7 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Mathlib.Order.Filter.AtTopBot.Basic
+import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
 import Phi4.WickProduct
 
 /-!
@@ -530,6 +531,89 @@ theorem exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (B := B) ?_
   exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ae
 
+/-- If cutoff lower bounds can fail only on a summable family of bad sets,
+    then the cutoff sequence is eventually bounded below almost surely. -/
+theorem cutoff_seq_eventually_lower_bound_of_bad_set_summable
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    (bad : ℕ → Set FieldConfig2D)
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞)
+    (hcutoff_good :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  have hnotbad :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop, ω ∉ bad n :=
+    MeasureTheory.ae_eventually_notMem
+      (μ := freeFieldMeasure params.mass params.mass_pos) hbad_sum
+  filter_upwards [hnotbad] with ω hω
+  exact hω.mono (fun n hn => hcutoff_good n ω hn)
+
+/-- If the bad-event probabilities for a fixed lower bound `-B` are summable,
+    then the cutoff sequence is eventually bounded below by `-B` almost surely. -/
+theorem cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  refine cutoff_seq_eventually_lower_bound_of_bad_set_summable
+    (params := params) (Λ := Λ) (B := B)
+    (bad := fun n => {ω : FieldConfig2D |
+      interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B})
+    hbad_sum ?_
+  intro n ω hω
+  exact not_lt.mp hω
+
+/-- Summable bad-event tails for cutoff lower bounds imply an almost-everywhere
+    lower bound on the limiting interaction. -/
+theorem interaction_ae_lower_bound_of_cutoff_seq_summable_bad_event_measure
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    [InteractionUVModel params]
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω := by
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure params Λ B hbad_sum
+  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
+
+/-- `Lᵖ` integrability of the Boltzmann weight from summable bad-event tails
+    for cutoff lower bounds. -/
+theorem exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure params Λ B hbad_sum
+  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
+    (params := params) (Λ := Λ) (B := B) hcutoff_ev
+
 /-- If per-cutoff lower bounds use a varying constant `Bₙ`, and `Bₙ ≤ B`
     eventually, then the cutoff sequence is eventually bounded below by `-B`
     almost surely. -/
@@ -630,6 +714,24 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_variable_lower_bounds
   exact exp_interaction_Lp_of_cutoff_seq_variable_lower_bounds
     (params := params) (Λ := Λ) (Bseq := Bseq) (B := B) hseq hB
 
+/-- Construct `InteractionWeightModel` from per-volume summable bad-event tails
+    for cutoff lower bounds. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_measure
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbad :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        (∑' n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hbad Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure
+    (params := params) (Λ := Λ) (B := B) hB
+
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence lower bounds (sufficient for
@@ -682,6 +784,24 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_variable_lower_b
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_variable_lower_bounds
       (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume summable bad-event tails for cutoff lower bounds. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_summable_bad_event_measure
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbad :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        (∑' n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_measure
+      (params := params) hbad with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩
 

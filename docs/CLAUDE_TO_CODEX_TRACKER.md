@@ -38,7 +38,7 @@ Each line item is actionable, testable, and tied to concrete files/modules.
 | ID | Issue | Action | Status |
 |---|---|---|---|
 | CTC-WP1-01 | Missing localized graph bound infrastructure | Add `Phi4/FeynmanGraphs/LocalizedBounds.lean` with occupancy/factorial combinatorics | done |
-| CTC-WP1-02 | `exp_interaction_Lp` not grounded | Build from semibounded Wick-4 + localized graph bounds + tail/layer-cake chain; weighted occupancy bounds + AE-lower-bound-to-`MemLp` + cutoff-sequence-lower-bound constructors (including eventually-in-`n` AE and variable `Bₙ` with eventual uniform control) for weight/integrability models landed | in_progress |
+| CTC-WP1-02 | `exp_interaction_Lp` not grounded | Build from semibounded Wick-4 + localized graph bounds + tail/layer-cake chain; weighted occupancy bounds + AE-lower-bound-to-`MemLp` + cutoff-sequence-lower-bound constructors (including eventually-in-`n` AE, variable `Bₙ` with eventual uniform control, and Borel-Cantelli summable-bad-event bridges) for weight/integrability models landed | in_progress |
 
 ### WP2: Covariance/Boundary/RP grounding
 
