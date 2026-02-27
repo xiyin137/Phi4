@@ -365,23 +365,16 @@ theorem interaction_lower_bound_of_cutoff_seq (params : Phi4Params) (Λ : Rectan
     Filter.Frequently.of_forall (fun n => hcutoff n ω)
   exact Filter.le_limsup_of_frequently_le hfreq (hbounded ω)
 
-/-- Almost-everywhere lower bound transfer from countably many UV-cutoff
-    lower bounds (uniform in cutoff index) to the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+/-- Almost-everywhere convergence of the canonical cutoff sequence
+    `κ_n = n + 1` to the limiting interaction. -/
+theorem interactionCutoff_standardSeq_tendsto_ae
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params] :
     ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hall :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-    rw [eventually_countable_forall]
-    intro n
-    exact hcutoff_ae n
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) := by
   have htend :
       ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
         Filter.Tendsto
@@ -389,7 +382,7 @@ theorem interaction_ae_lower_bound_of_cutoff_seq
           Filter.atTop
           (nhds (interaction params Λ ω)) :=
     interactionCutoff_tendsto_ae params Λ
-  filter_upwards [hall, htend] with ω hω hωt
+  filter_upwards [htend] with ω hωt
   have hnat' : Filter.Tendsto ((Nat.cast : ℕ → ℝ) ∘ fun a : ℕ => a + 1) Filter.atTop Filter.atTop :=
     (tendsto_natCast_atTop_atTop (R := ℝ)).comp (Filter.tendsto_add_atTop_nat 1)
   have hseq_raw :
@@ -410,17 +403,50 @@ theorem interaction_ae_lower_bound_of_cutoff_seq
     exact Filter.Eventually.of_forall (fun n => by
       have hn : 0 < (n + 1 : ℝ) := by exact_mod_cast Nat.succ_pos n
       simp [standardUVCutoffSeq, hn])
-  have hseq :
-      Filter.Tendsto
-        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
-        Filter.atTop
-        (nhds (interaction params Λ ω)) :=
-    hseq_raw.congr' hseq_eq
+  exact hseq_raw.congr' hseq_eq
+
+/-- If the canonical cutoff sequence is eventually bounded below almost surely,
+    then the limiting interaction inherits the same almost-everywhere lower bound. -/
+theorem interaction_ae_lower_bound_of_cutoff_seq_eventually
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω := by
+  have htend := interactionCutoff_standardSeq_tendsto_ae params Λ
+  filter_upwards [hcutoff_ae, htend] with ω hω hωt
   have hcutoff_mem :
       ∀ᶠ n in Filter.atTop,
         interactionCutoff params Λ (standardUVCutoffSeq n) ω ∈ Set.Ici (-B) :=
-    Filter.Eventually.of_forall (fun n => hω n)
-  exact isClosed_Ici.mem_of_tendsto hseq hcutoff_mem
+    hω
+  exact isClosed_Ici.mem_of_tendsto hωt hcutoff_mem
+
+/-- Almost-everywhere lower bound transfer from countably many UV-cutoff
+    lower bounds (uniform in cutoff index) to the limiting interaction. -/
+theorem interaction_ae_lower_bound_of_cutoff_seq
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω := by
+  have hall :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+    rw [eventually_countable_forall]
+    intro n
+    exact hcutoff_ae n
+  have hevent :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    hall.mono (fun ω hω => Filter.Eventually.of_forall hω)
+  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hevent
 
 /-! ## The exponential of the interaction is in Lᵖ
 
@@ -487,6 +513,23 @@ theorem exp_interaction_Lp_of_cutoff_seq_lower_bounds
     (B := B) ?_
   exact interaction_ae_lower_bound_of_cutoff_seq params Λ B hcutoff_ae
 
+/-- `Lᵖ` integrability of the Boltzmann weight from an eventually-in-`n`
+    almost-everywhere lower bound on the canonical cutoff sequence. -/
+theorem exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hcutoff_ae :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
+    (B := B) ?_
+  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ae
+
 /-- Construct `InteractionWeightModel` from per-volume cutoff-sequence
     almost-everywhere lower bounds. -/
 theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
@@ -504,6 +547,23 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
   exact exp_interaction_Lp_of_cutoff_seq_lower_bounds
     (params := params) (Λ := Λ) (B := B) hB
 
+/-- Construct `InteractionWeightModel` from per-volume eventually-in-`n`
+    cutoff-sequence almost-everywhere lower bounds. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          ∀ᶠ n in Filter.atTop,
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hcutoff_ae Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
+    (params := params) (Λ := Λ) (B := B) hB
+
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence lower bounds (sufficient for
@@ -518,6 +578,24 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds
             -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
+      (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume eventually-in-`n` cutoff lower bounds (sufficient for
+       Boltzmann-weight `Lᵖ` integrability). -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_eventually_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          ∀ᶠ n in Filter.atTop,
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
       (params := params) hcutoff_ae with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩

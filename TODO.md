@@ -25,6 +25,11 @@
   (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds`)
   so constructive cutoff bounds can instantiate the Chapter 8 interfaces directly.
+- `Phi4/Interaction.lean` now additionally supports eventually-in-cutoff (`∀ᶠ n`)
+  AE lower-bound transfer and matching constructors
+  (`interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_eventually_lower_bounds`),
+  reducing the need for all-`n` lower-bound assumptions.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
