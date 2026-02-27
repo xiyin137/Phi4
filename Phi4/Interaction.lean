@@ -614,6 +614,53 @@ theorem exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hcutoff_ev
 
+/-- If bad-event measures are controlled by a sequence with finite total mass,
+    then the cutoff sequence is eventually bounded below almost surely. -/
+theorem cutoff_seq_eventually_lower_bound_of_summable_bad_event_bound
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    (ε : ℕ → ℝ≥0∞)
+    (hε_sum : (∑' n : ℕ, ε n) ≠ ∞)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B} ≤ ε n) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  have hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞ :=
+    ne_top_of_le_ne_top hε_sum (ENNReal.tsum_le_tsum hbad_le)
+  exact cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure params Λ B hbad_sum
+
+/-- `Lᵖ` integrability of the Boltzmann weight from a summable majorant on
+    cutoff bad-event probabilities. -/
+theorem exp_interaction_Lp_of_cutoff_seq_summable_bad_event_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (ε : ℕ → ℝ≥0∞)
+    (hε_sum : (∑' n : ℕ, ε n) ≠ ∞)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B} ≤ ε n)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_lower_bound_of_summable_bad_event_bound
+      params Λ B ε hε_sum hbad_le
+  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
+    (params := params) (Λ := Λ) (B := B) hcutoff_ev
+
 /-- If per-cutoff lower bounds use a varying constant `Bₙ`, and `Bₙ ≤ B`
     eventually, then the cutoff sequence is eventually bounded below by `-B`
     almost surely. -/
@@ -732,6 +779,25 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_measure
   exact exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure
     (params := params) (Λ := Λ) (B := B) hB
 
+/-- Construct `InteractionWeightModel` from per-volume summable majorants on
+    cutoff bad-event probabilities. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_bound
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ ε : ℕ → ℝ≥0∞,
+        (∑' n : ℕ, ε n) ≠ ∞ ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B} ≤ ε n)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hbad Λ with ⟨B, ε, hε, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_summable_bad_event_bound
+    (params := params) (Λ := Λ) (B := B) (ε := ε) hε hB
+
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence lower bounds (sufficient for
@@ -801,6 +867,25 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_summable_bad_eve
               interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_measure
+      (params := params) hbad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume summable majorants on cutoff bad-event probabilities. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_summable_bad_event_bound
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ ε : ℕ → ℝ≥0∞,
+        (∑' n : ℕ, ε n) ≠ ∞ ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B} ≤ ε n)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_event_bound
       (params := params) hbad with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩

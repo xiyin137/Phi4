@@ -36,7 +36,9 @@
   weight/integrability constructors.
 - `Phi4/Interaction.lean` now also supports Borel-Cantelli transfer from
   summable cutoff bad-event tails to eventual almost-sure cutoff lower bounds,
-  with corresponding `exp_interaction_Lp` and weight/integrability constructors.
+  with corresponding `exp_interaction_Lp` and weight/integrability constructors;
+  and now includes majorant variants using explicit summable envelopes
+  (`μ badₙ ≤ εₙ`, `∑ εₙ < ∞`).
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
