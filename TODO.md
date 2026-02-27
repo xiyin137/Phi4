@@ -69,6 +69,10 @@ the local Glimm-Jaffe objective.
   `uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_family`,
   giving `∃ C > 0` such that all degree-capped weighted-bound graphs satisfy
   `|I(G)| ≤ C^|lines(G)|`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now adds direct model-bridge
+  constructors from weighted degree-capped assumptions:
+  `localized_graph_bound_of_degree_weighted_family` and
+  `feynmanGraphEstimateModel_nonempty_of_expansion_and_degree_weighted`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

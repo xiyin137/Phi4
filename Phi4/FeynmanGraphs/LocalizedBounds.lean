@@ -600,3 +600,56 @@ theorem uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_fami
 end FeynmanGraph
 
 end GraphIntegralBridge
+
+section EstimateModelBridge
+
+open MeasureTheory
+
+/-- Global localized graph bound from weighted degree-capped family bounds
+    plus a global degree cap. -/
+theorem localized_graph_bound_of_degree_weighted_family
+    (mass : ℝ) (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (hdegGlobal :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v ≤ d) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (r : ℕ) (G : FeynmanGraph r),
+      |graphIntegral G mass| ≤ C ^ G.lines.card := by
+  rcases FeynmanGraph.uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_family
+      (mass := mass) (d := d) (A := A) (B := B) hA hB hweighted with ⟨C, hCpos, hCbound⟩
+  refine ⟨C, hCpos, ?_⟩
+  intro r G
+  exact hCbound G (hdegGlobal G)
+
+/-- Construct `FeynmanGraphEstimateModel` from:
+    1) explicit graph-expansion data,
+    2) weighted degree-capped graph-integral bounds,
+    3) a global degree cap. -/
+theorem feynmanGraphEstimateModel_nonempty_of_expansion_and_degree_weighted
+    (mass : ℝ) (hmass : 0 < mass)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            ∑ G ∈ graphs, graphIntegral G mass)
+    (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (hdegGlobal :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v ≤ d) :
+    Nonempty (FeynmanGraphEstimateModel mass hmass) := by
+  rcases localized_graph_bound_of_degree_weighted_family
+      (mass := mass) (d := d) (A := A) (B := B) hA hB hweighted hdegGlobal with
+    ⟨C, hCpos, hCbound⟩
+  exact ⟨{
+    feynman_graph_expansion := hexpansion
+    localized_graph_bound := ⟨C, hCpos, hCbound⟩
+  }⟩
+
+end EstimateModelBridge
