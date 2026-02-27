@@ -227,6 +227,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice_monotone`,
      `correlationInequalityModel_nonempty_of_lattice_and_core_models`,
      `correlationInequalityModel_nonempty_of_lattice_and_core_models_and_lattice_monotone`
+   - bundle correlation assembly now uses atomic four-point inputs
+     (`CorrelationFourPointInequalityModel` + `SchwingerNMonotoneModel params 4`)
+     and reconstructs full `CorrelationFourPointModel` / `CorrelationInequalityModel`
    - in `Phi4/CorrelationInequalities.lean`
 
 4. Infinite-volume split/recombine

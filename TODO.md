@@ -260,8 +260,11 @@ the local Glimm-Jaffe objective.
   theorem signatures can state translated-test-function clustering directly.
 - `OSAxioms.lean` now includes trusted OS1 theorem
   `phi4_os1_of_interface`; `ModelBundle.lean` now exposes `phi4_os1_of_bundle`.
-- `Phi4/ModelBundle.lean` now carries correlation submodels directly; full
-  `CorrelationInequalityModel` is reconstructed by instance.
+- `Phi4/ModelBundle.lean` now carries correlation inputs in atomic form
+  (`CorrelationTwoPointModel`, `CorrelationFourPointInequalityModel`,
+  `SchwingerNMonotoneModel params 4`, `CorrelationFKGModel`); full
+  `CorrelationFourPointModel` / `CorrelationInequalityModel` are reconstructed
+  by instance.
 - `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
 - FKG-derived connected two-point nonnegativity statements now explicitly
   require nonnegative test functions (corrected soundness of statement direction).

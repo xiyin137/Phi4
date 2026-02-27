@@ -25,7 +25,8 @@ class Phi4ModelBundle (params : Phi4Params) where
   interactionWeight : InteractionWeightModel params
   finiteVolumeComparison : FiniteVolumeComparisonModel params
   correlationTwoPoint : CorrelationTwoPointModel params
-  correlationFourPoint : CorrelationFourPointModel params
+  correlationFourPointInequality : CorrelationFourPointInequalityModel params
+  schwingerFourMonotone : SchwingerNMonotoneModel params 4
   correlationFKG : CorrelationFKGModel params
   freeRP : FreeReflectionPositivityModel params.mass params.mass_pos
   dirichletRP : DirichletReflectionPositivityModel params.mass params.mass_pos
@@ -90,12 +91,20 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
   h.correlationTwoPoint
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
-    CorrelationFourPointModel params :=
-  h.correlationFourPoint
+    CorrelationFourPointInequalityModel params :=
+  h.correlationFourPointInequality
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     SchwingerNMonotoneModel params 4 :=
-  schwingerNMonotoneModel_four_of_correlationFourPoint (params := params)
+  h.schwingerFourMonotone
+
+instance (params : Phi4Params) [h : Phi4ModelBundle params] :
+    CorrelationFourPointModel params := by
+  letI : CorrelationFourPointInequalityModel params := h.correlationFourPointInequality
+  letI : SchwingerNMonotoneModel params 4 := h.schwingerFourMonotone
+  rcases correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
+      (params := params) with ⟨hfour⟩
+  exact hfour
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationFKGModel params :=
@@ -104,7 +113,12 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     CorrelationInequalityModel params := by
   letI : CorrelationTwoPointModel params := h.correlationTwoPoint
-  letI : CorrelationFourPointModel params := h.correlationFourPoint
+  letI : CorrelationFourPointInequalityModel params := h.correlationFourPointInequality
+  letI : SchwingerNMonotoneModel params 4 := h.schwingerFourMonotone
+  letI : CorrelationFourPointModel params := by
+    rcases correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
+        (params := params) with ⟨hfour⟩
+    exact hfour
   letI : CorrelationFKGModel params := h.correlationFKG
   infer_instance
 
