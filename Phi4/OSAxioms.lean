@@ -40,6 +40,8 @@ class OSAxiomCoreModel (params : Phi4Params) where
   schwingerFunctions : SchwingerFunctions 1
   os0 :
     ∀ n, Continuous (schwingerFunctions n)
+  schwinger_linear :
+    ∀ n, IsLinearMap ℂ (schwingerFunctions n)
   os2_translation :
     ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
       (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
@@ -124,6 +126,12 @@ theorem phi4_os0 (params : Phi4Params)
     ∀ n, Continuous (phi4SchwingerFunctions params n) := by
   simpa [phi4SchwingerFunctions] using
     (OSAxiomCoreModel.os0 (params := params))
+
+theorem phi4_os0_linear (params : Phi4Params)
+    [OSAxiomCoreModel params] :
+    ∀ n, IsLinearMap ℂ (phi4SchwingerFunctions params n) := by
+  simpa [phi4SchwingerFunctions] using
+    (OSAxiomCoreModel.schwinger_linear (params := params))
 
 /-! ## OS1: Regularity (Linear Growth) -/
 
@@ -275,6 +283,7 @@ theorem phi4_satisfies_OS_of_interfaces (params : Phi4Params)
 theorem osaCoreModel_nonempty_of_data (params : Phi4Params)
     (S : SchwingerFunctions 1)
     (hos0 : ∀ n, Continuous (S n))
+    (hos0_linear : ∀ n, IsLinearMap ℂ (S n))
     (hos2_translation :
       ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
@@ -293,6 +302,7 @@ theorem osaCoreModel_nonempty_of_data (params : Phi4Params)
   refine ⟨{
     schwingerFunctions := S
     os0 := hos0
+    schwinger_linear := hos0_linear
     os2_translation := hos2_translation
     os2_rotation := hos2_rotation
     e3_symmetric := he3_symmetric
@@ -303,6 +313,7 @@ theorem osaCoreModel_nonempty_of_data (params : Phi4Params)
 theorem gap_osaCoreModel_nonempty (params : Phi4Params)
     (S : SchwingerFunctions 1)
     (hos0 : ∀ n, Continuous (S n))
+    (hos0_linear : ∀ n, IsLinearMap ℂ (S n))
     (hos2_translation :
       ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
@@ -318,7 +329,8 @@ theorem gap_osaCoreModel_nonempty (params : Phi4Params)
         (∀ x, g.toFun x = f.toFun (fun i => x (σ i))) →
         S n f = S n g) :
     Nonempty (OSAxiomCoreModel params) := by
-  exact osaCoreModel_nonempty_of_data params S hos0 hos2_translation hos2_rotation he3_symmetric
+  exact osaCoreModel_nonempty_of_data params S hos0 hos0_linear
+    hos2_translation hos2_rotation he3_symmetric
 
 /-- Honest frontier: distributional E2 from the OS core package. -/
 theorem osDistributionE2Model_nonempty_of_data (params : Phi4Params)
@@ -387,6 +399,7 @@ theorem gap_osE4Cluster_nonempty (params : Phi4Params)
 theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
     (S : SchwingerFunctions 1)
     (hos0 : ∀ n, Continuous (S n))
+    (hos0_linear : ∀ n, IsLinearMap ℂ (S n))
     (hos2_translation :
       ∀ (n : ℕ) (a : Fin 2 → ℝ) (f g : SchwartzNPoint 1 n),
         (∀ x, g.toFun x = f.toFun (fun i => x i + a)) →
@@ -422,6 +435,7 @@ theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
   let core : OSAxiomCoreModel params := {
     schwingerFunctions := S
     os0 := hos0
+    schwinger_linear := hos0_linear
     os2_translation := hos2_translation
     os2_rotation := hos2_rotation
     e3_symmetric := he3_symmetric
@@ -473,6 +487,7 @@ theorem phi4_satisfies_OS (params : Phi4Params)
   rcases phi4_satisfies_OS_of_explicit_data params
       (S := OSAxiomCoreModel.schwingerFunctions (params := params))
       (hos0 := OSAxiomCoreModel.os0 (params := params))
+      (hos0_linear := OSAxiomCoreModel.schwinger_linear (params := params))
       (hos2_translation := OSAxiomCoreModel.os2_translation (params := params))
       (hos2_rotation := OSAxiomCoreModel.os2_rotation (params := params))
       (he3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params))
