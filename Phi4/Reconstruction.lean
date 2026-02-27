@@ -887,15 +887,16 @@ theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
           IsWickRotationPair OS.S Wfn.W := by
   exact hreconstruct
 
-/-- Explicit reconstruction step from OS + linear growth to Wightman data,
-    via the canonical OS→Wightman theorem. -/
+/-- Public reconstruction step from OS + linear growth to Wightman data,
+    routed through `WightmanReconstructionModel`. -/
 theorem phi4_wightman_reconstruction_step (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
-  exact wightman_reconstruction_of_os_to_wightman params
+  exact phi4_wightman_reconstruction_step_of_interface params
 
 /-! ## OS4: Clustering (for weak coupling) -/
 

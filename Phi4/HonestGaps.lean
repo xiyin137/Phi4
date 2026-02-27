@@ -25,7 +25,8 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
 
 /-- Honest gap placeholder for the OS-to-Wightman reconstruction step. -/
 theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    [OSAxiomCoreModel params]
+    [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
