@@ -240,6 +240,71 @@ class CorrelationFKGModel (params : Phi4Params) where
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
 
+/-- Construct `CorrelationTwoPointModel` from explicit two-point GKS-I and
+    two-point volume-monotonicity data. -/
+theorem correlationTwoPointModel_nonempty_of_data
+    (params : Phi4Params)
+    (hgriffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      0 ≤ schwingerTwo params Λ f g)
+    (hschwinger_two_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
+      schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g) :
+    Nonempty (CorrelationTwoPointModel params) := by
+  exact ⟨{
+    griffiths_first := hgriffiths_first
+    schwinger_two_monotone := hschwinger_two_monotone
+  }⟩
+
+/-- Construct `CorrelationFourPointModel` from explicit four-point
+    GKS-II/Lebowitz data together with four-point volume monotonicity. -/
+theorem correlationFourPointModel_nonempty_of_data
+    (params : Phi4Params)
+    (hgriffiths_second : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
+    (hlebowitz : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
+        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
+        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
+    (hfour_mono : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin 4 → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
+      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f) :
+    Nonempty (CorrelationFourPointModel params) := by
+  exact ⟨{
+    griffiths_second := hgriffiths_second
+    lebowitz_inequality := hlebowitz
+    schwinger_four_monotone := hfour_mono
+  }⟩
+
+/-- Construct `CorrelationFKGModel` from an explicit finite-volume FKG
+    positive-correlation inequality. -/
+theorem correlationFKGModel_nonempty_of_data
+    (params : Phi4Params)
+    (hfkg : ∀ (Λ : Rectangle)
+      (F G : FieldConfig2D → ℝ)
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
+        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
+      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)) :
+    Nonempty (CorrelationFKGModel params) := by
+  exact ⟨{ fkg_inequality := hfkg }⟩
+
 /-- Four-point monotonicity assumptions imply `k = 4` Schwinger-moment
     monotonicity. -/
 instance (priority := 100) schwingerNMonotoneModel_four_of_correlationFourPoint
