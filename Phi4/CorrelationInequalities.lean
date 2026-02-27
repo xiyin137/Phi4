@@ -87,6 +87,53 @@ class CorrelationTwoPointModel (params : Phi4Params) where
       (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
       schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g
 
+/-- Monotonicity interface for finite-volume `k`-point Schwinger moments under
+    domain inclusion. This extends the existing two-point monotonicity surface
+    to arbitrary fixed arity `k`. -/
+class SchwingerNMonotoneModel (params : Phi4Params) (k : ℕ) where
+  schwingerN_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin k → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
+      schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f
+
+/-- Construct `SchwingerNMonotoneModel` from explicit `k`-point monotonicity
+    data. -/
+theorem schwingerNMonotoneModel_nonempty_of_data
+    (params : Phi4Params) (k : ℕ)
+    (hmono : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin k → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
+      schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f) :
+    Nonempty (SchwingerNMonotoneModel params k) := by
+  exact ⟨{ schwingerN_monotone := hmono }⟩
+
+/-- Interface-level access to finite-volume `k`-point monotonicity. -/
+theorem schwingerN_monotone_of_interface
+    (params : Phi4Params) (k : ℕ)
+    [SchwingerNMonotoneModel params k]
+    (Λ₁ Λ₂ : Rectangle)
+    (h : Λ₁.toSet ⊆ Λ₂.toSet)
+    (f : Fin k → TestFun2D)
+    (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0) :
+    schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f := by
+  exact SchwingerNMonotoneModel.schwingerN_monotone
+    (params := params) Λ₁ Λ₂ h f hf hfΛ
+
+/-- Two-point monotonicity implies `k = 2` Schwinger-moment monotonicity. -/
+instance (priority := 100) schwingerNMonotoneModel_two_of_correlationTwoPoint
+    (params : Phi4Params) [CorrelationTwoPointModel params] :
+    SchwingerNMonotoneModel params 2 where
+  schwingerN_monotone := by
+    intro Λ₁ Λ₂ h f hf hfΛ
+    have hmono := CorrelationTwoPointModel.schwinger_two_monotone
+      (params := params) Λ₁ Λ₂ h (f 0) (f 1) (hf 0) (hf 1) (hfΛ 0) (hfΛ 1)
+    simpa [schwingerN_two_eq_schwingerTwo] using hmono
+
 /-- Four-point correlation inequality input: one GKS-II pairing channel and the
     Lebowitz four-point upper bound. -/
 class CorrelationFourPointModel (params : Phi4Params) where
@@ -260,6 +307,21 @@ class LatticeSchwingerTwoMonotoneModel (params : Phi4Params) where
         |schwingerTwo params Λ₁ f g - latticeTwo Λ₁ L₁ f g| < ε ∧
         |schwingerTwo params Λ₂ f g - latticeTwo Λ₂ L₂ f g| < ε
 
+/-- Bridge assumptions for deriving continuum volume-monotonicity of
+    finite-volume `k`-point Schwinger moments from lattice-ordered
+    approximants. -/
+class LatticeSchwingerNMonotoneModel (params : Phi4Params) (k : ℕ) where
+  latticeN : ∀ Λ : Rectangle, Phi4.RectLattice Λ → (Fin k → TestFun2D) → ℝ
+  approx_monotone_pair : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin k → TestFun2D) (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0)
+      (ε : ℝ), 0 < ε →
+      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
+        latticeN Λ₁ L₁ f ≤ latticeN Λ₂ L₂ f ∧
+        |schwingerN params Λ₁ k f - latticeN Λ₁ L₁ f| < ε ∧
+        |schwingerN params Λ₂ k f - latticeN Λ₂ L₂ f| < ε
+
 /-- Construct `LatticeSchwingerTwoMonotoneModel` from explicit lattice two-point
     data and ordered approximation pairs for nested volumes. -/
 theorem latticeSchwingerTwoMonotoneModel_nonempty_of_data
@@ -297,6 +359,81 @@ theorem schwinger_two_monotone_from_lattice
   refine ⟨LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ₁ L₁ f g,
     LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ₂ L₂ f g,
     hmon, hclose₁, hclose₂⟩
+
+/-- Construct `LatticeSchwingerNMonotoneModel` from explicit lattice `k`-point
+    data and ordered approximation pairs for nested volumes. -/
+theorem latticeSchwingerNMonotoneModel_nonempty_of_data
+    (params : Phi4Params) (k : ℕ)
+    (latticeN : ∀ Λ : Rectangle, Phi4.RectLattice Λ → (Fin k → TestFun2D) → ℝ)
+    (happrox_pair : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin k → TestFun2D) (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0)
+      (ε : ℝ), 0 < ε →
+      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
+        latticeN Λ₁ L₁ f ≤ latticeN Λ₂ L₂ f ∧
+        |schwingerN params Λ₁ k f - latticeN Λ₁ L₁ f| < ε ∧
+        |schwingerN params Λ₂ k f - latticeN Λ₂ L₂ f| < ε) :
+    Nonempty (LatticeSchwingerNMonotoneModel params k) := by
+  exact ⟨{
+    latticeN := latticeN
+    approx_monotone_pair := happrox_pair
+  }⟩
+
+/-- Continuum `k`-point monotonicity from lattice-ordered approximation pairs. -/
+theorem schwingerN_monotone_from_lattice
+    (params : Phi4Params) (k : ℕ)
+    [LatticeSchwingerNMonotoneModel params k]
+    (Λ₁ Λ₂ : Rectangle)
+    (h : Λ₁.toSet ⊆ Λ₂.toSet)
+    (f : Fin k → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
+    (hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0) :
+    schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f := by
+  apply le_of_approx_ordered
+  intro ε hε
+  rcases LatticeSchwingerNMonotoneModel.approx_monotone_pair
+      (params := params) Λ₁ Λ₂ h f hf hfΛ ε hε with
+      ⟨L₁, L₂, hmon, hclose₁, hclose₂⟩
+  refine ⟨LatticeSchwingerNMonotoneModel.latticeN (params := params) Λ₁ L₁ f,
+    LatticeSchwingerNMonotoneModel.latticeN (params := params) Λ₂ L₂ f,
+    hmon, hclose₁, hclose₂⟩
+
+/-- Lattice `k`-point monotonicity assumptions induce the continuum
+    `SchwingerNMonotoneModel` interface. -/
+instance (priority := 100) schwingerNMonotoneModel_of_lattice
+    (params : Phi4Params) (k : ℕ)
+    [LatticeSchwingerNMonotoneModel params k] :
+    SchwingerNMonotoneModel params k where
+  schwingerN_monotone := schwingerN_monotone_from_lattice (params := params) (k := k)
+
+/-- Existing lattice two-point monotonicity data yields a generic lattice
+    monotonicity model at arity `k = 2`. -/
+theorem latticeSchwingerNMonotoneModel_two_nonempty_of_latticeTwo
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params] :
+    Nonempty (LatticeSchwingerNMonotoneModel params 2) := by
+  refine latticeSchwingerNMonotoneModel_nonempty_of_data params 2
+    (fun Λ L f => LatticeSchwingerTwoMonotoneModel.latticeTwo (params := params) Λ L (f 0) (f 1))
+    ?_
+  intro Λ₁ Λ₂ h f hf hfΛ ε hε
+  rcases LatticeSchwingerTwoMonotoneModel.approx_monotone_pair
+      (params := params) Λ₁ Λ₂ h
+      (f 0) (f 1) (hf 0) (hf 1) (hfΛ 0) (hfΛ 1) ε hε with
+      ⟨L₁, L₂, hmon, hclose₁, hclose₂⟩
+  refine ⟨L₁, L₂, hmon, ?_, ?_⟩
+  · simpa [schwingerN_two_eq_schwingerTwo] using hclose₁
+  · simpa [schwingerN_two_eq_schwingerTwo] using hclose₂
+
+/-- Lattice two-point monotonicity yields a `k = 2` Schwinger-moment
+    monotonicity interface instance. -/
+theorem schwingerNMonotoneModel_two_nonempty_of_lattice
+    (params : Phi4Params)
+    [LatticeSchwingerTwoMonotoneModel params] :
+    Nonempty (SchwingerNMonotoneModel params 2) := by
+  rcases latticeSchwingerNMonotoneModel_two_nonempty_of_latticeTwo
+      (params := params) with ⟨hmonoN⟩
+  letI : LatticeSchwingerNMonotoneModel params 2 := hmonoN
+  exact ⟨inferInstance⟩
 
 /-- Core correlation-inequality inputs not yet derived from the current
     lattice bridge layer. This isolates the remaining analytic assumptions
