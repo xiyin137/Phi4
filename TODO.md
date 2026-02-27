@@ -56,6 +56,10 @@ the local Glimm-Jaffe objective.
   constant-valence exact formulas, and φ⁴-specialized identities
   (`lines_card_eq_two_mul_vertices_of_phi4`,
   `two_mul_lines_card_eq_four_mul_vertices_of_phi4`).
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides a degree-capped
+  weighted occupancy bound in pure line-count form
+  (`vertex_factorial_weighted_prod_le_degree_const_pow_lines`), i.e.
+  `∏ (legs! * A^legs) ≤ (((d!)^2 * A^2) ^ |lines|)` for `A ≥ 0`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

@@ -390,9 +390,53 @@ theorem vertex_factorial_prod_le_degree_factorial_pow_lines
     _ = ((Nat.factorial d) ^ 2) ^ G.lines.card := by
           simp [pow_mul]
 
+/-- Real-cast variant of `vertex_factorial_prod_le_degree_factorial_pow_lines`. -/
+theorem vertex_factorial_prod_le_degree_factorial_pow_lines_real
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
+      (((Nat.factorial d : ℝ) ^ 2) ^ G.lines.card) := by
+  exact_mod_cast vertex_factorial_prod_le_degree_factorial_pow_lines G d hdeg
+
 end FeynmanGraph
 
 end DegreeBound
+
+section DegreeWeighted
+
+namespace FeynmanGraph
+
+variable {r : ℕ}
+
+/-- Degree-capped weighted occupancy control in pure line-count form:
+    under `legs(v) ≤ d` and `A ≥ 0`, the product
+    `∏ (legs(v)! * A^{legs(v)})` is bounded by
+    `(((d!)^2) * A^2)^{|lines|}`. -/
+theorem vertex_factorial_weighted_prod_le_degree_const_pow_lines
+    (G : FeynmanGraph r) (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d)
+    (A : ℝ) (hA : 0 ≤ A) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+      ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) ^ G.lines.card) := by
+  rw [graph_vertex_factorial_weighted_prod_eq (G := G) (A := A)]
+  have hfac :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
+        (((Nat.factorial d : ℝ) ^ 2) ^ G.lines.card) :=
+    vertex_factorial_prod_le_degree_factorial_pow_lines_real G d hdeg
+  have hpow_nonneg : 0 ≤ A ^ (∑ v : Fin r, G.legs v) := pow_nonneg hA _
+  have hmul :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) * A ^ (∑ v : Fin r, G.legs v) ≤
+        (((Nat.factorial d : ℝ) ^ 2) ^ G.lines.card) * A ^ (∑ v : Fin r, G.legs v) :=
+    mul_le_mul_of_nonneg_right hfac hpow_nonneg
+  calc
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) * A ^ (∑ v : Fin r, G.legs v)
+        ≤ (((Nat.factorial d : ℝ) ^ 2) ^ G.lines.card) * A ^ (∑ v : Fin r, G.legs v) := hmul
+    _ = (((Nat.factorial d : ℝ) ^ 2) ^ G.lines.card) * (A ^ 2) ^ G.lines.card := by
+          simp [total_legs_pow_eq_pow_lines (G := G) (A := A)]
+    _ = ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) ^ G.lines.card) := by
+          simpa using (mul_pow ((Nat.factorial d : ℝ) ^ 2) (A ^ 2) G.lines.card).symm
+
+end FeynmanGraph
+
+end DegreeWeighted
 
 section DegreeCardinality
 
