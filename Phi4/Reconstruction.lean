@@ -759,9 +759,7 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
     (hbeta : 0 < beta)
-    (halpha_one : 1 ≤ alpha)
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -784,11 +782,44 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     ∃ OS' : OsterwalderSchraderAxioms 1,
       OS'.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS') := by
+  let alpha' : ℝ := max alpha 1
+  have halpha' : 0 < alpha' := by
+    exact lt_of_lt_of_le zero_lt_one (le_max_right alpha 1)
+  have halpha'_one : 1 ≤ alpha' := by
+    exact le_max_right alpha 1
+  have hreduce' :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f) := by
+    intro c n hn f
+    let C : ℝ :=
+      beta ^ n * (n.factorial : ℝ) ^ gamma *
+        SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f)
+    have hC_nonneg : 0 ≤ C := by
+      dsimp [C]
+      positivity
+    have hboundC : alpha * C ≤ alpha' * C := by
+      simpa [alpha', C, mul_assoc, mul_left_comm, mul_comm] using
+        (mul_le_mul_of_nonneg_right (le_max_left alpha 1) hC_nonneg)
+    have hboundC' :
+        alpha * C ≤
+          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f) := by
+      simpa [C, mul_assoc, mul_left_comm, mul_comm] using hboundC
+    exact (show
+      ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) ≤ alpha * C from by
+        simpa [C, mul_assoc, mul_left_comm, mul_comm] using hreduce c n hn f).trans hboundC'
   have hzero := phi4_zero_linear_growth_of_normalized_order0
-    params alpha beta gamma halpha_one hnormalized
+    params alpha' beta gamma halpha'_one hnormalized
   exact phi4_linear_growth_of_interface_productTensor_approx_and_zero
-    params OS hS 0 alpha beta gamma halpha hbeta
-    hcompat hreduce happrox hzero
+    params OS hS 0 alpha' beta gamma halpha' hbeta
+    hcompat hreduce' happrox hzero
 
 /-- Sequence approximation by product tensors from dense image of the
     product-tensor map at fixed positive order. -/
@@ -840,9 +871,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
     (hbeta : 0 < beta)
-    (halpha_one : 1 ≤ alpha)
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -865,7 +894,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order
       OS'.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS') := by
   exact phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hcompat hreduce
     (phi4_productTensor_approx_family_of_dense_range hdense)
     hnormalized
@@ -884,9 +913,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
     (hbeta : 0 < beta)
-    (halpha_one : 1 ≤ alpha)
     (hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0))
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
@@ -910,7 +937,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0
   have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
     phi4_normalized_order0_of_linear_and_compat params hlin0 hcompat
   exact phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hcompat hreduce hdense hnormalized
 
 /-- Construct φ⁴ linear-growth witness data from:
@@ -927,9 +954,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
     (hbeta : 0 < beta)
-    (halpha_one : 1 ≤ alpha)
     (hsmul0 :
       ∀ (z : ℂ) (g : SchwartzNPoint 1 0),
         phi4SchwingerFunctions params 0 (z • g) =
@@ -956,7 +981,7 @@ theorem phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
   have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
     phi4_normalized_order0_of_smul_and_compat params hsmul0 hcompat
   exact phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hcompat hreduce hdense hnormalized
 
 /-! ## Linear growth condition (E0') -/
@@ -2019,9 +2044,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
     [OSE4ClusterModel params] →
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
-    (halpha : 0 < alpha) →
     (hbeta : 0 < beta) →
-    (halpha_one : 1 ≤ alpha) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -2046,10 +2069,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
   intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
-    halpha hbeta halpha_one hcompat hreduce happrox hnormalized
+    hbeta hcompat hreduce happrox hnormalized
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hcompat hreduce happrox hnormalized
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
@@ -2070,9 +2093,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     [OSE4ClusterModel params] →
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
-    (halpha : 0 < alpha) →
     (hbeta : 0 < beta) →
-    (halpha_one : 1 ≤ alpha) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -2096,10 +2117,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
   intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
-    halpha hbeta halpha_one hcompat hreduce hdense hnormalized
+    hbeta hcompat hreduce hdense hnormalized
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_dense_and_normalized_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hcompat hreduce hdense hnormalized
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
@@ -2121,9 +2142,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_linear_order0
     [OSE4ClusterModel params] →
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
-    (halpha : 0 < alpha) →
     (hbeta : 0 < beta) →
-    (halpha_one : 1 ≤ alpha) →
     (hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0)) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
@@ -2146,10 +2165,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_linear_order0
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
   intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
-    halpha hbeta halpha_one hlin0 hcompat hreduce hdense
+    hbeta hlin0 hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_dense_and_linear_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hlin0 hcompat hreduce hdense
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
@@ -2171,9 +2190,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_smul_order0
     [OSE4ClusterModel params] →
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
-    (halpha : 0 < alpha) →
     (hbeta : 0 < beta) →
-    (halpha_one : 1 ≤ alpha) →
     (hsmul0 :
       ∀ (z : ℂ) (g : SchwartzNPoint 1 0),
         phi4SchwingerFunctions params 0 (z • g) =
@@ -2199,10 +2216,10 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_smul_order0
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
   intro hweight hlimit hreg hos he2 he4 hsmall alpha beta gamma
-    halpha hbeta halpha_one hsmul0 hcompat hreduce hdense
+    hbeta hsmul0 hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_dense_and_smul_order0
-    params OS hS alpha beta gamma halpha hbeta halpha_one
+    params OS hS alpha beta gamma hbeta
     hsmul0 hcompat hreduce hdense
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
