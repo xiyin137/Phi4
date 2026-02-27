@@ -1349,6 +1349,73 @@ theorem feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_phi4_wei
           simpa using
             (mul_pow (N : ℝ) (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) r).symm
 
+/-- Finite φ⁴ expansion bound in per-cell occupancy form for a fixed
+    localization map `loc : vertices → cells`. -/
+theorem feynman_expansion_abs_le_card_mul_cell_occupancy_weighted_of_phi4_vertex_weighted
+    {β : Type*} [DecidableEq β]
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (cells : Finset β) (loc : Fin r → β) (hloc : ∀ v : Fin r, loc v ∈ cells)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      ∀ G ∈ graphs,
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      graphs.card *
+        ((∏ c ∈ cells,
+          (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+            A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+          B ^ (2 * r)) := by
+  let K : ℝ :=
+    (∏ c ∈ cells,
+      (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+        A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+      B ^ (2 * r)
+  have hgraph : ∀ G ∈ graphs, |graphIntegral G mass| ≤ K := by
+    intro G hG
+    have hG :
+        |graphIntegral G mass| ≤
+          (∏ c ∈ cells,
+            (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+              A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+            B ^ (2 * r) :=
+      graphIntegral_abs_le_cell_occupancy_weighted_of_phi4_vertex_weighted_bound
+        (G := G) (mass := mass) (cells := cells) (loc := loc) hloc
+        (A := A) (B := B) hA hB (hphi4 := hphi4 G hG) (hbound := hbound G hG)
+    simpa [K] using hG
+  rw [hexp]
+  have habs :
+      |Finset.sum graphs (fun G => graphIntegral G mass)| ≤
+        Finset.sum graphs (fun G => |graphIntegral G mass|) := by
+    simpa using
+      (Finset.abs_sum_le_sum_abs
+        (f := fun G : FeynmanGraph r => graphIntegral G mass)
+        (s := graphs))
+  have hsum :
+      Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+        Finset.sum graphs (fun _ => K) := by
+    refine Finset.sum_le_sum ?_
+    intro G hG
+    exact hgraph G hG
+  calc
+    |Finset.sum graphs (fun G => graphIntegral G mass)|
+        ≤ Finset.sum graphs (fun G => |graphIntegral G mass|) := habs
+    _ ≤ Finset.sum graphs (fun _ => K) := hsum
+    _ = graphs.card * K := by
+          simp [Finset.sum_const, nsmul_eq_mul]
+    _ = graphs.card *
+          ((∏ c ∈ cells,
+            (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+              A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) *
+            B ^ (2 * r)) := by
+          simp [K]
+
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/
 theorem uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local

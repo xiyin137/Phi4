@@ -133,7 +133,10 @@ the local Glimm-Jaffe objective.
   `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image`;
   additionally, φ⁴-localized per-cell rewriting is now explicit via
   `graphIntegral_abs_le_cell_occupancy_weighted_of_phi4_vertex_weighted_bound`
-  (occupancies `4 * #(vertices in cell)` and line factor `B^(2|V|)`).
+  (occupancies `4 * #(vertices in cell)` and line factor `B^(2|V|)`), with
+  finite-expansion lifting to `#graphs`-scaled bounds for fixed localization
+  maps:
+  `feynman_expansion_abs_le_card_mul_cell_occupancy_weighted_of_phi4_vertex_weighted`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
