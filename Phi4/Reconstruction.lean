@@ -268,6 +268,59 @@ def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
     SchwartzNPoint 1 n :=
   SchwartzMap.productTensor (fun i => testFunToSchwartzSpacetime (f i))
 
+/-- Zero-point normalization on product tensors from compatibility with
+    `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_zero_of_compat
+    (params : Phi4Params)
+    [InfiniteVolumeLimitModel params]
+    [InteractionWeightModel params]
+    [OSAxiomCoreModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (f : Fin 0 → TestFun2D) :
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f) = 1 := by
+  calc
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f)
+        = (infiniteVolumeSchwinger params 0 f : ℂ) := by
+          simpa using hcompat 0 f
+    _ = 1 := by
+          norm_num [infiniteVolumeSchwinger_zero]
+
+/-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
+    from a global finite-volume uniform generating-functional estimate, plus an
+    explicit compatibility bridge to `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
+    (params : Phi4Params)
+    [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomCoreModel params]
+    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    ∃ c : ℝ,
+      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+  rcases infiniteVolumeSchwinger_mixed_bound_of_global_uniform
+      (params := params) hglobal n hn f with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  calc
+    ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖
+        = ‖(infiniteVolumeSchwinger params n f : ℂ)‖ := by
+          simp [hcompat n f]
+    _ = |infiniteVolumeSchwinger params n f| := by
+          simp
+    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := hc
+
 /-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
     from explicit pointwise-in-`f` finite-volume uniform generating-functional
     control, plus an explicit compatibility bridge to
