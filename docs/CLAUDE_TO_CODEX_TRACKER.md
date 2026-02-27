@@ -44,7 +44,7 @@ Each line item is actionable, testable, and tied to concrete files/modules.
 
 | ID | Issue | Action | Status |
 |---|---|---|---|
-| CTC-WP2-01 | `FreeCovarianceKernelModel` not constructively instantiated | Develop CLM-to-kernel bridge from existing free-field kernel machinery; constructor scaffolds landed (`freeCovarianceKernelModel_nonempty_of_data`, `freeCovarianceKernelModel_nonempty_of_two_point_kernel`) and reusable free-kernel Bessel representation exported (`freeCovKernel_eq_besselK0`) | in_progress |
+| CTC-WP2-01 | `FreeCovarianceKernelModel` not constructively instantiated | Develop CLM-to-kernel bridge from existing free-field kernel machinery; constructor scaffolds landed (`freeCovarianceKernelModel_nonempty_of_data`, `freeCovarianceKernelModel_nonempty_of_two_point_kernel`) and reusable free-kernel Bessel/off-diagonal bounds exported in `FreeField.lean` (`freeCovKernel_eq_besselK0` and `K₁` comparison consequences) | in_progress |
 | CTC-WP2-02 | Boundary comparison models remain interface-level | Ground `C_D ≤ C ≤ C_N` path in `CovarianceOperators.lean`; constructor scaffolds landed for boundary kernel/comparison/regularity/covariance models, with reusable off-diagonal free-kernel positivity/`K₁` comparison lemmas added | in_progress |
 
 ### WP3: Correlation + lattice bridge

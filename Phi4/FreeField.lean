@@ -3,6 +3,7 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Phi4.Defs
+import Phi4.Bessel.BesselK0
 import HeatKernel
 import Mathlib.Analysis.Calculus.BumpFunction.InnerProduct
 
@@ -259,6 +260,58 @@ theorem freeField_two_point_kernel (mass : ℝ) (hmass : 0 < mass)
 theorem freeCovKernel_symm (mass : ℝ) (x y : Spacetime2D) :
     freeCovKernel mass x y = freeCovKernel mass y x := by
   simp only [freeCovKernel, norm_sub_rev]
+
+/-- Rewrite the free covariance kernel using the 2D Schwinger integral identity. -/
+theorem freeCovKernel_eq_besselK0
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    freeCovKernel mass x y = (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) := by
+  have hsch :
+      ∫ t in Set.Ioi (0 : ℝ), (1 / t) * Real.exp (-mass ^ 2 * t - ‖x - y‖ ^ 2 / (4 * t))
+        = 2 * besselK0 (mass * ‖x - y‖) :=
+    schwingerIntegral2D_eq_besselK0 mass ‖x - y‖ hmass hxy
+  unfold freeCovKernel
+  calc
+    ∫ t in Set.Ioi (0 : ℝ), (4 * Real.pi * t)⁻¹ *
+        Real.exp (-(mass ^ 2 * t + ‖x - y‖ ^ 2 / (4 * t)))
+        = (4 * Real.pi)⁻¹ *
+            (∫ t in Set.Ioi (0 : ℝ), (1 / t) *
+              Real.exp (-mass ^ 2 * t - ‖x - y‖ ^ 2 / (4 * t))) := by
+          rw [← integral_const_mul]
+          apply integral_congr_ae
+          filter_upwards with t
+          ring_nf
+    _ = (4 * Real.pi)⁻¹ * (2 * besselK0 (mass * ‖x - y‖)) := by rw [hsch]
+    _ = (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) := by ring
+
+/-- Off-diagonal positivity of the free covariance kernel. -/
+theorem freeCovKernel_nonneg_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    0 ≤ freeCovKernel mass x y := by
+  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
+  have hK0_nonneg : 0 ≤ besselK0 (mass * ‖x - y‖) :=
+    (besselK0_pos _ (mul_pos hmass hxy)).le
+  exact mul_nonneg (by positivity) hK0_nonneg
+
+/-- Off-diagonal comparison against the `K₁` profile. -/
+theorem freeCovKernel_le_besselK1_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    freeCovKernel mass x y ≤ (2 * Real.pi)⁻¹ * besselK1 (mass * ‖x - y‖) := by
+  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
+  exact mul_le_mul_of_nonneg_left
+    (besselK0_le_besselK1 _ (mul_pos hmass hxy)) (by positivity)
+
+/-- Absolute-value variant of `freeCovKernel_le_besselK1_offDiagonal`. -/
+theorem abs_freeCovKernel_le_besselK1_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    |freeCovKernel mass x y| ≤ (2 * Real.pi)⁻¹ * besselK1 (mass * ‖x - y‖) := by
+  have hnonneg : 0 ≤ freeCovKernel mass x y :=
+    freeCovKernel_nonneg_offDiagonal mass hmass x y hxy
+  rw [abs_of_nonneg hnonneg]
+  exact freeCovKernel_le_besselK1_offDiagonal mass hmass x y hxy
 
 /-- Positivity of the free covariance as a smeared quadratic form.
     This is the mathematically sound positivity statement used by the Gaussian

@@ -54,7 +54,7 @@
 - `Phi4/FreeField.lean` now includes a direct model-construction bridge from
   two-point kernel identities:
   `freeCovarianceKernelModel_nonempty_of_two_point_kernel`.
-- `Phi4/CovarianceOperators.lean` now exports reusable free-kernel Bessel
+- `Phi4/FreeField.lean` now exports reusable free-kernel Bessel
   representation/off-diagonal bounds (`freeCovKernel_eq_besselK0` and
   `K₁`-comparison consequences) for downstream covariance estimates.
 - `Phi4/ReflectionPositivity.lean` now requires only boundary-kernel data for

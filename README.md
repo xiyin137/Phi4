@@ -49,7 +49,7 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
 - `Phi4/FreeField.lean` now also includes
   `freeCovarianceKernelModel_nonempty_of_two_point_kernel`, a direct bridge
   from a free two-point kernel identity to `FreeCovarianceKernelModel`.
-- `Phi4/CovarianceOperators.lean` now exposes public reusable free-kernel
+- `Phi4/FreeField.lean` now also exposes public reusable free-kernel
   analytic lemmas:
   `freeCovKernel_eq_besselK0`,
   `freeCovKernel_nonneg_offDiagonal`,
