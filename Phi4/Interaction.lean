@@ -2,6 +2,7 @@
 Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
+import Mathlib.Order.Filter.AtTopBot.Basic
 import Phi4.WickProduct
 
 /-!
@@ -186,6 +187,90 @@ class InteractionWeightModel (params : Phi4Params) where
       MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
         p (freeFieldMeasure params.mass params.mass_pos)
 
+/-- Construct `InteractionUVModel` from explicit UV/L² interaction data. -/
+theorem interactionUVModel_nonempty_of_data (params : Phi4Params)
+    (hcutoff_in_L2 :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        MemLp (interactionCutoff params Λ κ) 2
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_L2 :
+      ∀ (Λ : Rectangle),
+        MemLp (interaction params Λ) 2
+          (freeFieldMeasure params.mass params.mass_pos)) :
+    Nonempty (InteractionUVModel params) := by
+  exact ⟨{
+    interactionCutoff_in_L2 := hcutoff_in_L2
+    interactionCutoff_converges_L2 := hcutoff_conv
+    interactionCutoff_tendsto_ae := hcutoff_ae
+    interaction_in_L2 := hinteraction_L2
+  }⟩
+
+/-- Construct `InteractionWeightModel` from explicit Boltzmann-weight
+    `Lᵖ` integrability data. -/
+theorem interactionWeightModel_nonempty_of_data (params : Phi4Params)
+    (hexp :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+          p (freeFieldMeasure params.mass params.mass_pos)) :
+    Nonempty (InteractionWeightModel params) := by
+  exact ⟨{ exp_interaction_Lp := hexp }⟩
+
+/-- Construct `InteractionIntegrabilityModel` from explicit UV/L² and
+    Boltzmann-weight `Lᵖ` data. -/
+theorem interactionIntegrabilityModel_nonempty_of_data (params : Phi4Params)
+    (hcutoff_in_L2 :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        MemLp (interactionCutoff params Λ κ) 2
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_L2 :
+      ∀ (Λ : Rectangle),
+        MemLp (interaction params Λ) 2
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hexp :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+          p (freeFieldMeasure params.mass params.mass_pos)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  exact ⟨{
+    interactionCutoff_in_L2 := hcutoff_in_L2
+    interactionCutoff_converges_L2 := hcutoff_conv
+    interactionCutoff_tendsto_ae := hcutoff_ae
+    interaction_in_L2 := hinteraction_L2
+    exp_interaction_Lp := hexp
+  }⟩
+
 /-- Any full interaction-integrability model provides the weight-integrability
     subinterface. -/
 instance (priority := 100) interactionWeightModel_of_integrability
@@ -257,6 +342,86 @@ theorem interaction_in_L2 (params : Phi4Params)
   exact InteractionUVModel.interaction_in_L2
     (params := params) Λ
 
+/-- Pointwise lower bound transfer from all UV-cutoff interactions
+    along the canonical sequence to the limiting interaction
+    `interaction = limsup_n interactionCutoff κ_n`. -/
+theorem interaction_lower_bound_of_cutoff_seq (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    (hcutoff :
+      ∀ (n : ℕ) (ω : FieldConfig2D),
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+    (hbounded :
+      ∀ ω : FieldConfig2D,
+        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+          (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)) :
+    ∀ ω : FieldConfig2D, -B ≤ interaction params Λ ω := by
+  intro ω
+  change -B ≤
+    Filter.limsup
+      (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+      Filter.atTop
+  have hfreq :
+      ∃ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    Filter.Frequently.of_forall (fun n => hcutoff n ω)
+  exact Filter.le_limsup_of_frequently_le hfreq (hbounded ω)
+
+/-- Almost-everywhere lower bound transfer from countably many UV-cutoff
+    lower bounds (uniform in cutoff index) to the limiting interaction. -/
+theorem interaction_ae_lower_bound_of_cutoff_seq
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω := by
+  have hall :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+    rw [eventually_countable_forall]
+    intro n
+    exact hcutoff_ae n
+  have htend :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+          Filter.atTop
+          (nhds (interaction params Λ ω)) :=
+    interactionCutoff_tendsto_ae params Λ
+  filter_upwards [hall, htend] with ω hω hωt
+  have hnat' : Filter.Tendsto ((Nat.cast : ℕ → ℝ) ∘ fun a : ℕ => a + 1) Filter.atTop Filter.atTop :=
+    (tendsto_natCast_atTop_atTop (R := ℝ)).comp (Filter.tendsto_add_atTop_nat 1)
+  have hseq_raw :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 1) n)) then
+            interactionCutoff params Λ ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 1) n), h⟩ ω
+          else 0)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) :=
+    hωt.comp hnat'
+  have hseq_eq :
+      (fun n : ℕ =>
+        if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 1) n)) then
+          interactionCutoff params Λ ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 1) n), h⟩ ω
+        else 0) =ᶠ[Filter.atTop]
+      (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω) := by
+    exact Filter.Eventually.of_forall (fun n => by
+      have hn : 0 < (n + 1 : ℝ) := by exact_mod_cast Nat.succ_pos n
+      simp [standardUVCutoffSeq, hn])
+  have hseq :
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) :=
+    hseq_raw.congr' hseq_eq
+  have hcutoff_mem :
+      ∀ᶠ n in Filter.atTop,
+        interactionCutoff params Λ (standardUVCutoffSeq n) ω ∈ Set.Ici (-B) :=
+    Filter.Eventually.of_forall (fun n => hω n)
+  exact isClosed_Ici.mem_of_tendsto hseq hcutoff_mem
+
 /-! ## The exponential of the interaction is in Lᵖ
 
 This is the central estimate of the chapter (Theorem 8.6.2 of Glimm-Jaffe).
@@ -264,6 +429,63 @@ The proof has two main steps:
 1. Semiboundedness: :P(φ_κ):_C ≥ -const × (ln κ)^{deg P/2}
 2. Gaussian tail estimates: P(|:φ_κ: < threshold|) ≤ exp(-const × κ^δ)
 -/
+
+/-- On a finite measure space, an almost-everywhere lower bound on `V`
+    implies `exp(-V) ∈ Lᵖ` for every exponent `p`.
+    This is the measure-theoretic bridge used in the φ⁴ interaction-integrability
+    chain once semiboundedness/tail estimates provide the lower bound. -/
+theorem memLp_exp_neg_of_ae_lower_bound
+    {α : Type*} [MeasurableSpace α] (μ : Measure α) [IsFiniteMeasure μ]
+    (V : α → ℝ) (hV_meas : AEStronglyMeasurable V μ)
+    (B : ℝ) (hV_lower : ∀ᵐ x ∂μ, -B ≤ V x)
+    {p : ℝ≥0∞} :
+    MemLp (fun x => Real.exp (-(V x))) p μ := by
+  have hExp_meas : AEStronglyMeasurable (fun x => Real.exp (-(V x))) μ := by
+    exact ((hV_meas.aemeasurable.neg).exp).aestronglyMeasurable
+  have hbound : ∀ᵐ x ∂μ, ‖Real.exp (-(V x))‖ ≤ Real.exp B := by
+    filter_upwards [hV_lower] with x hx
+    have hle : -(V x) ≤ B := by linarith
+    have hexp_le : Real.exp (-(V x)) ≤ Real.exp B := Real.exp_le_exp.mpr hle
+    have hnonneg : 0 ≤ Real.exp (-(V x)) := le_of_lt (Real.exp_pos _)
+    simpa [Real.norm_eq_abs, abs_of_nonneg hnonneg] using hexp_le
+  exact MemLp.of_bound hExp_meas (Real.exp B) hbound
+
+/-- If the interaction has an almost-everywhere lower bound under the free field
+    measure, then its Boltzmann weight is in every finite `Lᵖ`.
+    This isolates the final measure-theoretic step from the hard Chapter 8
+    semiboundedness/tail estimates that produce the lower bound. -/
+theorem exp_interaction_Lp_of_ae_lower_bound (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hbound : ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hmeas :
+      AEStronglyMeasurable (interaction params Λ)
+        (freeFieldMeasure params.mass params.mass_pos) :=
+    (interaction_in_L2 params Λ).aestronglyMeasurable
+  exact memLp_exp_neg_of_ae_lower_bound
+    (μ := freeFieldMeasure params.mass params.mass_pos)
+    (V := interaction params Λ) hmeas B hbound
+
+/-- `Lᵖ` integrability of the Boltzmann weight from countably many
+    cutoff-level almost-everywhere lower bounds along the canonical UV sequence. -/
+theorem exp_interaction_Lp_of_cutoff_seq_lower_bounds
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
+    (B := B) ?_
+  exact interaction_ae_lower_bound_of_cutoff_seq params Λ B hcutoff_ae
 
 /-- **Theorem 8.6.2 (Glimm-Jaffe)**: e^{-V_Λ} ∈ Lᵖ(dφ_C) for all p < ∞.
     This is the key estimate for existence of the finite-volume measure in d=2.

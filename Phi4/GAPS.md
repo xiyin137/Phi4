@@ -160,22 +160,36 @@ assumption interfaces.
 
 These are not independent proof gaps; they can be reconstructed from smaller pieces:
 
-1. `BoundaryCovarianceModel` from boundary submodels
+1. Interaction split/recombine
+   - `interactionUVModel_of_integrability`
+   - `interactionWeightModel_of_integrability`
+   - `interactionIntegrabilityModel_of_uv_weight`
+   - constructors:
+     `interactionUVModel_nonempty_of_data`,
+     `interactionWeightModel_nonempty_of_data`,
+     `interactionIntegrabilityModel_nonempty_of_data`
+   - in `Phi4/Interaction.lean`
+
+2. `BoundaryCovarianceModel` from boundary submodels
    - `boundaryCovarianceModel_of_submodels` in `Phi4/CovarianceOperators.lean`
 
-2. Correlation split/recombine
+3. Correlation split/recombine
    - `correlationTwoPointModel_of_full`
    - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
    - `correlationInequalityModel_of_submodels`
+   - constructors:
+     `latticeGriffithsFirstModel_nonempty_of_data`,
+     `latticeSchwingerTwoMonotoneModel_nonempty_of_data`,
+     `correlationInequalityCoreModel_nonempty_of_data`
    - in `Phi4/CorrelationInequalities.lean`
 
-3. Infinite-volume split/recombine
+4. Infinite-volume split/recombine
    - `infiniteVolumeMeasureModel_of_limit`
    - `infiniteVolumeLimitModel_of_submodels`
    - in `Phi4/InfiniteVolumeLimit.lean`
 
-4. Two-point exhaustion convergence (partial constructive closure)
+5. Two-point exhaustion convergence (partial constructive closure)
    - `schwingerTwo_uniformly_bounded_on_exhaustion`
    - `schwingerTwo_tendsto_iSup_of_models`
    - `schwingerTwo_limit_exists_of_models`
@@ -190,7 +204,7 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `connectedTwoPointBilinear_self_nonneg`
    - in `Phi4/InfiniteVolumeLimit.lean`
 
-5. Reconstruction split/recombine
+6. Reconstruction split/recombine
    - `reconstructionInputModel_of_submodels`
    - `reconstructionWeakCouplingModel_of_uniform`
    - in `Phi4/Reconstruction.lean`

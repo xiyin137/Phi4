@@ -210,6 +210,25 @@ class LatticeGriffithsFirstModel (params : Phi4Params) where
       ∃ L : Phi4.RectLattice Λ,
         |schwingerTwo params Λ f g - latticeTwo Λ L f g| < ε
 
+/-- Construct `LatticeGriffithsFirstModel` from explicit lattice two-point data,
+    lattice GKS-I, and approximation to the continuum two-point function. -/
+theorem latticeGriffithsFirstModel_nonempty_of_data
+    (params : Phi4Params)
+    (latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ)
+    (hlattice_gks1 : ∀ (Λ : Rectangle) (L : Phi4.RectLattice Λ) (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      0 ≤ latticeTwo Λ L f g)
+    (happrox : ∀ (Λ : Rectangle) (f g : TestFun2D)
+      (ε : ℝ), 0 < ε →
+      ∃ L : Phi4.RectLattice Λ,
+        |schwingerTwo params Λ f g - latticeTwo Λ L f g| < ε) :
+    Nonempty (LatticeGriffithsFirstModel params) := by
+  exact ⟨{
+    latticeTwo := latticeTwo
+    lattice_gks1 := hlattice_gks1
+    schwingerTwo_approx_lattice := happrox
+  }⟩
+
 /-- Continuum GKS-I obtained from lattice GKS-I plus convergence of lattice
     approximants to the continuum two-point function. -/
 theorem griffiths_first_from_lattice
@@ -240,6 +259,26 @@ class LatticeSchwingerTwoMonotoneModel (params : Phi4Params) where
         latticeTwo Λ₁ L₁ f g ≤ latticeTwo Λ₂ L₂ f g ∧
         |schwingerTwo params Λ₁ f g - latticeTwo Λ₁ L₁ f g| < ε ∧
         |schwingerTwo params Λ₂ f g - latticeTwo Λ₂ L₂ f g| < ε
+
+/-- Construct `LatticeSchwingerTwoMonotoneModel` from explicit lattice two-point
+    data and ordered approximation pairs for nested volumes. -/
+theorem latticeSchwingerTwoMonotoneModel_nonempty_of_data
+    (params : Phi4Params)
+    (latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ)
+    (happrox_pair : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0)
+      (ε : ℝ), 0 < ε →
+      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
+        latticeTwo Λ₁ L₁ f g ≤ latticeTwo Λ₂ L₂ f g ∧
+        |schwingerTwo params Λ₁ f g - latticeTwo Λ₁ L₁ f g| < ε ∧
+        |schwingerTwo params Λ₂ f g - latticeTwo Λ₂ L₂ f g| < ε) :
+    Nonempty (LatticeSchwingerTwoMonotoneModel params) := by
+  exact ⟨{
+    latticeTwo := latticeTwo
+    approx_monotone_pair := happrox_pair
+  }⟩
 
 /-- Continuum two-point monotonicity from lattice-ordered approximation pairs. -/
 theorem schwinger_two_monotone_from_lattice
@@ -291,6 +330,40 @@ class CorrelationInequalityCoreModel (params : Phi4Params) where
         schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
         schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃
 
+/-- Construct `CorrelationInequalityCoreModel` from explicit continuum GKS-II,
+    FKG, and Lebowitz assumptions. -/
+theorem correlationInequalityCoreModel_nonempty_of_data
+    (params : Phi4Params)
+    (hgriffiths_second : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
+    (hfkg : ∀ (Λ : Rectangle)
+      (F G : FieldConfig2D → ℝ)
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
+        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
+      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ))
+    (hlebowitz : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
+        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
+        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃) :
+    Nonempty (CorrelationInequalityCoreModel params) := by
+  exact ⟨{
+    griffiths_second := hgriffiths_second
+    fkg_inequality := hfkg
+    lebowitz_inequality := hlebowitz
+  }⟩
+
 /-- Build the full `CorrelationInequalityModel` from:
     1. lattice bridge inputs for GKS-I and 2-point monotonicity, and
     2. remaining core assumptions (GKS-II, FKG, Lebowitz). -/
@@ -305,6 +378,16 @@ def correlationInequalityModelOfLattice
   fkg_inequality := CorrelationInequalityCoreModel.fkg_inequality (params := params)
   lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
+
+/-- Lattice bridge data and core assumptions provide a concrete
+    `CorrelationInequalityModel`. -/
+theorem correlationInequalityModel_nonempty_of_lattice
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationInequalityCoreModel params] :
+    Nonempty (CorrelationInequalityModel params) := by
+  exact ⟨correlationInequalityModelOfLattice params⟩
 
 /-- Low-priority instance: if lattice bridge data and the remaining core
     inequalities are available, synthesize the full correlation-inequality model. -/

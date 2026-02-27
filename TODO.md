@@ -13,6 +13,13 @@
   core reconstruction remains backend-abstract (`WightmanReconstructionModel`).
 - New WP1 infrastructure module `Phi4/FeynmanGraphs/LocalizedBounds.lean` adds
   reusable factorial occupancy bounds for localized graph estimates.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides weighted occupancy
+  inequalities (`∏ (N! * A^N) ≤ (∑ N)! * A^(∑ N)`) and graph-specialized forms
+  for vertex leg counts.
+- `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
+  `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
+  `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
+  semiboundedness/tail bounds to `exp(-V_Λ) ∈ Lᵖ`.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
@@ -34,6 +41,10 @@
   bridge interfaces/theorems for GKS-I and 2-point monotonicity transfer,
   and now exposes correlation subinterfaces
   (`CorrelationTwoPointModel`, `CorrelationFourPointModel`, `CorrelationFKGModel`).
+- Constructor scaffolds were added for explicit interface instantiation in
+  `FreeField.lean`, `CovarianceOperators.lean`, and `CorrelationInequalities.lean`
+  (`*_nonempty_of_data` theorems), so WP2/WP3 proof data can be ported into
+  stable class instances without ad hoc wrapper code.
 - `Phi4/InfiniteVolumeLimit.lean` and `Phi4/Reconstruction.lean` now use
   minimal correlation assumptions by theorem block (two-point/four-point/FKG).
 - `Phi4/InfiniteVolumeLimit.lean` now exposes

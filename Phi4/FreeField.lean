@@ -207,6 +207,16 @@ class FreeCovarianceKernelModel (mass : ℝ) (hmass : 0 < mass) where
       GaussianField.covariance (freeCovarianceCLM mass hmass) f g =
         ∫ x, ∫ y, f x * freeCovKernel mass x y * g y
 
+/-- Construct `FreeCovarianceKernelModel` from an explicit covariance-kernel
+    bridge theorem. -/
+theorem freeCovarianceKernelModel_nonempty_of_data (mass : ℝ) (hmass : 0 < mass)
+    (hcov :
+      ∀ (f g : TestFun2D),
+        GaussianField.covariance (freeCovarianceCLM mass hmass) f g =
+          ∫ x, ∫ y, f x * freeCovKernel mass x y * g y) :
+    Nonempty (FreeCovarianceKernelModel mass hmass) := by
+  exact ⟨{ covariance_eq_kernel := hcov }⟩
+
 /-- Bridge theorem: free-field covariance equals the Green-kernel bilinear form. -/
 theorem freeCovariance_eq_kernel (mass : ℝ) (hmass : 0 < mass)
     [FreeCovarianceKernelModel mass hmass]

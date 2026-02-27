@@ -38,20 +38,20 @@ Each line item is actionable, testable, and tied to concrete files/modules.
 | ID | Issue | Action | Status |
 |---|---|---|---|
 | CTC-WP1-01 | Missing localized graph bound infrastructure | Add `Phi4/FeynmanGraphs/LocalizedBounds.lean` with occupancy/factorial combinatorics | done |
-| CTC-WP1-02 | `exp_interaction_Lp` not grounded | Build from semibounded Wick-4 + localized graph bounds + tail/layer-cake chain | planned |
+| CTC-WP1-02 | `exp_interaction_Lp` not grounded | Build from semibounded Wick-4 + localized graph bounds + tail/layer-cake chain; weighted occupancy bounds and AE-lower-bound-to-`MemLp` bridge landed | in_progress |
 
 ### WP2: Covariance/Boundary/RP grounding
 
 | ID | Issue | Action | Status |
 |---|---|---|---|
-| CTC-WP2-01 | `FreeCovarianceKernelModel` not constructively instantiated | Develop CLM-to-kernel bridge from existing free-field kernel machinery | planned |
-| CTC-WP2-02 | Boundary comparison models remain interface-level | Ground `C_D ≤ C ≤ C_N` path in `CovarianceOperators.lean` | planned |
+| CTC-WP2-01 | `FreeCovarianceKernelModel` not constructively instantiated | Develop CLM-to-kernel bridge from existing free-field kernel machinery; constructor scaffold landed (`freeCovarianceKernelModel_nonempty_of_data`) | in_progress |
+| CTC-WP2-02 | Boundary comparison models remain interface-level | Ground `C_D ≤ C ≤ C_N` path in `CovarianceOperators.lean`; constructor scaffolds landed for boundary kernel/comparison/regularity/covariance models | in_progress |
 
 ### WP3: Correlation + lattice bridge
 
 | ID | Issue | Action | Status |
 |---|---|---|---|
-| CTC-WP3-01 | Lattice Griffiths/FKG assumptions remain ungrounded | Develop lattice-to-continuum constructive instances using existing approximation bridges | planned |
+| CTC-WP3-01 | Lattice Griffiths/FKG assumptions remain ungrounded | Develop lattice-to-continuum constructive instances using existing approximation bridges; constructor scaffolds landed for lattice/core correlation interfaces | in_progress |
 
 ### WP4: Multiple reflections + infinite volume
 
@@ -76,10 +76,11 @@ Each line item is actionable, testable, and tied to concrete files/modules.
 
 ## Active Execution Order
 
-1. Start `CTC-WP2-01` (free covariance kernel bridge) in scratch, then port.
-2. Start `CTC-WP3-01` (lattice Griffiths instance) once `WP2` infrastructure is stable.
-3. Continue `CTC-S-01` by porting only non-tautological scratch lemmas.
-4. Re-run trust/build/gap checks before each commit.
+1. Execute `CTC-WP1-02`: start `exp_interaction_Lp` closure chain from semibounded Wick-4 plus localized occupancy bounds.
+2. Continue `CTC-WP2-01` by proving a concrete CLM-to-kernel bridge lemma (constructor already in place).
+3. Continue `CTC-WP3-01` by constructing first lattice GKS-I / monotonicity instances against approximation data.
+4. Continue `CTC-S-01` by porting only non-tautological scratch lemmas that reduce WP1/WP2/WP3 blockers.
+5. Re-run trust/build/gap checks before each commit.
 
 ## Verification Commands
 

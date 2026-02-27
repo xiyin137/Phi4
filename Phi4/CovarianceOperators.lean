@@ -105,6 +105,104 @@ class BoundaryRegularityModel (mass : ℝ) (hmass : 0 < mass)
         DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
           BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ p.1 p.2) (x, y)
 
+/-- Construct `BoundaryKernelModel` from explicit Dirichlet/Neumann/periodic
+    kernel data. -/
+theorem boundaryKernelModel_nonempty_of_data (mass : ℝ) (hmass : 0 < mass)
+    (kD : Rectangle → Spacetime2D → Spacetime2D → ℝ)
+    (kN : Rectangle → Spacetime2D → Spacetime2D → ℝ)
+    (kP : (L₁ L₂ : ℝ) → 0 < L₁ → 0 < L₂ → Spacetime2D → Spacetime2D → ℝ) :
+    Nonempty (BoundaryKernelModel mass hmass) := by
+  exact ⟨{
+    dirichletKernel := kD
+    neumannKernel := kN
+    periodicKernel := kP
+  }⟩
+
+/-- Construct `BoundaryComparisonModel` from explicit quadratic-form
+    comparison inequalities. -/
+theorem boundaryComparisonModel_nonempty_of_data
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass]
+    (hdir : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x *
+        BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x y * f y ≤
+        ∫ x, ∫ y, f x * freeCovKernel mass x y * f y)
+    (hfree : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x * freeCovKernel mass x y * f y ≤
+        ∫ x, ∫ y, f x *
+          BoundaryKernelModel.neumannKernel (mass := mass) (hmass := hmass) Λ x y * f y)
+    (hmono : ∀ (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : TestFun2D) (_hf : ∀ x ∉ Λ₁.toSet, f x = 0),
+      ∫ x, ∫ y, f x *
+        BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ₁ x y * f y ≤
+        ∫ x, ∫ y, f x *
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ₂ x y * f y) :
+    Nonempty (BoundaryComparisonModel mass hmass) := by
+  exact ⟨{
+    dirichlet_le_free := hdir
+    free_le_neumann := hfree
+    dirichlet_monotone := hmono
+  }⟩
+
+/-- Construct `BoundaryRegularityModel` from explicit covariance-change bounds
+    and off-diagonal smoothness data. -/
+theorem boundaryRegularityModel_nonempty_of_data
+    (mass : ℝ) (hmass : 0 < mass)
+    [BoundaryKernelModel mass hmass]
+    (hchange : ∀ (Λ : Rectangle),
+      ∃ C : ℝ, ∀ x : Spacetime2D, x ∈ Λ.toSet →
+        |(freeCovKernel mass x x -
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ x x)| ≤ C)
+    (hsmooth : ∀ (Λ : Rectangle),
+      ∀ x y : Spacetime2D, x ≠ y → x ∈ Λ.toSet → y ∈ Λ.toSet →
+        DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
+          BoundaryKernelModel.dirichletKernel (mass := mass) (hmass := hmass) Λ p.1 p.2) (x, y)) :
+    Nonempty (BoundaryRegularityModel mass hmass) := by
+  exact ⟨{
+    covarianceChange_pointwise_bounded := hchange
+    dirichlet_smooth_off_diagonal := hsmooth
+  }⟩
+
+/-- Construct `BoundaryCovarianceModel` from explicit kernel, comparison, and
+    regularity data. -/
+theorem boundaryCovarianceModel_nonempty_of_data
+    (mass : ℝ) (hmass : 0 < mass)
+    (kD : Rectangle → Spacetime2D → Spacetime2D → ℝ)
+    (kN : Rectangle → Spacetime2D → Spacetime2D → ℝ)
+    (kP : (L₁ L₂ : ℝ) → 0 < L₁ → 0 < L₂ → Spacetime2D → Spacetime2D → ℝ)
+    (hdir : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x * kD Λ x y * f y ≤
+        ∫ x, ∫ y, f x * freeCovKernel mass x y * f y)
+    (hfree : ∀ (Λ : Rectangle) (f : TestFun2D)
+      (_hf : ∀ x ∉ Λ.toSet, f x = 0),
+      ∫ x, ∫ y, f x * freeCovKernel mass x y * f y ≤
+        ∫ x, ∫ y, f x * kN Λ x y * f y)
+    (hmono : ∀ (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : TestFun2D) (_hf : ∀ x ∉ Λ₁.toSet, f x = 0),
+      ∫ x, ∫ y, f x * kD Λ₁ x y * f y ≤
+        ∫ x, ∫ y, f x * kD Λ₂ x y * f y)
+    (hchange : ∀ (Λ : Rectangle),
+      ∃ C : ℝ, ∀ x : Spacetime2D, x ∈ Λ.toSet →
+        |(freeCovKernel mass x x - kD Λ x x)| ≤ C)
+    (hsmooth : ∀ (Λ : Rectangle),
+      ∀ x y : Spacetime2D, x ≠ y → x ∈ Λ.toSet → y ∈ Λ.toSet →
+        DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
+          kD Λ p.1 p.2) (x, y)) :
+    Nonempty (BoundaryCovarianceModel mass hmass) := by
+  exact ⟨{
+    dirichletKernel := kD
+    neumannKernel := kN
+    periodicKernel := kP
+    dirichlet_le_free := hdir
+    free_le_neumann := hfree
+    dirichlet_monotone := hmono
+    covarianceChange_pointwise_bounded := hchange
+    dirichlet_smooth_off_diagonal := hsmooth
+  }⟩
+
 /-- Any full boundary covariance model provides the kernel subinterface. -/
 instance (priority := 100) boundaryKernelModel_of_covariance
     (mass : ℝ) (hmass : 0 < mass)

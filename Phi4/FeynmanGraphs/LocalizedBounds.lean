@@ -18,7 +18,7 @@ open scoped BigOperators
 
 section Factorial
 
-variable {α : Type*} [DecidableEq α]
+variable {α : Type*}
 
 /-- Product of factorials divides factorial of the sum. -/
 theorem factorial_prod_dvd_factorial_sum (s : Finset α) (N : α → ℕ) :
@@ -49,6 +49,30 @@ theorem factorial_prod_le_factorial_sum_real (s : Finset α) (N : α → ℕ) :
       (Nat.factorial (∑ i ∈ s, N i) : ℝ) := by
   exact_mod_cast factorial_prod_le_factorial_sum (s := s) N
 
+/-- Factorized form of weighted factorial occupancy products:
+    factorial factors times per-cell powers combine into a global power
+    of the total occupancy. -/
+theorem factorial_weighted_prod_eq (s : Finset α) (N : α → ℕ) (A : ℝ) :
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i)) =
+      (∏ i ∈ s, (Nat.factorial (N i) : ℝ)) * A ^ (∑ i ∈ s, N i) := by
+  calc
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i))
+        = (∏ i ∈ s, (Nat.factorial (N i) : ℝ)) * (∏ i ∈ s, A ^ (N i)) := by
+          simp [Finset.prod_mul_distrib]
+    _ = (∏ i ∈ s, (Nat.factorial (N i) : ℝ)) * A ^ (∑ i ∈ s, N i) := by
+          simp [Finset.prod_pow_eq_pow_sum]
+
+/-- Weighted factorial occupancy control:
+    `∏ (N(i)! * A^{N(i)}) ≤ (∑ N(i))! * A^{∑ N(i)}` for `A ≥ 0`. -/
+theorem factorial_weighted_prod_le_factorial_sum_pow
+    (s : Finset α) (N : α → ℕ) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ i ∈ s, (Nat.factorial (N i) : ℝ) * A ^ (N i)) ≤
+      (Nat.factorial (∑ i ∈ s, N i) : ℝ) * A ^ (∑ i ∈ s, N i) := by
+  rw [factorial_weighted_prod_eq]
+  exact mul_le_mul_of_nonneg_right
+    (factorial_prod_le_factorial_sum_real (s := s) N)
+    (pow_nonneg hA _)
+
 end Factorial
 
 section GraphSpecialized
@@ -65,5 +89,23 @@ theorem graph_vertex_factorial_prod_le_total_factorial_real {r : ℕ} (G : Feynm
     (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
       (Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) := by
   exact_mod_cast graph_vertex_factorial_prod_le_total_factorial G
+
+/-- Graph-specialized factorization of weighted vertex occupancy products. -/
+theorem graph_vertex_factorial_weighted_prod_eq
+    {r : ℕ} (G : FeynmanGraph r) (A : ℝ) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) =
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) *
+        A ^ (∑ v : Fin r, G.legs v) := by
+  simpa using factorial_weighted_prod_eq
+    (s := (Finset.univ : Finset (Fin r))) (N := G.legs) A
+
+/-- Graph-specialized weighted factorial occupancy bound. -/
+theorem graph_vertex_factorial_weighted_prod_le_total_factorial_pow
+    {r : ℕ} (G : FeynmanGraph r) (A : ℝ) (hA : 0 ≤ A) :
+    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+      (Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) *
+        A ^ (∑ v : Fin r, G.legs v) := by
+  simpa using factorial_weighted_prod_le_factorial_sum_pow
+    (s := (Finset.univ : Finset (Fin r))) (N := G.legs) A hA
 
 end GraphSpecialized
