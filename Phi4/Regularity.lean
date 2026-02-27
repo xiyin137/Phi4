@@ -689,7 +689,7 @@ theorem diagonal_moment_limit_bound_of_exhaustion
     generating-functional bound. -/
 theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
     (f : TestFun2D) (n : ℕ) :
@@ -703,7 +703,7 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
           if h : 0 < m then schwingerN params (exhaustingRectangles m h) n (fun _ => f) else 0)
         Filter.atTop
         (nhds (infiniteVolumeSchwinger params n (fun _ => f))) :=
-    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
       (params := params) n (fun _ => f)
   have hlim :
       Filter.Tendsto
@@ -720,7 +720,7 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
     generating-functional control, lifted along exhaustion limits. -/
 theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
@@ -740,7 +740,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
         (fun m : ℕ => if h : 0 < m then schwingerN params (exhaustingRectangles m h) n f else 0)
         Filter.atTop
         (nhds (infiniteVolumeSchwinger params n f)) :=
-    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
       (params := params) n f
   have hlim :
       Filter.Tendsto
@@ -761,7 +761,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
     uniform finite-volume generating-functional control. -/
 theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
@@ -782,7 +782,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
         (fun m : ℕ => if h : 0 < m then schwingerN params (exhaustingRectangles m h) n f else 0)
         Filter.atTop
         (nhds (infiniteVolumeSchwinger params n f)) :=
-    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
       (params := params) n f
   have hlim :
       Filter.Tendsto
@@ -802,7 +802,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     generating-functional estimate. -/
 theorem infiniteVolumeSchwinger_mixed_bound_of_interface
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     [InfiniteVolumeMeasureModel params]
     [UniformGeneratingFunctionalBoundModel params]
     (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
@@ -821,7 +821,7 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_interface
     generating-functional control, via polarization and exhaustion limits. -/
 theorem infiniteVolume_twoPoint_bound_of_global_uniform
     (params : Phi4Params) [InteractionWeightModel params]
-    [InfiniteVolumeSchwingerModel params]
+    [SchwingerLimitModel params]
     (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
       |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (f g : TestFun2D) :
@@ -850,7 +850,7 @@ theorem infiniteVolume_twoPoint_bound_of_global_uniform
           else 0)
         Filter.atTop
         (nhds (infiniteVolumeSchwinger params 2 ![f, g])) :=
-    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
       (params := params) 2 (![f, g] : Fin 2 → TestFun2D)
   have hlim :
       Filter.Tendsto
