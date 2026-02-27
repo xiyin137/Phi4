@@ -605,7 +605,7 @@ theorem phi4_normalized_order0_of_linear_and_compat
     _ = g 0 := by simp [hone]
 
 /-- Construct φ⁴ linear-growth witness data from:
-    1) interface-level product-tensor positive-order bounds (via `RegularityModel`),
+    1) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
     2) explicit product-tensor approximation of general Schwartz `n`-point tests
        for `n > 0`,
     3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`. -/
@@ -613,12 +613,13 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     (params : Phi4Params)
     [InteractionWeightModel params]
     [InfiniteVolumeLimitModel params]
-    [RegularityModel params]
     [OSAxiomCoreModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (alpha beta gamma : ℝ)
     (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -678,7 +679,7 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     params alpha' beta gamma halpha'_one hnormalized
   have hprod := phi4_productTensor_linear_growth_of_uniform_generating_bound
     params 0 alpha' beta gamma
-    (RegularityModel.generating_functional_bound_uniform (params := params))
+    huniform
     hcompat hreduce'
   exact phi4_linear_growth_of_productTensor_approx_and_zero
     params OS hS 0 alpha' beta gamma halpha' hbeta hprod happrox hzero
@@ -1717,13 +1718,12 @@ theorem phi4_wightman_exists_of_os_and_explicit_linear_growth_bound
 
 /-- Direct weak-coupling endpoint from:
     1) interface-level OS package data under weak coupling,
-    2) interface-level product-tensor positive-order growth input (via `RegularityModel`),
+    2) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
     3) explicit product-tensor reduction/approximation and order-zero inputs. -/
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeLimitModel params] →
-    [RegularityModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1733,6 +1733,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
     (alpha beta gamma : ℝ) →
     (halpha : 0 < alpha) →
     (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -1759,12 +1761,12 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hreg hos hrec he2 he4 hsmall sobolev_index alpha beta gamma
-    halpha hbeta hcompat hreduce happrox hzero
+  intro hweight hlimit hos hrec he2 he4 hsmall sobolev_index alpha beta gamma
+    halpha hbeta huniform hcompat hreduce happrox hzero
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hprod := phi4_productTensor_linear_growth_of_uniform_generating_bound
     params sobolev_index alpha beta gamma
-    (RegularityModel.generating_functional_bound_uniform (params := params))
+    huniform
     hcompat hreduce
   have hlinear := phi4_linear_growth_of_productTensor_approx_and_zero
     params OS hS sobolev_index alpha beta gamma halpha hbeta hprod happrox hzero
@@ -1774,14 +1776,13 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
 
 /-- Direct weak-coupling endpoint from:
     1) interface-level OS package data under weak coupling,
-    2) interface-level product-tensor positive-order growth input (via `RegularityModel`),
+    2) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
     3) explicit product-tensor reduction/approximation,
     4) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`. -/
 theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeLimitModel params] →
-    [RegularityModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1789,6 +1790,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
     (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -1810,11 +1813,11 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hreg hos hrec he2 he4 hsmall alpha beta gamma
-    hbeta hcompat hreduce happrox
+  intro hweight hlimit hos hrec he2 he4 hsmall alpha beta gamma
+    hbeta huniform hcompat hreduce happrox
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma hbeta
+    params OS hS alpha beta gamma hbeta huniform
     hcompat hreduce happrox
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
@@ -1822,14 +1825,13 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_normalized_order
 
 /-- Direct weak-coupling endpoint from:
     1) interface-level OS package data under weak coupling,
-    2) interface-level product-tensor positive-order growth input (via `RegularityModel`),
+    2) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
     3) dense image of product tensors in each positive-order Schwartz `n`-point space,
     4) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`. -/
 theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     (params : Phi4Params) :
     [InteractionWeightModel params] →
     [InfiniteVolumeLimitModel params] →
-    [RegularityModel params] →
     [OSAxiomCoreModel params] →
     [WightmanReconstructionModel params] →
     [OSDistributionE2Model params] →
@@ -1837,6 +1839,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     (hsmall : params.coupling < os4WeakCouplingThreshold params) →
     (alpha beta gamma : ℝ) →
     (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
@@ -1857,11 +1861,11 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
       ∃ (OS' : OsterwalderSchraderAxioms 1),
         OS'.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS'.S Wfn.W := by
-  intro hweight hlimit hreg hos hrec he2 he4 hsmall alpha beta gamma
-    hbeta hcompat hreduce hdense
+  intro hweight hlimit hos hrec he2 he4 hsmall alpha beta gamma
+    hbeta huniform hcompat hreduce hdense
   rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
   have hlinear := phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma hbeta
+    params OS hS alpha beta gamma hbeta huniform
     hcompat hreduce (phi4_productTensor_approx_family_of_dense_range hdense)
   exact phi4_wightman_exists_of_explicit_data params
     (hlinear := hlinear)
