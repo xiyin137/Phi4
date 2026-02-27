@@ -438,6 +438,56 @@ instance (priority := 100) correlationInequalityModel_of_submodels
   schwinger_four_monotone := CorrelationFourPointModel.schwinger_four_monotone (params := params)
   schwinger_two_monotone := CorrelationTwoPointModel.schwinger_two_monotone (params := params)
 
+/-- Construct `CorrelationInequalityModel` from explicit continuum data. -/
+theorem correlationInequalityModel_nonempty_of_data
+    (params : Phi4Params)
+    (hgriffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
+      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
+      0 ≤ schwingerTwo params Λ f g)
+    (hgriffiths_second : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
+        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
+    (hfkg : ∀ (Λ : Rectangle)
+      (F G : FieldConfig2D → ℝ)
+      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
+      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
+        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
+      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
+        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
+      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ))
+    (hlebowitz : ∀ (Λ : Rectangle)
+      (f₁ f₂ f₃ f₄ : TestFun2D)
+      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
+      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
+      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
+        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
+        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
+        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
+    (hfour_mono : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f : Fin 4 → TestFun2D)
+      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
+      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
+      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f)
+    (htwo_mono : ∀ (Λ₁ Λ₂ : Rectangle)
+      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
+      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
+      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
+      schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g) :
+    Nonempty (CorrelationInequalityModel params) := by
+  exact ⟨{
+    griffiths_first := hgriffiths_first
+    griffiths_second := hgriffiths_second
+    fkg_inequality := hfkg
+    lebowitz_inequality := hlebowitz
+    schwinger_four_monotone := hfour_mono
+    schwinger_two_monotone := htwo_mono
+  }⟩
+
 /-- Construct `CorrelationInequalityModel` from the three correlation
     subinterfaces directly. -/
 theorem correlationInequalityModel_nonempty_of_submodels
@@ -1107,6 +1157,17 @@ instance (priority := 100) correlationFourPointModel_of_core
     CorrelationFourPointModel params where
   toCorrelationFourPointInequalityModel := inferInstance
   schwinger_four_monotone := CorrelationInequalityCoreModel.schwinger_four_monotone (params := params)
+
+/-- Construct `CorrelationInequalityModel` from two-point data plus
+    `CorrelationInequalityCoreModel`. -/
+theorem correlationInequalityModel_nonempty_of_twoPoint_and_core
+    (params : Phi4Params)
+    [CorrelationTwoPointModel params]
+    [CorrelationInequalityCoreModel params] :
+    Nonempty (CorrelationInequalityModel params) := by
+  letI : CorrelationFourPointModel params := inferInstance
+  letI : CorrelationFKGModel params := inferInstance
+  exact correlationInequalityModel_nonempty_of_submodels params
 
 /-! ## Griffiths' First Inequality (GKS-I) -/
 

@@ -103,6 +103,9 @@ the local Glimm-Jaffe objective.
   `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`
   and the lattice-specialized
   `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`;
+  full continuum constructors are now explicit via
+  `correlationInequalityModel_nonempty_of_data` and
+  `correlationInequalityModel_nonempty_of_twoPoint_and_core`;
   atomic-subinterface constructors are also available via
   `correlationInequalityCoreModel_nonempty_of_models` and
   `correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone`;

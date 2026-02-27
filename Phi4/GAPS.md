@@ -219,6 +219,8 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `correlationInequalityCoreModel_nonempty_of_models`,
      `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`,
      `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`,
+     `correlationInequalityModel_nonempty_of_data`,
+     `correlationInequalityModel_nonempty_of_twoPoint_and_core`,
      `correlationInequalityModel_nonempty_of_submodels`,
      `correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone`,
      `correlationInequalityModel_nonempty_of_lattice_and_core_data`,
