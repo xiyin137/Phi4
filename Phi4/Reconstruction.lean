@@ -498,19 +498,13 @@ theorem phi4_positive_order_linear_growth_of_productTensor_approx
       ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
         ∃ u : ℕ → Fin n → TestFun2D,
           Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g) ∧
-          Filter.Tendsto
-            (fun k =>
-              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-                (schwartzProductTensorFromTestFamily (u k)))
-            Filter.atTop
-            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g))) :
+            Filter.atTop (nhds g)) :
     ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
       ‖phi4SchwingerFunctions params n g‖ ≤
         alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
           SchwartzMap.seminorm ℝ sobolev_index sobolev_index g := by
   intro n hn g
-  rcases happrox n hn g with ⟨u, hu_tendsto, hseminorm_tendsto⟩
+  rcases happrox n hn g with ⟨u, hu_tendsto⟩
   let Cn : ℝ := alpha * beta ^ n * (n.factorial : ℝ) ^ gamma
   have hS_cont : Continuous (phi4SchwingerFunctions params n) := phi4_os0 params n
   have hS_tendsto :
@@ -525,6 +519,20 @@ theorem phi4_positive_order_linear_growth_of_productTensor_approx
         Filter.atTop
         (nhds ‖phi4SchwingerFunctions params n g‖) := by
     exact hS_tendsto.norm
+  have hseminorm_cont : Continuous
+      (SchwartzMap.seminorm ℝ sobolev_index sobolev_index :
+        SchwartzNPoint 1 n → ℝ) := by
+    simpa [SchwartzNPoint] using
+      ((schwartz_withSeminorms ℝ (NPointDomain 1 n) ℂ).continuous_seminorm
+        (sobolev_index, sobolev_index))
+  have hseminorm_tendsto :
+      Filter.Tendsto
+        (fun k =>
+          SchwartzMap.seminorm ℝ sobolev_index sobolev_index
+            (schwartzProductTensorFromTestFamily (u k)))
+        Filter.atTop
+        (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g)) :=
+    (hseminorm_cont.tendsto g).comp hu_tendsto
   have hbound_tendsto :
       Filter.Tendsto
         (fun k =>
@@ -570,13 +578,7 @@ theorem phi4_linear_growth_of_productTensor_approx_and_zero
       ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
         ∃ u : ℕ → Fin n → TestFun2D,
           Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g) ∧
-          Filter.Tendsto
-            (fun k =>
-              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-                (schwartzProductTensorFromTestFamily (u k)))
-            Filter.atTop
-            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g)))
+            Filter.atTop (nhds g))
     (hzero :
       ∀ g : SchwartzNPoint 1 0,
         ‖phi4SchwingerFunctions params 0 g‖ ≤
@@ -637,13 +639,7 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_zero
       ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
         ∃ u : ℕ → Fin n → TestFun2D,
           Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g) ∧
-          Filter.Tendsto
-            (fun k =>
-              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-                (schwartzProductTensorFromTestFamily (u k)))
-            Filter.atTop
-            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g)))
+            Filter.atTop (nhds g))
     (hzero :
       ∀ g : SchwartzNPoint 1 0,
         ‖phi4SchwingerFunctions params 0 g‖ ≤
@@ -1682,13 +1678,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_approx_and_zero
       ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
         ∃ u : ℕ → Fin n → TestFun2D,
           Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g) ∧
-          Filter.Tendsto
-            (fun k =>
-              SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-                (schwartzProductTensorFromTestFamily (u k)))
-            Filter.atTop
-            (nhds (SchwartzMap.seminorm ℝ sobolev_index sobolev_index g))) →
+            Filter.atTop (nhds g)) →
     (hzero :
       ∀ g : SchwartzNPoint 1 0,
         ‖phi4SchwingerFunctions params 0 g‖ ≤
