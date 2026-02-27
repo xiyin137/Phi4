@@ -349,6 +349,16 @@ theorem correlationFourPointInequalityModel_nonempty_of_models
     toCorrelationLebowitzModel := inferInstance
   }⟩
 
+/-- Atomic GKS-II and Lebowitz interfaces reconstruct the combined four-point
+    inequality class. -/
+instance (priority := 100) correlationFourPointInequalityModel_of_atomic
+    (params : Phi4Params)
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params] :
+    CorrelationFourPointInequalityModel params where
+  toCorrelationGKSSecondModel := inferInstance
+  toCorrelationLebowitzModel := inferInstance
+
 /-- Construct `CorrelationFourPointInequalityModel` from explicit four-point
     GKS-II/Lebowitz data. -/
 theorem correlationFourPointInequalityModel_nonempty_of_data

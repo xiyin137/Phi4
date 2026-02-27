@@ -268,7 +268,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      correlation bundles where unused
    - four-point inequality transport/bound theorem blocks in
      `InfiniteVolumeLimit.lean` and `Reconstruction.lean` now depend on
-     `CorrelationFourPointInequalityModel` where monotonicity data is unused
+     atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
+     where monotonicity data is unused (with compatibility reconstruction of
+     `CorrelationFourPointInequalityModel`)
    - interface-style `if h : 0 < n then ... else 0` convergence/existence variants
    - infinite-volume permutation symmetry transfer:
      `infiniteVolumeSchwinger_perm` (with `infiniteVolumeSchwinger_two_symm` as a corollary)

@@ -1713,7 +1713,8 @@ theorem cumulantFourPoint_tendsto_infinite
 theorem infiniteCumulantFourPoint_nonpos
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1736,7 +1737,8 @@ theorem infiniteCumulantFourPoint_nonpos
 theorem infiniteCumulantFourPoint_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1796,7 +1798,8 @@ theorem infiniteCumulantFourPoint_abs_bound
 theorem infiniteCumulantFourPoint_lower_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1967,7 +1970,8 @@ theorem infiniteCumulantFourPoint_lower_bounds_all_channels
 theorem infiniteCumulantFourPoint_abs_bound_alt13
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1988,7 +1992,8 @@ theorem infiniteCumulantFourPoint_abs_bound_alt13
 theorem infiniteCumulantFourPoint_abs_bound_alt14
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2009,7 +2014,8 @@ theorem infiniteCumulantFourPoint_abs_bound_alt14
 theorem infiniteSchwinger_four_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2096,7 +2102,8 @@ def infiniteTruncatedFourPoint14 (params : Phi4Params)
 theorem infiniteTruncatedFourPoint12_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2112,7 +2119,8 @@ theorem infiniteTruncatedFourPoint12_nonneg
 theorem infiniteTruncatedFourPoint13_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2128,7 +2136,8 @@ theorem infiniteTruncatedFourPoint13_nonneg
 theorem infiniteTruncatedFourPoint14_nonneg
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2144,7 +2153,8 @@ theorem infiniteTruncatedFourPoint14_nonneg
 theorem infiniteTruncatedFourPoint12_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2163,7 +2173,8 @@ theorem infiniteTruncatedFourPoint12_upper
 theorem infiniteTruncatedFourPoint13_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2182,7 +2193,8 @@ theorem infiniteTruncatedFourPoint13_upper
 theorem infiniteTruncatedFourPoint14_upper
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2202,7 +2214,8 @@ theorem infiniteTruncatedFourPoint14_upper
 theorem infiniteTruncatedFourPoint12_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2220,7 +2233,8 @@ theorem infiniteTruncatedFourPoint12_abs_bound
 theorem infiniteTruncatedFourPoint13_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2238,7 +2252,8 @@ theorem infiniteTruncatedFourPoint13_abs_bound
 theorem infiniteTruncatedFourPoint14_abs_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2256,7 +2271,8 @@ theorem infiniteTruncatedFourPoint14_abs_bound
 theorem infiniteTruncatedFourPoint12_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2275,7 +2291,8 @@ theorem infiniteTruncatedFourPoint12_bounds
 theorem infiniteTruncatedFourPoint13_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2294,7 +2311,8 @@ theorem infiniteTruncatedFourPoint13_bounds
 theorem infiniteTruncatedFourPoint14_bounds
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -2313,7 +2331,8 @@ theorem infiniteTruncatedFourPoint14_bounds
 theorem infiniteTruncatedFourPoint_bounds_all_channels
     (params : Phi4Params)
     [SchwingerLimitModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :

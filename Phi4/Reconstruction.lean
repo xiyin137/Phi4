@@ -1394,18 +1394,20 @@ theorem phi4_connectedTwoPoint_quadratic_nonneg_standard (params : Phi4Params) :
 /-- Infinite-volume 4-point cumulant nonpositivity inherited from Lebowitz bounds. -/
 theorem phi4_infiniteCumulantFourPoint_nonpos (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
       infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ ≤ 0 := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteCumulantFourPoint_nonpos params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume absolute bound for the fully connected 4-point cumulant. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1414,14 +1416,15 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₂, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteCumulantFourPoint_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Channel-wise lower bounds for the infinite-volume fully connected 4-point
     cumulant. -/
 theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1440,14 +1443,15 @@ theorem phi4_infiniteCumulantFourPoint_lower_bounds_all_channels (params : Phi4P
         infiniteVolumeSchwinger params 2 ![f₁, f₃] *
         infiniteVolumeSchwinger params 2 ![f₂, f₄])
         ≤ infiniteCumulantFourPoint params f₁ f₂ f₃ f₄ := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteCumulantFourPoint_lower_bounds_all_channels
     params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Alternative absolute-value bound via the `(13)(24)` channel. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13 (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1456,13 +1460,14 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound_alt13 (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteCumulantFourPoint_abs_bound_alt13 params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Alternative absolute-value bound via the `(14)(23)` channel. -/
 theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14 (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1471,14 +1476,15 @@ theorem phi4_infiniteCumulantFourPoint_abs_bound_alt14 (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₃] *
           infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteCumulantFourPoint_abs_bound_alt14 params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume all-channel 4-point bounds (GKS lower channels + Lebowitz upper
     channel). -/
 theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1496,7 +1502,7 @@ theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₂, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteSchwinger_four_bounds_all_channels
     params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
@@ -1504,42 +1510,46 @@ theorem phi4_infiniteSchwinger_four_bounds_all_channels (params : Phi4Params) :
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_nonneg (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
       0 ≤ infiniteTruncatedFourPoint12 params f₁ f₂ f₃ f₄ := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint12_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume nonnegativity of the `(13)(24)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_nonneg (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
       0 ≤ infiniteTruncatedFourPoint13 params f₁ f₂ f₃ f₄ := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint13_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume nonnegativity of the `(14)(23)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_nonneg (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
       0 ≤ infiniteTruncatedFourPoint14 params f₁ f₂ f₃ f₄ := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint14_nonneg params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume upper bound for the `(12)(34)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_upper (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1548,13 +1558,14 @@ theorem phi4_infiniteTruncatedFourPoint12_upper (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₂, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint12_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume upper bound for the `(13)(24)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_upper (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1563,13 +1574,14 @@ theorem phi4_infiniteTruncatedFourPoint13_upper (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint13_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume upper bound for the `(14)(23)` pairing-subtracted channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_upper (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1578,14 +1590,15 @@ theorem phi4_infiniteTruncatedFourPoint14_upper (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₃] *
           infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint14_upper params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume absolute-value bound for the `(12)(34)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_abs_bound (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1594,14 +1607,15 @@ theorem phi4_infiniteTruncatedFourPoint12_abs_bound (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₂, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint12_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume absolute-value bound for the `(13)(24)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_abs_bound (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1610,14 +1624,15 @@ theorem phi4_infiniteTruncatedFourPoint13_abs_bound (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₄] *
           infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint13_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume absolute-value bound for the `(14)(23)` pairing-subtracted
     channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_abs_bound (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1626,14 +1641,15 @@ theorem phi4_infiniteTruncatedFourPoint14_abs_bound (params : Phi4Params) :
           infiniteVolumeSchwinger params 2 ![f₃, f₄] +
         infiniteVolumeSchwinger params 2 ![f₁, f₃] *
           infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint14_abs_bound params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume two-sided bounds for the `(12)(34)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint12_bounds (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1643,14 +1659,15 @@ theorem phi4_infiniteTruncatedFourPoint12_bounds (params : Phi4Params) :
             infiniteVolumeSchwinger params 2 ![f₂, f₄] +
           infiniteVolumeSchwinger params 2 ![f₁, f₄] *
             infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint12_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume two-sided bounds for the `(13)(24)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint13_bounds (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1660,14 +1677,15 @@ theorem phi4_infiniteTruncatedFourPoint13_bounds (params : Phi4Params) :
             infiniteVolumeSchwinger params 2 ![f₃, f₄] +
           infiniteVolumeSchwinger params 2 ![f₁, f₄] *
             infiniteVolumeSchwinger params 2 ![f₂, f₃] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint13_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume two-sided bounds for the `(14)(23)` pairing-subtracted
     4-point channel. -/
 theorem phi4_infiniteTruncatedFourPoint14_bounds (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1677,14 +1695,15 @@ theorem phi4_infiniteTruncatedFourPoint14_bounds (params : Phi4Params) :
             infiniteVolumeSchwinger params 2 ![f₃, f₄] +
           infiniteVolumeSchwinger params 2 ![f₁, f₃] *
             infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint14_bounds params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Combined two-sided bounds for all infinite-volume pairing-subtracted
     4-point channels. -/
 theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params) :
     [SchwingerLimitModel params] →
-    [CorrelationFourPointInequalityModel params] →
+    [CorrelationGKSSecondModel params] →
+    [CorrelationLebowitzModel params] →
     ∀ (f₁ f₂ f₃ f₄ : TestFun2D),
       (∀ x, 0 ≤ f₁ x) → (∀ x, 0 ≤ f₂ x) →
       (∀ x, 0 ≤ f₃ x) → (∀ x, 0 ≤ f₄ x) →
@@ -1706,7 +1725,7 @@ theorem phi4_infiniteTruncatedFourPoint_bounds_all_channels (params : Phi4Params
             infiniteVolumeSchwinger params 2 ![f₃, f₄] +
           infiniteVolumeSchwinger params 2 ![f₁, f₃] *
             infiniteVolumeSchwinger params 2 ![f₂, f₄] := by
-  intro hlim hcorr f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
+  intro hlim hgks hleb f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact infiniteTruncatedFourPoint_bounds_all_channels params f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
 
 /-- Infinite-volume connected two-point symmetry. -/
