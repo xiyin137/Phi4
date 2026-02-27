@@ -196,6 +196,9 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
    - `correlationFourPointInequalityModel_nonempty_of_data`
    - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
+   - `CorrelationInequalityCoreModel` now extends
+     `CorrelationFourPointInequalityModel` + `CorrelationFKGModel` with
+     only explicit 4-point monotonicity as additional core data
    - `correlationInequalityModel_of_submodels`
    - `correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone`
    - `schwingerNMonotoneModel_four_of_correlationFourPoint`

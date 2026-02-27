@@ -89,6 +89,11 @@ the local Glimm-Jaffe objective.
   and now exposes correlation subinterfaces
   (`CorrelationTwoPointModel`, `CorrelationFourPointInequalityModel`,
   `CorrelationFourPointModel`, `CorrelationFKGModel`).
+- `CorrelationInequalityCoreModel` now extends
+  `CorrelationFourPointInequalityModel` and `CorrelationFKGModel` directly,
+  with only 4-point volume monotonicity remaining as an extra core field;
+  this removes duplicated core inequality fields and keeps core assumptions
+  explicitly atomic.
 - Constructor scaffolds were added for explicit interface instantiation in
   `FreeField.lean`, `CovarianceOperators.lean`, and `CorrelationInequalities.lean`
   (`*_nonempty_of_data` theorems), so WP2/WP3 proof data can be ported into

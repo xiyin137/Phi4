@@ -783,33 +783,9 @@ theorem schwingerNMonotoneModel_two_nonempty_of_lattice
     lattice bridge layer. This isolates the remaining analytic assumptions
     while allowing GKS-I and two-point monotonicity to be sourced from
     lattice approximation results. -/
-class CorrelationInequalityCoreModel (params : Phi4Params) where
-  /-- GKS-II lower bound in the `(12)(34)` channel. -/
-  griffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄]
-  /-- FKG positive-correlation inequality. -/
-  fkg_inequality : ∀ (Λ : Rectangle)
-      (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
-      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
-        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
-      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
-  /-- Lebowitz 4-point upper bound. -/
-  lebowitz_inequality : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃
+class CorrelationInequalityCoreModel (params : Phi4Params)
+    extends CorrelationFourPointInequalityModel params,
+      CorrelationFKGModel params where
   /-- Monotonicity of finite-volume 4-point moments under domain inclusion for
       nonnegative test-function inputs supported in the smaller volume. -/
   schwinger_four_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
@@ -853,10 +829,12 @@ theorem correlationInequalityCoreModel_nonempty_of_data
       (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
       schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f) :
     Nonempty (CorrelationInequalityCoreModel params) := by
+  rcases correlationFourPointInequalityModel_nonempty_of_data
+      params hgriffiths_second hlebowitz with ⟨hineq⟩
+  rcases correlationFKGModel_nonempty_of_data params hfkg with ⟨hfkgModel⟩
   exact ⟨{
-    griffiths_second := hgriffiths_second
-    fkg_inequality := hfkg
-    lebowitz_inequality := hlebowitz
+    toCorrelationFourPointInequalityModel := hineq
+    toCorrelationFKGModel := hfkgModel
     schwinger_four_monotone := hfour_mono
   }⟩
 
@@ -939,9 +917,9 @@ def correlationInequalityModelOfLattice
     [CorrelationInequalityCoreModel params] :
     CorrelationInequalityModel params where
   griffiths_first := griffiths_first_from_lattice (params := params)
-  griffiths_second := CorrelationInequalityCoreModel.griffiths_second (params := params)
-  fkg_inequality := CorrelationInequalityCoreModel.fkg_inequality (params := params)
-  lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
+  griffiths_second := CorrelationFourPointInequalityModel.griffiths_second (params := params)
+  fkg_inequality := CorrelationFKGModel.fkg_inequality (params := params)
+  lebowitz_inequality := CorrelationFourPointInequalityModel.lebowitz_inequality (params := params)
   schwinger_four_monotone := CorrelationInequalityCoreModel.schwinger_four_monotone (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
 
@@ -1052,16 +1030,8 @@ instance (priority := 100) correlationFourPointModel_of_core
     (params : Phi4Params)
     [CorrelationInequalityCoreModel params] :
     CorrelationFourPointModel params where
-  griffiths_second := CorrelationInequalityCoreModel.griffiths_second (params := params)
-  lebowitz_inequality := CorrelationInequalityCoreModel.lebowitz_inequality (params := params)
+  toCorrelationFourPointInequalityModel := inferInstance
   schwinger_four_monotone := CorrelationInequalityCoreModel.schwinger_four_monotone (params := params)
-
-/-- Core assumptions provide the finite-volume FKG subinterface. -/
-instance (priority := 100) correlationFKGModel_of_core
-    (params : Phi4Params)
-    [CorrelationInequalityCoreModel params] :
-    CorrelationFKGModel params where
-  fkg_inequality := CorrelationInequalityCoreModel.fkg_inequality (params := params)
 
 /-! ## Griffiths' First Inequality (GKS-I) -/
 
