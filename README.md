@@ -37,7 +37,8 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
   - cutoff-sequence transfer lemmas (all-`n` and eventually-`n`),
   - Borel-Cantelli tail bridges from summable cutoff bad-event sets to
     eventual almost-sure lower bounds, plus variants using summable
-    bad-event majorants `μ(badₙ) ≤ εₙ`,
+    bad-event majorants `μ(badₙ) ≤ εₙ` and geometric tails
+    `μ(badₙ) ≤ C rⁿ` (`r < 1`),
   - constructor paths to instantiate
     `InteractionWeightModel`/`InteractionIntegrabilityModel` from cutoff lower
     bound data.
