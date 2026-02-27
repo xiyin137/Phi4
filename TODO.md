@@ -39,7 +39,8 @@
   with corresponding `exp_interaction_Lp` and weight/integrability constructors;
   and now includes majorant variants using explicit summable envelopes
   (`μ badₙ ≤ εₙ`, `∑ εₙ < ∞`) plus geometric-tail specializations
-  (`μ badₙ ≤ C rⁿ`, `r < 1`).
+  (`μ badₙ ≤ C rⁿ`, `r < 1`) and exponential-tail specializations
+  (`μ badₙ ≤ C * exp(-α n)`, `α > 0`).
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
