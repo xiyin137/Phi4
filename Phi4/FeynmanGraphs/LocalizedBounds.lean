@@ -653,3 +653,69 @@ theorem feynmanGraphEstimateModel_nonempty_of_expansion_and_degree_weighted
   }⟩
 
 end EstimateModelBridge
+
+section Phi4Specialization
+
+open MeasureTheory
+
+/-- φ⁴-specialized localized graph bound from weighted-family assumptions
+    and a global valence-4 constraint. -/
+theorem localized_graph_bound_of_phi4_weighted_family
+    (mass : ℝ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r),
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (hphi4Global :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v = 4) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (r : ℕ) (G : FeynmanGraph r),
+      |graphIntegral G mass| ≤ C ^ G.lines.card := by
+  have hweightedDeg :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card := by
+    intro r G hdeg
+    exact hweighted G
+  have hdegGlobal :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v ≤ 4 := by
+    intro r G v
+    simp [hphi4Global G v]
+  exact localized_graph_bound_of_degree_weighted_family
+    (mass := mass) (d := 4) (A := A) (B := B) hA hB hweightedDeg hdegGlobal
+
+/-- φ⁴-specialized constructor of `FeynmanGraphEstimateModel` from explicit
+    expansion data and weighted graph-integral bounds. -/
+theorem feynmanGraphEstimateModel_nonempty_of_expansion_and_phi4_weighted
+    (mass : ℝ) (hmass : 0 < mass)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            ∑ G ∈ graphs, graphIntegral G mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r),
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (hphi4Global :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v = 4) :
+    Nonempty (FeynmanGraphEstimateModel mass hmass) := by
+  have hweightedDeg :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card := by
+    intro r G hdeg
+    exact hweighted G
+  have hdegGlobal :
+      ∀ {r : ℕ} (G : FeynmanGraph r), ∀ v : Fin r, G.legs v ≤ 4 := by
+    intro r G v
+    simp [hphi4Global G v]
+  exact feynmanGraphEstimateModel_nonempty_of_expansion_and_degree_weighted
+    (mass := mass) (hmass := hmass) hexpansion
+    (d := 4) (A := A) (B := B) hA hB hweightedDeg hdegGlobal
+
+end Phi4Specialization
