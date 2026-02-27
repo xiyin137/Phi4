@@ -211,6 +211,87 @@ theorem finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound
   exact finiteVolume_diagonal_moment_bound_of_generating_bound
     params c hc Λ f n
 
+/-- Finite-volume two-point bound from a finite-volume generating-functional
+    exponential bound, obtained by polarization from diagonal moment bounds. -/
+theorem finiteVolume_twoPoint_bound_of_generating_bound
+    (params : Phi4Params) [InteractionWeightModel params]
+    (c : ℝ)
+    (hbound : ∀ (h : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (Λ : Rectangle) (f g : TestFun2D) :
+    |schwingerTwo params Λ f g| ≤
+      ((Nat.factorial 2 : ℝ) *
+          (Real.exp (c * normFunctional (f + g)) +
+            Real.exp (c * normFunctional (-(f + g)))) +
+        (Nat.factorial 2 : ℝ) *
+          (Real.exp (c * normFunctional (f - g)) +
+            Real.exp (c * normFunctional (-(f - g))))) / 4 := by
+  let Mplus : ℝ :=
+    (Nat.factorial 2 : ℝ) *
+      (Real.exp (c * normFunctional (f + g)) +
+        Real.exp (c * normFunctional (-(f + g))))
+  let Mminus : ℝ :=
+    (Nat.factorial 2 : ℝ) *
+      (Real.exp (c * normFunctional (f - g)) +
+        Real.exp (c * normFunctional (-(f - g))))
+  have hplusDiag :
+      |schwingerTwo params Λ (f + g) (f + g)| ≤ Mplus := by
+    have hdiag :=
+      finiteVolume_diagonal_moment_bound_of_generating_bound
+        params c hbound Λ (f + g) 2
+    simpa [Mplus, schwingerN_two_eq_schwingerTwo] using hdiag
+  have hminusDiag :
+      |schwingerTwo params Λ (f - g) (f - g)| ≤ Mminus := by
+    have hdiag :=
+      finiteVolume_diagonal_moment_bound_of_generating_bound
+        params c hbound Λ (f - g) 2
+    simpa [Mminus, schwingerN_two_eq_schwingerTwo] using hdiag
+  have hpol := schwingerTwo_polarization params Λ f g
+  have htri :
+      |schwingerTwo params Λ (f + g) (f + g) -
+          schwingerTwo params Λ (f - g) (f - g)| ≤
+        |schwingerTwo params Λ (f + g) (f + g)| +
+          |schwingerTwo params Λ (f - g) (f - g)| := by
+    simpa [Real.norm_eq_abs, sub_eq_add_neg] using
+      (norm_add_le (schwingerTwo params Λ (f + g) (f + g))
+        (-(schwingerTwo params Λ (f - g) (f - g))))
+  calc
+    |schwingerTwo params Λ f g|
+        = |schwingerTwo params Λ (f + g) (f + g) -
+            schwingerTwo params Λ (f - g) (f - g)| / 4 := by
+            rw [hpol, abs_div, abs_of_pos (show (0 : ℝ) < 4 by norm_num)]
+    _ ≤ (|schwingerTwo params Λ (f + g) (f + g)| +
+          |schwingerTwo params Λ (f - g) (f - g)|) / 4 := by
+          exact div_le_div_of_nonneg_right htri (by positivity)
+    _ ≤ (Mplus + Mminus) / 4 := by
+          exact div_le_div_of_nonneg_right (add_le_add hplusDiag hminusDiag) (by positivity)
+    _ = ((Nat.factorial 2 : ℝ) *
+          (Real.exp (c * normFunctional (f + g)) +
+            Real.exp (c * normFunctional (-(f + g)))) +
+        (Nat.factorial 2 : ℝ) *
+          (Real.exp (c * normFunctional (f - g)) +
+            Real.exp (c * normFunctional (-(f - g))))) / 4 := by
+          simp [Mplus, Mminus]
+
+/-- Finite-volume two-point bound from a global finite-volume generating-functional
+    exponential estimate. -/
+theorem finiteVolume_twoPoint_bound_of_global_uniform_generating_bound
+    (params : Phi4Params) [InteractionWeightModel params]
+    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (Λ : Rectangle) (f g : TestFun2D) :
+    ∃ c : ℝ,
+      |schwingerTwo params Λ f g| ≤
+        ((Nat.factorial 2 : ℝ) *
+            (Real.exp (c * normFunctional (f + g)) +
+              Real.exp (c * normFunctional (-(f + g)))) +
+          (Nat.factorial 2 : ℝ) *
+            (Real.exp (c * normFunctional (f - g)) +
+              Real.exp (c * normFunctional (-(f - g))))) / 4 := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  exact finiteVolume_twoPoint_bound_of_generating_bound params c hc Λ f g
+
 private theorem abs_limit_le_of_abs_bound {u : ℕ → ℝ} {x B : ℝ}
     (hu : Filter.Tendsto u Filter.atTop (nhds x))
     (hbound : ∀ n, |u n| ≤ B) :

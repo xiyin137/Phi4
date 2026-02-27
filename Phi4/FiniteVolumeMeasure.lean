@@ -430,6 +430,50 @@ theorem finiteVolume_pairing_memLp_two (params : Phi4Params)
     exact (GaussianField.configuration_eval_measurable f).aestronglyMeasurable
   exact (memLp_two_iff_integrable_sq hAEMeas).2 hIntSq
 
+/-- Polarization identity for the finite-volume 2-point function. -/
+theorem schwingerTwo_polarization (params : Phi4Params)
+    [InteractionWeightModel params]
+    (Λ : Rectangle) (f g : TestFun2D) :
+    schwingerTwo params Λ f g =
+      (schwingerTwo params Λ (f + g) (f + g) -
+        schwingerTwo params Λ (f - g) (f - g)) / 4 := by
+  set μ : Measure FieldConfig2D := finiteVolumeMeasure params Λ
+  have hplusInt : Integrable (fun ω : FieldConfig2D => (ω (f + g)) ^ 2) μ := by
+    have hLp := finiteVolume_pairing_memLp_two params Λ (f + g)
+    simpa [μ] using hLp.integrable_sq
+  have hminusInt : Integrable (fun ω : FieldConfig2D => (ω (f - g)) ^ 2) μ := by
+    have hLp := finiteVolume_pairing_memLp_two params Λ (f - g)
+    simpa [μ] using hLp.integrable_sq
+  have hmain :
+      4 * schwingerTwo params Λ f g =
+        ∫ ω, (ω (f + g)) ^ 2 ∂μ - ∫ ω, (ω (f - g)) ^ 2 ∂μ := by
+    calc
+      4 * schwingerTwo params Λ f g
+          = ∫ ω, 4 * (ω f * ω g) ∂μ := by
+              rw [schwingerTwo, integral_const_mul]
+      _ = ∫ ω, ((ω (f + g)) ^ 2 - (ω (f - g)) ^ 2) ∂μ := by
+            congr 1
+            funext ω
+            rw [map_add, map_sub]
+            ring
+      _ = ∫ ω, (ω (f + g)) ^ 2 ∂μ - ∫ ω, (ω (f - g)) ^ 2 ∂μ := by
+            rw [integral_sub hplusInt hminusInt]
+  have hplus :
+      schwingerTwo params Λ (f + g) (f + g) =
+        ∫ ω, (ω (f + g)) ^ 2 ∂μ := by
+    simp [schwingerTwo, μ, pow_two]
+  have hminus :
+      schwingerTwo params Λ (f - g) (f - g) =
+        ∫ ω, (ω (f - g)) ^ 2 ∂μ := by
+    simp [schwingerTwo, μ, pow_two]
+  apply (eq_div_iff (show (4 : ℝ) ≠ 0 by norm_num)).2
+  calc
+    schwingerTwo params Λ f g * 4 = 4 * schwingerTwo params Λ f g := by ring
+    _ = ∫ ω, (ω (f + g)) ^ 2 ∂μ - ∫ ω, (ω (f - g)) ^ 2 ∂μ := hmain
+    _ = schwingerTwo params Λ (f + g) (f + g) -
+          schwingerTwo params Λ (f - g) (f - g) := by
+          rw [hplus, hminus]
+
 /-- Diagonal connected 2-point positivity (variance form) in finite volume. -/
 theorem connectedSchwingerTwo_self_nonneg (params : Phi4Params)
     [InteractionWeightModel params]
