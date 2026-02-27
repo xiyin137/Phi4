@@ -45,8 +45,8 @@ class Phi4ModelBundle (params : Phi4Params) where
   osE4 : @OSE4ClusterModel params osAxiom.toSchwingerFunctionModel
   osE2 : @OSDistributionE2Model params osAxiom.toSchwingerFunctionModel
   reconstructionLinearGrowth : @ReconstructionLinearGrowthModel params
-    osAxiom
-  wightmanReconstruction : @WightmanReconstructionModel params osAxiom
+    osAxiom.toSchwingerFunctionModel
+  wightmanReconstruction : WightmanReconstructionModel params
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     FreeCovarianceKernelModel params.mass params.mass_pos :=
@@ -166,12 +166,11 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionLinearGrowthModel params := by
-  letI : OSAxiomCoreModel params := h.osAxiom
+  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
   exact h.reconstructionLinearGrowth
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     WightmanReconstructionModel params := by
-  letI : OSAxiomCoreModel params := h.osAxiom
   exact h.wightmanReconstruction
 
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
@@ -183,7 +182,7 @@ instance (params : Phi4Params) [h : Phi4ModelBundle params] :
 instance (params : Phi4Params) [h : Phi4ModelBundle params] :
     ReconstructionInputModel params := by
   letI : InfiniteVolumeSchwingerModel params := h.infiniteVolumeSchwinger
-  letI : OSAxiomCoreModel params := h.osAxiom
+  letI : SchwingerFunctionModel params := h.osAxiom.toSchwingerFunctionModel
   letI : ReconstructionLinearGrowthModel params := h.reconstructionLinearGrowth
   letI : ReconstructionWeakCouplingModel params := inferInstance
   infer_instance

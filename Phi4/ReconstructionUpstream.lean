@@ -19,8 +19,8 @@ open MeasureTheory Reconstruction
 
 /-- Canonical OS→Wightman reconstruction rule from the upstream
     `os_to_wightman_full` theorem. -/
-theorem wightman_reconstruction_of_os_to_wightman (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+theorem wightman_reconstruction_of_os_to_wightman (_params : Phi4Params)
+    :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
@@ -31,8 +31,7 @@ theorem wightman_reconstruction_of_os_to_wightman (params : Phi4Params)
 /-- Package the upstream OS→Wightman theorem as a
     `WightmanReconstructionModel`. -/
 theorem wightmanReconstructionModel_nonempty_of_os_to_wightman
-    (params : Phi4Params)
-    [OSAxiomCoreModel params] :
+    (params : Phi4Params) :
     Nonempty (WightmanReconstructionModel params) := by
   exact wightmanReconstructionModel_nonempty_of_data params
     (wightman_reconstruction_of_os_to_wightman params)

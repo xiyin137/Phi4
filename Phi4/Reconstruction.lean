@@ -98,14 +98,14 @@ class UniformWeakCouplingDecayModel (params : Phi4Params)
 /-- Linear-growth input needed at fixed `params` for OS-to-Wightman
     reconstruction. -/
 class ReconstructionLinearGrowthModel (params : Phi4Params)
-    [OSAxiomCoreModel params] where
+    [SchwingerFunctionModel params] where
   os_package : OsterwalderSchraderAxioms 1
   os_package_eq : os_package.S = phi4SchwingerFunctions params
   linear_growth : OSLinearGrowthCondition 1 os_package
 
 /-- Backward-compatible existential view of `ReconstructionLinearGrowthModel`. -/
 theorem ReconstructionLinearGrowthModel.phi4_linear_growth (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -144,14 +144,14 @@ instance (priority := 90) reconstructionWeakCouplingModel_of_uniform
 /-- Backward-compatible aggregate reconstruction input model. -/
 class ReconstructionInputModel (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     extends ReconstructionLinearGrowthModel params,
       ReconstructionWeakCouplingModel params
 
 instance (priority := 100) reconstructionInputModel_of_submodels
     (params : Phi4Params)
     [InfiniteVolumeSchwingerModel params]
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params]
     [ReconstructionWeakCouplingModel params] :
     ReconstructionInputModel params where
@@ -162,7 +162,7 @@ instance (priority := 100) reconstructionInputModel_of_submodels
     Kept separate from `ReconstructionInputModel` so fixed-`params`
     analytic assumptions and reconstruction machinery are not bundled together. -/
 class WightmanReconstructionModel (params : Phi4Params)
-    [OSAxiomCoreModel params] where
+    where
   wightman_reconstruction :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -181,7 +181,7 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
 
 /-- Linear-growth input extracted from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth_of_interface (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -191,7 +191,7 @@ theorem phi4_linear_growth_of_interface (params : Phi4Params)
 /-- Explicit linear-growth constants extracted from
     `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth_constants_of_interface (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ (sobolev_index : ℕ) (alpha beta gamma : ℝ),
       0 < alpha ∧ 0 < beta ∧
@@ -210,7 +210,6 @@ theorem phi4_linear_growth_constants_of_interface (params : Phi4Params)
 /-- Canonical Wightman-reconstruction step extracted from upstream
     `WightmanReconstructionModel`. -/
 theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
-    [OSAxiomCoreModel params]
     [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -788,7 +787,7 @@ theorem osLinearGrowthCondition_nonempty_of_bound
 /-- Construct φ⁴ linear-growth witness data from explicit seminorm-growth
     constants for one OS package matching `phi4SchwingerFunctions`. -/
 theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (sobolev_index : ℕ)
@@ -810,7 +809,7 @@ theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
 
 /-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (hlinear :
       ∃ OS : OsterwalderSchraderAxioms 1,
         OS.S = phi4SchwingerFunctions params ∧
@@ -828,7 +827,7 @@ theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
     constants for an OS package matching `phi4SchwingerFunctions`. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (OS : OsterwalderSchraderAxioms 1)
     (hS : OS.S = phi4SchwingerFunctions params)
     (sobolev_index : ℕ)
@@ -849,7 +848,10 @@ theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     2) an explicit seminorm-growth estimate for `phi4SchwingerFunctions`. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
     (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    [OSEuclideanCovarianceModel params]
+    [OSE3SymmetryModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params)
@@ -877,7 +879,7 @@ theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem gap_phi4_linear_growth (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     (hlinear :
       ∃ OS : OsterwalderSchraderAxioms 1,
         OS.S = phi4SchwingerFunctions params ∧
@@ -889,7 +891,7 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
 
 /-- Public linear-growth endpoint from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth (params : Phi4Params)
-    [OSAxiomCoreModel params]
+    [SchwingerFunctionModel params]
     [ReconstructionLinearGrowthModel params] :
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -898,7 +900,6 @@ theorem phi4_linear_growth (params : Phi4Params)
 
 /-- Construct `WightmanReconstructionModel` from an explicit reconstruction rule. -/
 theorem wightmanReconstructionModel_nonempty_of_data (params : Phi4Params)
-    [OSAxiomCoreModel params]
     (hreconstruct :
       ∀ (OS : OsterwalderSchraderAxioms 1),
         OSLinearGrowthCondition 1 OS →
@@ -909,8 +910,7 @@ theorem wightmanReconstructionModel_nonempty_of_data (params : Phi4Params)
 
 /-- Honest frontier: reconstruction step from explicit OS+linear-growth
     reconstruction data. -/
-theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
-    [OSAxiomCoreModel params]
+theorem gap_phi4_wightman_reconstruction_step (_params : Phi4Params)
     (hreconstruct :
       ∀ (OS : OsterwalderSchraderAxioms 1),
         OSLinearGrowthCondition 1 OS →
@@ -925,7 +925,6 @@ theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
 /-- Public reconstruction step from OS + linear growth to Wightman data,
     routed through `WightmanReconstructionModel`. -/
 theorem phi4_wightman_reconstruction_step (params : Phi4Params)
-    [OSAxiomCoreModel params]
     [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
@@ -1740,7 +1739,7 @@ theorem wightman_exists_of_linear_growth_and_reconstruction
 /-- Construct Wightman existence from explicit linear-growth and reconstruction
     rule data at fixed `params`. -/
 theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     (hlinear : ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS)) →
@@ -1761,7 +1760,7 @@ theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
     `phi4SchwingerFunctions` yields Wightman existence. -/
 theorem phi4_wightman_exists_of_explicit_linear_growth_bound
     (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [WightmanReconstructionModel params] →
     (OS : OsterwalderSchraderAxioms 1) →
     (hS : OS.S = phi4SchwingerFunctions params) →
@@ -1969,7 +1968,7 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the abstract reconstruction backend interface. -/
 theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -1984,7 +1983,7 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params) :
 /-- Interface-level self-adjointness corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -1999,7 +1998,7 @@ theorem phi4_selfadjoint_fields_of_interfaces (params : Phi4Params) :
 /-- Interface-level locality corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_locality_of_interfaces (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2012,7 +2011,7 @@ theorem phi4_locality_of_interfaces (params : Phi4Params) :
 /-- Interface-level Lorentz-covariance corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2025,7 +2024,7 @@ theorem phi4_lorentz_covariance_of_interfaces (params : Phi4Params) :
 /-- Interface-level positive-definite/vacuum corollary obtained from
     `phi4_wightman_exists_of_interfaces`. -/
 theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2047,7 +2046,7 @@ theorem phi4_unique_vacuum_of_interfaces (params : Phi4Params) :
     - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
     - W3: Locality (spacelike commutativity) -/
 theorem phi4_wightman_exists (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2064,7 +2063,7 @@ theorem phi4_wightman_exists (params : Phi4Params) :
     This is encoded in the `hermitian` field of `WightmanFunctions`,
     which is the distributional version of φ(f)* = φ(f̄) for real f. -/
 theorem phi4_selfadjoint_fields (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2082,7 +2081,7 @@ theorem phi4_selfadjoint_fields (params : Phi4Params) :
     This follows from the Wightman reconstruction theorem applied to
     the φ⁴₂ Schwinger functions. -/
 theorem phi4_locality (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2096,7 +2095,7 @@ theorem phi4_locality (params : Phi4Params) :
     U(Λ,a) φ(f) U(Λ,a)⁻¹ = φ((Λ,a)·f) for (Λ,a) ∈ ISO(1,1).
     (Glimm-Jaffe Section 19.5) -/
 theorem phi4_lorentz_covariance (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
@@ -2114,7 +2113,7 @@ theorem phi4_lorentz_covariance (params : Phi4Params) :
     For strong coupling, vacuum uniqueness is related to the absence of
     phase transitions (or selecting a pure phase). -/
 theorem phi4_unique_vacuum (params : Phi4Params) :
-    [OSAxiomCoreModel params] →
+    [SchwingerFunctionModel params] →
     [ReconstructionLinearGrowthModel params] →
     [WightmanReconstructionModel params] →
     ∃ (Wfn : WightmanFunctions 1),
