@@ -422,7 +422,8 @@ theorem correlationFourPointModel_nonempty_of_data
     `k = 4` monotonicity interface. -/
 theorem correlationFourPointModel_nonempty_of_inequality_and_schwingerFourMonotone
     (params : Phi4Params)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     [SchwingerNMonotoneModel params 4] :
     Nonempty (CorrelationFourPointModel params) := by
   exact ⟨{
@@ -564,7 +565,8 @@ theorem correlationInequalityModel_nonempty_of_submodels
 theorem correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone
     (params : Phi4Params)
     [CorrelationTwoPointModel params]
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     [CorrelationFKGModel params]
     [SchwingerNMonotoneModel params 4] :
     Nonempty (CorrelationInequalityModel params) := by
@@ -1510,7 +1512,8 @@ theorem pairing_subtracted_four_point_upper_bound_14_23
 /-- Two-sided estimate for the `(12)(34)` pairing-subtracted 4-point expression. -/
 theorem pairing_subtracted_four_point_bounds
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1528,7 +1531,8 @@ theorem pairing_subtracted_four_point_bounds
     `|S₄ - S₂(12)S₂(34)| ≤ S₂(13)S₂(24) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_abs_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1545,7 +1549,8 @@ theorem pairing_subtracted_four_point_abs_bound
     `|S₄ - S₂(13)S₂(24)| ≤ S₂(12)S₂(34) + S₂(14)S₂(23)`. -/
 theorem pairing_subtracted_four_point_abs_bound_13_24
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1562,7 +1567,8 @@ theorem pairing_subtracted_four_point_abs_bound_13_24
     `|S₄ - S₂(14)S₂(23)| ≤ S₂(12)S₂(34) + S₂(13)S₂(24)`. -/
 theorem pairing_subtracted_four_point_abs_bound_14_23
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1590,7 +1596,7 @@ def cumulantFourPoint (params : Phi4Params) (Λ : Rectangle)
 /-- Lebowitz implies nonpositivity of the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_nonpos
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1602,7 +1608,7 @@ theorem cumulantFourPoint_nonpos
 /-- GKS-II yields a lower bound on the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_lower_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1616,7 +1622,8 @@ theorem cumulantFourPoint_lower_bound
 /-- Absolute-value control of the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_abs_bound
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1634,7 +1641,8 @@ theorem cumulantFourPoint_abs_bound
     every GKS-II pairing channel gives a lower bound, and Lebowitz gives the upper bound. -/
 theorem schwinger_four_bounds_all_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1657,7 +1665,7 @@ theorem schwinger_four_bounds_all_channels
 /-- Three channel-wise lower bounds on the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_lower_bounds_all_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1683,7 +1691,8 @@ theorem cumulantFourPoint_lower_bounds_all_channels
 /-- Alternative absolute-value bound using the `(13)(24)` GKS-II lower channel. -/
 theorem cumulantFourPoint_abs_bound_alt13
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1700,7 +1709,8 @@ theorem cumulantFourPoint_abs_bound_alt13
 /-- Alternative absolute-value bound using the `(14)(23)` GKS-II lower channel. -/
 theorem cumulantFourPoint_abs_bound_alt14
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
@@ -1718,7 +1728,8 @@ theorem cumulantFourPoint_abs_bound_alt14
     of the three two-pair channel sums. -/
 theorem cumulantFourPoint_abs_bound_min_channels
     (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationFourPointInequalityModel params]
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
     (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
     (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :

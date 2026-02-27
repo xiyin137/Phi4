@@ -159,7 +159,8 @@ the local Glimm-Jaffe objective.
   monotonicity (`schwinger_four_monotone`), inducing
   `SchwingerNMonotoneModel params 4`.
 - Four-point inequality theorem blocks in `Phi4/InfiniteVolumeLimit.lean` and
-  `Phi4/Reconstruction.lean` now depend on
+  `Phi4/Reconstruction.lean` (and finite-volume bound blocks in
+  `Phi4/CorrelationInequalities.lean`) now depend on
   atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
   (not full 4-point monotonicity) when monotonicity data is unused;
   `CorrelationFourPointInequalityModel` is reconstructed by compatibility.

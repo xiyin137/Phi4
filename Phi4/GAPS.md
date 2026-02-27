@@ -267,7 +267,8 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      interfaces (`SchwingerNMonotoneModel params 2/4`) instead of stronger
      correlation bundles where unused
    - four-point inequality transport/bound theorem blocks in
-     `InfiniteVolumeLimit.lean` and `Reconstruction.lean` now depend on
+     `CorrelationInequalities.lean`, `InfiniteVolumeLimit.lean`, and
+     `Reconstruction.lean` now depend on
      atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
      where monotonicity data is unused (with compatibility reconstruction of
      `CorrelationFourPointInequalityModel`)
