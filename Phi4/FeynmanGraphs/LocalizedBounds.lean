@@ -564,6 +564,39 @@ theorem graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
           simpa using
             (mul_pow (((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) B G.lines.card).symm
 
+/-- Uniform positive-constant `C^{|lines|}` bound from a family-level weighted
+    degree-capped estimate. -/
+theorem uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_family
+    (mass : ℝ) (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤ C ^ G.lines.card := by
+  let C0 : ℝ := (((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B
+  have hfact_nonneg : 0 ≤ (Nat.factorial d : ℝ) := by
+    exact_mod_cast (Nat.zero_le (Nat.factorial d))
+  have hC0_nonneg : 0 ≤ C0 := by
+    dsimp [C0]
+    exact mul_nonneg
+      (mul_nonneg (pow_nonneg hfact_nonneg 2) (pow_nonneg hA 2))
+      hB
+  refine ⟨C0 + 1, by linarith, ?_⟩
+  intro r G hdeg
+  have hbase :
+      |graphIntegral G mass| ≤ C0 ^ G.lines.card := by
+    have hG := hweighted G hdeg
+    simpa [C0] using
+      graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
+        (G := G) (mass := mass) (d := d) hdeg A B hA hB hG
+  have hpow :
+      C0 ^ G.lines.card ≤ (C0 + 1) ^ G.lines.card := by
+    exact pow_le_pow_left₀ hC0_nonneg (le_add_of_nonneg_right zero_le_one) _
+  exact hbase.trans hpow
+
 end FeynmanGraph
 
 end GraphIntegralBridge

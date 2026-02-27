@@ -64,6 +64,11 @@ the local Glimm-Jaffe objective.
   weighted occupancy estimates to pure `C^|lines|` graph-integral bounds under
   degree caps:
   `graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides a family-level
+  positive-constant uniformization theorem
+  `uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_family`,
+  giving `∃ C > 0` such that all degree-capped weighted-bound graphs satisfy
+  `|I(G)| ≤ C^|lines(G)|`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
