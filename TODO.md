@@ -99,6 +99,13 @@ the local Glimm-Jaffe objective.
   `sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp`
   and
   `feynman_expansion_abs_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides generic finite
+  graph-family/expansion controls from per-graph `K^|V|` bounds
+  (`sum_abs_graphIntegral_le_card_mul_const_pow_vertices`,
+  `feynman_expansion_abs_le_card_mul_const_pow_vertices`) plus a local φ⁴
+  weighted-family corollary that extracts `K > 0` and applies it to a concrete
+  expansion:
+  `feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

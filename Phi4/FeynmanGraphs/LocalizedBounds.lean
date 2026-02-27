@@ -847,6 +847,84 @@ theorem feynman_expansion_abs_le_card_mul_const_pow_vertices_of_phi4_weighted_sh
     (sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp
       (graphs := graphs) (mass := mass) (A := A) (B := B) hphi4 hbound)
 
+/-- Generic finite graph-family control from a per-graph `K^{|V|}` bound. -/
+theorem sum_abs_graphIntegral_le_card_mul_const_pow_vertices
+    (graphs : Finset (FeynmanGraph r)) (mass K : ℝ)
+    (hbound : ∀ G ∈ graphs, |graphIntegral G mass| ≤ K ^ r) :
+    Finset.sum graphs (fun G => |graphIntegral G mass|) ≤ graphs.card * (K ^ r) := by
+  have hsum :
+      Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+        Finset.sum graphs (fun _ => K ^ r) := by
+    refine Finset.sum_le_sum ?_
+    intro G hG
+    exact hbound G hG
+  calc
+    Finset.sum graphs (fun G => |graphIntegral G mass|)
+        ≤ Finset.sum graphs (fun _ => K ^ r) := hsum
+    _ = graphs.card * (K ^ r) := by
+          simp [Finset.sum_const, nsmul_eq_mul]
+
+/-- Generic finite expansion control from a per-graph `K^{|V|}` bound. -/
+theorem feynman_expansion_abs_le_card_mul_const_pow_vertices
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (K : ℝ)
+    (hbound : ∀ G ∈ graphs, |graphIntegral G mass| ≤ K ^ r) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      graphs.card * (K ^ r) := by
+  rw [hexp]
+  have habs :
+      |Finset.sum graphs (fun G => graphIntegral G mass)| ≤
+        Finset.sum graphs (fun G => |graphIntegral G mass|) := by
+    simpa using
+      (Finset.abs_sum_le_sum_abs
+        (f := fun G : FeynmanGraph r => graphIntegral G mass)
+        (s := graphs))
+  exact habs.trans
+    (sum_abs_graphIntegral_le_card_mul_const_pow_vertices
+      (graphs := graphs) (mass := mass) (K := K) hbound)
+
+/-- Finite φ⁴ expansion control via the local weighted-family infrastructure:
+    extract a positive `K`, then bound by `#graphs * K^{|V|}`. -/
+theorem feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ K : ℝ, 0 < K ∧
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        graphs.card * (K ^ r) := by
+  let K0 : ℝ := ((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2)
+  have hfact_nonneg : 0 ≤ (Nat.factorial 4 : ℝ) := by
+    exact_mod_cast (Nat.zero_le (Nat.factorial 4))
+  have hK0_nonneg : 0 ≤ K0 := by
+    dsimp [K0]
+    exact mul_nonneg (mul_nonneg hfact_nonneg (pow_nonneg hA 4)) (pow_nonneg hB 2)
+  refine ⟨K0 + 1, by linarith, ?_⟩
+  exact feynman_expansion_abs_le_card_mul_const_pow_vertices
+    (graphs := graphs) (mass := mass) (hmass := hmass) (f := f) hexp (K := K0 + 1)
+    (fun G hG => by
+      have hsharp :
+          |graphIntegral G mass| ≤ K0 ^ r := by
+        dsimp [K0]
+        exact graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound_sharp
+          (G := G) (mass := mass) (A := A) (B := B)
+          (hphi4 := hphi4 G hG) (hbound := hweighted G (hphi4 G hG))
+      have hpow : K0 ^ r ≤ (K0 + 1) ^ r := by
+        exact pow_le_pow_left₀ hK0_nonneg (le_add_of_nonneg_right zero_le_one) _
+      exact hsharp.trans hpow)
+
 /-- Uniform local φ⁴ weighted family bound in vertex-count form:
     `∃ K > 0` such that `|I(G)| ≤ K^{|V|}` for all φ⁴ graphs. -/
 theorem uniform_graphIntegral_abs_le_pos_const_pow_vertices_of_phi4_weighted_family_local
