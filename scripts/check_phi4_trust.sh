@@ -43,8 +43,8 @@ echo "[OK] No def/abbrev := by sorry placeholders"
 
 # 3) Theorem-level sorry is allowed by project policy; report current inventory.
 grep -RIn "^[[:space:]]*sorry\\b" Phi4 --include='*.lean' >"$TMP_REPORT" || true
-CORE_COUNT="$(grep -v '/Scratch/' "$TMP_REPORT" | wc -l | tr -d ' ')"
-SCRATCH_COUNT="$(grep '/Scratch/' "$TMP_REPORT" | wc -l | tr -d ' ')"
+CORE_COUNT="$(awk '$0 !~ /\/Scratch\// { c++ } END { print c+0 }' "$TMP_REPORT")"
+SCRATCH_COUNT="$(awk '$0 ~ /\/Scratch\// { c++ } END { print c+0 }' "$TMP_REPORT")"
 TOTAL_COUNT="$(wc -l < "$TMP_REPORT" | tr -d ' ')"
 
 if [[ "$TOTAL_COUNT" -eq 0 ]]; then

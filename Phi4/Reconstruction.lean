@@ -280,6 +280,28 @@ theorem phi4_productTensor_zero_of_compat
     _ = 1 := by
           norm_num [infiniteVolumeSchwinger_zero]
 
+/-- Measure-representation variant of zero-point normalization on product
+    tensors from compatibility with `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_zero_of_compat_of_moment
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InfiniteVolumeMeasureModel params]
+    [OSAxiomCoreModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (f : Fin 0 → TestFun2D) :
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f) = 1 := by
+  calc
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f)
+        = (infiniteVolumeSchwinger params 0 f : ℂ) := by
+          simpa using hcompat 0 f
+    _ = 1 := by
+          have hzero : infiniteVolumeSchwinger params 0 f = 1 :=
+            infiniteVolumeSchwinger_zero_of_moment (params := params) f
+          simp [hzero]
+
 /-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
     from a global finite-volume uniform generating-functional estimate, plus an
     explicit compatibility bridge to `infiniteVolumeSchwinger`. -/
@@ -591,6 +613,38 @@ theorem phi4_normalized_order0_of_linear_and_compat
   let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
   have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
     phi4_productTensor_zero_of_compat params hcompat f0
+  have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
+    ext x
+    have hx : x = 0 := Subsingleton.elim x 0
+    subst hx
+    simp [schwartzProductTensorFromTestFamily]
+  calc
+    phi4SchwingerFunctions params 0 g
+        = phi4SchwingerFunctions params 0 ((g 0) • schwartzProductTensorFromTestFamily f0) := by
+            exact congrArg (phi4SchwingerFunctions params 0) hdecomp
+    _ = (g 0) * phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) := by
+            exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
+    _ = g 0 := by simp [hone]
+
+/-- Measure-representation variant of order-zero normalization from:
+    1) core linearity of `phi4SchwingerFunctions params 0`, and
+    2) compatibility with `infiniteVolumeSchwinger` on product tensors. -/
+theorem phi4_normalized_order0_of_linear_and_compat_of_moment
+    (params : Phi4Params)
+    [InfiniteVolumeSchwingerModel params]
+    [InfiniteVolumeMeasureModel params]
+    [OSAxiomCoreModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ)) :
+    ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 := by
+  have hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0) :=
+    phi4_os0_linear params 0
+  intro g
+  let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
+  have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
+    phi4_productTensor_zero_of_compat_of_moment params hcompat f0
   have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
     ext x
     have hx : x = 0 := Subsingleton.elim x 0
