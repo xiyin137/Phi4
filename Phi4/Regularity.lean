@@ -402,6 +402,61 @@ theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
   exact diagonal_moment_limit_bound_of_exhaustion
     params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim
 
+/-- Infinite-volume 2-point Schwinger bound from global finite-volume
+    generating-functional control, via polarization and exhaustion limits. -/
+theorem infiniteVolume_twoPoint_bound_of_global_uniform
+    (params : Phi4Params) [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (f g : TestFun2D) :
+    ∃ c : ℝ,
+      |infiniteVolumeSchwinger params 2 ![f, g]| ≤
+        ((Nat.factorial 2 : ℝ) *
+            (Real.exp (c * normFunctional (f + g)) +
+              Real.exp (c * normFunctional (-(f + g)))) +
+          (Nat.factorial 2 : ℝ) *
+            (Real.exp (c * normFunctional (f - g)) +
+              Real.exp (c * normFunctional (-(f - g))))) / 4 := by
+  rcases hglobal with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  let C : ℝ :=
+    ((Nat.factorial 2 : ℝ) *
+        (Real.exp (c * normFunctional (f + g)) +
+          Real.exp (c * normFunctional (-(f + g)))) +
+      (Nat.factorial 2 : ℝ) *
+        (Real.exp (c * normFunctional (f - g)) +
+          Real.exp (c * normFunctional (-(f - g))))) / 4
+  have hraw :
+      Filter.Tendsto
+        (fun m : ℕ =>
+          if h : 0 < m then
+            schwingerN params (exhaustingRectangles m h) 2 (![f, g] : Fin 2 → TestFun2D)
+          else 0)
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params 2 ![f, g])) :=
+    InfiniteVolumeSchwingerModel.infiniteVolumeSchwinger_tendsto
+      (params := params) 2 (![f, g] : Fin 2 → TestFun2D)
+  have hlim :
+      Filter.Tendsto
+        (fun k : ℕ =>
+          schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) 2
+            (![f, g] : Fin 2 → TestFun2D))
+        Filter.atTop
+        (nhds (infiniteVolumeSchwinger params 2 ![f, g])) := by
+    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
+    simpa using hcomp
+  have hbound : ∀ k : ℕ,
+      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) 2
+        (![f, g] : Fin 2 → TestFun2D)| ≤ C := by
+    intro k
+    have hfin :
+        |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := by
+      simpa [C] using finiteVolume_twoPoint_bound_of_generating_bound params c hc
+        (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g
+    simpa [schwingerN_two_eq_schwingerTwo] using hfin
+  simpa [C] using abs_limit_le_of_abs_bound hlim hbound
+
 /-- If the generating functional along exhaustion converges to the infinite-volume
     generating functional and satisfies a global exponential bound, then OS1 follows. -/
 theorem generating_functional_bound_of_exhaustion_limit
