@@ -269,6 +269,40 @@ def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
   SchwartzMap.productTensor (fun i => testFunToSchwartzSpacetime (f i))
 
 /-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
+    from explicit pointwise-in-`f` finite-volume uniform generating-functional
+    control, plus an explicit compatibility bridge to
+    `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
+    (params : Phi4Params)
+    [InteractionWeightModel params]
+    [InfiniteVolumeLimitModel params]
+    [OSAxiomCoreModel params]
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
+    ∃ c : ℝ,
+      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := by
+  rcases infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
+      (params := params) huniform n hn f with ⟨c, hc⟩
+  refine ⟨c, ?_⟩
+  calc
+    ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖
+        = ‖(infiniteVolumeSchwinger params n f : ℂ)‖ := by
+          simp [hcompat n f]
+    _ = |infiniteVolumeSchwinger params n f| := by
+          simp
+    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) := hc
+
+/-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
     obtained from the infinite-volume mixed bound plus an explicit compatibility
     bridge to `infiniteVolumeSchwinger`. -/
 theorem phi4_productTensor_mixed_bound_of_interface
@@ -287,18 +321,9 @@ theorem phi4_productTensor_mixed_bound_of_interface
         ∑ i : Fin n, (Nat.factorial n : ℝ) *
           (Real.exp (c * normFunctional (f i)) +
             Real.exp (c * normFunctional (-(f i)))) := by
-  rcases infiniteVolumeSchwinger_mixed_bound_of_interface
-      (params := params) n hn f with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  calc
-    ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖
-        = ‖(infiniteVolumeSchwinger params n f : ℂ)‖ := by
-          simp [hcompat n f]
-    _ = |infiniteVolumeSchwinger params n f| := by
-          simp
-    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := hc
+  exact phi4_productTensor_mixed_bound_of_uniform_generating_bound params
+    (RegularityModel.generating_functional_bound_uniform (params := params))
+    hcompat n hn f
 
 /-! ## Linear growth condition (E0') -/
 
