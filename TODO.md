@@ -50,6 +50,12 @@
 - `Phi4/CovarianceOperators.lean` now exposes boundary-covariance subinterfaces
   (`BoundaryKernelModel`, `BoundaryComparisonModel`, `BoundaryRegularityModel`)
   plus derived quadratic comparison lemmas (`C_D ≤ C ≤ C_N` consequences).
+- `Phi4/FreeField.lean` now includes a direct model-construction bridge from
+  two-point kernel identities:
+  `freeCovarianceKernelModel_nonempty_of_two_point_kernel`.
+- `Phi4/CovarianceOperators.lean` now exports reusable free-kernel Bessel
+  representation/off-diagonal bounds (`freeCovKernel_eq_besselK0` and
+  `K₁`-comparison consequences) for downstream covariance estimates.
 - `Phi4/ReflectionPositivity.lean` now requires only boundary-kernel data for
   Dirichlet RP assumptions (`BoundaryKernelModel`), consistent with the covariance split.
 - `Phi4/ModelBundle.lean` now carries boundary kernel/comparison/regularity

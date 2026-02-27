@@ -45,6 +45,15 @@ Primary reference: Glimm-Jaffe, *Quantum Physics: A Functional Integral Point of
   `Phi4/CorrelationInequalities.lean` include `*_nonempty_of_data` constructors
   so constructive proof data can be attached to interfaces without ad hoc
   instance boilerplate.
+- `Phi4/FreeField.lean` now also includes
+  `freeCovarianceKernelModel_nonempty_of_two_point_kernel`, a direct bridge
+  from a free two-point kernel identity to `FreeCovarianceKernelModel`.
+- `Phi4/CovarianceOperators.lean` now exposes public reusable free-kernel
+  analytic lemmas:
+  `freeCovKernel_eq_besselK0`,
+  `freeCovKernel_nonneg_offDiagonal`,
+  `freeCovKernel_le_besselK1_offDiagonal`,
+  `abs_freeCovKernel_le_besselK1_offDiagonal`.
 
 ### High-Level Architecture State
 

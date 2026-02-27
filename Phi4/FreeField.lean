@@ -217,6 +217,25 @@ theorem freeCovarianceKernelModel_nonempty_of_data (mass : ℝ) (hmass : 0 < mas
     Nonempty (FreeCovarianceKernelModel mass hmass) := by
   exact ⟨{ covariance_eq_kernel := hcov }⟩
 
+/-- Construct `FreeCovarianceKernelModel` from the free two-point identity in
+    kernel form. This is a convenient bridge when the kernel representation is
+    first proved at the level of expectations. -/
+theorem freeCovarianceKernelModel_nonempty_of_two_point_kernel
+    (mass : ℝ) (hmass : 0 < mass)
+    (h2pt :
+      ∀ (f g : TestFun2D),
+        ∫ ω, ω f * ω g ∂(freeFieldMeasure mass hmass) =
+          ∫ x, ∫ y, f x * freeCovKernel mass x y * g y) :
+    Nonempty (FreeCovarianceKernelModel mass hmass) := by
+  refine freeCovarianceKernelModel_nonempty_of_data mass hmass ?_
+  intro f g
+  calc
+    GaussianField.covariance (freeCovarianceCLM mass hmass) f g
+        = ∫ ω, ω f * ω g ∂(freeFieldMeasure mass hmass) := by
+            symm
+            exact freeField_two_point mass hmass f g
+    _ = ∫ x, ∫ y, f x * freeCovKernel mass x y * g y := h2pt f g
+
 /-- Bridge theorem: free-field covariance equals the Green-kernel bilinear form. -/
 theorem freeCovariance_eq_kernel (mass : ℝ) (hmass : 0 < mass)
     [FreeCovarianceKernelModel mass hmass]

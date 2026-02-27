@@ -386,7 +386,7 @@ theorem dirichletCov_smooth_off_diagonal (Λ : Rectangle) (mass : ℝ) (hmass : 
       (mass := mass) (hmass := hmass) Λ)
 
 /-- Rewrite the free covariance kernel using the 2D Schwinger integral identity. -/
-private lemma freeCovKernel_eq_besselK0
+theorem freeCovKernel_eq_besselK0
     (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
     (hxy : 0 < ‖x - y‖) :
     freeCovKernel mass x y = (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) := by
@@ -408,6 +408,35 @@ private lemma freeCovKernel_eq_besselK0
     _ = (4 * Real.pi)⁻¹ * (2 * besselK0 (mass * ‖x - y‖)) := by rw [hsch]
     _ = (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) := by ring
 
+/-- Off-diagonal positivity of the free covariance kernel. -/
+theorem freeCovKernel_nonneg_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    0 ≤ freeCovKernel mass x y := by
+  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
+  have hK0_nonneg : 0 ≤ besselK0 (mass * ‖x - y‖) :=
+    (besselK0_pos _ (mul_pos hmass hxy)).le
+  exact mul_nonneg (by positivity) hK0_nonneg
+
+/-- Off-diagonal comparison against the `K₁` profile. -/
+theorem freeCovKernel_le_besselK1_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    freeCovKernel mass x y ≤ (2 * Real.pi)⁻¹ * besselK1 (mass * ‖x - y‖) := by
+  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
+  exact mul_le_mul_of_nonneg_left
+    (besselK0_le_besselK1 _ (mul_pos hmass hxy)) (by positivity)
+
+/-- Absolute-value variant of `freeCovKernel_le_besselK1_offDiagonal`. -/
+theorem abs_freeCovKernel_le_besselK1_offDiagonal
+    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
+    (hxy : 0 < ‖x - y‖) :
+    |freeCovKernel mass x y| ≤ (2 * Real.pi)⁻¹ * besselK1 (mass * ‖x - y‖) := by
+  have hnonneg : 0 ≤ freeCovKernel mass x y :=
+    freeCovKernel_nonneg_offDiagonal mass hmass x y hxy
+  rw [abs_of_nonneg hnonneg]
+  exact freeCovKernel_le_besselK1_offDiagonal mass hmass x y hxy
+
 /-- The free covariance kernel decays exponentially:
     |C(x,y)| ≤ const × e^{-m|x-y|} for |x-y| ≥ 1. -/
 theorem freeCov_exponential_decay (mass : ℝ) (hmass : 0 < mass) :
@@ -423,11 +452,8 @@ theorem freeCov_exponential_decay (mass : ℝ) (hmass : 0 < mass) :
   intro x y hxy1
   have hxy_pos : 0 < ‖x - y‖ := lt_of_lt_of_le zero_lt_one hxy1
   have hrepr := freeCovKernel_eq_besselK0 mass hmass x y hxy_pos
-  have hnonneg : 0 ≤ freeCovKernel mass x y := by
-    rw [hrepr]
-    have hK0_nonneg : 0 ≤ besselK0 (mass * ‖x - y‖) :=
-      (besselK0_pos _ (mul_pos hmass hxy_pos)).le
-    positivity
+  have hnonneg : 0 ≤ freeCovKernel mass x y :=
+    freeCovKernel_nonneg_offDiagonal mass hmass x y hxy_pos
   rw [abs_of_nonneg hnonneg, hrepr]
   by_cases hlarge : 1 ≤ mass * ‖x - y‖
   · have hK0_le : besselK0 (mass * ‖x - y‖) ≤
