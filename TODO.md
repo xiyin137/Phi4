@@ -169,6 +169,12 @@ the local Glimm-Jaffe objective.
   `interactionUVModel_nonempty_of_integrability_nonempty`,
   `interactionWeightModel_nonempty_of_integrability_nonempty`,
   `interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty`.
+- `Phi4/Interaction.lean` now also includes square-integrability-to-`L²`
+  constructor routes for UV/full interaction packaging:
+  `interactionCutoff_memLp_two_of_sq_integrable`,
+  `interaction_memLp_two_of_sq_integrable`,
+  `interactionUVModel_nonempty_of_sq_integrable_data`,
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data`.
 - `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
   lemmas and direct constructors
   (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,

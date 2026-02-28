@@ -76,6 +76,12 @@ project objective.
   `interactionUVModel_nonempty_of_integrability_nonempty`,
   `interactionWeightModel_nonempty_of_integrability_nonempty`, and
   `interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty`.
+- `Phi4/Interaction.lean` now also includes square-integrability-to-`L²`
+  constructor routes:
+  `interactionCutoff_memLp_two_of_sq_integrable`,
+  `interaction_memLp_two_of_sq_integrable`,
+  `interactionUVModel_nonempty_of_sq_integrable_data`, and
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data`.
 - `Phi4/Reconstruction.lean` now includes direct WP1-style-to-reconstruction
   bridge endpoints using shifted-cutoff geometric moment assumptions, including:
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,

@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 -/
 import Mathlib.Order.Filter.AtTopBot.Basic
 import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
+import Mathlib.MeasureTheory.Function.L2Space
 import Phi4.WickProduct
 
 /-!
@@ -346,6 +347,83 @@ theorem interactionUVModel_nonempty_of_data (params : Phi4Params)
     interaction_in_L2 := hinteraction_L2
   }⟩
 
+/-- Build cutoff `L²` control from a square-integrability hypothesis. -/
+theorem interactionCutoff_memLp_two_of_sq_integrable
+    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
+    (hmeas :
+      AEStronglyMeasurable (interactionCutoff params Λ κ)
+        (freeFieldMeasure params.mass params.mass_pos))
+    (hsq :
+      Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+        (freeFieldMeasure params.mass params.mass_pos)) :
+    MemLp (interactionCutoff params Λ κ) 2
+      (freeFieldMeasure params.mass params.mass_pos) := by
+  exact (memLp_two_iff_integrable_sq hmeas).2 hsq
+
+/-- Build limiting-interaction `L²` control from a square-integrability
+    hypothesis. -/
+theorem interaction_memLp_two_of_sq_integrable
+    (params : Phi4Params) (Λ : Rectangle)
+    (hmeas :
+      AEStronglyMeasurable (interaction params Λ)
+        (freeFieldMeasure params.mass params.mass_pos))
+    (hsq :
+      Integrable (fun ω => (interaction params Λ ω) ^ 2)
+        (freeFieldMeasure params.mass params.mass_pos)) :
+    MemLp (interaction params Λ) 2
+      (freeFieldMeasure params.mass params.mass_pos) := by
+  exact (memLp_two_iff_integrable_sq hmeas).2 hsq
+
+/-- Construct `InteractionUVModel` from:
+    1) cutoff-square integrability + measurability,
+    2) UV `L²` convergence data,
+    3) cutoff a.e. UV convergence,
+    4) limiting-interaction square integrability + measurability. -/
+theorem interactionUVModel_nonempty_of_sq_integrable_data
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos)) :
+    Nonempty (InteractionUVModel params) := by
+  refine interactionUVModel_nonempty_of_data params ?_ hcutoff_conv hcutoff_ae ?_
+  · intro Λ κ
+    exact interactionCutoff_memLp_two_of_sq_integrable
+      (params := params) (Λ := Λ) (κ := κ)
+      (hcutoff_meas Λ κ) (hcutoff_sq Λ κ)
+  · intro Λ
+    exact interaction_memLp_two_of_sq_integrable
+      (params := params) (Λ := Λ)
+      (hinteraction_meas Λ) (hinteraction_sq Λ)
+
 /-- Construct `InteractionWeightModel` from explicit Boltzmann-weight
     `Lᵖ` integrability data. -/
 theorem interactionWeightModel_nonempty_of_data (params : Phi4Params)
@@ -451,6 +529,55 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty
   letI : InteractionUVModel params := huvInst
   letI : InteractionWeightModel params := hweightInst
   exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from square-integrability UV
+    data plus explicit Boltzmann-weight `Lᵖ` data. -/
+theorem interactionIntegrabilityModel_nonempty_of_sq_integrable_data
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hexp :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+          p (freeFieldMeasure params.mass params.mass_pos)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionUVModel_nonempty_of_sq_integrable_data
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq with ⟨huv⟩
+  rcases interactionWeightModel_nonempty_of_data (params := params) hexp with ⟨hweight⟩
+  exact interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty
+    (params := params) ⟨huv⟩ ⟨hweight⟩
 
 /-! ## The interaction is in Lᵖ -/
 
