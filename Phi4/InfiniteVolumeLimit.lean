@@ -1527,6 +1527,58 @@ theorem infinite_volume_schwinger_exists_four_of_correlationCore_models
     hf₁ hf₂ hf₃ hf₄
     hf₁supp hf₂supp hf₃supp hf₄supp
 
+/-- Full-correlation `k = 4` bridge:
+    the `k = 4` infinite-volume existence endpoint under
+    `CorrelationInequalityModel` and multiple reflections. -/
+theorem infinite_volume_schwinger_exists_four_of_correlationInequality_models
+    (params : Phi4Params)
+    [CorrelationInequalityModel params]
+    [MultipleReflectionModel params]
+    (f₁ f₂ f₃ f₄ : TestFun2D)
+    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
+    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x)
+    (hf₁supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₁ x = 0)
+    (hf₂supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₂ x = 0)
+    (hf₃supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₃ x = 0)
+    (hf₄supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₄ x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
+          (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  exact infinite_volume_schwinger_exists_four_of_models
+    (params := params) f₁ f₂ f₃ f₄
+    hf₁ hf₂ hf₃ hf₄
+    hf₁supp hf₂supp hf₃supp hf₄supp
+
+/-- Lattice+core packaged `k = 4` bridge:
+    if GKS-I/two-point monotonicity come from lattice bridges and the remaining
+    four-point/FKG data are packaged in `CorrelationInequalityCoreModel`, then
+    the `k = 4` infinite-volume existence endpoint follows. -/
+theorem infinite_volume_schwinger_exists_four_of_lattice_and_core_models
+    (params : Phi4Params)
+    [LatticeGriffithsFirstModel params]
+    [LatticeSchwingerTwoMonotoneModel params]
+    [CorrelationInequalityCoreModel params]
+    [MultipleReflectionModel params]
+    (f₁ f₂ f₃ f₄ : TestFun2D)
+    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
+    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x)
+    (hf₁supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₁ x = 0)
+    (hf₂supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₂ x = 0)
+    (hf₃supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₃ x = 0)
+    (hf₄supp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f₄ x = 0) :
+    ∃ S : ℝ, Filter.Tendsto
+      (fun n : ℕ =>
+        if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
+          (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
+      Filter.atTop (nhds S) := by
+  letI : CorrelationInequalityModel params := correlationInequalityModelOfLattice params
+  exact infinite_volume_schwinger_exists_four_of_correlationInequality_models
+    (params := params) f₁ f₂ f₃ f₄
+    hf₁ hf₂ hf₃ hf₄
+    hf₁supp hf₂supp hf₃supp hf₄supp
+
 /-- Constructive `k = 2` infinite-volume Schwinger existence in the
     interface sequence form `if h : 0 < n then ... else 0`, under explicit
     two-point monotonicity and multiple-reflection bounds. -/

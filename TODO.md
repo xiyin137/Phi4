@@ -232,7 +232,10 @@ the local Glimm-Jaffe objective.
 - `Phi4/InfiniteVolumeLimit.lean` now includes direct `k = 4` infinite-volume
   existence bridges from correlation packages:
   `infinite_volume_schwinger_exists_four_of_correlationFourPoint_models` and
-  `infinite_volume_schwinger_exists_four_of_correlationCore_models`, reducing
+  `infinite_volume_schwinger_exists_four_of_correlationCore_models`, plus
+  package-level endpoints
+  `infinite_volume_schwinger_exists_four_of_correlationInequality_models` and
+  `infinite_volume_schwinger_exists_four_of_lattice_and_core_models`, reducing
   manual instance plumbing on the monotonicity path
   (`Correlation*` → `SchwingerNMonotoneModel params 4` → IV existence).
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
