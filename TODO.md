@@ -415,6 +415,10 @@ the local Glimm-Jaffe objective.
   existential-`C` partition-function ratio bounds were removed from the model
   interface and are proved directly as standalone theorems with precise
   assumptions.
+- The standalone reflection-layer partition-function endpoints now return
+  nonnegative constants explicitly (`0 ≤ C`) and use meaningful assumptions
+  (`determinant_bound` depends on `InteractionWeightModel`), reducing
+  degenerate/vacuous statement shapes.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
   measure-only assumptions, and `phi4_os3` follows this reduced interface.
 - `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now

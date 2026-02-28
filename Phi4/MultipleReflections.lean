@@ -99,7 +99,8 @@ theorem chessboard_estimate (params : Phi4Params) (Λ : Rectangle)
 theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
     [InteractionWeightModel params]
     (hΛ : Λ.IsTimeSymmetric) :
-    ∃ C : ℝ, 0 < partitionFunction params Λ ∧
+    ∃ C : ℝ, 0 ≤ C ∧
+      0 < partitionFunction params Λ ∧
       partitionFunction params
           (Λ.positiveTimeHalf (Rectangle.IsTimeSymmetric.pos_time_half_exists Λ hΛ)) ^ 2 /
         partitionFunction params Λ ≤
@@ -108,7 +109,11 @@ theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
   have hZpos : 0 < partitionFunction params Λ := by
     simpa [partitionFunction] using partition_function_pos params Λ
   set r : ℝ := partitionFunction params Λplus ^ 2 / partitionFunction params Λ
-  refine ⟨Real.log (max r 1) / Λ.area, hZpos, ?_⟩
+  have hC_nonneg : 0 ≤ Real.log (max r 1) / Λ.area := by
+    have hlog_nonneg : 0 ≤ Real.log (max r 1) := by
+      exact Real.log_nonneg (le_max_right r 1)
+    exact div_nonneg hlog_nonneg Λ.area_pos.le
+  refine ⟨Real.log (max r 1) / Λ.area, hC_nonneg, hZpos, ?_⟩
   have harea : Λ.area ≠ 0 := ne_of_gt Λ.area_pos
   have hmul : (Real.log (max r 1) / Λ.area) * Λ.area = Real.log (max r 1) := by
     field_simp [harea]
@@ -144,11 +149,17 @@ theorem schwinger_uniform_bound (params : Phi4Params)
 /-- The partition function ratio Z_Λ₁/Z_Λ₂ is controlled for Λ₁ ⊂ Λ₂,
     using conditioning and the determinant bound. -/
 theorem partition_function_ratio_bound (params : Phi4Params)
+    [InteractionWeightModel params]
     (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet) :
-    ∃ C : ℝ, partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
-      Real.exp (C * Λ₂.area) := by
+    ∃ C : ℝ, 0 ≤ C ∧
+      partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
+        Real.exp (C * Λ₂.area) := by
   set r : ℝ := partitionFunction params Λ₁ / partitionFunction params Λ₂
-  refine ⟨Real.log (max r 1) / Λ₂.area, ?_⟩
+  have hC_nonneg : 0 ≤ Real.log (max r 1) / Λ₂.area := by
+    have hlog_nonneg : 0 ≤ Real.log (max r 1) := by
+      exact Real.log_nonneg (le_max_right r 1)
+    exact div_nonneg hlog_nonneg Λ₂.area_pos.le
+  refine ⟨Real.log (max r 1) / Λ₂.area, hC_nonneg, ?_⟩
   have harea : Λ₂.area ≠ 0 := ne_of_gt Λ₂.area_pos
   have hmul : (Real.log (max r 1) / Λ₂.area) * Λ₂.area = Real.log (max r 1) := by
     field_simp [harea]
