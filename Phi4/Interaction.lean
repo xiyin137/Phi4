@@ -497,6 +497,24 @@ theorem exp_interaction_Lp_of_ae_lower_bound (params : Phi4Params) (Λ : Rectang
     (μ := freeFieldMeasure params.mass params.mass_pos)
     (V := interaction params Λ) hmeas B hbound
 
+/-- Measurable-version of `exp_interaction_Lp_of_ae_lower_bound`:
+    if one provides measurability of `interaction params Λ` directly, no
+    `InteractionUVModel` assumption is needed for the `Lᵖ` conclusion. -/
+theorem exp_interaction_Lp_of_ae_lower_bound_of_aestronglyMeasurable
+    (params : Phi4Params) (Λ : Rectangle)
+    (hmeas :
+      AEStronglyMeasurable (interaction params Λ)
+        (freeFieldMeasure params.mass params.mass_pos))
+    (B : ℝ)
+    (hbound : ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  exact memLp_exp_neg_of_ae_lower_bound
+    (μ := freeFieldMeasure params.mass params.mass_pos)
+    (V := interaction params Λ) hmeas B hbound
+
 /-- `Lᵖ` integrability of the Boltzmann weight from countably many
     cutoff-level almost-everywhere lower bounds along the canonical UV sequence. -/
 theorem exp_interaction_Lp_of_cutoff_seq_lower_bounds
@@ -929,6 +947,42 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_exponential_bad_event_boun
   exact exp_interaction_Lp_of_cutoff_seq_exponential_bad_event_bound
     (params := params) (Λ := Λ) (B := B) (C := C) (α := α) hC hα hB
 
+/-- Construct `InteractionWeightModel` from direct per-volume almost-everywhere
+    lower bounds on the limiting interaction `interaction params Λ`. -/
+theorem interactionWeightModel_nonempty_of_ae_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbound :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interaction params Λ ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hbound Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_ae_lower_bound
+    (params := params) (Λ := Λ) (B := B) hB
+
+/-- Construct `InteractionWeightModel` from direct per-volume almost-everywhere
+    lower bounds on `interaction`, using explicit measurability inputs instead
+    of `InteractionUVModel`. -/
+theorem interactionWeightModel_nonempty_of_ae_lower_bounds_of_aestronglyMeasurable
+    (params : Phi4Params)
+    (hmeas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interaction params Λ ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hbound Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_ae_lower_bound_of_aestronglyMeasurable
+    (params := params) (Λ := Λ) (hmeas := hmeas Λ) (B := B) hB
+
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence lower bounds (sufficient for
@@ -1058,6 +1112,23 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_exponential_bad_
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_exponential_bad_event_bound
       (params := params) hbad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. direct per-volume almost-everywhere lower bounds on the limiting
+       interaction `interaction params Λ`. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_ae_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hbound :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interaction params Λ ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_ae_lower_bounds
+      (params := params) hbound with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩
 

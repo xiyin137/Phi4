@@ -162,6 +162,15 @@ the local Glimm-Jaffe objective.
   (`μ badₙ ≤ εₙ`, `∑ εₙ < ∞`) plus geometric-tail specializations
   (`μ badₙ ≤ C rⁿ`, `r < 1`) and exponential-tail specializations
   (`μ badₙ ≤ C * exp(-α n)`, `α > 0`).
+- `Phi4/Interaction.lean` now also includes direct limiting-interaction
+  lower-bound entry points:
+  measurable-only `exp_interaction_Lp` bridge
+  `exp_interaction_Lp_of_ae_lower_bound_of_aestronglyMeasurable`,
+  direct weight-model constructors from per-volume AE lower bounds
+  (`interactionWeightModel_nonempty_of_ae_lower_bounds`,
+   `interactionWeightModel_nonempty_of_ae_lower_bounds_of_aestronglyMeasurable`),
+  and the corresponding UV+AE integrability constructor
+  `interactionIntegrabilityModel_nonempty_of_uv_ae_lower_bounds`.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
