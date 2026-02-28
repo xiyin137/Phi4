@@ -212,6 +212,12 @@ the local Glimm-Jaffe objective.
   theorem families at all three layers (`exp_interaction_Lp`,
   `InteractionWeightModel`, `InteractionIntegrabilityModel`):
   `*_shifted_{summable,geometric,exponential}_wick_sublevel_bad_sets`.
+- `Phi4/Interaction.lean` now also includes a direct Chernoff/Markov
+  moment-to-tail bridge for shifted cutoff events:
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment` and
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_bound`,
+  connecting exponential-moment control of `interactionCutoff(κ_{n+1})`
+  to explicit bad-event probability bounds.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,

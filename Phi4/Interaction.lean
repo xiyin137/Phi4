@@ -972,6 +972,96 @@ theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hcutoff_ev
 
+/-- Shifted-index cutoff bad-event bound from exponential moments (Chernoff):
+    for `θ > 0`,
+    `μ{interactionCutoff(κ_{n+1}) < -B} ≤ exp(-θ B) * E[exp(-θ interactionCutoff(κ_{n+1}))]`.
+    This is a reusable bridge from moment control to bad-event tails. -/
+theorem shifted_cutoff_bad_event_measure_le_of_exponential_moment
+    (params : Phi4Params) (Λ : Rectangle) (B θ : ℝ) (hθ : 0 < θ) (n : ℕ)
+    (hInt :
+      Integrable
+        (fun ω : FieldConfig2D =>
+          Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+        (freeFieldMeasure params.mass params.mass_pos)) :
+    (freeFieldMeasure params.mass params.mass_pos)
+      {ω : FieldConfig2D |
+        interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}
+      ≤ ENNReal.ofReal
+          (Real.exp (-θ * B) *
+            ∫ ω : FieldConfig2D,
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+                ∂(freeFieldMeasure params.mass params.mass_pos)) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let X : FieldConfig2D → ℝ :=
+    fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
+  letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+  have hchernoff :
+      μ.real {ω : FieldConfig2D | X ω ≤ -B} ≤
+        Real.exp (-(-θ) * (-B)) * ProbabilityTheory.mgf X μ (-θ) := by
+    exact ProbabilityTheory.measure_le_le_exp_mul_mgf
+      (μ := μ) (X := X) (ε := -B) (t := -θ) (ht := by linarith) hInt
+  have hchernoff' :
+      μ.real {ω : FieldConfig2D | X ω ≤ -B} ≤
+        Real.exp (-θ * B) *
+          ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ := by
+    simpa [ProbabilityTheory.mgf, X, μ, mul_comm, mul_left_comm, mul_assoc] using hchernoff
+  have hreal :
+      (μ {ω : FieldConfig2D | X ω ≤ -B}).toReal ≤
+        Real.exp (-θ * B) *
+          ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ := by
+    simpa [Measure.real, μ] using hchernoff'
+  have hrhs_nonneg :
+      0 ≤ Real.exp (-θ * B) *
+        ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ := by
+    refine mul_nonneg (Real.exp_nonneg _) ?_
+    exact integral_nonneg (fun _ => Real.exp_nonneg _)
+  have hle_le :
+      μ {ω : FieldConfig2D | X ω ≤ -B} ≤
+        ENNReal.ofReal
+          (Real.exp (-θ * B) *
+            ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ) := by
+    exact (ENNReal.le_ofReal_iff_toReal_le (ha := measure_ne_top μ _) (hb := hrhs_nonneg)).2 hreal
+  have hsubset :
+      {ω : FieldConfig2D | X ω < -B} ⊆ {ω : FieldConfig2D | X ω ≤ -B} := by
+    intro ω hω
+    exact le_of_lt (by simpa using hω)
+  exact (measure_mono hsubset).trans hle_le
+
+/-- Shifted-index cutoff bad-event majorant from exponential moments:
+    if `E[exp(-θ interactionCutoff(κ_{n+1}))] ≤ Mₙ`, then
+    `μ{interactionCutoff(κ_{n+1}) < -B} ≤ exp(-θ B) * Mₙ`. -/
+theorem shifted_cutoff_bad_event_measure_le_of_exponential_moment_bound
+    (params : Phi4Params) (Λ : Rectangle) (B θ : ℝ) (hθ : 0 < θ)
+    (M : ℕ → ℝ)
+    (hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+          Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ M n) :
+    ∀ n : ℕ,
+      (freeFieldMeasure params.mass params.mass_pos)
+        {ω : FieldConfig2D |
+          interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}
+        ≤ ENNReal.ofReal (Real.exp (-θ * B) * M n) := by
+  intro n
+  have hbase :=
+    shifted_cutoff_bad_event_measure_le_of_exponential_moment
+      (params := params) (Λ := Λ) (B := B) (θ := θ) hθ n (hInt n)
+  have hmul :
+      Real.exp (-θ * B) *
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ Real.exp (-θ * B) * M n := by
+    exact mul_le_mul_of_nonneg_left (hM n) (Real.exp_nonneg _)
+  exact hbase.trans (ENNReal.ofReal_le_ofReal hmul)
+
 /-- `Lᵖ` integrability from shifted-index summable bad sets with good-set
     cutoff lower bounds. -/
 theorem exp_interaction_Lp_of_cutoff_seq_shifted_bad_set_summable
