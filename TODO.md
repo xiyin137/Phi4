@@ -248,9 +248,15 @@ the local Glimm-Jaffe objective.
   vertex-partner API for pairings (`Pairing.incidentPair`, `Pairing.partner`)
   with core correctness lemmas (`incidentPair_mem`, `incidentPair_contains`,
   `incidentPair_eq_of_mem_left/right`, `partner_eq_of_mem_left/right`,
-  `partner_ne_self`, `partner_partner`, and partner-edge membership), which is
-  foundational infrastructure for recursive pairing-count and Wick-expansion
-  constructions.
+  `partner_ne_self`, `partner_partner`, and partner-edge membership), plus
+  uniqueness/cardinality controls for edges containing a fixed vertex
+  (`pair_eq_incidentPair_of_mem_contains`,
+   `mem_filter_contains_iff_eq_incidentPair`,
+   `card_filter_pairs_containing_eq_one`,
+   `card_erase_incidentPair`,
+   `card_erase_incidentPair_eq_sub_one`);
+  this is foundational infrastructure for recursive pairing-count and
+  Wick-expansion constructions.
 - `PairingEnumerationModel` now records only cardinality of pairings; enumeration
   itself is canonical via `Finset.univ`.
 - `Phi4/CovarianceOperators.lean` now exposes boundary-covariance subinterfaces

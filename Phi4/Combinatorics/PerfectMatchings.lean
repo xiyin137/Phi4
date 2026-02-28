@@ -290,6 +290,51 @@ theorem partner_partner (π : Pairing r) (i : Fin r) :
       partner_eq_of_mem_left π j i hmem
     simpa [j] using hpartner
 
+/-- Any edge in `π.pairs` that contains `i` is the incident pair of `i`. -/
+theorem pair_eq_incidentPair_of_mem_contains
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
+    (hpMem : p ∈ π.pairs) (hpContains : p.1 = i ∨ p.2 = i) :
+    p = π.incidentPair i := by
+  have hcov : π.incidentPair i = p := by
+    unfold incidentPair
+    exact coveringPair_eq_of_mem_contains π i p hpMem hpContains
+  exact hcov.symm
+
+/-- Characterization of the unique edge containing `i` in `π.pairs`. -/
+theorem mem_filter_contains_iff_eq_incidentPair
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r) :
+    p ∈ π.pairs.filter (fun q => q.1 = i ∨ q.2 = i) ↔ p = π.incidentPair i := by
+  constructor
+  · intro hp
+    rcases Finset.mem_filter.mp hp with ⟨hpMem, hpContains⟩
+    exact pair_eq_incidentPair_of_mem_contains π i p hpMem hpContains
+  · intro hp
+    subst hp
+    exact Finset.mem_filter.mpr ⟨π.incidentPair_mem i, π.incidentPair_contains i⟩
+
+/-- Exactly one edge of `π.pairs` contains a given vertex `i`. -/
+theorem card_filter_pairs_containing_eq_one
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.filter (fun p => p.1 = i ∨ p.2 = i)).card = 1 := by
+  have hEq :
+      π.pairs.filter (fun p => p.1 = i ∨ p.2 = i) = {π.incidentPair i} := by
+    ext p
+    simpa [Finset.mem_singleton] using
+      (mem_filter_contains_iff_eq_incidentPair π i p)
+  rw [hEq, Finset.card_singleton]
+
+/-- Erasing the incident pair drops the pair count by one. -/
+theorem card_erase_incidentPair
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.erase (π.incidentPair i)).card + 1 = π.pairs.card := by
+  simpa using Finset.card_erase_add_one (π.incidentPair_mem i)
+
+/-- Equivalent subtraction form of `card_erase_incidentPair`. -/
+theorem card_erase_incidentPair_eq_sub_one
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.erase (π.incidentPair i)).card = π.pairs.card - 1 := by
+  exact Finset.card_erase_of_mem (π.incidentPair_mem i)
+
 private lemma card_endpoint_eq_two
     (π : Pairing r) (p : Fin r × Fin r) (hpMem : p ∈ π.pairs) :
     ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)).card = 2 := by
