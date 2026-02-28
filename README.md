@@ -96,6 +96,11 @@ project objective.
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also provides direct `exp(-V_Λ) ∈ L^p` endpoints
+  from shifted-cutoff exponential-moment geometric decay:
+  `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
+  and
+  `exp_interaction_Lp_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` and `Phi4/FiniteVolumeMeasure.lean` now also include
   shifted-index exponential-tail routes for Wick sublevel bad events
   (`{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`), including UV-level and
