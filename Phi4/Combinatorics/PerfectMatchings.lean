@@ -244,6 +244,52 @@ private lemma coveringPair_eq_iff_endpoint
       · exact Or.inr hi2.symm
     exact coveringPair_eq_of_mem_contains π i p hpMem hpContains
 
+/-- If `(i, j)` is an edge of `π`, then it is exactly the incident pair at `i`. -/
+theorem incidentPair_eq_of_mem_left
+    (π : Pairing r) (i j : Fin r) (hij : (i, j) ∈ π.pairs) :
+    π.incidentPair i = (i, j) := by
+  unfold incidentPair
+  exact coveringPair_eq_of_mem_contains π i (i, j) hij (Or.inl rfl)
+
+/-- If `(j, i)` is an edge of `π`, then it is exactly the incident pair at `i`. -/
+theorem incidentPair_eq_of_mem_right
+    (π : Pairing r) (i j : Fin r) (hji : (j, i) ∈ π.pairs) :
+    π.incidentPair i = (j, i) := by
+  unfold incidentPair
+  exact coveringPair_eq_of_mem_contains π i (j, i) hji (Or.inr rfl)
+
+/-- If `(i, j)` is an edge of `π`, then `j` is the partner of `i`. -/
+theorem partner_eq_of_mem_left
+    (π : Pairing r) (i j : Fin r) (hij : (i, j) ∈ π.pairs) :
+    π.partner i = j := by
+  have hpair : π.incidentPair i = (i, j) := incidentPair_eq_of_mem_left π i j hij
+  unfold partner
+  simpa [hpair]
+
+/-- If `(j, i)` is an edge of `π`, then `j` is the partner of `i`. -/
+theorem partner_eq_of_mem_right
+    (π : Pairing r) (i j : Fin r) (hji : (j, i) ∈ π.pairs) :
+    π.partner i = j := by
+  have hpair : π.incidentPair i = (j, i) := incidentPair_eq_of_mem_right π i j hji
+  have hneq : j ≠ i := ne_of_lt (π.ordered (j, i) hji)
+  unfold partner
+  simp [hpair, hneq]
+
+/-- The partner map is an involution on any pairing. -/
+theorem partner_partner (π : Pairing r) (i : Fin r) :
+    π.partner (π.partner i) = i := by
+  rcases pair_partner_mem_or_partner_pair_mem π i with hij | hji
+  · let j : Fin r := π.partner i
+    have hmem : (i, j) ∈ π.pairs := by simpa [j] using hij
+    have hpartner : π.partner j = i :=
+      partner_eq_of_mem_right π j i hmem
+    simpa [j] using hpartner
+  · let j : Fin r := π.partner i
+    have hmem : (j, i) ∈ π.pairs := by simpa [j] using hji
+    have hpartner : π.partner j = i :=
+      partner_eq_of_mem_left π j i hmem
+    simpa [j] using hpartner
+
 private lemma card_endpoint_eq_two
     (π : Pairing r) (p : Fin r × Fin r) (hpMem : p ∈ π.pairs) :
     ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)).card = 2 := by
