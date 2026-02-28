@@ -196,6 +196,14 @@ the local Glimm-Jaffe objective.
   same shifted-cutoff exponential-moment geometric assumptions to shifted
   geometric bad-event tails at threshold `0`:
   `shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also derives eventual cutoff nonnegativity and
+  limiting-interaction AE nonnegativity from these shifted-cutoff moment-decay
+  hypotheses:
+  `cutoff_seq_eventually_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `interaction_ae_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and correspondingly routes
+  `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
+  through the nonnegativity-transfer chain.
 - `Phi4/Interaction.lean` now also includes a square-integrable-data route
   driven by shifted-index exponential tails of Wick sublevel bad events:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,

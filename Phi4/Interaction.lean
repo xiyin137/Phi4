@@ -2410,6 +2410,82 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_shifted_exponential_bad_ev
   exact exp_interaction_Lp_of_cutoff_seq_shifted_exponential_bad_event_bound
     (params := params) (Λ := Λ) (B := B) (C := C) (α := α) hC hα hB
 
+/-- Eventual cutoff nonnegativity from geometric decay of shifted-index
+    exponential moments of cutoff interactions on a fixed volume. -/
+theorem cutoff_seq_eventually_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    (hmom :
+      ∃ θ D r : ℝ,
+        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        0 ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  rcases hmom with ⟨θ, D, r, hθ, hD, hr0, hr1, hInt, hM⟩
+  have hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < 0}
+          ≤ ENNReal.ofReal (Real.exp 0 * D) * (ENNReal.ofReal r) ^ n := by
+    simpa [Real.exp_zero] using
+      (shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound
+        (params := params) (Λ := Λ) (B := 0) (θ := θ) (D := D) (r := r)
+        hθ hD hr0 hInt hM)
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -0 ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_lower_bound_of_shifted_geometric_bad_event_bound
+      (params := params) (Λ := Λ) (B := 0)
+      (C := ENNReal.ofReal (Real.exp 0 * D)) (r := ENNReal.ofReal r)
+      (hC := by simp)
+      (hr := (ENNReal.ofReal_lt_one).2 hr1)
+      (by simpa using hbad_le)
+  simpa using hcutoff_ev
+
+/-- Almost-everywhere nonnegativity of the limiting interaction from geometric
+    decay of shifted-index exponential moments of cutoff interactions. -/
+theorem interaction_ae_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (hmom :
+      ∃ θ D r : ℝ,
+        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      0 ≤ interaction params Λ ω := by
+  have hcutoff_ev :=
+    cutoff_seq_eventually_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+      (params := params) (Λ := Λ) hmom
+  have hcutoff_ev_neg :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -0 ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+    simpa using hcutoff_ev
+  have hinteraction :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        -0 ≤ interaction params Λ ω :=
+    interaction_ae_lower_bound_of_cutoff_seq_eventually
+      (params := params) (Λ := Λ) (B := 0) hcutoff_ev_neg
+  simpa using hinteraction
+
 /-- Construct `InteractionWeightModel` from geometric decay of shifted-index
     exponential moments of the cutoff interaction:
     `E[exp(-θ interactionCutoff(κ_{n+1}))] ≤ D * r^n` with `r < 1`. -/
@@ -2431,19 +2507,17 @@ theorem exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric
     {p : ℝ≥0∞} :
     MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
       p (freeFieldMeasure params.mass params.mass_pos) := by
-  rcases hmom with ⟨θ, D, r, hθ, hD, hr0, hr1, hInt, hM⟩
-  exact exp_interaction_Lp_of_cutoff_seq_shifted_geometric_bad_event_bound
-    (params := params) (Λ := Λ) (B := 0)
-    (C := ENNReal.ofReal (Real.exp 0 * D))
-    (r := ENNReal.ofReal r)
-    (hC := by
-      simp)
-    (hr := (ENNReal.ofReal_lt_one).2 hr1)
-    (hbad_le := by
-      simpa [Real.exp_zero] using
-        (shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound
-          (params := params) (Λ := Λ) (B := 0) (θ := θ) (D := D) (r := r)
-          hθ hD hr0 hInt hM))
+  have hbound :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        -0 ≤ interaction params Λ ω := by
+    simpa using
+      (interaction_ae_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        (params := params) (Λ := Λ) hmom)
+  simpa using
+    (exp_interaction_Lp_of_ae_lower_bound
+      (params := params) (Λ := Λ) (B := 0) hbound : MemLp
+        (fun ω => Real.exp (-(interaction params Λ ω)))
+        p (freeFieldMeasure params.mass params.mass_pos))
 
 /-- `Lᵖ` integrability endpoint from:
     1. square-integrability/measurability UV data (used to instantiate
