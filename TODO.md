@@ -612,9 +612,13 @@ the local Glimm-Jaffe objective.
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
-- `Phi4/Reconstruction.lean` now also includes a direct interface-level
-  Wightman endpoint from square-integrable UV data plus shifted-index
-  exponential Wick sublevel bad-event tails:
+- `Phi4/Reconstruction.lean` now also includes square-integrable-data
+  reconstruction-chain endpoints from shifted-index exponential Wick sublevel
+  bad-event tails:
+  `gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
   routes through `WightmanReconstructionModel` (interface-backed theorem) rather

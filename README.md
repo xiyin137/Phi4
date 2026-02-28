@@ -114,9 +114,13 @@ project objective.
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
-- `Phi4/Reconstruction.lean` now also exposes a direct interface-level Wightman
-  endpoint from square-integrable UV data plus shifted-index exponential Wick
+- `Phi4/Reconstruction.lean` now also includes square-integrable-data
+  reconstruction-chain endpoints driven by shifted-index exponential Wick
   sublevel-tail hypotheses:
+  `gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Regularity.lean` now includes concrete constructor chains from explicit
   Wick/EOM/exhaustion/global-bound data to regularity interfaces, including
