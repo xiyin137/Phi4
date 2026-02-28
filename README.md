@@ -62,6 +62,12 @@ project objective.
   - constructor paths to instantiate
     `InteractionWeightModel`/`InteractionIntegrabilityModel` from cutoff lower
     bound data.
+- `Phi4/Reconstruction.lean` now includes direct WP1-style-to-reconstruction
+  bridge endpoints using shifted-cutoff geometric moment assumptions, including:
+  `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and
+  `phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/FreeField.lean`, `Phi4/CovarianceOperators.lean`, and
   `Phi4/CorrelationInequalities.lean` include `*_nonempty_of_data` constructors
   so constructive proof data can be attached to interfaces without ad hoc
