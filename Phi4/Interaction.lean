@@ -997,6 +997,111 @@ theorem exp_interaction_Lp_of_cutoff_seq_shifted_bad_set_summable
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hcutoff_ev
 
+/-- `Lᵖ` integrability from Wick-level shifted-index summable bad sets:
+    outside each bad set one has a pointwise lower bound on `wickPower 4`,
+    which induces the required cutoff lower bound. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (bad : ℕ → Set FieldConfig2D)
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    (hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  rcases interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_bad_sets
+      (params := params) (Λ := Λ) (B := B) (bad := bad)
+      hΛ_meas hΛ_finite hwick_int hgood with ⟨Bcut, hcut⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_bad_set_summable
+    (params := params) (Λ := Λ) (B := Bcut) (bad := bad) hbad_sum hcut
+
+/-- `Lᵖ` integrability from Wick-level shifted-index geometric bad-set tails
+    (`μ(bad n) ≤ C * r^n`, `r < 1`) plus good-set lower bounds on `wickPower 4`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (bad : ℕ → Set FieldConfig2D)
+    (C r : ℝ≥0∞) (hC : C ≠ ⊤) (hr : r < 1)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤ C * r ^ n)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    (hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hgeom_lt : (∑' n : ℕ, r ^ n) < ∞ :=
+    (tsum_geometric_lt_top).2 hr
+  have hsum_lt : (∑' n : ℕ, C * r ^ n) < ∞ := by
+    have hC_lt : C < ∞ := by exact lt_of_le_of_ne le_top hC
+    rw [ENNReal.tsum_mul_left]
+    exact ENNReal.mul_lt_top hC_lt hgeom_lt
+  have hbad_sum :
+      (∑' n : ℕ, (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞ :=
+    ne_top_of_le_ne_top (ne_of_lt hsum_lt) (ENNReal.tsum_le_tsum hbad_le)
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_bad_sets
+    (params := params) (Λ := Λ) (B := B) (bad := bad) hbad_sum
+    hΛ_meas hΛ_finite hwick_int hgood
+
+/-- `Lᵖ` integrability from Wick-level shifted-index exponential bad-set tails
+    (`μ(bad n) ≤ C * exp(-α n)`, `α > 0`) plus good-set lower bounds on
+    `wickPower 4`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (bad : ℕ → Set FieldConfig2D)
+    (C : ℝ≥0∞) (α : ℝ) (hC : C ≠ ⊤) (hα : 0 < α)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n)
+          ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    (hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  have hr : ENNReal.ofReal (Real.exp (-α)) < 1 := by
+    refine (ENNReal.ofReal_lt_one).2 ?_
+    have hneg : -α < 0 := by linarith
+    exact Real.exp_lt_one_iff.mpr hneg
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_bad_sets
+    (params := params) (Λ := Λ) (B := B) (bad := bad)
+    (C := C) (r := ENNReal.ofReal (Real.exp (-α))) hC hr hbad_le
+    hΛ_meas hΛ_finite hwick_int hgood
+
 /-- `Lᵖ` integrability of the Boltzmann weight from summable bad sets and
     good-set cutoff lower bounds. -/
 theorem exp_interaction_Lp_of_cutoff_seq_bad_set_summable

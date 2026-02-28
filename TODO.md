@@ -201,6 +201,12 @@ the local Glimm-Jaffe objective.
   `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_bad_sets`,
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_bad_sets`,
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_bad_sets`.
+- `Phi4/Interaction.lean` now also provides direct `exp_interaction_Lp`
+  endpoints for the same Wick bad-set hypotheses (without going through model
+  construction first):
+  `exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_bad_sets`,
+  `exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_bad_sets`,
+  `exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_bad_sets`.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,
