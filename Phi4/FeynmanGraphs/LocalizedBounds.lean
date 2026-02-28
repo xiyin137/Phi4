@@ -1693,6 +1693,66 @@ theorem feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_phi4_wei
           simpa using
             (mul_pow (N : ℝ) (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1) r).symm
 
+/-- All-arity Gaussian-moment bound from local φ⁴ expansion data:
+    if each finite expansion has graph-count growth `#graphs ≤ N^{|V|}`,
+    valence-4 structure, and a local φ⁴ weighted-family graph bound, then the
+    resulting moments obey an explicit uniform exponential-in-arity bound. -/
+theorem gaussian_moment_abs_le_explicit_uniform_const_pow_of_phi4_weighted_expansion_data_local
+    (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (N : ℕ)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          (∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            Finset.sum graphs (fun G => graphIntegral G mass)) ∧
+          (∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4) ∧
+          graphs.card ≤ N ^ r)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∀ (r : ℕ) (f : Fin r → TestFun2D),
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        (((N : ℝ) * (((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1)) ^ r) := by
+  intro r f
+  rcases hexpansion r f with ⟨graphs, hexp, hphi4, hcard⟩
+  exact feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_phi4_weighted_family_local
+    (graphs := graphs) (mass := mass) (hmass := hmass)
+    (A := A) (B := B) hA hB
+    (f := f) hexp hphi4 hweighted N hcard
+
+/-- All-arity Gaussian-moment bound from local φ⁴ expansion data in
+    existential-positive-constant form:
+    there exists `K > 0` with `|moment_r| ≤ ((N * K)^r)` for every arity `r`. -/
+theorem gaussian_moment_abs_le_uniform_const_pow_of_phi4_weighted_expansion_data_local
+    (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (N : ℕ)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          (∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            Finset.sum graphs (fun G => graphIntegral G mass)) ∧
+          (∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4) ∧
+          graphs.card ≤ N ^ r)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v = 4) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+          (((N : ℝ) * K) ^ r) := by
+  refine ⟨(((Nat.factorial 4 : ℝ) * A ^ 4) * (B ^ 2) + 1), by positivity, ?_⟩
+  intro r f
+  simpa using
+    (gaussian_moment_abs_le_explicit_uniform_const_pow_of_phi4_weighted_expansion_data_local
+      (mass := mass) (hmass := hmass)
+      (A := A) (B := B) hA hB (N := N) hexpansion hweighted r f)
+
 /-- Finite φ⁴ expansion bound in per-cell occupancy form for a fixed
     localization map `loc : vertices → cells`. -/
 theorem feynman_expansion_abs_le_card_mul_cell_occupancy_weighted_of_phi4_vertex_weighted

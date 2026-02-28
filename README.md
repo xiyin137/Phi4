@@ -59,6 +59,12 @@ project objective.
   `feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_degree_weighted_family`,
   `gaussian_moment_abs_le_explicit_uniform_const_pow_of_degree_weighted_expansion_data`,
   `gaussian_moment_abs_le_uniform_const_pow_of_degree_weighted_expansion_data`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also packages local φ⁴
+  weighted-family finite-expansion bounds into all-arity Gaussian-moment
+  endpoints:
+  `gaussian_moment_abs_le_explicit_uniform_const_pow_of_phi4_weighted_expansion_data_local`
+  and
+  `gaussian_moment_abs_le_uniform_const_pow_of_phi4_weighted_expansion_data_local`.
 - `Phi4/Interaction.lean` now includes reusable bridges from lower bounds to
   Boltzmann-weight integrability:
   - `memLp_exp_neg_of_ae_lower_bound`,
