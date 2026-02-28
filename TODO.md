@@ -556,6 +556,11 @@ the local Glimm-Jaffe objective.
   `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
   and
   `phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Reconstruction.lean` now further lifts this to aggregate reconstruction
+  input packaging via
+  `reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  so weak-coupling and linear-growth assumptions can be consumed as a single
+  constructive model witness.
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
   routes through `WightmanReconstructionModel` (interface-backed theorem) rather
   than taking a raw reconstruction function argument.
