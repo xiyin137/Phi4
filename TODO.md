@@ -179,6 +179,10 @@ the local Glimm-Jaffe objective.
    `interactionWeightModel_nonempty_of_ae_lower_bounds_of_aestronglyMeasurable`),
   and the corresponding UV+AE integrability constructor
   `interactionIntegrabilityModel_nonempty_of_uv_ae_lower_bounds`.
+- `Phi4/Interaction.lean` now also has direct pointwise-cutoff lower-bound
+  constructors (`∀ ω`, `∀ n`) feeding the same pipeline:
+  `interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds` and
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_bounds`.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,

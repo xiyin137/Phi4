@@ -836,6 +836,24 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
   exact exp_interaction_Lp_of_cutoff_seq_lower_bounds
     (params := params) (Λ := Λ) (B := B) hB
 
+/-- Construct `InteractionWeightModel` from per-volume cutoff-sequence
+    pointwise lower bounds (`∀ ω`, `∀ n`). -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ, ∀ ω : FieldConfig2D,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
+    (params := params) ?_
+  intro Λ
+  rcases hcutoff Λ with ⟨B, hB⟩
+  refine ⟨B, ?_⟩
+  intro n
+  exact Filter.Eventually.of_forall (fun ω => hB n ω)
+
 /-- Construct `InteractionWeightModel` from per-volume eventually-in-`n`
     cutoff-sequence almost-everywhere lower bounds. -/
 theorem interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
@@ -998,6 +1016,22 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
       (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. per-volume cutoff-sequence pointwise lower bounds (`∀ ω`, `∀ n`). -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ, ∀ ω : FieldConfig2D,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds
+      (params := params) hcutoff with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩
 
