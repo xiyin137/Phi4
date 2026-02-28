@@ -2739,6 +2739,113 @@ theorem
   exact phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     params hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
+/-- Interface-level Wightman existence endpoint from:
+    1) square-integrable/measurable UV interaction data,
+    2) shifted-index exponential tails of natural Wick sublevel bad events
+       `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`,
+    3) weak-coupling OS/product-tensor hypotheses.
+    This routes the sublevel-tail assumptions through the proved WP1
+    interaction-integrability bridge, then uses the standard weight-model
+    reconstruction theorem. -/
+theorem
+    phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params : Phi4Params) :
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
+    [WightmanReconstructionModel params] →
+    [OSDistributionE2Model params] →
+    [OSE4ClusterModel params] →
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0)) →
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω))) →
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) →
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) →
+    (alpha beta gamma : ℝ) →
+    (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ)) →
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f)) →
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS : OsterwalderSchraderAxioms 1),
+        OS.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS.S Wfn.W := by
+  intro _hlimit _hcore _hrec _he2 _he4
+    hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+    hinteraction_meas hinteraction_sq hwick_bad
+    hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  have hInt :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq hwick_bad
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hInt
+  rcases hW with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
+    params hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the abstract reconstruction backend interface. -/
 theorem phi4_wightman_exists_of_interfaces (params : Phi4Params)

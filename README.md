@@ -90,6 +90,15 @@ project objective.
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` and `Phi4/FiniteVolumeMeasure.lean` now also include
+  square-integrable-data routes driven by shifted-index exponential tails of
+  Wick sublevel bad events (`{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`),
+  including:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  and
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Reconstruction.lean` now includes direct WP1-style-to-reconstruction
   bridge endpoints using shifted-cutoff geometric moment assumptions, including:
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
@@ -105,6 +114,10 @@ project objective.
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Reconstruction.lean` now also exposes a direct interface-level Wightman
+  endpoint from square-integrable UV data plus shifted-index exponential Wick
+  sublevel-tail hypotheses:
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Regularity.lean` now includes concrete constructor chains from explicit
   Wick/EOM/exhaustion/global-bound data to regularity interfaces, including
   `uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform`,

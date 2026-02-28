@@ -181,6 +181,12 @@ the local Glimm-Jaffe objective.
   plus concrete partition-function endpoints
   `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound` and
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also includes a square-integrable-data route
+  driven by shifted-index exponential tails of Wick sublevel bad events:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  plus concrete partition-function endpoints
+  `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets` and
+  `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
   lemmas and direct constructors
   (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,
@@ -266,7 +272,9 @@ the local Glimm-Jaffe objective.
   `finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel` and
   `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   plus
-  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,
@@ -604,6 +612,10 @@ the local Glimm-Jaffe objective.
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Reconstruction.lean` now also includes a direct interface-level
+  Wightman endpoint from square-integrable UV data plus shifted-index
+  exponential Wick sublevel bad-event tails:
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
   routes through `WightmanReconstructionModel` (interface-backed theorem) rather
   than taking a raw reconstruction function argument.
