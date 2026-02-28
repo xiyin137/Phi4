@@ -404,6 +404,10 @@ the local Glimm-Jaffe objective.
   `LatticeGriffithsFirstModel`
   (`schwingerTwo_tendsto_if_exhaustion_of_lattice_models`,
    `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`).
+- The legacy lattice+core `k = 4` IV endpoint
+  `infinite_volume_schwinger_exists_four_of_lattice_and_core_models` now uses
+  only `CorrelationInequalityCoreModel` + `MultipleReflectionModel`; the
+  theorem no longer carries unused lattice GKS-I assumptions.
 - `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure/moment
   submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker

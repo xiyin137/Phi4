@@ -1551,14 +1551,12 @@ theorem infinite_volume_schwinger_exists_four_of_correlationInequality_models
     hf₁ hf₂ hf₃ hf₄
     hf₁supp hf₂supp hf₃supp hf₄supp
 
-/-- Lattice+core packaged `k = 4` bridge:
-    if GKS-I/two-point monotonicity come from lattice bridges and the remaining
-    four-point/FKG data are packaged in `CorrelationInequalityCoreModel`, then
-    the `k = 4` infinite-volume existence endpoint follows. -/
+/-- Core-packaged `k = 4` bridge (legacy lattice+core endpoint name):
+    for the `k = 4` infinite-volume existence endpoint, only four-point
+    monotonicity (available from `CorrelationInequalityCoreModel`) and
+    multiple-reflection bounds are needed. No lattice GKS-I input is required. -/
 theorem infinite_volume_schwinger_exists_four_of_lattice_and_core_models
     (params : Phi4Params)
-    [LatticeGriffithsFirstModel params]
-    [LatticeSchwingerTwoMonotoneModel params]
     [CorrelationInequalityCoreModel params]
     [MultipleReflectionModel params]
     (f₁ f₂ f₃ f₄ : TestFun2D)
@@ -1573,8 +1571,7 @@ theorem infinite_volume_schwinger_exists_four_of_lattice_and_core_models
         if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
           (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
       Filter.atTop (nhds S) := by
-  letI : CorrelationInequalityModel params := correlationInequalityModelOfLattice params
-  exact infinite_volume_schwinger_exists_four_of_correlationInequality_models
+  exact infinite_volume_schwinger_exists_four_of_correlationCore_models
     (params := params) f₁ f₂ f₃ f₄
     hf₁ hf₂ hf₃ hf₄
     hf₁supp hf₂supp hf₃supp hf₄supp
