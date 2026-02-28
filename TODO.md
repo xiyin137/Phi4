@@ -189,6 +189,18 @@ the local Glimm-Jaffe objective.
   `interactionCutoff_lower_bound_of_wick_semibounded`,
   and shifted-sequence extraction
   `interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_semibounded`.
+- `Phi4/Interaction.lean` now also bridges Wick-level good-set lower bounds
+  (outside bad sets) to cutoff and model-level integrability constructors:
+  `interactionCutoff_lower_bound_of_wick_lower_bound_on_good_set`,
+  `interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_bad_sets`,
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_summable_wick_bad_sets`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_wick_bad_sets`.
+- `Phi4/Interaction.lean` now also adds geometric/exponential bad-tail
+  specializations for the Wick good-set route (still shifted in `κ_{n+1}`):
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_bad_sets`,
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_bad_sets`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_bad_sets`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_bad_sets`.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,
