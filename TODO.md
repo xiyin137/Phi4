@@ -205,6 +205,17 @@ the local Glimm-Jaffe objective.
   and model constructors
   `interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_sets`,
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_summable_bad_sets`.
+- `Phi4/Interaction.lean` now also has shifted-index (`κ_{n+1}`) Borel-Cantelli
+  adapters for summable bad-event tails, so estimates naturally stated for
+  `κ > 1` feed directly into the canonical cutoff pipeline:
+  `eventually_atTop_of_eventually_atTop_succ`,
+  `cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable`,
+  `cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure`,
+  `interaction_ae_lower_bound_of_cutoff_seq_shifted_summable_bad_event_measure`,
+  `exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure`,
+  and shifted summable-tail model constructors
+  `interactionWeightModel_nonempty_of_cutoff_seq_shifted_summable_bad_event_measure`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_bad_event_measure`.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
