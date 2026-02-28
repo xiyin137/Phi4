@@ -155,7 +155,11 @@ the local Glimm-Jaffe objective.
   bounds:
   `graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound` and
   `feynman_expansion_abs_le_uniform_const_pow_vertices_of_degree_weighted_family`
-  (with explicit graph-count growth input `#graphs ≤ N^|V|`).
+  (with explicit graph-count growth input `#graphs ≤ N^|V|`), plus explicit
+  and all-arity moment-level endpoints:
+  `feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_degree_weighted_family`,
+  `gaussian_moment_abs_le_explicit_uniform_const_pow_of_degree_weighted_expansion_data`,
+  `gaussian_moment_abs_le_uniform_const_pow_of_degree_weighted_expansion_data`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

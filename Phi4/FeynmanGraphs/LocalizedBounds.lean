@@ -1434,6 +1434,113 @@ theorem feynman_expansion_abs_le_uniform_const_pow_vertices_of_degree_weighted_f
         (G := G) (mass := mass) (d := d) hGdeg A B hA hB hGw)
   exact hGk
 
+/-- Explicit degree-capped weighted-family finite expansion bound with concrete
+    constant
+    `K0 = (max ((((d!)^2) * A^2) * B) 1)^d`. -/
+theorem feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_degree_weighted_family
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hdeg : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v ≤ d)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (N : ℕ) (hcard : graphs.card ≤ N ^ r) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      (((N : ℝ) * ((max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d)) ^ r) := by
+  let K0 : ℝ := (max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d
+  have hK0_nonneg : 0 ≤ K0 := by
+    dsimp [K0]
+    have hmax_nonneg : 0 ≤ max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) (1 : ℝ) := by
+      exact le_trans (by norm_num : (0 : ℝ) ≤ 1) (le_max_right _ (1 : ℝ))
+    exact pow_nonneg hmax_nonneg d
+  refine feynman_expansion_abs_le_const_pow_vertices_of_card_bound
+    (graphs := graphs) (mass := mass) (hmass := hmass)
+    (f := f) hexp (K := K0) hK0_nonneg ?_ (N := N) hcard
+  intro G hG
+  have hGdeg : ∀ v : Fin r, G.legs v ≤ d := hdeg G hG
+  have hGw :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card := hweighted G hGdeg
+  have hGk :
+      |graphIntegral G mass| ≤ K0 ^ r := by
+    simpa [K0] using
+      (graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound
+        (G := G) (mass := mass) (d := d) hGdeg A B hA hB hGw)
+  exact hGk
+
+/-- All-arity Gaussian-moment bound from expansion data, degree cap, weighted
+    graph bounds, and graph-count growth `#graphs ≤ N^{|V|}` (explicit constant
+    form). -/
+theorem gaussian_moment_abs_le_explicit_uniform_const_pow_of_degree_weighted_expansion_data
+    (mass : ℝ) (hmass : 0 < mass)
+    (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (N : ℕ)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          (∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            Finset.sum graphs (fun G => graphIntegral G mass)) ∧
+          (∀ G ∈ graphs, ∀ v : Fin r, G.legs v ≤ d) ∧
+          graphs.card ≤ N ^ r)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∀ (r : ℕ) (f : Fin r → TestFun2D),
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        (((N : ℝ) * ((max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d)) ^ r) := by
+  intro r f
+  rcases hexpansion r f with ⟨graphs, hexp, hdeg, hcard⟩
+  exact feynman_expansion_abs_le_explicit_uniform_const_pow_vertices_of_degree_weighted_family
+    (graphs := graphs) (mass := mass) (hmass := hmass)
+    (d := d) (A := A) (B := B) hA hB
+    (f := f) hexp hdeg hweighted N hcard
+
+/-- All-arity Gaussian-moment bound from expansion data, degree cap, weighted
+    graph bounds, and graph-count growth `#graphs ≤ N^{|V|}` (existential
+    positive-constant form). -/
+theorem gaussian_moment_abs_le_uniform_const_pow_of_degree_weighted_expansion_data
+    (mass : ℝ) (hmass : 0 < mass)
+    (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (N : ℕ)
+    (hexpansion :
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        ∃ (graphs : Finset (FeynmanGraph r)),
+          (∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+            Finset.sum graphs (fun G => graphIntegral G mass)) ∧
+          (∀ G ∈ graphs, ∀ v : Fin r, G.legs v ≤ d) ∧
+          graphs.card ≤ N ^ r)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (r : ℕ) (f : Fin r → TestFun2D),
+        |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+          (((N : ℝ) * K) ^ r) := by
+  let K0 : ℝ := (max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d
+  have hK0_pos : 0 < K0 := by
+    have hbase_pos : 0 < max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1 := by
+      exact lt_of_lt_of_le zero_lt_one (le_max_right _ _)
+    dsimp [K0]
+    exact pow_pos hbase_pos d
+  refine ⟨K0, hK0_pos, ?_⟩
+  intro r f
+  simpa [K0] using
+    (gaussian_moment_abs_le_explicit_uniform_const_pow_of_degree_weighted_expansion_data
+      (mass := mass) (hmass := hmass)
+      (d := d) (A := A) (B := B) hA hB
+      (N := N) hexpansion hweighted r f)
+
 /-- Finite φ⁴ expansion control via the local weighted-family infrastructure:
     extract a positive `K`, then bound by `#graphs * K^{|V|}`. -/
 theorem feynman_expansion_abs_le_card_mul_uniform_const_pow_vertices_of_phi4_weighted_family_local
