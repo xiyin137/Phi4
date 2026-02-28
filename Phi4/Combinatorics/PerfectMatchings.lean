@@ -391,6 +391,19 @@ theorem even_card (π : Pairing r) : Even r := by
   refine ⟨π.pairs.card, ?_⟩
   simpa [two_mul] using (two_mul_pairs_card π).symm
 
+/-- The number of pairs is half the number of labels. -/
+theorem pairs_card_eq_half (π : Pairing r) :
+    π.pairs.card = r / 2 := by
+  rcases even_card π with ⟨m, hm⟩
+  have h2 : 2 * π.pairs.card = m + m := by
+    simpa [hm, two_mul] using two_mul_pairs_card π
+  have hcard : π.pairs.card = m := by
+    omega
+  calc
+    π.pairs.card = m := hcard
+    _ = (m + m) / 2 := by omega
+    _ = r / 2 := by simpa [hm]
+
 /-- For a pairing on `2n` labels, there are exactly `n` pairs. -/
 theorem pairs_card_even (n : ℕ) (π : Pairing (2 * n)) :
     π.pairs.card = n := by

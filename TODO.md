@@ -254,7 +254,8 @@ the local Glimm-Jaffe objective.
    `mem_filter_contains_iff_eq_incidentPair`,
    `card_filter_pairs_containing_eq_one`,
    `card_erase_incidentPair`,
-   `card_erase_incidentPair_eq_sub_one`);
+   `card_erase_incidentPair_eq_sub_one`,
+   `pairs_card_eq_half`);
   this is foundational infrastructure for recursive pairing-count and
   Wick-expansion constructions.
 - `PairingEnumerationModel` now records only cardinality of pairings; enumeration
