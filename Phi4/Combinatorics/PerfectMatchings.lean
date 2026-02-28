@@ -158,6 +158,64 @@ private lemma coveringPair_contains (π : Pairing r) (i : Fin r) :
     (coveringPair π i).1 = i ∨ (coveringPair π i).2 = i := by
   exact (Classical.choose_spec (ExistsUnique.exists (π.covers i))).2
 
+/-- The unique pair in `π.pairs` that is incident to vertex `i`. -/
+def incidentPair (π : Pairing r) (i : Fin r) : Fin r × Fin r :=
+  coveringPair π i
+
+/-- The incident pair is indeed a member of `π.pairs`. -/
+theorem incidentPair_mem (π : Pairing r) (i : Fin r) :
+    π.incidentPair i ∈ π.pairs := by
+  exact coveringPair_mem π i
+
+/-- The incident pair contains `i` as one of its two endpoints. -/
+theorem incidentPair_contains (π : Pairing r) (i : Fin r) :
+    (π.incidentPair i).1 = i ∨ (π.incidentPair i).2 = i := by
+  exact coveringPair_contains π i
+
+/-- The partner of `i` in pairing `π`: the other endpoint of `incidentPair i`. -/
+def partner (π : Pairing r) (i : Fin r) : Fin r :=
+  if _h : (π.incidentPair i).1 = i then (π.incidentPair i).2 else (π.incidentPair i).1
+
+/-- The partner of `i` is distinct from `i`. -/
+theorem partner_ne_self (π : Pairing r) (i : Fin r) :
+    π.partner i ≠ i := by
+  by_cases hleft : (π.incidentPair i).1 = i
+  · intro hEq
+    have hlt := π.ordered (π.incidentPair i) (π.incidentPair_mem i)
+    have hsnd : (π.incidentPair i).2 = i := by
+      simpa [partner, hleft] using hEq
+    have hlt' : i < i := by
+      simpa [hleft, hsnd] using hlt
+    exact (lt_irrefl _ hlt')
+  · intro hEq
+    simp [partner, hleft] at hEq
+
+/-- The edge witnessing `partner` is in the pairing. -/
+theorem incidentPair_eq_pair_partner_or_partner_pair
+    (π : Pairing r) (i : Fin r) :
+    π.incidentPair i = (i, π.partner i) ∨
+      π.incidentPair i = (π.partner i, i) := by
+  unfold partner
+  by_cases hleft : (π.incidentPair i).1 = i
+  · left
+    ext <;> simp [hleft]
+  · right
+    have hcontains := π.incidentPair_contains i
+    rcases hcontains with hfst | hsnd
+    · exact False.elim (hleft hfst)
+    · ext <;> simp [hleft, hsnd]
+
+/-- One of the two oriented partner pairs belongs to `π.pairs`. -/
+theorem pair_partner_mem_or_partner_pair_mem
+    (π : Pairing r) (i : Fin r) :
+    (i, π.partner i) ∈ π.pairs ∨ (π.partner i, i) ∈ π.pairs := by
+  have hmem : π.incidentPair i ∈ π.pairs := π.incidentPair_mem i
+  rcases π.incidentPair_eq_pair_partner_or_partner_pair i with h | h
+  · left
+    simpa [h] using hmem
+  · right
+    simpa [h] using hmem
+
 private lemma coveringPair_eq_of_mem_contains
     (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
     (hpMem : p ∈ π.pairs) (hpContains : p.1 = i ∨ p.2 = i) :

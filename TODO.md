@@ -244,6 +244,11 @@ the local Glimm-Jaffe objective.
   discretization maps, Riemann-sum identities, and monotonicity lemmas.
 - `Phi4/Combinatorics/PerfectMatchings.lean` now centralizes pairing/perfect-matching
   combinatorics for Wick/Feynman expansion infrastructure.
+- `Phi4/Combinatorics/PerfectMatchings.lean` now also exposes a public
+  vertex-partner API for pairings (`Pairing.incidentPair`, `Pairing.partner`)
+  with core correctness lemmas (`incidentPair_mem`, `incidentPair_contains`,
+  `partner_ne_self`, and partner-edge membership), which is foundational
+  infrastructure for recursive pairing-count and Wick-expansion constructions.
 - `PairingEnumerationModel` now records only cardinality of pairings; enumeration
   itself is canonical via `Finset.univ`.
 - `Phi4/CovarianceOperators.lean` now exposes boundary-covariance subinterfaces
