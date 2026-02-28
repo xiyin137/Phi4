@@ -137,6 +137,14 @@ the local Glimm-Jaffe objective.
   finite-expansion lifting to `#graphs`-scaled bounds for fixed localization
   maps:
   `feynman_expansion_abs_le_card_mul_cell_occupancy_weighted_of_phi4_vertex_weighted`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also links localized φ⁴
+  occupancy data back to global factorial-moment forms:
+  `phi4_sum_cell_occupancies_eq_four_mul_vertices`,
+  `phi4_cell_occupancy_weighted_prod_le_total_factorial_pow`,
+  `graphIntegral_abs_le_total_factorial_pow_vertices_of_phi4_weighted_bound`,
+  `sum_abs_graphIntegral_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted`,
+  and
+  `feynman_expansion_abs_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted`.
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

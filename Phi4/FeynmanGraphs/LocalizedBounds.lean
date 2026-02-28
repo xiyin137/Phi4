@@ -960,6 +960,56 @@ theorem graphIntegral_abs_le_cell_occupancy_weighted_of_phi4_vertex_weighted_bou
           B ^ (2 * r) := by
             simp [hlines]
 
+/-- Under a localization map `loc : Fin r → cells` covering all vertices,
+    the summed φ⁴ cell occupancies are exactly `4 * r`. -/
+theorem phi4_sum_cell_occupancies_eq_four_mul_vertices
+    {β : Type*} [DecidableEq β]
+    (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells) :
+    (∑ c ∈ cells, 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) = 4 * r := by
+  have hmap :
+      ((Finset.univ : Finset (Fin r)) : Set (Fin r)).MapsTo loc (cells : Set β) := by
+    intro v hv
+    simpa using hloc v
+  have hcount :
+      (Finset.univ : Finset (Fin r)).card =
+        ∑ c ∈ cells, ((Finset.univ.filter fun v : Fin r => loc v = c).card) := by
+    simpa using
+      (Finset.card_eq_sum_card_fiberwise
+        (f := loc) (s := (Finset.univ : Finset (Fin r))) (t := cells) hmap)
+  calc
+    (∑ c ∈ cells, 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))
+        = 4 * (∑ c ∈ cells, ((Finset.univ.filter fun v : Fin r => loc v = c).card)) := by
+          simp [Finset.mul_sum]
+    _ = 4 * ((Finset.univ : Finset (Fin r)).card) := by
+          rw [← hcount]
+    _ = 4 * r := by simp
+
+/-- The φ⁴ per-cell weighted occupancy product is bounded by the global
+    weighted total-leg factor `((4r)!)*A^(4r)`. -/
+theorem phi4_cell_occupancy_weighted_prod_le_total_factorial_pow
+    {β : Type*} [DecidableEq β]
+    (cells : Finset β) (loc : Fin r → β)
+    (hloc : ∀ v : Fin r, loc v ∈ cells)
+    (A : ℝ) (hA : 0 ≤ A) :
+    (∏ c ∈ cells,
+      (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+        A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) ≤
+      (Nat.factorial (4 * r) : ℝ) * A ^ (4 * r) := by
+  have hbase :
+      (∏ c ∈ cells,
+        (Nat.factorial (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+          A ^ (4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))) ≤
+        (Nat.factorial
+          (∑ c ∈ cells, 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) : ℝ) *
+          A ^ (∑ c ∈ cells, 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card)) := by
+    exact factorial_weighted_prod_le_factorial_sum_pow
+      (s := cells)
+      (N := fun c => 4 * ((Finset.univ.filter fun v : Fin r => loc v = c).card))
+      A hA
+  simpa [phi4_sum_cell_occupancies_eq_four_mul_vertices (cells := cells) (loc := loc) hloc]
+    using hbase
+
 /-- Family-level local φ⁴ specialization:
     weighted bounds for each valence-4 graph imply a uniform positive
     `C^{|lines|}` control on all such graphs. -/
@@ -1036,6 +1086,44 @@ theorem graphIntegral_abs_le_const_pow_vertices_of_phi4_weighted_bound
     (G := G) (mass := mass)
     (C := ((((Nat.factorial 4 : ℝ) ^ 2) * (A ^ 2)) * B))
     hphi4 hlines
+
+/-- φ⁴ weighted bound in global factorial form:
+    `|I(G)| ≤ ((4r)! * A^(4r)) * B^(2r)`. -/
+theorem graphIntegral_abs_le_total_factorial_pow_vertices_of_phi4_weighted_bound
+    (G : FeynmanGraph r) (mass : ℝ)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hphi4 : ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      ((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r) := by
+  have hocc :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) ≤
+        (Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) * A ^ (∑ v : Fin r, G.legs v) :=
+    graph_vertex_factorial_weighted_prod_le_total_factorial_pow (G := G) (A := A) hA
+  have hmul :
+      (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card ≤
+        ((Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) * A ^ (∑ v : Fin r, G.legs v)) *
+          B ^ G.lines.card := by
+    exact mul_le_mul_of_nonneg_right hocc (pow_nonneg hB _)
+  have hlegs : (∑ v : Fin r, G.legs v) = 4 * r := by
+    calc
+      (∑ v : Fin r, G.legs v) = r * 4 :=
+        total_legs_eq_mul_card_of_const_legs (G := G) 4 hphi4
+      _ = 4 * r := by simp [Nat.mul_comm]
+  have hlines : G.lines.card = 2 * r :=
+    lines_card_eq_two_mul_vertices_of_phi4 (G := G) hphi4
+  calc
+    |graphIntegral G mass|
+        ≤ (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card := hbound
+    _ ≤ ((Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) * A ^ (∑ v : Fin r, G.legs v)) *
+          B ^ G.lines.card := hmul
+    _ = ((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r) := by
+          simp [hlegs, hlines]
 
 /-- Exact simplification of weighted vertex occupancy factors in φ⁴:
     each vertex contributes the same factor `(4! * A^4)`. -/
@@ -1126,6 +1214,63 @@ theorem feynman_expansion_abs_le_card_mul_const_pow_vertices_of_phi4_weighted_sh
   exact habs.trans
     (sum_abs_graphIntegral_le_card_mul_const_pow_vertices_of_phi4_weighted_sharp
       (graphs := graphs) (mass := mass) (A := A) (B := B) hphi4 hbound)
+
+/-- Finite φ⁴ graph-family bound in global factorial form:
+    if each graph satisfies the weighted φ⁴ hypothesis, then
+    `∑ |I(G)| ≤ #graphs * (((4r)! * A^(4r)) * B^(2r))`. -/
+theorem sum_abs_graphIntegral_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      ∀ G ∈ graphs, |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+      graphs.card * (((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r)) := by
+  have hsum :
+      Finset.sum graphs (fun G => |graphIntegral G mass|) ≤
+        Finset.sum graphs (fun _ =>
+          ((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r)) := by
+    refine Finset.sum_le_sum ?_
+    intro G hG
+    exact graphIntegral_abs_le_total_factorial_pow_vertices_of_phi4_weighted_bound
+      (G := G) (mass := mass) (A := A) (B := B) hA hB
+      (hphi4 := hphi4 G hG) (hbound := hbound G hG)
+  calc
+    Finset.sum graphs (fun G => |graphIntegral G mass|)
+        ≤ Finset.sum graphs (fun _ =>
+            ((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r)) := hsum
+    _ = graphs.card * (((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r)) := by
+          simp [Finset.sum_const, nsmul_eq_mul]
+
+/-- Finite φ⁴ expansion control in global factorial form:
+    `|expansion| ≤ #graphs * (((4r)! * A^(4r)) * B^(2r))`. -/
+theorem feynman_expansion_abs_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hphi4 : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v = 4)
+    (hbound :
+      ∀ G ∈ graphs, |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+      graphs.card * (((Nat.factorial (4 * r) : ℝ) * A ^ (4 * r)) * B ^ (2 * r)) := by
+  rw [hexp]
+  have habs :
+      |Finset.sum graphs (fun G => graphIntegral G mass)| ≤
+        Finset.sum graphs (fun G => |graphIntegral G mass|) := by
+    simpa using
+      (Finset.abs_sum_le_sum_abs
+        (f := fun G : FeynmanGraph r => graphIntegral G mass)
+        (s := graphs))
+  exact habs.trans
+    (sum_abs_graphIntegral_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted
+      (graphs := graphs) (mass := mass) (A := A) (B := B) hA hB hphi4 hbound)
 
 /-- Generic finite graph-family control from a per-graph `K^{|V|}` bound. -/
 theorem sum_abs_graphIntegral_le_card_mul_const_pow_vertices
