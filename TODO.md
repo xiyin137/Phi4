@@ -255,7 +255,15 @@ the local Glimm-Jaffe objective.
    `card_filter_pairs_containing_eq_one`,
    `card_erase_incidentPair`,
    `card_erase_incidentPair_eq_sub_one`,
-   `pairs_card_eq_half`);
+   `pairs_card_eq_half`) and recursion-ready erase/partner lemmas
+  (`incidentPair_contains_partner`,
+   `incidentPair_partner_eq`,
+   `not_mem_erase_incidentPair_contains`,
+   `not_mem_erase_incidentPair_contains_partner`,
+   `filter_erase_incidentPair_contains_eq_empty`,
+   `filter_erase_incidentPair_contains_partner_eq_empty`,
+   `two_mul_card_erase_incidentPair`,
+   `card_erase_incidentPair_eq_half_sub_two`);
   this is foundational infrastructure for recursive pairing-count and
   Wick-expansion constructions.
 - `PairingEnumerationModel` now records only cardinality of pairings; enumeration

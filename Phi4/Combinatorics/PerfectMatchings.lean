@@ -335,6 +335,70 @@ theorem card_erase_incidentPair_eq_sub_one
     (π.pairs.erase (π.incidentPair i)).card = π.pairs.card - 1 := by
   exact Finset.card_erase_of_mem (π.incidentPair_mem i)
 
+/-- The incident pair at `i` also contains `partner i`. -/
+theorem incidentPair_contains_partner (π : Pairing r) (i : Fin r) :
+    (π.incidentPair i).1 = π.partner i ∨ (π.incidentPair i).2 = π.partner i := by
+  rcases π.incidentPair_eq_pair_partner_or_partner_pair i with hpair | hpair
+  · right
+    simpa [hpair]
+  · left
+    simpa [hpair]
+
+/-- `i` and `partner i` share the same incident pair. -/
+theorem incidentPair_partner_eq (π : Pairing r) (i : Fin r) :
+    π.incidentPair (π.partner i) = π.incidentPair i := by
+  have hEq :
+      π.incidentPair i = π.incidentPair (π.partner i) :=
+    pair_eq_incidentPair_of_mem_contains π (π.partner i) (π.incidentPair i)
+      (π.incidentPair_mem i) (π.incidentPair_contains_partner i)
+  exact hEq.symm
+
+/-- Any edge in `erase (incidentPair i)` cannot still contain `i`. -/
+theorem not_mem_erase_incidentPair_contains
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
+    (hp : p ∈ π.pairs.erase (π.incidentPair i)) :
+    ¬ (p.1 = i ∨ p.2 = i) := by
+  intro hpContains
+  rcases Finset.mem_erase.mp hp with ⟨hpNe, hpMem⟩
+  exact hpNe (pair_eq_incidentPair_of_mem_contains π i p hpMem hpContains)
+
+/-- Any edge in `erase (incidentPair i)` cannot contain `partner i`. -/
+theorem not_mem_erase_incidentPair_contains_partner
+    (π : Pairing r) (i : Fin r) (p : Fin r × Fin r)
+    (hp : p ∈ π.pairs.erase (π.incidentPair i)) :
+    ¬ (p.1 = π.partner i ∨ p.2 = π.partner i) := by
+  intro hpContains
+  rcases Finset.mem_erase.mp hp with ⟨hpNe, hpMem⟩
+  have hpEqPartner :
+      p = π.incidentPair (π.partner i) :=
+    pair_eq_incidentPair_of_mem_contains π (π.partner i) p hpMem hpContains
+  exact hpNe (hpEqPartner.trans (π.incidentPair_partner_eq i))
+
+/-- Erasing the incident pair removes all edges containing `i`. -/
+theorem filter_erase_incidentPair_contains_eq_empty
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.erase (π.incidentPair i)).filter (fun p => p.1 = i ∨ p.2 = i) = ∅ := by
+  ext p
+  constructor
+  · intro hp
+    rcases Finset.mem_filter.mp hp with ⟨hpErase, hpContains⟩
+    exact (π.not_mem_erase_incidentPair_contains i p hpErase hpContains).elim
+  · intro hp
+    simpa using hp
+
+/-- Erasing the incident pair removes all edges containing `partner i`. -/
+theorem filter_erase_incidentPair_contains_partner_eq_empty
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.erase (π.incidentPair i)).filter
+        (fun p => p.1 = π.partner i ∨ p.2 = π.partner i) = ∅ := by
+  ext p
+  constructor
+  · intro hp
+    rcases Finset.mem_filter.mp hp with ⟨hpErase, hpContains⟩
+    exact (π.not_mem_erase_incidentPair_contains_partner i p hpErase hpContains).elim
+  · intro hp
+    simpa using hp
+
 private lemma card_endpoint_eq_two
     (π : Pairing r) (p : Fin r × Fin r) (hpMem : p ∈ π.pairs) :
     ({i : Fin r | i = p.1 ∨ i = p.2} : Finset (Fin r)).card = 2 := by
@@ -403,6 +467,29 @@ theorem pairs_card_eq_half (π : Pairing r) :
     π.pairs.card = m := hcard
     _ = (m + m) / 2 := by omega
     _ = r / 2 := by simpa [hm]
+
+/-- The erased pair-set has endpoint count identity `2 * |E\\{eᵢ}| = r - 2`. -/
+theorem two_mul_card_erase_incidentPair
+    (π : Pairing r) (i : Fin r) :
+    2 * (π.pairs.erase (π.incidentPair i)).card = r - 2 := by
+  rcases even_card π with ⟨m, hm⟩
+  have hcard : π.pairs.card = m := by
+    have h2 : 2 * π.pairs.card = m + m := by
+      simpa [hm, two_mul] using two_mul_pairs_card π
+    omega
+  have hErase : (π.pairs.erase (π.incidentPair i)).card = m - 1 := by
+    simpa [hcard] using card_erase_incidentPair_eq_sub_one π i
+  calc
+    2 * (π.pairs.erase (π.incidentPair i)).card = 2 * (m - 1) := by simp [hErase]
+    _ = m + m - 2 := by omega
+    _ = r - 2 := by simpa [hm, two_mul]
+
+/-- Half-cardinality form of `two_mul_card_erase_incidentPair`. -/
+theorem card_erase_incidentPair_eq_half_sub_two
+    (π : Pairing r) (i : Fin r) :
+    (π.pairs.erase (π.incidentPair i)).card = (r - 2) / 2 := by
+  have hdiv := congrArg (fun n : ℕ => n / 2) (π.two_mul_card_erase_incidentPair i)
+  simpa [Nat.mul_div_right] using hdiv
 
 /-- For a pairing on `2n` labels, there are exactly `n` pairs. -/
 theorem pairs_card_even (n : ℕ) (π : Pairing (2 * n)) :
