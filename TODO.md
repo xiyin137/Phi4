@@ -410,6 +410,11 @@ the local Glimm-Jaffe objective.
   theorem no longer carries unused lattice GKS-I assumptions.
 - `Phi4/ModelBundle.lean` now carries infinite-volume Schwinger/measure/moment
   submodels directly and reconstructs `InfiniteVolumeLimitModel` by instance.
+- `Phi4/MultipleReflections.lean` now keeps `MultipleReflectionModel` focused on
+  the genuine chessboard/uniform-Schwinger inputs only; the previously vacuous
+  existential-`C` partition-function ratio bounds were removed from the model
+  interface and are proved directly as standalone theorems with precise
+  assumptions.
 - `Phi4/OSAxioms.lean` now places `MeasureOS3Model` on the weaker
   measure-only assumptions, and `phi4_os3` follows this reduced interface.
 - `OSAxiomCoreModel`, `OSE4ClusterModel`, and `OSDistributionE2Model` are now

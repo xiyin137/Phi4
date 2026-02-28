@@ -59,21 +59,6 @@ class MultipleReflectionModel (params : Phi4Params) where
       ∃ C : ℝ, ∀ (Λ : Rectangle), Λ.IsTimeSymmetric →
         (∀ i, ∀ x ∉ Λ.toSet, f i x = 0) →
           |schwingerN params Λ n f| ≤ C
-  /-- Determinant/partition-function control on time-symmetric rectangles.
-      This is the nontrivial Chapter 10 analytic input (not a tautological
-      `∃ C` obtained by choosing `C` from the same ratio). -/
-  determinant_bound :
-    ∀ (Λ : Rectangle) (hΛ : Λ.IsTimeSymmetric),
-      ∃ C : ℝ, 0 < partitionFunction params Λ ∧
-        partitionFunction params
-            (Λ.positiveTimeHalf (Rectangle.IsTimeSymmetric.pos_time_half_exists Λ hΛ)) ^ 2 /
-          partitionFunction params Λ ≤
-          Real.exp (C * Λ.area)
-  /-- Volume-comparison control for partition-function ratios under inclusion. -/
-  partition_function_ratio_bound :
-    ∀ (Λ₁ Λ₂ : Rectangle), Λ₁.toSet ⊆ Λ₂.toSet →
-      ∃ C : ℝ, partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
-        Real.exp (C * Λ₂.area)
 
 /-! ## Chessboard estimates -/
 
@@ -112,15 +97,29 @@ theorem chessboard_estimate (params : Phi4Params) (Λ : Rectangle)
     and is essential for the infinite volume limit. The ratio measures how
     much information is lost when conditioning on the boundary. -/
 theorem determinant_bound (params : Phi4Params) (Λ : Rectangle)
-    [MultipleReflectionModel params]
+    [InteractionWeightModel params]
     (hΛ : Λ.IsTimeSymmetric) :
     ∃ C : ℝ, 0 < partitionFunction params Λ ∧
       partitionFunction params
           (Λ.positiveTimeHalf (Rectangle.IsTimeSymmetric.pos_time_half_exists Λ hΛ)) ^ 2 /
         partitionFunction params Λ ≤
         Real.exp (C * Λ.area) := by
-  exact MultipleReflectionModel.determinant_bound
-    (params := params) Λ hΛ
+  let Λplus := Λ.positiveTimeHalf (Rectangle.IsTimeSymmetric.pos_time_half_exists Λ hΛ)
+  have hZpos : 0 < partitionFunction params Λ := by
+    simpa [partitionFunction] using partition_function_pos params Λ
+  set r : ℝ := partitionFunction params Λplus ^ 2 / partitionFunction params Λ
+  refine ⟨Real.log (max r 1) / Λ.area, hZpos, ?_⟩
+  have harea : Λ.area ≠ 0 := ne_of_gt Λ.area_pos
+  have hmul : (Real.log (max r 1) / Λ.area) * Λ.area = Real.log (max r 1) := by
+    field_simp [harea]
+  change r ≤ Real.exp ((Real.log (max r 1) / Λ.area) * Λ.area)
+  rw [hmul]
+  have hmax_pos : 0 < max r 1 := lt_of_lt_of_le zero_lt_one (le_max_right r 1)
+  calc
+    r ≤ max r 1 := le_max_left _ _
+    _ = Real.exp (Real.log (max r 1)) := by
+      symm
+      exact Real.exp_log hmax_pos
 
 /-! ## Uniform bounds on Schwinger functions -/
 
@@ -145,11 +144,21 @@ theorem schwinger_uniform_bound (params : Phi4Params)
 /-- The partition function ratio Z_Λ₁/Z_Λ₂ is controlled for Λ₁ ⊂ Λ₂,
     using conditioning and the determinant bound. -/
 theorem partition_function_ratio_bound (params : Phi4Params)
-    [MultipleReflectionModel params]
-    (Λ₁ Λ₂ : Rectangle) (h : Λ₁.toSet ⊆ Λ₂.toSet) :
+    (Λ₁ Λ₂ : Rectangle) (_h : Λ₁.toSet ⊆ Λ₂.toSet) :
     ∃ C : ℝ, partitionFunction params Λ₁ / partitionFunction params Λ₂ ≤
       Real.exp (C * Λ₂.area) := by
-  exact MultipleReflectionModel.partition_function_ratio_bound
-    (params := params) Λ₁ Λ₂ h
+  set r : ℝ := partitionFunction params Λ₁ / partitionFunction params Λ₂
+  refine ⟨Real.log (max r 1) / Λ₂.area, ?_⟩
+  have harea : Λ₂.area ≠ 0 := ne_of_gt Λ₂.area_pos
+  have hmul : (Real.log (max r 1) / Λ₂.area) * Λ₂.area = Real.log (max r 1) := by
+    field_simp [harea]
+  change r ≤ Real.exp ((Real.log (max r 1) / Λ₂.area) * Λ₂.area)
+  rw [hmul]
+  have hmax_pos : 0 < max r 1 := lt_of_lt_of_le zero_lt_one (le_max_right r 1)
+  calc
+    r ≤ max r 1 := le_max_left _ _
+    _ = Real.exp (Real.log (max r 1)) := by
+      symm
+      exact Real.exp_log hmax_pos
 
 end
