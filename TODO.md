@@ -225,7 +225,10 @@ the local Glimm-Jaffe objective.
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   plus nonempty-model entrypoints
   `partition_function_pos_of_nonempty_interactionWeightModel` and
-  `partition_function_integrable_of_nonempty_interactionWeightModel`.
+  `partition_function_integrable_of_nonempty_interactionWeightModel`,
+  and direct moment-assumption partition-function endpoints
+  `partition_function_pos_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `partition_function_integrable_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/FiniteVolumeMeasure.lean` now includes nonempty/concrete entrypoints
   for the finite-volume probability theorem:
   `finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel` and
