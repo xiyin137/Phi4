@@ -229,6 +229,12 @@ the local Glimm-Jaffe objective.
    `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_bad_event_bound`,
    `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_geometric_bad_event_bound`,
    `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_bad_event_bound`).
+- `Phi4/InfiniteVolumeLimit.lean` now includes direct `k = 4` infinite-volume
+  existence bridges from correlation packages:
+  `infinite_volume_schwinger_exists_four_of_correlationFourPoint_models` and
+  `infinite_volume_schwinger_exists_four_of_correlationCore_models`, reducing
+  manual instance plumbing on the monotonicity path
+  (`Correlation*` → `SchwingerNMonotoneModel params 4` → IV existence).
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
