@@ -218,6 +218,18 @@ the local Glimm-Jaffe objective.
   `shifted_cutoff_bad_event_measure_le_of_exponential_moment_bound`,
   connecting exponential-moment control of `interactionCutoff(κ_{n+1})`
   to explicit bad-event probability bounds.
+- `Phi4/Interaction.lean` now also adds direct geometric-moment closure for the
+  same shifted cutoff route:
+  `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound`,
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  plus nonempty-model entrypoints
+  `partition_function_pos_of_nonempty_interactionWeightModel` and
+  `partition_function_integrable_of_nonempty_interactionWeightModel`.
+- `Phi4/FiniteVolumeMeasure.lean` now includes nonempty/concrete entrypoints
+  for the finite-volume probability theorem:
+  `finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel` and
+  `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,

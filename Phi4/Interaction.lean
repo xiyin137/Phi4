@@ -2829,4 +2829,28 @@ theorem partition_function_integrable (params : Phi4Params)
     exp_interaction_Lp params Λ (p := (1 : ℝ≥0∞)) (by norm_num)
   exact (memLp_one_iff_integrable.mp hLp)
 
+/-- `partition_function_pos` from an explicit witness of
+    `InteractionWeightModel`, avoiding direct typeclass assumptions
+    at theorem-call sites. -/
+theorem partition_function_pos_of_nonempty_interactionWeightModel
+    (params : Phi4Params) (Λ : Rectangle)
+    (hW : Nonempty (InteractionWeightModel params)) :
+    0 < ∫ ω, Real.exp (-(interaction params Λ ω))
+        ∂(freeFieldMeasure params.mass params.mass_pos) := by
+  rcases hW with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact partition_function_pos params Λ
+
+/-- `partition_function_integrable` from an explicit witness of
+    `InteractionWeightModel`, avoiding direct typeclass assumptions
+    at theorem-call sites. -/
+theorem partition_function_integrable_of_nonempty_interactionWeightModel
+    (params : Phi4Params) (Λ : Rectangle)
+    (hW : Nonempty (InteractionWeightModel params)) :
+    Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
+        (freeFieldMeasure params.mass params.mass_pos) := by
+  rcases hW with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact partition_function_integrable params Λ
+
 end

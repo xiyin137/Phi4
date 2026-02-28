@@ -96,6 +96,44 @@ theorem finiteVolumeMeasure_isProbability (params : Phi4Params)
             simp
           exact ENNReal.inv_mul_cancel hne0 hneTop
 
+/-- `finiteVolumeMeasure_isProbability` from an explicit witness of
+    `InteractionWeightModel`, avoiding direct typeclass assumptions
+    at theorem-call sites. -/
+theorem finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params : Phi4Params) (Λ : Rectangle)
+    (hW : Nonempty (InteractionWeightModel params)) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  rcases hW with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact finiteVolumeMeasure_isProbability params Λ
+
+/-- Concrete finite-volume probability theorem from geometric decay of shifted
+    exponential moments of cutoff interactions. This discharges the
+    `InteractionWeightModel` interface via proved interaction bridges. -/
+theorem finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hmom :
+      ∀ Λ : Rectangle, ∃ θ D r : ℝ,
+        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+      (params := params) hmom
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
 /-! ## Schwinger functions (correlation functions) -/
 
 /-- The 2-point Schwinger function in finite volume:
