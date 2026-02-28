@@ -150,6 +150,12 @@ the local Glimm-Jaffe objective.
   `sum_abs_graphIntegral_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted`,
   and
   `feynman_expansion_abs_le_card_mul_total_factorial_pow_vertices_of_phi4_weighted`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides generic
+  degree-capped weighted-family conversion to vertex-exponential expansion
+  bounds:
+  `graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound` and
+  `feynman_expansion_abs_le_uniform_const_pow_vertices_of_degree_weighted_family`
+  (with explicit graph-count growth input `#graphs ≤ N^|V|`).
 - `Phi4/Interaction.lean` now provides a reusable measure-theoretic bridge
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from

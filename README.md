@@ -50,6 +50,11 @@ project objective.
 - `Phi4/FeynmanGraphs/LocalizedBounds.lean` now includes weighted occupancy
   inequalities, including graph-specialized bounds:
   `∏ (N! * A^N) ≤ (∑ N)! * A^(∑ N)`.
+- `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also includes generic
+  degree-capped weighted-to-vertex-exponential bridges:
+  `graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound` and
+  `feynman_expansion_abs_le_uniform_const_pow_vertices_of_degree_weighted_family`
+  (the latter adds graph-count growth control `#graphs ≤ N^{|V|}`).
 - `Phi4/Interaction.lean` now includes reusable bridges from lower bounds to
   Boltzmann-weight integrability:
   - `memLp_exp_neg_of_ae_lower_bound`,

@@ -772,6 +772,54 @@ theorem graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
           simpa using
             (mul_pow (((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) B G.lines.card).symm
 
+/-- Degree-capped weighted single-graph bound in vertex-count form.
+    This converts the line-count bound to a pure `K^{|V|}` estimate using the
+    degree cardinality control `2|lines| ≤ d|V|`. -/
+theorem graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound
+    (G : FeynmanGraph r) (mass : ℝ)
+    (d : ℕ) (hdeg : ∀ v : Fin r, G.legs v ≤ d)
+    (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (hbound :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card) :
+    |graphIntegral G mass| ≤
+      (((max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d) ^ r) := by
+  let C0 : ℝ := ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B)
+  have hline :
+      |graphIntegral G mass| ≤ C0 ^ G.lines.card := by
+    simpa [C0] using
+      graphIntegral_abs_le_const_pow_lines_of_degree_weighted_bound
+        (G := G) (mass := mass) (d := d) hdeg A B hA hB hbound
+  have hC0_nonneg : 0 ≤ C0 := by
+    dsimp [C0]
+    have hfact_nonneg : 0 ≤ (Nat.factorial d : ℝ) := by
+      exact_mod_cast (Nat.zero_le (Nat.factorial d))
+    exact mul_nonneg
+      (mul_nonneg (pow_nonneg hfact_nonneg 2) (pow_nonneg hA 2))
+      hB
+  have hpow_base :
+      C0 ^ G.lines.card ≤ (max C0 1) ^ G.lines.card := by
+    exact pow_le_pow_left₀ hC0_nonneg (le_max_left C0 1) _
+  have hlines_le_twice : G.lines.card ≤ 2 * G.lines.card := by
+    calc
+      G.lines.card ≤ G.lines.card + G.lines.card := Nat.le_add_right G.lines.card G.lines.card
+      _ = 2 * G.lines.card := by simp [two_mul]
+  have hlines_le_rd : G.lines.card ≤ r * d := by
+    exact le_trans hlines_le_twice
+      (two_mul_lines_card_le_mul_card_of_degree_le G d hdeg)
+  have hpow_exp :
+      (max C0 1) ^ G.lines.card ≤ (max C0 1) ^ (r * d) := by
+    exact pow_le_pow_right₀ (le_max_right C0 1) hlines_le_rd
+  calc
+    |graphIntegral G mass| ≤ C0 ^ G.lines.card := hline
+    _ ≤ (max C0 1) ^ G.lines.card := hpow_base
+    _ ≤ (max C0 1) ^ (r * d) := hpow_exp
+    _ = ((max C0 1) ^ d) ^ r := by
+          rw [Nat.mul_comm, pow_mul]
+    _ = (((max ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B) 1) ^ d) ^ r) := by
+          simp [C0]
+
 /-- Uniform positive-constant `C^{|lines|}` bound from a family-level weighted
     degree-capped estimate. -/
 theorem uniform_graphIntegral_abs_le_pos_const_pow_lines_of_degree_weighted_family
@@ -1341,6 +1389,50 @@ theorem feynman_expansion_abs_le_const_pow_vertices_of_card_bound
     _ ≤ ((N : ℝ) ^ r) * (K ^ r) := hmul
     _ = (((N : ℝ) * K) ^ r) := by
           simpa using (mul_pow (N : ℝ) K r).symm
+
+/-- Generic degree-capped weighted-family finite expansion control in pure
+    exponential vertex form, under `#graphs ≤ N^{|V|}`. -/
+theorem feynman_expansion_abs_le_uniform_const_pow_vertices_of_degree_weighted_family
+    (graphs : Finset (FeynmanGraph r)) (mass : ℝ) (hmass : 0 < mass)
+    (d : ℕ) (A B : ℝ) (hA : 0 ≤ A) (hB : 0 ≤ B)
+    (f : Fin r → TestFun2D)
+    (hexp :
+      ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+        Finset.sum graphs (fun G => graphIntegral G mass))
+    (hdeg : ∀ G ∈ graphs, ∀ v : Fin r, G.legs v ≤ d)
+    (hweighted :
+      ∀ {r : ℕ} (G : FeynmanGraph r), (∀ v : Fin r, G.legs v ≤ d) →
+        |graphIntegral G mass| ≤
+          (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+            B ^ G.lines.card)
+    (N : ℕ) (hcard : graphs.card ≤ N ^ r) :
+    ∃ K : ℝ, 0 < K ∧
+      |∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass)| ≤
+        (((N : ℝ) * K) ^ r) := by
+  let C0 : ℝ := ((((Nat.factorial d : ℝ) ^ 2) * (A ^ 2)) * B)
+  let K0 : ℝ := (max C0 1) ^ d
+  have hK0_pos : 0 < K0 := by
+    have hbase_pos : 0 < max C0 1 := by
+      exact lt_of_lt_of_le zero_lt_one (le_max_right C0 1)
+    dsimp [K0]
+    exact pow_pos hbase_pos d
+  have hK0_nonneg : 0 ≤ K0 := hK0_pos.le
+  refine ⟨K0, hK0_pos, ?_⟩
+  refine feynman_expansion_abs_le_const_pow_vertices_of_card_bound
+    (graphs := graphs) (mass := mass) (hmass := hmass)
+    (f := f) hexp (K := K0) hK0_nonneg ?_ (N := N) hcard
+  intro G hG
+  have hGdeg : ∀ v : Fin r, G.legs v ≤ d := hdeg G hG
+  have hGw :
+      |graphIntegral G mass| ≤
+        (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ) * A ^ (G.legs v)) *
+          B ^ G.lines.card := hweighted G hGdeg
+  have hGk :
+      |graphIntegral G mass| ≤ K0 ^ r := by
+    simpa [C0, K0] using
+      (graphIntegral_abs_le_const_pow_vertices_of_degree_weighted_bound
+        (G := G) (mass := mass) (d := d) hGdeg A B hA hB hGw)
+  exact hGk
 
 /-- Finite φ⁴ expansion control via the local weighted-family infrastructure:
     extract a positive `K`, then bound by `#graphs * K^{|V|}`. -/
