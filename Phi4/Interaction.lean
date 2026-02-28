@@ -102,6 +102,79 @@ theorem wick_fourth_lower_bound_explicit (mass : ℝ) (_hmass : 0 < mass) (κ : 
   simp only [wickPower, wickMonomial_four]
   nlinarith [sq_nonneg (rawFieldEval mass κ ω x ^ 2 - 3 * regularizedPointCovariance mass κ)]
 
+/-- Bridge from pointwise Wick lower bounds to a lower bound on the cutoff
+    interaction integral over a fixed volume. -/
+theorem interactionCutoff_lower_bound_of_wick_lower_bound
+    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff) (ω : FieldConfig2D)
+    (B : ℝ)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume)
+    (hlower : ∀ x ∈ Λ.toSet, -B ≤ wickPower 4 params.mass κ ω x) :
+    params.coupling * ∫ x in Λ.toSet, (-B : ℝ) ≤
+      interactionCutoff params Λ κ ω := by
+  have hconst_int : IntegrableOn (fun _ : Spacetime2D => (-B : ℝ)) Λ.toSet volume :=
+    integrableOn_const hΛ_finite
+  have hint_le :
+      ∫ x in Λ.toSet, (-B : ℝ) ∂volume ≤
+        ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x ∂volume := by
+    exact setIntegral_mono_on hconst_int hwick_int hΛ_meas hlower
+  have hmul :
+      params.coupling * (∫ x in Λ.toSet, (-B : ℝ) ∂volume) ≤
+        params.coupling * (∫ x in Λ.toSet, wickPower 4 params.mass κ ω x ∂volume) :=
+    mul_le_mul_of_nonneg_left hint_le params.coupling_pos.le
+  simpa [interactionCutoff] using hmul
+
+/-- Semibounded Wick quartic implies a cutoff-interaction lower bound for each
+    UV cutoff scale `κ > 1`, provided integrability on the finite volume. -/
+theorem interactionCutoff_lower_bound_of_wick_semibounded
+    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
+    (hκ : 1 < κ.κ)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ ω : FieldConfig2D,
+        IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume) :
+    ∃ C : ℝ, ∀ ω : FieldConfig2D,
+      params.coupling *
+          ∫ x in Λ.toSet, (-(C * (Real.log κ.κ) ^ 2) : ℝ) ≤
+        interactionCutoff params Λ κ ω := by
+  rcases wick_fourth_semibounded params.mass params.mass_pos κ hκ with ⟨C, hC⟩
+  refine ⟨C, ?_⟩
+  intro ω
+  refine interactionCutoff_lower_bound_of_wick_lower_bound
+    (params := params) (Λ := Λ) (κ := κ) (ω := ω)
+    (B := C * (Real.log κ.κ) ^ 2)
+    hΛ_meas hΛ_finite (hwick_int ω) ?_
+  intro x hx
+  simpa [neg_mul] using hC ω x
+
+/-- Along the shifted canonical UV sequence `κ_{n+1} = n + 2`, semibounded Wick
+    control yields pointwise lower bounds for `interactionCutoff`. -/
+theorem interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_semibounded
+    (params : Phi4Params) (Λ : Rectangle)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume) :
+    ∀ n : ℕ, ∃ B : ℝ, ∀ ω : FieldConfig2D,
+      -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
+  intro n
+  have hκ : 1 < (standardUVCutoffSeq (n + 1)).κ := by
+    simpa [standardUVCutoffSeq] using
+      (show (0 : ℝ) < (n : ℝ) + 1 from by positivity)
+  rcases interactionCutoff_lower_bound_of_wick_semibounded
+      (params := params) (Λ := Λ) (κ := standardUVCutoffSeq (n + 1))
+      hκ hΛ_meas hΛ_finite (hwick_int n) with ⟨C, hC⟩
+  refine ⟨-(params.coupling *
+      ∫ x in Λ.toSet, (-(C * (Real.log (standardUVCutoffSeq (n + 1)).κ) ^ 2) : ℝ)), ?_⟩
+  intro ω
+  simpa using hC ω
+
 /-! ## Abstract interaction-integrability interface -/
 
 /-- Analytic interaction estimates used by finite-volume construction. This
@@ -449,6 +522,52 @@ theorem interaction_ae_lower_bound_of_cutoff_seq
     hall.mono (fun ω hω => Filter.Eventually.of_forall hω)
   exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hevent
 
+/-- Shifted-sequence transfer: if `-B` bounds all cutoff interactions along
+    `κ_{n+1}`, then the unshifted canonical sequence is eventually bounded below
+    by `-B` almost surely. This isolates the common `n = 0` bookkeeping step. -/
+theorem cutoff_seq_eventually_lower_bound_of_succ
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      ∀ᶠ n in Filter.atTop,
+        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
+  have hall :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
+    rw [eventually_countable_forall]
+    intro n
+    exact hcutoff_ae n
+  filter_upwards [hall] with ω hω
+  refine Filter.eventually_atTop.2 ?_
+  refine ⟨1, ?_⟩
+  intro n hn
+  cases n with
+  | zero =>
+      exact (False.elim (Nat.not_succ_le_zero 0 hn))
+  | succ m =>
+      simpa [Nat.succ_eq_add_one, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hω m
+
+/-- Shifted-sequence lower bounds (`κ_{n+1}`) imply an almost-everywhere lower
+    bound on the limiting interaction. -/
+theorem interaction_ae_lower_bound_of_cutoff_seq_succ
+    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      -B ≤ interaction params Λ ω := by
+  have hcutoff_ev :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        ∀ᶠ n in Filter.atTop,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
+    cutoff_seq_eventually_lower_bound_of_succ params Λ B hcutoff_ae
+  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
+
 /-! ## The exponential of the interaction is in Lᵖ
 
 This is the central estimate of the chapter (Theorem 8.6.2 of Glimm-Jaffe).
@@ -548,6 +667,23 @@ theorem exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
   refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
     (B := B) ?_
   exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ae
+
+/-- `Lᵖ` integrability of the Boltzmann weight from shifted canonical
+    cutoff-sequence lower bounds (`κ_{n+1}`). -/
+theorem exp_interaction_Lp_of_cutoff_seq_succ_lower_bounds
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hcutoff_ae :
+      ∀ n : ℕ,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
+    (B := B) ?_
+  exact interaction_ae_lower_bound_of_cutoff_seq_succ params Λ B hcutoff_ae
 
 /-- If cutoff lower bounds can fail only on a summable family of bad sets,
     then the cutoff sequence is eventually bounded below almost surely. -/
@@ -883,6 +1019,23 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
   exact exp_interaction_Lp_of_cutoff_seq_lower_bounds
     (params := params) (Λ := Λ) (B := B) hB
 
+/-- Construct `InteractionWeightModel` from per-volume shifted cutoff-sequence
+    lower bounds (`κ_{n+1}`), avoiding direct `n = 0` obligations. -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_succ_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hcutoff_ae Λ with ⟨B, hB⟩
+  exact exp_interaction_Lp_of_cutoff_seq_succ_lower_bounds
+    (params := params) (Λ := Λ) (B := B) hB
+
 /-- Construct `InteractionWeightModel` from per-volume cutoff-sequence
     pointwise lower bounds (`∀ ω`, `∀ n`). -/
 theorem interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds
@@ -894,6 +1047,24 @@ theorem interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds
           -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
     Nonempty (InteractionWeightModel params) := by
   refine interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds
+    (params := params) ?_
+  intro Λ
+  rcases hcutoff Λ with ⟨B, hB⟩
+  refine ⟨B, ?_⟩
+  intro n
+  exact Filter.Eventually.of_forall (fun ω => hB n ω)
+
+/-- Construct `InteractionWeightModel` from per-volume shifted cutoff-sequence
+    pointwise lower bounds (`κ_{n+1}`, `∀ ω`, `∀ n`). -/
+theorem interactionWeightModel_nonempty_of_cutoff_seq_succ_pointwise_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ, ∀ ω : FieldConfig2D,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_cutoff_seq_succ_lower_bounds
     (params := params) ?_
   intro Λ
   rcases hcutoff Λ with ⟨B, hB⟩
@@ -1085,6 +1256,24 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_lower_bounds
 
 /-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
+    2. shifted cutoff-sequence lower bounds (`κ_{n+1}`), avoiding direct
+       `n = 0` assumptions. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_succ_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff_ae :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ,
+          ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+            -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_succ_lower_bounds
+      (params := params) hcutoff_ae with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
     2. per-volume cutoff-sequence pointwise lower bounds (`∀ ω`, `∀ n`). -/
 theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_bounds
     (params : Phi4Params)
@@ -1095,6 +1284,22 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_
           -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds
+      (params := params) hcutoff with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. shifted cutoff-sequence pointwise lower bounds (`κ_{n+1}`, `∀ ω`, `∀ n`). -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_succ_pointwise_lower_bounds
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hcutoff :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        ∀ n : ℕ, ∀ ω : FieldConfig2D,
+          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_cutoff_seq_succ_pointwise_lower_bounds
       (params := params) hcutoff with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩

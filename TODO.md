@@ -183,6 +183,21 @@ the local Glimm-Jaffe objective.
   constructors (`∀ ω`, `∀ n`) feeding the same pipeline:
   `interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds` and
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_bounds`.
+- `Phi4/Interaction.lean` now also includes semibounded-Wick to cutoff-interaction
+  bridges:
+  `interactionCutoff_lower_bound_of_wick_lower_bound`,
+  `interactionCutoff_lower_bound_of_wick_semibounded`,
+  and shifted-sequence extraction
+  `interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_semibounded`.
+- `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
+  lower-bound transfer and constructors, reducing direct `n = 0` obligations:
+  `cutoff_seq_eventually_lower_bound_of_succ`,
+  `interaction_ae_lower_bound_of_cutoff_seq_succ`,
+  `exp_interaction_Lp_of_cutoff_seq_succ_lower_bounds`,
+  `interactionWeightModel_nonempty_of_cutoff_seq_succ_lower_bounds`,
+  `interactionWeightModel_nonempty_of_cutoff_seq_succ_pointwise_lower_bounds`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_succ_lower_bounds`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_succ_pointwise_lower_bounds`.
 - `Phi4/Interaction.lean` now also has generic summable-bad-set entry points
   (arbitrary bad sets with good-set cutoff lower bounds), including
   `interaction_ae_lower_bound_of_cutoff_seq_bad_set_summable`,
