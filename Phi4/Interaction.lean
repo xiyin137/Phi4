@@ -404,6 +404,26 @@ instance (priority := 100) interactionWeightModel_of_integrability
     InteractionWeightModel params where
   exp_interaction_Lp := InteractionIntegrabilityModel.exp_interaction_Lp (params := params)
 
+/-- Any nonempty full interaction-integrability witness yields a nonempty
+    UV/L² subinterface witness. -/
+theorem interactionUVModel_nonempty_of_integrability_nonempty
+    (params : Phi4Params)
+    (hint : Nonempty (InteractionIntegrabilityModel params)) :
+    Nonempty (InteractionUVModel params) := by
+  rcases hint with ⟨hintInst⟩
+  letI : InteractionIntegrabilityModel params := hintInst
+  exact ⟨inferInstance⟩
+
+/-- Any nonempty full interaction-integrability witness yields a nonempty
+    weight-integrability subinterface witness. -/
+theorem interactionWeightModel_nonempty_of_integrability_nonempty
+    (params : Phi4Params)
+    (hint : Nonempty (InteractionIntegrabilityModel params)) :
+    Nonempty (InteractionWeightModel params) := by
+  rcases hint with ⟨hintInst⟩
+  letI : InteractionIntegrabilityModel params := hintInst
+  exact ⟨inferInstance⟩
+
 /-- The combined UV/L² and weight-integrability subinterfaces reconstruct the
     original interaction-integrability interface. -/
 instance (priority := 100) interactionIntegrabilityModel_of_uv_weight
@@ -418,6 +438,19 @@ instance (priority := 100) interactionIntegrabilityModel_of_uv_weight
     InteractionUVModel.interactionCutoff_tendsto_ae (params := params)
   interaction_in_L2 := InteractionUVModel.interaction_in_L2 (params := params)
   exp_interaction_Lp := InteractionWeightModel.exp_interaction_Lp (params := params)
+
+/-- Combine nonempty UV/L² and weight-integrability witnesses into a nonempty
+    full interaction-integrability witness. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty
+    (params : Phi4Params)
+    (huv : Nonempty (InteractionUVModel params))
+    (hweight : Nonempty (InteractionWeightModel params)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases huv with ⟨huvInst⟩
+  rcases hweight with ⟨hweightInst⟩
+  letI : InteractionUVModel params := huvInst
+  letI : InteractionWeightModel params := hweightInst
+  exact ⟨inferInstance⟩
 
 /-! ## The interaction is in Lᵖ -/
 

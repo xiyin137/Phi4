@@ -164,6 +164,11 @@ the local Glimm-Jaffe objective.
   `memLp_exp_neg_of_ae_lower_bound` (and the interaction specialization
   `exp_interaction_Lp_of_ae_lower_bound`) for the Chapter 8 route from
   semiboundedness/tail bounds to `exp(-V_Λ) ∈ Lᵖ`.
+- `Phi4/Interaction.lean` now also includes nonempty witness-composition
+  constructors across UV/weight/full interfaces:
+  `interactionUVModel_nonempty_of_integrability_nonempty`,
+  `interactionWeightModel_nonempty_of_integrability_nonempty`,
+  `interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty`.
 - `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
   lemmas and direct constructors
   (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,
