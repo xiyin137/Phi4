@@ -213,9 +213,22 @@ the local Glimm-Jaffe objective.
   `cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure`,
   `interaction_ae_lower_bound_of_cutoff_seq_shifted_summable_bad_event_measure`,
   `exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure`,
-  and shifted summable-tail model constructors
-  `interactionWeightModel_nonempty_of_cutoff_seq_shifted_summable_bad_event_measure`,
-  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_bad_event_measure`.
+  plus shifted majorant/geometric/exponential tail variants
+  (`cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_bound`,
+   `cutoff_seq_eventually_lower_bound_of_shifted_geometric_bad_event_bound`,
+   `cutoff_seq_eventually_lower_bound_of_shifted_exponential_bad_event_bound`,
+   `exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_bound`,
+   `exp_interaction_Lp_of_cutoff_seq_shifted_geometric_bad_event_bound`,
+   `exp_interaction_Lp_of_cutoff_seq_shifted_exponential_bad_event_bound`)
+  and corresponding shifted model constructors for weight/integrability
+  (`interactionWeightModel_nonempty_of_cutoff_seq_shifted_summable_bad_event_measure`,
+   `interactionWeightModel_nonempty_of_cutoff_seq_shifted_summable_bad_event_bound`,
+   `interactionWeightModel_nonempty_of_cutoff_seq_shifted_geometric_bad_event_bound`,
+   `interactionWeightModel_nonempty_of_cutoff_seq_shifted_exponential_bad_event_bound`,
+   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_bad_event_measure`,
+   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_bad_event_bound`,
+   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_geometric_bad_event_bound`,
+   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_bad_event_bound`).
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
