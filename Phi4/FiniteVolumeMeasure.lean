@@ -202,6 +202,37 @@ theorem
     (params := params) (Λ := Λ) hW
 
 /-- Concrete finite-volume probability theorem from:
+    shifted-index exponential tails of natural Wick sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ℝ≥0∞, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+      (params := params) hwick_bad
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
     1) square-integrable/measurable UV interaction data, and
     2) shifted-index exponential tails of natural Wick sublevel bad events
        `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
@@ -257,18 +288,13 @@ theorem
             Λ.toSet volume))
     (Λ : Rectangle) :
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
-  have hInt :
-      Nonempty (InteractionIntegrabilityModel params) :=
-    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+  rcases interactionUVModel_nonempty_of_sq_integrable_data
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq hwick_bad
-  have hW :
-      Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_integrability_nonempty
-      (params := params) hInt
-  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
-    (params := params) (Λ := Λ) hW
+      hinteraction_meas hinteraction_sq with ⟨huv⟩
+  letI : InteractionUVModel params := huv
+  exact finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params := params) hwick_bad Λ
 
 /-! ## Schwinger functions (correlation functions) -/
 

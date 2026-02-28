@@ -184,7 +184,10 @@ the local Glimm-Jaffe objective.
 - `Phi4/Interaction.lean` now also includes a square-integrable-data route
   driven by shifted-index exponential tails of Wick sublevel bad events:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
-  plus concrete partition-function endpoints
+  plus UV-level and square-integrable concrete partition-function endpoints
+  `partition_function_pos_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `partition_function_integrable_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  and
   `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets` and
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
 - `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
@@ -271,6 +274,7 @@ the local Glimm-Jaffe objective.
   for the finite-volume probability theorem:
   `finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel` and
   `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
   plus
   `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and

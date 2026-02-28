@@ -91,9 +91,12 @@ project objective.
   and
   `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` and `Phi4/FiniteVolumeMeasure.lean` now also include
-  square-integrable-data routes driven by shifted-index exponential tails of
-  Wick sublevel bad events (`{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`),
-  including:
+  shifted-index exponential-tail routes for Wick sublevel bad events
+  (`{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`), including UV-level and
+  square-integrable-data endpoints:
+  `partition_function_pos_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `partition_function_integrable_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+  `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
   `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
