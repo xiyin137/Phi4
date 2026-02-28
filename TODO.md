@@ -595,6 +595,13 @@ the local Glimm-Jaffe objective.
   `reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   so weak-coupling and linear-growth assumptions can be consumed as a single
   constructive model witness.
+- `Phi4/Reconstruction.lean` now also includes square-integrable-data variants
+  of this shifted-geometric reconstruction chain, so the same WP1 bridge no
+  longer requires a pre-installed `InteractionUVModel`:
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
   routes through `WightmanReconstructionModel` (interface-backed theorem) rather
   than taking a raw reconstruction function argument.

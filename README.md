@@ -96,6 +96,13 @@ project objective.
   `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Reconstruction.lean` now also provides square-integrable-data variants
+  of these shifted-geometric WP1 bridges (building `InteractionUVModel`
+  constructively first), including:
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Regularity.lean` now includes concrete constructor chains from explicit
   Wick/EOM/exhaustion/global-bound data to regularity interfaces, including
   `uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform`,
