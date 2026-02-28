@@ -112,7 +112,7 @@ theorem interactionCutoff_lower_bound_of_wick_lower_bound
     (hwick_int :
       IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume)
     (hlower : ∀ x ∈ Λ.toSet, -B ≤ wickPower 4 params.mass κ ω x) :
-    params.coupling * ∫ x in Λ.toSet, (-B : ℝ) ≤
+    params.coupling * ∫ _ in Λ.toSet, (-B : ℝ) ≤
       interactionCutoff params Λ κ ω := by
   have hconst_int : IntegrableOn (fun _ : Spacetime2D => (-B : ℝ)) Λ.toSet volume :=
     integrableOn_const hΛ_finite
@@ -138,7 +138,7 @@ theorem interactionCutoff_lower_bound_of_wick_semibounded
         IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume) :
     ∃ C : ℝ, ∀ ω : FieldConfig2D,
       params.coupling *
-          ∫ x in Λ.toSet, (-(C * (Real.log κ.κ) ^ 2) : ℝ) ≤
+          ∫ _ in Λ.toSet, (-(C * (Real.log κ.κ) ^ 2) : ℝ) ≤
         interactionCutoff params Λ κ ω := by
   rcases wick_fourth_semibounded params.mass params.mass_pos κ hκ with ⟨C, hC⟩
   refine ⟨C, ?_⟩
