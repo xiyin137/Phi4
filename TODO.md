@@ -536,6 +536,9 @@ the local Glimm-Jaffe objective.
   `CorrelationFourPointModel`, and `CorrelationInequalityModel` are
   reconstructed by instance.
 - `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
+- `Phi4/HonestGaps.lean` now also forwards the new UV shifted geometric-moment
+  linear-growth bridge frontier
+  (`gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`).
 - FKG-derived connected two-point nonnegativity statements now explicitly
   require nonnegative test functions (corrected soundness of statement direction).
 - `gap_phi4_linear_growth` in `Phi4/Reconstruction.lean` is no longer an
