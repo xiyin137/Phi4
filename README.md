@@ -101,6 +101,10 @@ project objective.
   `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
   and
   `exp_interaction_Lp_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also includes a global reusable bridge from
+  shifted-cutoff exponential-moment geometric decay to shifted geometric
+  bad-event tails at threshold `0`:
+  `shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` and `Phi4/FiniteVolumeMeasure.lean` now also include
   shifted-index exponential-tail routes for Wick sublevel bad events
   (`{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`), including UV-level and

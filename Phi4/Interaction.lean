@@ -1267,6 +1267,42 @@ theorem shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound
     exact hrepr.le
   exact hbase.trans hrewrite
 
+/-- Global shifted-index geometric bad-event tails from per-volume geometric
+    decay of shifted-index exponential moments of cutoff interactions.
+    This packages the Chernoff + moment-decay bridge at the canonical threshold
+    `B = 0`. -/
+theorem
+    shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+    (params : Phi4Params)
+    (hmom :
+      ∀ Λ : Rectangle, ∃ θ D r : ℝ,
+        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
+    ∀ Λ : Rectangle, ∃ C r : ℝ≥0∞,
+      C ≠ ⊤ ∧ r < 1 ∧
+      (∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < 0} ≤ C * r ^ n) := by
+  intro Λ
+  rcases hmom Λ with ⟨θ, D, r, hθ, hD, hr0, hr1, hInt, hM⟩
+  refine ⟨ENNReal.ofReal (Real.exp 0 * D), ENNReal.ofReal r, ?_, ?_, ?_⟩
+  · simp
+  · exact (ENNReal.ofReal_lt_one).2 hr1
+  · intro n
+    simpa [Real.exp_zero] using
+      (shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound
+        (params := params) (Λ := Λ) (B := 0) (θ := θ) (D := D) (r := r)
+        hθ hD hr0 hInt hM n)
+
 /-- `Lᵖ` integrability from shifted-index summable bad sets with good-set
     cutoff lower bounds. -/
 theorem exp_interaction_Lp_of_cutoff_seq_shifted_bad_set_summable
@@ -2490,10 +2526,14 @@ theorem interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_mom
             Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
             ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
     Nonempty (InteractionWeightModel params) := by
-  refine interactionWeightModel_nonempty_of_data params ?_
-  intro Λ p _hp
-  exact exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    (params := params) (Λ := Λ) (hmom := hmom Λ)
+  refine interactionWeightModel_nonempty_of_cutoff_seq_shifted_geometric_bad_event_bound
+    (params := params) ?_
+  intro Λ
+  rcases
+      shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        (params := params) hmom Λ with ⟨C, r, hC, hr, hbad⟩
+  refine ⟨0, C, r, hC, hr, ?_⟩
+  simpa using hbad
 
 /-- Construct `InteractionWeightModel` from direct per-volume almost-everywhere
     lower bounds on the limiting interaction `interaction params Λ`. -/

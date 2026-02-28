@@ -192,6 +192,10 @@ the local Glimm-Jaffe objective.
   level and via square-integrable UV data:
   `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   `exp_interaction_Lp_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also provides a reusable global bridge from the
+  same shifted-cutoff exponential-moment geometric assumptions to shifted
+  geometric bad-event tails at threshold `0`:
+  `shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` now also includes a square-integrable-data route
   driven by shifted-index exponential tails of Wick sublevel bad events:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
