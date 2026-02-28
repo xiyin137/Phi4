@@ -82,6 +82,14 @@ project objective.
   `interaction_memLp_two_of_sq_integrable`,
   `interactionUVModel_nonempty_of_sq_integrable_data`, and
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data`.
+- `Phi4/Interaction.lean` and `Phi4/FiniteVolumeMeasure.lean` now also include
+  direct square-integrable-data + shifted-cutoff geometric-moment routes to
+  concrete endpoints:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  and
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Reconstruction.lean` now includes direct WP1-style-to-reconstruction
   bridge endpoints using shifted-cutoff geometric moment assumptions, including:
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,

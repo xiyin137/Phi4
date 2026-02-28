@@ -175,6 +175,12 @@ the local Glimm-Jaffe objective.
   `interaction_memLp_two_of_sq_integrable`,
   `interactionUVModel_nonempty_of_sq_integrable_data`,
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data`.
+- `Phi4/Interaction.lean` now also adds a direct square-integrable-data +
+  shifted-cutoff geometric-moment constructor path:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  plus concrete partition-function endpoints
+  `partition_function_pos_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound` and
+  `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` now also provides cutoff-sequence lower-bound transfer
   lemmas and direct constructors
   (`interactionWeightModel_nonempty_of_cutoff_seq_lower_bounds`,
@@ -258,7 +264,9 @@ the local Glimm-Jaffe objective.
 - `Phi4/FiniteVolumeMeasure.lean` now includes nonempty/concrete entrypoints
   for the finite-volume probability theorem:
   `finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel` and
-  `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+  `finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  plus
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `Phi4/Interaction.lean` now also supports shifted canonical-sequence (`κ_{n+1}`)
   lower-bound transfer and constructors, reducing direct `n = 0` obligations:
   `cutoff_seq_eventually_lower_bound_of_succ`,
