@@ -1,19 +1,15 @@
 # Chapter 6: Field Theory -- Axioms, Reconstruction, Free Field, Wick Ordering
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- Scope status:
-  Free-field and Wick infrastructure is largely implemented in code, but OS packaging
-  and reconstruction inputs remain incomplete.
-- Remaining direct blockers:
-  `OSAxioms.lean` has 6 `sorry`s (`phi4SchwingerFunctions`, `phi4_os0`,
-  `phi4_os2_translation`, `phi4_os2_rotation`, `phi4_os3`, `phi4_satisfies_OS`).
-- Reconstruction side:
-  `Reconstruction.lean` has 2 `sorry`s (`phi4_linear_growth`,
-  `phi4_os4_weak_coupling`).
-- Note:
-  line-number references below are historical and may drift; theorem names are the
-  stable lookup key.
+- `OSAxioms.lean` and `Reconstruction.lean` now have no theorem-level `sorry`.
+- Frontier obligations are carried explicitly by interfaces:
+  `SchwingerFunctionModel`, `OSTemperedModel`, `OSEuclideanCovarianceModel`,
+  `OSE3SymmetryModel`, `OSDistributionE2Model`, `OSE4ClusterModel`,
+  `ReconstructionLinearGrowthModel`, and `WightmanReconstructionModel`.
+- `phi4_satisfies_OS` and `phi4_wightman_exists` are theorem-complete wrappers
+  over those interfaces; they are not yet assumption-free constructive closures.
+- Note: theorem names are the stable lookup key; line numbers can drift.
 
 ## 1. Osterwalder-Schrader (Euclidean) Axioms
 
@@ -35,10 +31,10 @@ For φ^4, take p = 4/3.
 **OS4 (Ergodicity).** Time translations T(t) act ergodically on (S'(R^d), dμ).
 
 ### Lean file mapping
-- `phi4_os0` (OSAxioms.lean:56) ← OS0
-- `phi4_os2_translation`, `phi4_os2_rotation` (OSAxioms.lean:84,99) ← OS2
-- `phi4_os3` (OSAxioms.lean:117) ← OS3
-- `phi4_os4_weak_coupling` (Reconstruction.lean:83) ← OS4
+- `phi4_os0` ← OS0
+- `phi4_os2_translation`, `phi4_os2_rotation` ← OS2
+- `phi4_os3` ← OS3
+- `phi4_e4_cluster_of_weak_coupling` / `phi4_os4_weak_coupling` wrappers ← OS4
 
 ## 2. Wightman Axioms
 
@@ -51,8 +47,8 @@ For φ^4, take p = 4/3.
 **W4 (Uniqueness of vacuum).** Ω is the unique (up to scalar) vector invariant under time translations.
 
 ### Lean file mapping
-- `phi4_wightman_exists` (Reconstruction.lean:107) ← W1-W3
-- `phi4_unique_vacuum` (Reconstruction.lean:157) ← W4
+- `phi4_wightman_exists` / `phi4_wightman_exists_of_interfaces` ← W1-W3 wrappers
+- `phi4_unique_vacuum` / `phi4_unique_vacuum_of_interfaces` ← W4 wrapper
 
 ## 3. OS Reconstruction Theorem (Theorem 6.1.3 + 6.1.5)
 
@@ -72,7 +68,10 @@ By spectral theorem, R(t) = e^{-tH} with H ≥ 0 self-adjoint, HΩ = 0.
     ∫ φ_E(x_1,t_1)···φ_E(x_n,t_n) dμ = ⟨Ω, φ_M(it_1,x_1)···φ_M(it_n,x_n) Ω⟩
 
 ### Proof idea for Lean
-The reconstruction theorem is essentially the content of the OSReconstruction dependency. The main work is verifying that our constructed Schwinger functions satisfy OS0-OS3 (done in OSAxioms.lean) and OS4 (done via cluster expansion in Reconstruction.lean).
+The reconstruction theorem is essentially the content of the OSReconstruction
+dependency. In current Phi4 code, the endpoint is exposed through explicit
+interfaces and backend abstraction, with OS and linear-growth obligations passed
+as assumptions rather than hidden placeholders.
 
 ## 4. Free Field Construction (Section 6.2)
 

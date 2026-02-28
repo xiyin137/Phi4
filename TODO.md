@@ -22,6 +22,16 @@ the local Glimm-Jaffe objective.
 - `lake build Phi4` succeeds.
 - `scripts/check_phi4_trust.sh` now also enforces that selected trusted
   interface/bundle endpoints are free of `sorryAx` dependencies (`#print axioms` check).
+- The shifted geometric-moment WP1 bridge now has assumption-explicit cores in
+  both `Interaction` and `Reconstruction`:
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`
+  and
+  `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`,
+  with `[InteractionUVModel]` theorem forms retained as wrappers.
+- The shifted exponential Wick-sublevel branch now also has assumption-explicit
+  cores for interaction, reconstruction-linear-growth/input, and Wightman
+  endpoints (with class-based theorem forms retained only as compatibility
+  wrappers).
 - Upstream blocker triage is now automated via
   `scripts/upstream_blockers_scan.sh` (inventory + file/declaration queues +
   status merge), `scripts/sync_upstream_blockers_todo.sh` (TODO sync), and
@@ -204,6 +214,15 @@ the local Glimm-Jaffe objective.
   and correspondingly routes
   `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
   through the nonnegativity-transfer chain.
+- `Phi4/Interaction.lean` now also includes a globalized nonnegativity endpoint
+  across all rectangles
+  (`interaction_ae_nonneg_all_rectangles_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`)
+  and a direct square-integrable-data constructor for
+  `InteractionWeightModel` from the same shifted geometric-moment input
+  (`interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`).
+  This removes unnecessary detours through full
+  `InteractionIntegrabilityModel` in the square-data partition-function and
+  finite-volume probability endpoints.
 - `Phi4/Interaction.lean` now also includes a square-integrable-data route
   driven by shifted-index exponential tails of Wick sublevel bad events:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
@@ -615,6 +634,22 @@ the local Glimm-Jaffe objective.
   packaging plus concrete generating-functional/product-tensor hypotheses
   (`huniform`, `hcompat`, `hreduce`, `hdense`) via
   `phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0`.
+- `Phi4/Reconstruction.lean` now also exposes an explicit zero-mode
+  normalization frontier split for E0':
+  `gap_phi4_linear_growth_of_zero_mode_normalization` plus reusable zero-mode
+  bridges
+  (`phi4_productTensor_zero_of_compat_of_zero`,
+   `phi4_normalized_order0_of_linear_and_compat_of_zero`,
+   `phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0`);
+  legacy `gap_phi4_linear_growth` now discharges this zeroth-mode input via
+  `infiniteVolumeSchwinger_zero`.
+- The same E0' route now also has an explicit mixed-bound core bridge
+  (`phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0`);
+  `gap_phi4_linear_growth_of_zero_mode_normalization` no longer assumes
+  `InteractionWeightModel` and instead takes this mixed product-tensor bound as
+  explicit frontier data, while `gap_phi4_linear_growth` remains the
+  compatibility wrapper that constructs it from uniform generating-functional
+  bounds under `InteractionWeightModel`.
 - `Phi4/Reconstruction.lean` now includes direct WP1→WP5 bridge endpoints that
   avoid requiring a pre-installed `InteractionWeightModel`:
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
@@ -639,6 +674,10 @@ the local Glimm-Jaffe objective.
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- These square-data reconstruction endpoints now consume the direct
+  square-data `InteractionWeightModel` constructor (from `Interaction.lean`)
+  rather than instantiating an intermediate local `InteractionUVModel`
+  wrapper in their proof bodies.
 - `Phi4/Reconstruction.lean` now also includes UV-level and square-integrable
   reconstruction-chain endpoints from shifted-index exponential Wick sublevel
   bad-event tails:
@@ -653,6 +692,16 @@ the local Glimm-Jaffe objective.
   `phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
+- The UV-level Wick-sublevel reconstruction/linear-growth routes now also use
+  direct
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`
+  in proof bodies (no intermediate
+  `InteractionIntegrabilityModel`-to-`InteractionWeightModel` conversion).
+- Square-data Wick-sublevel endpoints now also use direct
+  `interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`
+  (eliminating local `InteractionUVModel` instantiation in these
+  finite-volume/reconstruction/reconstruction-input/Wightman-interface/partition-function
+  proof bodies).
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
   routes through `WightmanReconstructionModel` (interface-backed theorem) rather
   than taking a raw reconstruction function argument.
@@ -926,32 +975,34 @@ This section is a dependency-risk dashboard only. It is not the primary work
 queue; the primary queue remains the local Glimm-Jaffe `φ⁴₂` OS pipeline above.
 
 <!-- BEGIN_UPSTREAM_BLOCKERS -->
-_Generated: 2026-02-27_
+_Generated: 2026-02-28_
 
 Generated from `.lake/packages/OSReconstruction/OSReconstruction/**/*.lean` by mapping each `sorry` token to its enclosing declaration.
 
 - Total `sorry` tokens: `97`.
-- Unique blocking declarations: `78` across `18` files.
-- Queue status counts: `open=78`, `in_progress=0`, `blocked=0`, `done=0`.
+- Unique blocking declarations: `82` across `18` files.
+- Queue status counts: `open=80`, `in_progress=2`, `blocked=0`, `done=0`.
 - Entries marked `(xN)` contain multiple `sorry` tokens in one declaration.
 
 Top file priorities (score/reverse-importers/declarations/tokens):
-- `Wightman/WightmanAxioms.lean`: `284 / 5 / 2 / 4`
-- `ComplexLieGroups/Connectedness.lean`: `217 / 4 / 1 / 2`
+- `Wightman/WightmanAxioms.lean`: `294 / 5 / 4 / 4`
+- `ComplexLieGroups/Connectedness.lean`: `222 / 4 / 2 / 2`
 - `Wightman/Reconstruction/WickRotation/OSToWightman.lean`: `199 / 1 / 13 / 14`
 - `vNA/ModularAutomorphism.lean`: `173 / 2 / 6 / 8`
 - `SCV/LaplaceSchwartz.lean`: `166 / 2 / 6 / 6`
 - `vNA/ModularTheory.lean`: `166 / 2 / 6 / 6`
 - `vNA/KMS.lean`: `145 / 1 / 8 / 10`
-- `ComplexLieGroups/GeodesicConvexity.lean`: `128 / 2 / 2 / 3`
+- `ComplexLieGroups/GeodesicConvexity.lean`: `133 / 2 / 3 / 3`
 - `SCV/BochnerTubeTheorem.lean`: `122 / 2 / 2 / 2`
 - `SCV/PaleyWiener.lean`: `116 / 1 / 6 / 6`
 
-### `ComplexLieGroups/Connectedness.lean` (priority `217`, reverse importers `4`, declarations `1`, sorry tokens `2`)
-- `theorem:Fin.Perm.adjSwap_induction_right` (x2)
+### `ComplexLieGroups/Connectedness.lean` (priority `222`, reverse importers `4`, declarations `2`, sorry tokens `2`)
+- `theorem:adjacent_sectors_overlap_right`
+- `theorem:iterated_eow_permutation_extension`
 
-### `ComplexLieGroups/GeodesicConvexity.lean` (priority `128`, reverse importers `2`, declarations `2`, sorry tokens `3`)
-- `theorem:geodesic_convexity_forwardCone` (x2)
+### `ComplexLieGroups/GeodesicConvexity.lean` (priority `133`, reverse importers `2`, declarations `3`, sorry tokens `3`)
+- `theorem:cartan_exp_embedding`
+- `theorem:geodesic_convexity_forwardCone`
 - `theorem:polar_decomposition`
 
 ### `SCV/BochnerTubeTheorem.lean` (priority `122`, reverse importers `2`, declarations `2`, sorry tokens `2`)
@@ -975,11 +1026,11 @@ Top file priorities (score/reverse-importers/declarations/tokens):
 - `theorem:paley_wiener_unique`
 
 ### `Wightman/NuclearSpaces/BochnerMinlos.lean` (priority `72`, reverse importers `1`, declarations `2`, sorry tokens `2`)
-- `theorem:bochner_theorem`
-- `theorem:bochner_uniqueness`
+- `theorem:bochner_tightness_and_limit`
+- `theorem:minlos_nuclearity_tightness`
 
 ### `Wightman/Reconstruction/GNSHilbertSpace.lean` (priority `68`, reverse importers `1`, declarations `1`, sorry tokens `3`)
-- `theorem:gnsFieldOp_domain` (x3)
+- `def:gnsQFT` (x3)
 
 ### `Wightman/Reconstruction/Main.lean` (priority `111`, reverse importers `2`, declarations `1`, sorry tokens `1`)
 - `theorem:wightman_uniqueness`
@@ -1021,9 +1072,11 @@ Top file priorities (score/reverse-importers/declarations/tokens):
 - `theorem:polynomial_growth_on_PET`
 - `theorem:schwinger_os_term_eq_wightman_term`
 
-### `Wightman/WightmanAxioms.lean` (priority `284`, reverse importers `5`, declarations `2`, sorry tokens `4`)
-- `def:WightmanDistributionProduct` (x2)
-- `def:wickRotatePoint` (x2)
+### `Wightman/WightmanAxioms.lean` (priority `294`, reverse importers `5`, declarations `4`, sorry tokens `4`)
+- `theorem:pointwise_limit_along_forwardCone_direction`
+- `theorem:schwartz_nuclear_extension`
+- `theorem:spectrum_implies_distributional_bv`
+- `theorem:wightman_separately_continuous`
 
 ### `vNA/KMS.lean` (priority `145`, reverse importers `1`, declarations `8`, sorry tokens `10`)
 - `theorem:high_temperature_limit`

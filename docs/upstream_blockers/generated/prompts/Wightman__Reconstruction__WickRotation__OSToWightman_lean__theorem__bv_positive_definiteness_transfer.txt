@@ -1,0 +1,43 @@
+You are assisting with a focused coding/proof blocker.
+
+Task:
+- Primary goal: Close upstream blocker theorem:bv_positive_definiteness_transfer without placeholders.
+- Current blocker: Declaration currently contains 'sorry' (score=199, status=open, sorry_count=1, reverse_importers=1).
+
+Repository context:
+- Language/toolchain: Lean 4 + Mathlib
+- File(s): /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/Wightman/Reconstruction/WickRotation/OSToWightman.lean
+- Target declaration: theorem bv_positive_definiteness_transfer
+
+Current local context:
+- Relevant hypotheses/locals:
+
+a) Declaration snippet (from Wightman/Reconstruction/WickRotation/OSToWightman.lean:509)
+theorem bv_positive_definiteness_transfer (OS : OsterwalderSchraderAxioms d)
+    (lgc : OSLinearGrowthCondition d OS)
+    (W : (n : ℕ) → SchwartzNPoint d n → ℂ)
+    (hW_eq : ∀ n, W n = bvt_W OS lgc n)
+    (hE2 : ∀ (F : BorchersSequence d),
+      (∀ n, ∀ x : NPointDomain d n, (F.funcs n).toFun x ≠ 0 →
+        x ∈ PositiveTimeRegion d n) →
+      (OSInnerProduct d OS.S F F).re ≥ 0) :
+    ∀ F : BorchersSequence d, (WightmanInnerProduct d W F F).re ≥ 0 := by
+
+b) Build target
+- lake build OSReconstruction.Wightman.Reconstruction.WickRotation.OSToWightman
+
+What already failed:
+1) <ATTEMPT_1 + error/result>
+2) <ATTEMPT_2 + error/result>
+
+Constraints:
+- No axioms/placeholders/weakened theorem statements.
+- Keep existing architecture and imports unless necessary.
+- Prefer reusable infrastructure lemmas over brittle one-off hacks.
+
+Request:
+1) Propose 2-3 concrete solution paths, ranked by feasibility.
+2) For the top path, give exact code-level steps.
+3) Point out likely type mismatches or missing bridge lemmas.
+4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
+5) Keep output actionable and concise.

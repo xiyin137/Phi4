@@ -114,6 +114,22 @@ instance (priority := 100) osE3SymmetryModel_of_osaCoreModel
     OSE3SymmetryModel params where
   e3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params)
 
+/-- OS core package reconstructed from explicit Schwinger/OS0/OS2/E3
+    subinterfaces. -/
+instance (priority := 100) osaCoreModel_of_submodels
+    (params : Phi4Params)
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    [OSEuclideanCovarianceModel params]
+    [OSE3SymmetryModel params] :
+    OSAxiomCoreModel params where
+  toSchwingerFunctionModel := inferInstance
+  os0 := OSTemperedModel.os0 (params := params)
+  schwinger_linear := OSTemperedModel.schwinger_linear (params := params)
+  os2_translation := OSEuclideanCovarianceModel.os2_translation (params := params)
+  os2_rotation := OSEuclideanCovarianceModel.os2_rotation (params := params)
+  e3_symmetric := OSE3SymmetryModel.e3_symmetric (params := params)
+
 /-- Weak-coupling E4 cluster input, parameterized over Schwinger packaging only. -/
 class OSE4ClusterModel (params : Phi4Params)
     [SchwingerFunctionModel params] where
@@ -324,10 +340,7 @@ theorem phi4_e4_cluster_of_weak_coupling (params : Phi4Params)
     are provided and weak coupling is available, the packaged Schwinger functions
     satisfy OS0-OS4. -/
 theorem phi4_satisfies_OS_of_interfaces (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    [OSEuclideanCovarianceModel params]
-    [OSE3SymmetryModel params]
+    [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
@@ -535,34 +548,16 @@ theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     params.coupling < os4WeakCouplingThreshold params := hsmall
 
-/-- **Theorem 12.1.1 (Glimm-Jaffe)**: Under weak coupling, the φ⁴₂ generating
-    functional S{f} satisfies the Euclidean axioms OS0-OS4.
-
-    Current status: this endpoint is exposed honestly through explicit
-    theorem-level frontier gaps (`gap_...`) rather than hidden model assumptions. -/
+/-- **Theorem 12.1.1 (Glimm-Jaffe), interface form**: under weak coupling and
+    explicit OS subinterfaces, the φ⁴₂ generating functional satisfies
+    Euclidean axioms OS0-OS4. -/
 theorem phi4_satisfies_OS (params : Phi4Params)
-    (core : OSAxiomCoreModel params)
+    [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
     [OSE4ClusterModel params]
     (hsmall : params.coupling < os4WeakCouplingThreshold params) :
     ∃ OS : OsterwalderSchraderAxioms 1,
-      OS.S = @phi4SchwingerFunctions params core.toSchwingerFunctionModel := by
-  letI : OSAxiomCoreModel params := core
-  have hsmall' : params.coupling < OSE4ClusterModel.weak_coupling_threshold (params := params) := by
-    simpa [os4WeakCouplingThreshold] using hsmall
-  rcases phi4_satisfies_OS_of_explicit_data params
-      (S := SchwingerFunctionModel.schwingerFunctions (params := params))
-      (hos0 := OSAxiomCoreModel.os0 (params := params))
-      (hos0_linear := OSAxiomCoreModel.schwinger_linear (params := params))
-      (hos2_translation := OSAxiomCoreModel.os2_translation (params := params))
-      (hos2_rotation := OSAxiomCoreModel.os2_rotation (params := params))
-      (he3_symmetric := OSAxiomCoreModel.e3_symmetric (params := params))
-      (he2 := OSDistributionE2Model.e2_reflection_positive (params := params))
-      (threshold := OSE4ClusterModel.weak_coupling_threshold (params := params))
-      (hthreshold_pos := OSE4ClusterModel.weak_coupling_threshold_pos (params := params))
-      (hcluster := OSE4ClusterModel.e4_cluster_of_weak_coupling (params := params))
-      (hsmall := hsmall') with ⟨OS, hOS⟩
-  refine ⟨OS, ?_⟩
-  simpa [phi4SchwingerFunctions] using hOS
+      OS.S = phi4SchwingerFunctions params := by
+  exact phi4_satisfies_OS_of_interfaces params hsmall
 
 end

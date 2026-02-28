@@ -56,3 +56,36 @@ Request:
 3) Point out likely type mismatches or missing bridge lemmas.
 4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
 5) Keep output actionable and concise.
+
+## Theorem Clarity Policy
+
+- Avoid wrappers by default. Prefer direct, mathematically meaningful theorem
+  statements over interface-forwarding aliases.
+- Simplification lemmas are encouraged when they:
+  1) remove repeated proof blocks,
+  2) control recursive-definition unfolding, or
+  3) provide reusable technical bridges with nontrivial proof content.
+- If a wrapper is temporarily necessary for compatibility, it must:
+  1) delegate to an assumption-explicit core theorem,
+  2) be clearly marked as a compatibility shim, and
+  3) be scheduled for removal once downstream callers migrate.
+- Wrapper-for-wrapper layering is disallowed.
+
+## No Assumption Smuggling Policy
+
+- Do not hide substantive hypotheses behind typeclass inference or broad
+  bundles when the theorem can state them explicitly.
+- Every frontier theorem should expose the real mathematical inputs needed for
+  the result (for example: measurability, convergence, bounds), not only a
+  convenient model-class façade.
+- Refactors that increase abstraction are acceptable only when they reduce, not
+  increase, hidden assumptions.
+- “No wrapper” and “no assumption smuggling” take precedence over local API
+  convenience.
+
+## Definition Fidelity Policy
+
+- A simplified definition is a wrong definition.
+- Do not replace mathematically correct target definitions with easier surrogates.
+- If a weaker notion is needed for staging, introduce it as an explicitly named
+  intermediate/interface artifact, never as the canonical definition.

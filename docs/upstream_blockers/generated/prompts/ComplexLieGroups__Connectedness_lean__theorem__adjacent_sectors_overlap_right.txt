@@ -1,0 +1,38 @@
+You are assisting with a focused coding/proof blocker.
+
+Task:
+- Primary goal: Close upstream blocker theorem:adjacent_sectors_overlap_right without placeholders.
+- Current blocker: Declaration currently contains 'sorry' (score=222, status=in_progress, sorry_count=1, reverse_importers=4).
+
+Repository context:
+- Language/toolchain: Lean 4 + Mathlib
+- File(s): /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/ComplexLieGroups/Connectedness.lean
+- Target declaration: theorem adjacent_sectors_overlap_right
+
+Current local context:
+- Relevant hypotheses/locals:
+
+a) Declaration snippet (from ComplexLieGroups/Connectedness.lean:2493)
+private theorem adjacent_sectors_overlap_right [NeZero d] (π : Equiv.Perm (Fin n))
+    (i : Fin n) (hi : i.val + 1 < n) :
+    (lorentzPermSector (d := d) (n := n) π ∩
+      lorentzPermSector (d := d) (n := n) (π * Equiv.swap i ⟨i.val + 1, hi⟩)).Nonempty := by
+
+b) Build target
+- lake build OSReconstruction.ComplexLieGroups.Connectedness
+
+What already failed:
+1) <ATTEMPT_1 + error/result>
+2) <ATTEMPT_2 + error/result>
+
+Constraints:
+- No axioms/placeholders/weakened theorem statements.
+- Keep existing architecture and imports unless necessary.
+- Prefer reusable infrastructure lemmas over brittle one-off hacks.
+
+Request:
+1) Propose 2-3 concrete solution paths, ranked by feasibility.
+2) For the top path, give exact code-level steps.
+3) Point out likely type mismatches or missing bridge lemmas.
+4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
+5) Keep output actionable and concise.

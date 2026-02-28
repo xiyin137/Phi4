@@ -1,18 +1,17 @@
 # Chapters 18-19: Cluster Expansion and Reconstruction
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- `Reconstruction.lean` currently has 2 `sorry`s:
-  `phi4_linear_growth` and `phi4_os4_weak_coupling`.
-- Consequence:
-  reconstruction-facing theorems that rely on these statements type-check, but are
-  not yet fully theorem-complete end-to-end.
-- Strategic reading:
-  this chapter remains downstream of unresolved Chapter 12 (OS1 growth) and
-  Chapter 18 cluster-expansion infrastructure.
-- Note:
-  line-number references below are historical and may drift; theorem names are the
-  stable lookup key.
+- `Reconstruction.lean` now has no theorem-level `sorry`.
+- Reconstruction assumptions are explicit interfaces:
+  `ReconstructionLinearGrowthModel`,
+  `ReconstructionWeakCouplingModel`,
+  `WightmanReconstructionModel`, and the optional
+  `UniformWeakCouplingDecayModel`.
+- Endpoints such as `phi4_wightman_exists` are theorem-complete wrappers over
+  these interfaces; full constructive closure still depends on grounding
+  Chapter-18/19 assumptions (and audited upstream reconstruction backend usage).
+- Note: theorem names are the stable lookup key; line numbers can drift.
 
 ## 1. Cluster Expansion for Weak Coupling (Section 18.2)
 

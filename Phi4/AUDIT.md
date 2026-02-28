@@ -7,11 +7,37 @@ Update (2026-02-27):
 - Trusted interface/bundle endpoints remain `sorryAx`-free.
 - The OS→Wightman upstream adapter is isolated in `Phi4/ReconstructionUpstream.lean`.
 
+Update (2026-02-28):
+- Re-audited with current tree state:
+  - Lean files under `Phi4/`: `118` total (`23` core, `95` scratch).
+  - `class ...Model` declarations in `Phi4/**/*.lean`: `58` (previous `38` count in this file is stale).
+  - Core theorem-level `sorry`: `0`; scratch theorem-level `sorry`: `0`; explicit `axiom`: `0`; `def/abbrev := by sorry`: `0`.
+- `lake build Phi4` succeeds; `scripts/check_phi4_trust.sh` succeeds.
+- Upstream blocker inventory moved to `82` unique declarations (`open=80`, `in_progress=2`); the TODO inventory section has been resynced.
+- Regression fix: `test/task2_k4_iv_existence.lean` was converted from duplicate
+  theorem redeclarations to compile-checked `example` usage of production theorems
+  (`infinite_volume_schwinger_exists_four_of_models`,
+  `infinite_volume_schwinger_exists_four_of_lattice_models`), restoring test-file
+  compile.
+- Trust-boundary fix: `Phi4.lean` no longer imports `Phi4/ReconstructionUpstream.lean`;
+  upstream `sorryAx`-dependent reconstruction is now opt-in via explicit import.
+
+## Canonical Goal And Architecture (Authoritative)
+
+This audit is scoped to the Glimm-Jaffe `φ⁴₂` objective:
+
+1. establish infinite-volume Schwinger data,
+2. package OS axioms (OS0-OS4, weak-coupling OS4 explicit),
+3. reconstruct Wightman theory.
+
+Findings below are interpreted against that architecture. Upstream dependency
+audits are support checks and do not change the local project objective.
+
 ## Scope
 
 - Audited all Lean files under `Phi4/`.
-- Core modules: `21` files (excluding `Phi4/Scratch/`).
-- Scratch modules: `93` files.
+- Core modules: `23` files (excluding `Phi4/Scratch/`).
+- Scratch modules: `95` files.
 
 Policy basis (from `agent.md`):
 1. no `axiom`,
@@ -25,7 +51,7 @@ Policy basis (from `agent.md`):
 - `def/abbrev := by sorry` in `Phi4/**/*.lean`: **0**
 - theorem-level `sorry` count (core): **0**
 - theorem-level `sorry` count (scratch): **0**
-- `class ...Model` declarations in `Phi4/**/*.lean`: **38**
+- `class ...Model` declarations in `Phi4/**/*.lean`: **58**
 
 ## Core Theorem-Level Gap Inventory
 

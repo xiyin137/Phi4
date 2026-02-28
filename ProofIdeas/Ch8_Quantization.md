@@ -1,20 +1,17 @@
 # Chapter 8: Quantization -- Feynman Graphs, Wick Products, e^{-V} in L^p
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- `FeynmanGraphs.lean`:
-  4 `sorry`s remain (`num_pairings`, `wicks_theorem_even`,
-  `feynman_graph_expansion`, `localized_graph_bound`).
-- `Interaction.lean`:
-  4 `sorry`s remain (`interactionCutoff_in_L2`, `interactionCutoff_converges_L2`,
-  `interaction_in_L2`, `exp_interaction_Lp`).
-- `FiniteVolumeMeasure.lean`:
-  1 `sorry` remains (`schwingerTwo_le_free`).
-- Closed and stable in this chapter layer:
-  semibounded quartic Wick estimate (`wick_fourth_semibounded`) and its explicit lower bound.
-- Note:
-  line-number references below are historical and may drift; theorem names are the
-  stable lookup key.
+- `FeynmanGraphs.lean`, `Interaction.lean`, and `FiniteVolumeMeasure.lean` now
+  have no theorem-level `sorry`.
+- Chapter-8 proof debt is encoded as interfaces:
+  `PairingEnumerationModel`, `GaussianWickExpansionModel`,
+  `FeynmanGraphEstimateModel`, `InteractionUVModel`,
+  `InteractionWeightModel`, and `FiniteVolumeComparisonModel`.
+- Closed and stable in this layer:
+  semibounded quartic Wick estimates (`wick_fourth_semibounded` and explicit
+  lower-bound variants), plus interface-level wrappers for `exp_interaction_Lp`.
+- Note: theorem names are the stable lookup key; line numbers can drift.
 
 ## 1. Feynman Graphs (Section 8.2)
 

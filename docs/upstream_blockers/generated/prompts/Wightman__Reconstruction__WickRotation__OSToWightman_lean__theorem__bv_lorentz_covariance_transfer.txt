@@ -1,0 +1,57 @@
+You are assisting with a focused coding/proof blocker.
+
+Task:
+- Primary goal: Close upstream blocker theorem:bv_lorentz_covariance_transfer without placeholders.
+- Current blocker: Declaration currently contains 'sorry' (score=199, status=open, sorry_count=1, reverse_importers=1).
+
+Repository context:
+- Language/toolchain: Lean 4 + Mathlib
+- File(s): /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/Wightman/Reconstruction/WickRotation/OSToWightman.lean
+- Target declaration: theorem bv_lorentz_covariance_transfer
+
+Current local context:
+- Relevant hypotheses/locals:
+
+a) Declaration snippet (from Wightman/Reconstruction/WickRotation/OSToWightman.lean:448)
+theorem bv_lorentz_covariance_transfer (OS : OsterwalderSchraderAxioms d)
+    (lgc : OSLinearGrowthCondition d OS) (n : ℕ)
+    (W_n : SchwartzNPoint d n → ℂ)
+    (F_n : (Fin n → Fin (d + 1) → ℂ) → ℂ)
+    (hF_hol : DifferentiableOn ℂ F_n (ForwardTube d n))
+    (hBV : ∀ (f : SchwartzNPoint d n) (η : Fin n → Fin (d + 1) → ℝ),
+      InForwardCone d n η →
+      Filter.Tendsto
+        (fun ε : ℝ => ∫ x : NPointDomain d n,
+          F_n (fun k μ => ↑(x k μ) + ε * ↑(η k μ) * Complex.I) * (f x))
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (W_n f)))
+    (hEuclid : ∀ (f : SchwartzNPoint d n),
+      OS.S n f = ∫ x : NPointDomain d n,
+        F_n (fun k => wickRotatePoint (x k)) * (f x))
+    (hE1_rot : ∀ (R : Matrix (Fin (d + 1)) (Fin (d + 1)) ℝ),
+      R.transpose * R = 1 → R.det = 1 →
+      ∀ (f g : SchwartzNPoint d n),
+      (∀ x, g.toFun x = f.toFun (fun i => R.mulVec (x i))) →
+      OS.S n f = OS.S n g) :
+    ∀ (Λ : LorentzGroup d) (f g : SchwartzNPoint d n),
+      (∀ x, g.toFun x = f.toFun (fun i => Matrix.mulVec Λ⁻¹.val (x i))) →
+      W_n f = W_n g := by
+
+b) Build target
+- lake build OSReconstruction.Wightman.Reconstruction.WickRotation.OSToWightman
+
+What already failed:
+1) <ATTEMPT_1 + error/result>
+2) <ATTEMPT_2 + error/result>
+
+Constraints:
+- No axioms/placeholders/weakened theorem statements.
+- Keep existing architecture and imports unless necessary.
+- Prefer reusable infrastructure lemmas over brittle one-off hacks.
+
+Request:
+1) Propose 2-3 concrete solution paths, ranked by feasibility.
+2) For the top path, give exact code-level steps.
+3) Point out likely type mismatches or missing bridge lemmas.
+4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
+5) Keep output actionable and concise.

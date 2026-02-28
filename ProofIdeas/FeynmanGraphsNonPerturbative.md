@@ -1,14 +1,14 @@
 # The Non-Perturbative Role of Feynman Graphs in phi^4_2
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- This document remains conceptually accurate and still matches the intended
+- This document remains conceptually accurate and aligned with the intended
   non-perturbative architecture.
-- Current formal blockers directly tied to this note:
-  `localized_graph_bound` (`FeynmanGraphs.lean`) and `exp_interaction_Lp`
-  (`Interaction.lean`) are still open.
-- Use this note as strategy context; current executable progress tracking lives in
-  `ProofIdeas/Overview.md` and the chapter-specific status blocks.
+- In current code, chapter-8 graph/integrability obligations are represented as
+  explicit interfaces (`FeynmanGraphEstimateModel`, `InteractionUVModel`,
+  `InteractionWeightModel`) rather than local theorem-level `sorry`.
+- Use this note as strategy context; executable progress tracking lives in
+  `ProofIdeas/Overview.md` and chapter status blocks.
 
 ## Key Conceptual Point
 

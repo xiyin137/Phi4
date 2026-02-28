@@ -1,0 +1,85 @@
+You are assisting with a focused coding/proof blocker.
+
+Task:
+- Primary goal: Close upstream blocker def:wickRotatePoint without placeholders.
+- Current blocker: Declaration currently contains 'sorry' (score=287, status=open, sorry_count=2, reverse_importers=5).
+
+Repository context:
+- Language/toolchain: Lean 4 + Mathlib
+- File(s): /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/Wightman/WightmanAxioms.lean
+- Target declaration: def wickRotatePoint
+
+Current local context:
+- Relevant hypotheses/locals:
+
+a) Declaration snippet (from Wightman/WightmanAxioms.lean:437)
+def wickRotatePoint {d : ℕ} (x : Fin (d + 1) → ℝ) : Fin (d + 1) → ℂ :=
+  fun μ => if μ = 0 then Complex.I * (x 0 : ℂ) else (x μ : ℂ)
+
+/-- The Wightman functions have analytic continuation to the forward tube.
+
+    The n-point Wightman function W_n(x₁,...,xₙ), initially defined as a
+    distribution on real spacetime points, extends to a holomorphic function
+    on the forward tube T_n.
+
+    By Lorentz covariance, it further extends to the extended forward tube T_n^{ext}.
+    The edge-of-the-wedge theorem (Bargmann-Hall-Wightman) shows this extension
+    is single-valued.
+
+    We define `analyticContinuation` on the full ambient space ℂ^{n(d+1)} and
+    constrain holomorphicity to the forward tube via `DifferentiableOn`. -/
+structure WightmanAnalyticity (qft : WightmanQFT d) where
+  /-- The analytic continuation of the n-point function, defined on all of ℂ^{n(d+1)}.
+      Only meaningful on the forward tube; values outside are auxiliary. -/
+  analyticContinuation : (n : ℕ) → (Fin n → Fin (d + 1) → ℂ) → ℂ
+  /-- The continuation is holomorphic on the forward tube -/
+  isHolomorphic : ∀ n : ℕ, DifferentiableOn ℂ (analyticContinuation n) (ForwardTube d n)
+
+/-- **Spectrum condition implies Fourier-Laplace distributional boundary values.**
+
+    If a Wightman QFT has an analytic continuation to the forward tube (holomorphic
+    on ForwardTube d n), and the QFT satisfies the spectrum condition, then the analytic
+    continuation has tempered distributional boundary values.
+
+    The boundary value distribution T is determined by the Wightman n-point function:
+    the spectrum condition constrains the Fourier transform of W_n to be supported in
+    the dual cone V_+^*, which is exactly the condition for W_n to be the distributional
+    boundary value of its Fourier-Laplace transform (the analytic continuation).
+
+    This is the fundamental connection between:
+    (a) The Wightman distribution W_n (tempered, defined via inner products)
+    (b) The analytic continuation (holomorphic on the forward tube)
+    (c) The Fourier-Laplace representation (connecting (a) and (b))
+
+    Ref: Streater-Wightman, Theorem 2-6; Vladimirov 25-26 -/
+private theorem spectrum_implies_distributional_bv {d n : ℕ} [NeZero d]
+    {F : (Fin n → Fin (d + 1) → ℂ) → ℂ}
+    (hF : DifferentiableOn ℂ F (ForwardTube d n))
+    (T : SchwartzNPointSpace d n → ℂ)
+    (hT_cont : Continuous T) :
+    ∀ (f : SchwartzNPointSpace d n) (η : Fin n → Fin (d + 1) → ℝ),
+      InForwardCone d n η →
+      Filter.Tendsto
+        (fun ε : ℝ => ∫ x : NPointSpacetime d n,
+          F (fun k μ => ↑(x k μ) + ε * ↑(η k μ) * Complex.I) * (f x))
+        (nhdsWithin 0 (Set.Ioi 0))
+        (nhds (T f)) := by
+
+b) Build target
+- lake build OSReconstruction.Wightman.WightmanAxioms
+
+What already failed:
+1) <ATTEMPT_1 + error/result>
+2) <ATTEMPT_2 + error/result>
+
+Constraints:
+- No axioms/placeholders/weakened theorem statements.
+- Keep existing architecture and imports unless necessary.
+- Prefer reusable infrastructure lemmas over brittle one-off hacks.
+
+Request:
+1) Propose 2-3 concrete solution paths, ranked by feasibility.
+2) For the top path, give exact code-level steps.
+3) Point out likely type mismatches or missing bridge lemmas.
+4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
+5) Keep output actionable and concise.

@@ -3,6 +3,12 @@
 ## Reference
 Glimm & Jaffe, *Quantum Physics: A Functional Integral Point of View* (2nd ed.)
 
+## Canonical Goal (Authoritative)
+
+This document tracks one target only: formalizing the Glimm-Jaffe construction
+of `φ⁴₂` through OS axioms and then to Wightman reconstruction. All chapter
+plans below are supporting steps of that single pipeline.
+
 ## Proof Architecture
 
 The construction of the phi^4_2 quantum field theory proceeds through these stages:
@@ -19,20 +25,17 @@ The construction of the phi^4_2 quantum field theory proceeds through these stag
 10. **Cluster Expansion** (GJ Ch 18): OS4 (ergodicity/clustering) for weak coupling
 11. **Reconstruction** (GJ Ch 19): OS → Wightman via analytic continuation
 
-## Sorry Count by File (current snapshot: 2026-02-25)
+## Status Snapshot (2026-02-27)
 
-| File | Sorries | Primary GJ Chapters |
-|------|---------|---------------------|
-| FeynmanGraphs.lean | 4 | 8.2-8.5 |
-| FiniteVolumeMeasure.lean | 1 | 8.6, 10.2, 11.2 |
-| InfiniteVolumeLimit.lean | 5 | 11.2 |
-| Interaction.lean | 4 | 8.5, 8.6 |
-| MultipleReflections.lean | 2 | 10.5, 10.6 |
-| OSAxioms.lean | 6 | 10.4, 12.1 |
-| Reconstruction.lean | 2 | 12.5, 18, 19 |
-| ReflectionPositivity.lean | 3 | 7.10, 10.4 |
-| Regularity.lean | 5 | 12.1-12.5 |
-| **Total** | **32** | |
+- Core `Phi4/**/*.lean` has no theorem-level `sorry`, no explicit `axiom`, and
+  no `def/abbrev := by sorry` placeholders.
+- The main frontier is now explicit interface debt (`...Model` assumptions), not
+  hidden placeholders.
+- Current architecture intentionally isolates assumptions into focused
+  subinterfaces (interaction, infinite-volume, regularity, OS, reconstruction)
+  so each major analytic obligation can be grounded independently.
+- Upstream `OSReconstruction` still contains its own `sorry` declarations; the
+  trusted Phi4 path stays backend-abstract via `WightmanReconstructionModel`.
 
 ## Current Development Constraints (project policy)
 
@@ -41,17 +44,16 @@ The construction of the phi^4_2 quantum field theory proceeds through these stag
 3. For major proofs: prototype in `Phi4/Scratch/` first, compile, then port to working files.
 4. Prioritize mathematically sound statements aligned with the OS/Wightman end goal.
 
-## Critical Path (highest-priority sorries)
+## Critical Path (highest-priority interface debt)
 
-These sorries block the most downstream results right now:
+These assumptions are the deepest remaining obligations:
 
-1. **`exp_interaction_Lp`** (Interaction.lean) -- GJ 8.6.2: central L^p estimate, feeds finite-volume construction.
-2. **`chessboard_estimate`** (MultipleReflections.lean) -- GJ 10.5.5: key uniform-bound engine.
-3. **`schwinger_uniform_bound` / `schwinger_uniformly_bounded`** (MultipleReflections + InfiniteVolumeLimit) -- bridge to infinite-volume existence.
-4. **`infiniteVolumeMeasure`** and moment identification (InfiniteVolumeLimit.lean) -- core object for OS axioms.
-5. **`generating_functional_bound`** (Regularity.lean) -- OS1 regularity.
-6. **`phi4_os0/os2/os3` + packaging in `phi4_satisfies_OS`** (OSAxioms.lean) -- OS theorem interface.
-7. **`phi4_os4_weak_coupling`** (Reconstruction.lean) -- clustering / weak-coupling input for full reconstruction.
+1. **Interaction integrability grounding** (`InteractionUVModel`, `InteractionWeightModel`) for Chapter 8 finite-volume control.
+2. **Reflection positivity + chessboard grounding** (`Free/Dirichlet/InteractingReflectionPositivityModel`, `MultipleReflectionModel`).
+3. **Infinite-volume assembly grounding** (`SchwingerUniformBoundModel`, `SchwingerLimitModel`, `InfiniteVolumeMeasureModel`, `InfiniteVolumeMomentModel`).
+4. **Regularity grounding** (`WickCubicConvergenceModel`, `EuclideanEquationModel`, `GeneratingFunctionalBoundModel`, `NonlocalPhi4BoundModel`, `UniformGeneratingFunctionalBoundModel`).
+5. **OS packaging grounding** (`OSTemperedModel`, `OSEuclideanCovarianceModel`, `OSE3SymmetryModel`, `OSDistributionE2Model`, `OSE4ClusterModel`).
+6. **Reconstruction backend grounding** (`ReconstructionLinearGrowthModel`, `WightmanReconstructionModel`), with upstream dependency audits for trusted closure.
 
 ## Detailed Notes
 

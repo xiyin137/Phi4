@@ -286,6 +286,27 @@ theorem phi4_productTensor_zero_of_compat_of_moment
             infiniteVolumeSchwinger_zero_of_moment (params := params) f
           simp [hzero]
 
+/-- Zero-point normalization on product tensors from compatibility with
+    `infiniteVolumeSchwinger`, assuming explicit zeroth-mode normalization
+    for `infiniteVolumeSchwinger`. -/
+theorem phi4_productTensor_zero_of_compat_of_zero
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [SchwingerFunctionModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1)
+    (f : Fin 0 → TestFun2D) :
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f) = 1 := by
+  calc
+    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f)
+        = (infiniteVolumeSchwinger params 0 f : ℂ) := by
+          simpa using hcompat 0 f
+    _ = 1 := by
+          simpa using hzero f
+
 /-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
     from a global finite-volume uniform generating-functional estimate, plus an
     explicit compatibility bridge to `infiniteVolumeSchwinger`. -/
@@ -647,6 +668,178 @@ theorem phi4_normalized_order0_of_linear_and_compat_of_moment
             exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
     _ = g 0 := by simp [hone]
 
+/-- Explicit-zero-mode variant of order-zero normalization from:
+    1) core linearity of `phi4SchwingerFunctions params 0`,
+    2) compatibility with `infiniteVolumeSchwinger` on product tensors, and
+    3) explicit normalization `infiniteVolumeSchwinger params 0 f = 1`. -/
+theorem phi4_normalized_order0_of_linear_and_compat_of_zero
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1) :
+    ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 := by
+  have hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0) :=
+    phi4_os0_linear params 0
+  intro g
+  let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
+  have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
+    phi4_productTensor_zero_of_compat_of_zero params hcompat hzero f0
+  have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
+    ext x
+    have hx : x = 0 := Subsingleton.elim x 0
+    subst hx
+    simp [schwartzProductTensorFromTestFamily]
+  calc
+    phi4SchwingerFunctions params 0 g
+        = phi4SchwingerFunctions params 0 ((g 0) • schwartzProductTensorFromTestFamily f0) := by
+            exact congrArg (phi4SchwingerFunctions params 0) hdecomp
+    _ = (g 0) * phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) := by
+            exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
+    _ = g 0 := by simp [hone]
+
+/-- Construct φ⁴ linear-growth witness data from:
+    1) explicit mixed product-tensor bounds,
+    2) explicit product-tensor approximation of general Schwartz `n`-point tests
+       for `n > 0`,
+    3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`,
+    with normalization provided explicitly. -/
+theorem phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    (OS : OsterwalderSchraderAxioms 1)
+    (hS : OS.S = phi4SchwingerFunctions params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (happrox :
+      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
+        ∃ u : ℕ → Fin n → TestFun2D,
+          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
+            Filter.atTop (nhds g))
+    (hnormalized :
+      ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0) :
+    ∃ OS' : OsterwalderSchraderAxioms 1,
+      OS'.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS') := by
+  let alpha' : ℝ := max alpha 1
+  have halpha' : 0 < alpha' := by
+    exact lt_of_lt_of_le zero_lt_one (le_max_right alpha 1)
+  have halpha'_one : 1 ≤ alpha' := by
+    exact le_max_right alpha 1
+  have hreduce' :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f) := by
+    intro c n hn f
+    let C : ℝ :=
+      beta ^ n * (n.factorial : ℝ) ^ gamma *
+        SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f)
+    have hC_nonneg : 0 ≤ C := by
+      dsimp [C]
+      positivity
+    have hboundC : alpha * C ≤ alpha' * C := by
+      simpa [alpha', C, mul_assoc, mul_left_comm, mul_comm] using
+        (mul_le_mul_of_nonneg_right (le_max_left alpha 1) hC_nonneg)
+    have hboundC' :
+        alpha * C ≤
+          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f) := by
+      simpa [C, mul_assoc, mul_left_comm, mul_comm] using hboundC
+    exact (show
+      ∑ i : Fin n, (Nat.factorial n : ℝ) *
+          (Real.exp (c * normFunctional (f i)) +
+            Real.exp (c * normFunctional (-(f i)))) ≤ alpha * C from by
+        simpa [C, mul_assoc, mul_left_comm, mul_comm] using hreduce c n hn f).trans hboundC'
+  have hprod :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f) := by
+    intro n hn f
+    rcases hmixed n hn f with ⟨c, hc⟩
+    exact hc.trans (hreduce' c n hn f)
+  have hzero := phi4_zero_linear_growth_of_normalized_order0
+    params alpha' beta gamma halpha'_one hnormalized
+  exact phi4_linear_growth_of_productTensor_approx_and_zero
+    params OS hS 0 alpha' beta gamma halpha' hbeta hprod happrox hzero
+
+/-- Construct φ⁴ linear-growth witness data from:
+    1) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
+    2) explicit product-tensor approximation of general Schwartz `n`-point tests
+       for `n > 0`,
+    3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`,
+    with normalization provided explicitly. -/
+theorem phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0
+    (params : Phi4Params)
+    [InteractionWeightModel params]
+    [SchwingerLimitModel params]
+    [SchwingerFunctionModel params]
+    [OSTemperedModel params]
+    (OS : OsterwalderSchraderAxioms 1)
+    (hS : OS.S = phi4SchwingerFunctions params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (happrox :
+      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
+        ∃ u : ℕ → Fin n → TestFun2D,
+          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
+            Filter.atTop (nhds g))
+    (hnormalized :
+      ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0) :
+    ∃ OS' : OsterwalderSchraderAxioms 1,
+      OS'.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS') := by
+  have hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) := by
+    intro n hn f
+    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
+      params huniform hcompat n hn f
+  exact phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0
+    params OS hS alpha beta gamma hbeta hmixed hreduce happrox hnormalized
+
 /-- Construct φ⁴ linear-growth witness data from:
     1) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
     2) explicit product-tensor approximation of general Schwartz `n`-point tests
@@ -684,49 +877,13 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_orde
     ∃ OS' : OsterwalderSchraderAxioms 1,
       OS'.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS') := by
+  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
+    intro f
+    exact infiniteVolumeSchwinger_zero (params := params) f
   have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
-    phi4_normalized_order0_of_linear_and_compat params hcompat
-  let alpha' : ℝ := max alpha 1
-  have halpha' : 0 < alpha' := by
-    exact lt_of_lt_of_le zero_lt_one (le_max_right alpha 1)
-  have halpha'_one : 1 ≤ alpha' := by
-    exact le_max_right alpha 1
-  have hreduce' :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f) := by
-    intro c n hn f
-    let C : ℝ :=
-      beta ^ n * (n.factorial : ℝ) ^ gamma *
-        SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f)
-    have hC_nonneg : 0 ≤ C := by
-      dsimp [C]
-      positivity
-    have hboundC : alpha * C ≤ alpha' * C := by
-      simpa [alpha', C, mul_assoc, mul_left_comm, mul_comm] using
-        (mul_le_mul_of_nonneg_right (le_max_left alpha 1) hC_nonneg)
-    have hboundC' :
-        alpha * C ≤
-          alpha' * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0 (schwartzProductTensorFromTestFamily f) := by
-      simpa [C, mul_assoc, mul_left_comm, mul_comm] using hboundC
-    exact (show
-      ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) ≤ alpha * C from by
-        simpa [C, mul_assoc, mul_left_comm, mul_comm] using hreduce c n hn f).trans hboundC'
-  have hzero := phi4_zero_linear_growth_of_normalized_order0
-    params alpha' beta gamma halpha'_one hnormalized
-  have hprod := phi4_productTensor_linear_growth_of_uniform_generating_bound
-    params 0 alpha' beta gamma
-    huniform
-    hcompat hreduce'
-  exact phi4_linear_growth_of_productTensor_approx_and_zero
-    params OS hS 0 alpha' beta gamma halpha' hbeta hprod happrox hzero
+    phi4_normalized_order0_of_linear_and_compat_of_zero params hcompat hzero
+  exact phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0
+    params OS hS alpha beta gamma hbeta huniform hcompat hreduce happrox hnormalized
 
 /-- Sequence approximation by product tensors from dense image of the
     product-tensor map at fixed positive order. -/
@@ -870,6 +1027,52 @@ theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
   exact reconstructionLinearGrowthModel_nonempty_of_explicit_bound params OS hS
     sobolev_index alpha beta gamma halpha hbeta hgrowth
 
+/-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions, with
+    explicit zeroth-mode normalization of `infiniteVolumeSchwinger`.
+    This is the assumption-minimal frontier form: no interaction-weight
+    interface is required once `S₀ = 1` and the mixed product-tensor
+    Schwinger bound bridge are provided explicitly. -/
+theorem gap_phi4_linear_growth_of_zero_mode_normalization (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1)
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
+  have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
+    phi4_normalized_order0_of_linear_and_compat_of_zero params hcompat hzero
+  exact phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0
+    params OS hS alpha beta gamma hbeta hmixed hreduce
+    (phi4_productTensor_approx_family_of_dense_range hdense) hnormalized
+
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
     |S_n(f)| ≤ α · βⁿ · (n!)^γ · ‖f‖_s
     with γ = 1/2 for the φ⁴ interaction.
@@ -910,10 +1113,86 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
-  exact phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    params OS hS alpha beta gamma hbeta huniform hcompat hreduce
-    (phi4_productTensor_approx_family_of_dense_range hdense)
+  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
+    intro f
+    exact infiniteVolumeSchwinger_zero (params := params) f
+  have hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) := by
+    intro n hn f
+    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
+      params huniform hcompat n hn f
+  exact gap_phi4_linear_growth_of_zero_mode_normalization
+    params hsmall alpha beta gamma hbeta hmixed hcompat hzero hreduce hdense
+
+/-- Linear-growth frontier with an explicit WP1-style interaction input:
+    replace direct `[InteractionWeightModel params]` by geometric decay of
+    shifted cutoff exponential moments, together with explicit measurability
+    and canonical-sequence a.e. convergence data used to constructively
+    instantiate the weight model. -/
+theorem
+    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hmom :
+      ∀ Λ : Rectangle, ∃ θ D r : ℝ,
+        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  rcases
+      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+        (params := params) hinteraction_meas hcutoff_tendsto_ae hmom with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with an explicit WP1-style interaction input:
     replace direct `[InteractionWeightModel params]` by geometric decay of
@@ -962,18 +1241,18 @@ theorem gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geome
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  rcases
-      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-        (params := params) hmom with ⟨hW⟩
-  letI : InteractionWeightModel params := hW
-  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
-    huniform hcompat hreduce hdense
+  exact
+    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with explicit square-integrable UV data and shifted
     geometric cutoff-moment decay.
-    This first instantiates `InteractionUVModel` constructively from
-    square-integrable/measurable cutoff data, then applies the UV-based
-    linear-growth bridge. -/
+    This directly instantiates `InteractionWeightModel` from square-integrable
+    data + shifted geometric moment decay, then applies
+    `gap_phi4_linear_growth`. -/
 theorem
     gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params : Phi4Params)
@@ -1049,13 +1328,83 @@ theorem
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
+  rcases
+      interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    params hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+      hinteraction_meas hinteraction_sq hmom with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) UV Wick-sublevel-tail interaction control,
+    2) explicit measurability + canonical-sequence a.e. convergence data for
+       `interaction`, and
+    3) weak-coupling OS + product-tensor linear-growth reduction hypotheses. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params) hinteraction_meas hcutoff_tendsto_ae hwick_bad with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
 
 /-- Construct `ReconstructionLinearGrowthModel` from:
     1) UV Wick-sublevel-tail interaction control, and
@@ -1105,20 +1454,12 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionLinearGrowthModel params) := by
-  have hInt :
-      Nonempty (InteractionIntegrabilityModel params) :=
-    interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-      (params := params) hwick_bad
-  have hW :
-      Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_integrability_nonempty
-      (params := params) hInt
-  rcases hW with ⟨hWinst⟩
-  letI : InteractionWeightModel params := hWinst
-  exact reconstructionLinearGrowthModel_nonempty_of_data params
-    (hlinear :=
-      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
-        huniform hcompat hreduce hdense)
+  exact
+    reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Construct `ReconstructionLinearGrowthModel` from:
     1) UV interaction control plus shifted-cutoff geometric exponential-moment
@@ -1175,8 +1516,7 @@ theorem reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_expone
     1) square-integrable/measurable UV interaction data,
     2) shifted-cutoff geometric exponential-moment decay, and
     3) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
-    This first builds `InteractionUVModel` constructively, then reuses the
-    UV-based linear-growth bridge. -/
+    This uses the direct square-data linear-growth frontier bridge. -/
 theorem
     reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params : Phi4Params)
@@ -1250,14 +1590,84 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionLinearGrowthModel params) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    (params := params) hmom hsmall alpha beta gamma hbeta
-    huniform hcompat hreduce hdense
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        params
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        hmom hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) UV Wick-sublevel-tail interaction control,
+    3) explicit measurability + canonical-sequence a.e. convergence data for
+       `interaction`, and
+    4) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+        (params := params)
+        hinteraction_meas hcutoff_tendsto_ae
+        hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
 
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure,
@@ -1309,12 +1719,12 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionInputModel params) := by
-  rcases
-      reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-        (params := params)
-        hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense with ⟨hlin⟩
-  letI : ReconstructionLinearGrowthModel params := hlin
-  exact ⟨inferInstance⟩
+  exact
+    reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure (`ReconstructionWeakCouplingModel`),
@@ -1375,7 +1785,7 @@ theorem reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_m
     2) square-integrable/measurable UV interaction data,
     3) shifted-cutoff geometric moment decay, and
     4) explicit product-tensor reduction/approximation hypotheses.
-    This first instantiates `InteractionUVModel` constructively. -/
+    This uses the direct square-data linear-growth constructor. -/
 theorem
     reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params : Phi4Params)
@@ -1450,19 +1860,89 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionInputModel params) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    (params := params) hmom hsmall alpha beta gamma hbeta
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        hmom hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Linear-growth frontier with explicit Wick-sublevel-tail interaction input:
+    shifted-index exponential tails of natural bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}` are routed through the
+    direct `InteractionWeightModel` bridge, then into `gap_phi4_linear_growth`,
+    using explicit measurability and canonical-sequence a.e. convergence data. -/
+theorem
+    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  rcases
+      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params) hinteraction_meas hcutoff_tendsto_ae hwick_bad with ⟨hWinst⟩
+  letI : InteractionWeightModel params := hWinst
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
     huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with explicit Wick-sublevel-tail interaction input:
     shifted-index exponential tails of natural bad events
     `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}` are routed through the
-    proved interaction-integrability bridge, then into `gap_phi4_linear_growth`. -/
+    direct `InteractionWeightModel` bridge, then into `gap_phi4_linear_growth`. -/
 theorem
     gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
     (params : Phi4Params)
@@ -1510,26 +1990,20 @@ theorem
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  have hInt :
-      Nonempty (InteractionIntegrabilityModel params) :=
-    interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-      (params := params) hwick_bad
-  have hW :
-      Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_integrability_nonempty
-      (params := params) hInt
-  rcases hW with ⟨hWinst⟩
-  letI : InteractionWeightModel params := hWinst
-  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
-    huniform hcompat hreduce hdense
+  exact
+    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier from:
     1) square-integrable/measurable UV interaction data,
     2) shifted-index exponential tails of natural Wick sublevel bad events
        `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`,
     3) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
-    This routes the bad-set assumptions through the proved
-    `InteractionIntegrabilityModel` bridge, then applies `gap_phi4_linear_growth`. -/
+    This routes the bad-set assumptions through the direct
+    `InteractionWeightModel` bridge, then applies `gap_phi4_linear_growth`. -/
 theorem
     gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
     (params : Phi4Params)
@@ -1608,21 +2082,20 @@ theorem
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
+  rcases
+      interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params := params)
-    hwick_bad hsmall alpha beta gamma hbeta
+      hinteraction_meas hinteraction_sq hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
     huniform hcompat hreduce hdense
 
 /-- Construct `ReconstructionLinearGrowthModel` from:
     1) square-integrable/measurable UV interaction data,
     2) shifted-index exponential tails for natural Wick sublevel bad events,
     3) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
-    This first builds `InteractionIntegrabilityModel` constructively and then
+    This first builds `InteractionWeightModel` constructively and then
     applies the linear-growth frontier above. -/
 theorem
     reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
@@ -1700,14 +2173,14 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionLinearGrowthModel params) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params := params)
-    hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        hwick_bad hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
 
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure,
@@ -1792,14 +2265,15 @@ theorem
         DenseRange (fun f : Fin n → TestFun2D =>
           schwartzProductTensorFromTestFamily f)) :
     Nonempty (ReconstructionInputModel params) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params := params)
-    hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+      hinteraction_meas hinteraction_sq
+      hwick_bad hsmall alpha beta gamma hbeta
+      huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
 
 /-- Public linear-growth endpoint from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth (params : Phi4Params)
@@ -2955,7 +3429,8 @@ theorem phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
     1) square-integrable/measurable UV interaction data,
     2) shifted-cutoff geometric exponential-moment decay,
     3) weak-coupling OS + reconstruction interfaces.
-    This first instantiates `InteractionUVModel` constructively. -/
+    This directly instantiates `InteractionWeightModel` from square data and
+    applies the standard weak-coupling bridge. -/
 theorem
     phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params : Phi4Params) :
@@ -3037,14 +3512,14 @@ theorem
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq
     hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact
-    phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-      params hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  rcases
+      interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hmom with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
+    params hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Interface-level Wightman existence endpoint driven by explicit WP1-style
     interaction input (shifted-cutoff geometric moment decay), by first
@@ -3110,8 +3585,8 @@ theorem phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_
     1) square-integrable/measurable UV interaction data,
     2) shifted-cutoff geometric moment decay, and
     3) weak-coupling OS/product-tensor hypotheses.
-    This first instantiates `InteractionUVModel` constructively, then applies the
-    UV-based interface theorem. -/
+    This uses the direct square-data linear-growth constructor, then applies the
+    standard interface reconstruction theorem. -/
 theorem
     phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params : Phi4Params) :
@@ -3193,13 +3668,93 @@ theorem
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq
     hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    params hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        hmom hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact phi4_wightman_exists_of_explicit_data params
+    (hlinear := phi4_linear_growth_of_interface params)
+    (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
+
+/-- Dense product-tensor weak-coupling Wightman endpoint with an explicit
+    Wick-sublevel-tail interaction hypothesis:
+    shifted-index exponential tails of natural bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}` are used to instantiate
+    `InteractionWeightModel` constructively before applying the standard
+    weak-coupling bridge, with explicit measurability and canonical-sequence
+    a.e. convergence hypotheses for `interaction`. -/
+theorem
+    phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params) :
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
+    [WightmanReconstructionModel params] →
+    [OSDistributionE2Model params] →
+    [OSE4ClusterModel params] →
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω))) →
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) →
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) →
+    (alpha beta gamma : ℝ) →
+    (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ)) →
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f)) →
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS' : OsterwalderSchraderAxioms 1),
+        OS'.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS'.S Wfn.W := by
+  intro _hlimit _hcore _hrec _he2 _he4
+    hinteraction_meas hcutoff_tendsto_ae
+    hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  rcases
+      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+        (params := params) hinteraction_meas hcutoff_tendsto_ae hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
+    params hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Dense product-tensor weak-coupling Wightman endpoint with an explicit
     Wick-sublevel-tail interaction hypothesis:
@@ -3258,18 +3813,18 @@ theorem
         IsWickRotationPair OS'.S Wfn.W := by
   intro _huv _hlimit _hcore _hrec _he2 _he4
     hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases
-      interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-        (params := params) hwick_bad with ⟨hW⟩
-  letI : InteractionWeightModel params := hW
-  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
-    params hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  exact
+    phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Dense product-tensor weak-coupling Wightman endpoint from:
     1) square-integrable/measurable UV interaction data,
     2) shifted-index exponential tails of natural Wick sublevel bad events,
     3) weak-coupling OS + reconstruction interfaces.
-    This first instantiates `InteractionUVModel` constructively. -/
+    This first instantiates `InteractionWeightModel` constructively. -/
 theorem
     phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
     (params : Phi4Params) :
@@ -3354,14 +3909,91 @@ theorem
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq hwick_bad
     hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
+  rcases
+      interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact
-    phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-      params hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+      hinteraction_meas hinteraction_sq hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0
+    params hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+
+/-- Interface-level Wightman existence endpoint from:
+    1) UV Wick-sublevel-tail interaction control,
+    2) explicit measurability + canonical-sequence a.e. convergence data for
+       `interaction`, and
+    3) weak-coupling OS/product-tensor hypotheses. -/
+theorem
+    phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+    (params : Phi4Params) :
+    [SchwingerLimitModel params] →
+    [OSAxiomCoreModel params] →
+    [WightmanReconstructionModel params] →
+    [OSDistributionE2Model params] →
+    [OSE4ClusterModel params] →
+    (hinteraction_meas :
+      ∀ Λ : Rectangle,
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos)) →
+    (hcutoff_tendsto_ae :
+      ∀ Λ : Rectangle,
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω))) →
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) →
+    (hsmall : params.coupling < os4WeakCouplingThreshold params) →
+    (alpha beta gamma : ℝ) →
+    (hbeta : 0 < beta) →
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h)) →
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ)) →
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f)) →
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) →
+    ∃ (Wfn : WightmanFunctions 1),
+      ∃ (OS : OsterwalderSchraderAxioms 1),
+        OS.S = phi4SchwingerFunctions params ∧
+        IsWickRotationPair OS.S Wfn.W := by
+  intro _hlimit _hcore _hrec _he2 _he4
+    hinteraction_meas hcutoff_tendsto_ae
+    hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+        (params := params)
+        hinteraction_meas hcutoff_tendsto_ae
+        hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact phi4_wightman_exists_of_explicit_data params
+    (hlinear := phi4_linear_growth_of_interface params)
+    (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
 
 /-- Interface-level Wightman existence endpoint from:
     1) UV Wick-sublevel-tail interaction control, and
@@ -3417,14 +4049,12 @@ theorem
         IsWickRotationPair OS.S Wfn.W := by
   intro _huv _hlimit _hcore _hrec _he2 _he4
     hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases
-      reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-        (params := params)
-        hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense with ⟨hlin⟩
-  letI : ReconstructionLinearGrowthModel params := hlin
-  exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := phi4_linear_growth_of_interface params)
-    (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
+  exact
+    phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Interface-level Wightman existence endpoint from:
     1) square-integrable/measurable UV interaction data,
@@ -3515,13 +4145,13 @@ theorem
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq hwick_bad
     hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
+  exact
+    phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+      params
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    params hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+      hinteraction_meas hinteraction_sq
+      hwick_bad hsmall alpha beta gamma hbeta
+      huniform hcompat hreduce hdense
 
 /-- Interface-level Wightman existence from linear-growth inputs, routed
     through the abstract reconstruction backend interface. -/

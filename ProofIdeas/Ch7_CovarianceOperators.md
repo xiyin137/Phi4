@@ -1,20 +1,16 @@
 # Chapter 7: Covariance Operators
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- Core covariance inequality layer:
-  `CovarianceOperators.lean` currently has no `sorry`; it is now organized around the
-  `BoundaryCovarianceModel` interface.
-- Correlation inequality layer:
-  `CorrelationInequalities.lean` currently has no `sorry`; results are exposed via the
-  `CorrelationInequalityModel` interface.
-- Remaining chapter-adjacent blocker:
-  `ReflectionPositivity.lean` still has 3 `sorry`s (free, Dirichlet, and interacting RP).
-- Important implementation note:
-  uses of `dirichletCov` now require `[BoundaryCovarianceModel mass hmass]`.
-- Note:
-  line-number references below are historical and may drift; theorem names are the
-  stable lookup key.
+- `CovarianceOperators.lean`, `CorrelationInequalities.lean`, and
+  `ReflectionPositivity.lean` have no theorem-level `sorry`.
+- Chapter-7 obligations are represented as interfaces:
+  boundary (`BoundaryKernel/Comparison/RegularityModel`),
+  correlation (`CorrelationTwoPoint/FourPoint/FKGModel` and lattice bridges),
+  and RP (`Free/Dirichlet/InteractingReflectionPositivityModel`).
+- Reflection-positivity statements are theorem-complete wrappers over these
+  interfaces; constructive grounding is still open.
+- Note: theorem names are the stable lookup key; line numbers can drift.
 
 ## 1. Free Covariance (Section 7.2)
 

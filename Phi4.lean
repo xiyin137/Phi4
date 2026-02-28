@@ -56,4 +56,3 @@ import Phi4.InfiniteVolumeLimit
 import Phi4.Regularity
 import Phi4.OSAxioms
 import Phi4.Reconstruction
-import Phi4.ReconstructionUpstream

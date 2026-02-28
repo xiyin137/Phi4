@@ -188,16 +188,12 @@ theorem
             ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
     (Λ : Rectangle) :
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
-  have hInt :
-      Nonempty (InteractionIntegrabilityModel params) :=
-    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
       hinteraction_meas hinteraction_sq hmom
-  have hW :
-      Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_integrability_nonempty
-      (params := params) hInt
   exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
     (params := params) (Λ := Λ) hW
 
@@ -288,13 +284,14 @@ theorem
             Λ.toSet volume))
     (Λ : Rectangle) :
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
       (params := params)
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
-  exact finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params := params) hwick_bad Λ
+      hinteraction_meas hinteraction_sq hwick_bad
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
 
 /-! ## Schwinger functions (correlation functions) -/
 

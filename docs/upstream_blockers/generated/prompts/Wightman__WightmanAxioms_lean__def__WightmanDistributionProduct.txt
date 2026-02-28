@@ -1,0 +1,70 @@
+You are assisting with a focused coding/proof blocker.
+
+Task:
+- Primary goal: Close upstream blocker def:WightmanDistributionProduct without placeholders.
+- Current blocker: Declaration currently contains 'sorry' (score=287, status=open, sorry_count=2, reverse_importers=5).
+
+Repository context:
+- Language/toolchain: Lean 4 + Mathlib
+- File(s): /Users/xiyin/Phi4/.lake/packages/OSReconstruction/OSReconstruction/Wightman/WightmanAxioms.lean
+- Target declaration: def WightmanDistributionProduct
+
+Current local context:
+- Relevant hypotheses/locals:
+
+a) Declaration snippet (from Wightman/WightmanAxioms.lean:267)
+def WightmanDistributionProduct (qft : WightmanQFT d) (n : ℕ) :
+    (Fin n → SchwartzSpacetime d) → ℂ :=
+  qft.wightmanFunction n
+
+/-- **Schwartz nuclear theorem (kernel theorem for Schwartz spaces).**
+
+    Given a separately continuous multilinear functional Phi on n copies of
+    S(R^{d+1}), there exists a unique continuous linear functional W on the
+    full Schwartz space S(R^{n(d+1)}) such that W agrees with Phi on product
+    test functions: W(f_1 tensor ... tensor f_n) = Phi(f_1,...,f_n).
+
+    The nuclear theorem guarantees that the multilinear Wightman n-point function
+    extends to a continuous linear functional on the full Schwartz space S(R^{n(d+1)}).
+
+    Since S(R^{d+1}) is nuclear (proved in SchwartzNuclear.lean),
+    the completed projective tensor product S(R^{d+1}) tensor_pi ... tensor_pi S(R^{d+1})
+    is isomorphic (as a topological vector space) to S(R^{n(d+1)}).
+
+    The proof requires:
+    1. Schwartz space is nuclear (proved in SchwartzNuclear.lean)
+    2. For nuclear spaces, the projective tensor product topology agrees with
+       the injective tensor product topology
+    3. S(R^{d+1}) tensor_pi ... tensor_pi S(R^{d+1}) = S(R^{n(d+1)}) as TVS
+    4. Separately continuous multilinear functionals on nuclear spaces extend
+       uniquely to continuous functionals on the completed tensor product
+
+    Ref: Gel'fand-Vilenkin, "Generalized Functions IV", Ch. I, 3;
+    Reed-Simon, "Methods of Modern Math Physics I", Theorem V.13;
+    Treves, "Topological Vector Spaces", Ch. 51 -/
+private theorem schwartz_nuclear_extension (d n : ℕ) [NeZero d]
+    (Phi : (Fin n → SchwartzSpacetime d) → ℂ)
+    (hPhi_sep : ∀ (i : Fin n) (fs : Fin n → SchwartzSpacetime d),
+      Continuous (fun f => Phi (Function.update fs i f))) :
+    ∃ (W : SchwartzNPointSpace d n →L[ℂ] ℂ),
+      ∀ fs : Fin n → SchwartzSpacetime d,
+        W (SchwartzMap.productTensor fs) = Phi fs := by
+
+b) Build target
+- lake build OSReconstruction.Wightman.WightmanAxioms
+
+What already failed:
+1) <ATTEMPT_1 + error/result>
+2) <ATTEMPT_2 + error/result>
+
+Constraints:
+- No axioms/placeholders/weakened theorem statements.
+- Keep existing architecture and imports unless necessary.
+- Prefer reusable infrastructure lemmas over brittle one-off hacks.
+
+Request:
+1) Propose 2-3 concrete solution paths, ranked by feasibility.
+2) For the top path, give exact code-level steps.
+3) Point out likely type mismatches or missing bridge lemmas.
+4) If statement looks false/underdetermined, provide a minimal counterexample strategy or corrected intermediate lemma.
+5) Keep output actionable and concise.

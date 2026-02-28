@@ -1,19 +1,16 @@
 # Chapter 12: Regularity and Axioms -- OS1
 
-## Status Snapshot (2026-02-25)
+## Status Snapshot (2026-02-27)
 
-- `Regularity.lean` currently has 5 `sorry`s:
-  `wick_powers_infinite_volume`, `euclidean_equation_of_motion`,
-  `generating_functional_bound`, `nonlocal_phi4_bound`,
-  `generating_functional_bound_uniform`.
-- Dependency reality:
-  this chapter depends critically on unresolved Chapter 8/10/11 analytic estimates
-  (notably `exp_interaction_Lp`, chessboard/uniform bounds, and infinite-volume measure construction).
-- Current role:
-  keep theorem statements aligned with GJ Chapter 12 while upstream infrastructure is completed.
-- Note:
-  line-number references below are historical and may drift; theorem names are the
-  stable lookup key.
+- `Regularity.lean` now has no theorem-level `sorry`.
+- Chapter-12 obligations are represented explicitly by regularity subinterfaces:
+  `WickCubicConvergenceModel`, `EuclideanEquationModel`,
+  `GeneratingFunctionalBoundModel`, `NonlocalPhi4BoundModel`,
+  and `UniformGeneratingFunctionalBoundModel` (recombining to
+  `RegularityModel`).
+- Upstream Chapter 8/10/11 analytic content is still the main constructive debt,
+  but no longer tracked via local placeholders.
+- Note: theorem names are the stable lookup key; line numbers can drift.
 
 ## Main Result
 
@@ -134,7 +131,7 @@ This super-linear convergence dominates all combinatorial factors.
 - `normFunctional` (Regularity.lean:80) -- N'(f) norm
 
 ### Proof strategy for generating_functional_bound
-This is the most analytically demanding sorry. The proof requires:
+This is the most analytically demanding frontier obligation. The proof requires:
 1. Theorem 12.4.1 (uniformity in volume) -- eliminates |Λ|
 2. Integration by parts (Cor. 12.2.3) -- Schwinger-Dyson equations
 3. Exponential decay of C_0 -- controls the IBP contractions
