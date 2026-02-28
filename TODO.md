@@ -598,8 +598,10 @@ the local Glimm-Jaffe objective.
 - `Phi4/Reconstruction.lean` now also includes square-integrable-data variants
   of this shifted-geometric reconstruction chain, so the same WP1 bridge no
   longer requires a pre-installed `InteractionUVModel`:
+  `gap_phi4_linear_growth_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   `reconstructionInputModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+  `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
 - `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
