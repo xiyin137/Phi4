@@ -1102,6 +1102,147 @@ theorem exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_bad_sets
     (C := C) (r := ENNReal.ofReal (Real.exp (-α))) hC hr hbad_le
     hΛ_meas hΛ_finite hwick_int hgood
 
+/-- `Lᵖ` integrability from shifted-index summable tails of the natural Wick
+    sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_sublevel_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (hbad_sum :
+      (∑' n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            ∃ x ∈ Λ.toSet,
+              wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}) ≠ ∞)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  let bad : ℕ → Set FieldConfig2D := fun n =>
+    {ω : FieldConfig2D |
+      ∃ x ∈ Λ.toSet,
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+  have hbad_sum' :
+      (∑' n : ℕ, (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞ := by
+    simpa [bad] using hbad_sum
+  have hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x := by
+    intro n ω hω x hx
+    by_contra hlt
+    have hlt' :
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B :=
+      lt_of_not_ge hlt
+    exact hω ⟨x, hx, hlt'⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_bad_sets
+    (params := params) (Λ := Λ) (B := B) (bad := bad)
+    hbad_sum' hΛ_meas hΛ_finite hwick_int hgood
+
+/-- `Lᵖ` integrability from shifted-index geometric tails of the natural Wick
+    sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_sublevel_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (C r : ℝ≥0∞) (hC : C ≠ ⊤) (hr : r < 1)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            ∃ x ∈ Λ.toSet,
+              wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+          ≤ C * r ^ n)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  let bad : ℕ → Set FieldConfig2D := fun n =>
+    {ω : FieldConfig2D |
+      ∃ x ∈ Λ.toSet,
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+  have hbad_le' :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤ C * r ^ n := by
+    intro n
+    simpa [bad] using hbad_le n
+  have hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x := by
+    intro n ω hω x hx
+    by_contra hlt
+    have hlt' :
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B :=
+      lt_of_not_ge hlt
+    exact hω ⟨x, hx, hlt'⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_bad_sets
+    (params := params) (Λ := Λ) (B := B) (bad := bad)
+    (C := C) (r := r) hC hr hbad_le' hΛ_meas hΛ_finite hwick_int hgood
+
+/-- `Lᵖ` integrability from shifted-index exponential tails of the natural
+    Wick sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params]
+    (B : ℝ)
+    (C : ℝ≥0∞) (α : ℝ) (hC : C ≠ ⊤) (hα : 0 < α)
+    (hbad_le :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            ∃ x ∈ Λ.toSet,
+              wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+          ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n)
+    (hΛ_meas : MeasurableSet Λ.toSet)
+    (hΛ_finite : volume Λ.toSet ≠ ∞)
+    (hwick_int :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        IntegrableOn
+          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+          Λ.toSet volume)
+    {p : ℝ≥0∞} :
+    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  let bad : ℕ → Set FieldConfig2D := fun n =>
+    {ω : FieldConfig2D |
+      ∃ x ∈ Λ.toSet,
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+  have hbad_le' :
+      ∀ n : ℕ,
+        (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤
+          C * (ENNReal.ofReal (Real.exp (-α))) ^ n := by
+    intro n
+    simpa [bad] using hbad_le n
+  have hgood :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
+        ∀ x ∈ Λ.toSet,
+          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x := by
+    intro n ω hω x hx
+    by_contra hlt
+    have hlt' :
+        wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B :=
+      lt_of_not_ge hlt
+    exact hω ⟨x, hx, hlt'⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_bad_sets
+    (params := params) (Λ := Λ) (B := B) (bad := bad)
+    (C := C) (α := α) hC hα hbad_le' hΛ_meas hΛ_finite hwick_int hgood
+
 /-- `Lᵖ` integrability of the Boltzmann weight from summable bad sets and
     good-set cutoff lower bounds. -/
 theorem exp_interaction_Lp_of_cutoff_seq_bad_set_summable
@@ -1665,6 +1806,92 @@ theorem interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wic
   refine ⟨B, bad, C, ENNReal.ofReal (Real.exp (-α)), hC, hr, hbad_le,
     hΛ_meas, hΛ_finite, hwick_int, hgood⟩
 
+/-- Construct `InteractionWeightModel` from shifted-index summable tails of
+    natural Wick sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_summable_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        (∑' n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}) ≠ ∞ ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hwick_bad Λ with ⟨B, hbad_sum, hΛ_meas, hΛ_finite, hwick_int⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_sublevel_bad_sets
+    (params := params) (Λ := Λ) (B := B)
+    hbad_sum hΛ_meas hΛ_finite hwick_int
+
+/-- Construct `InteractionWeightModel` from shifted-index geometric tails of
+    natural Wick sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C r : ℝ≥0∞,
+        C ≠ ⊤ ∧ r < 1 ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * r ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hwick_bad Λ with ⟨B, C, r, hC, hr, hbad_le, hΛ_meas, hΛ_finite, hwick_int⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_sublevel_bad_sets
+    (params := params) (Λ := Λ) (B := B) (C := C) (r := r)
+    hC hr hbad_le hΛ_meas hΛ_finite hwick_int
+
+/-- Construct `InteractionWeightModel` from shifted-index exponential tails of
+    natural Wick sublevel bad events
+    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ℝ≥0∞, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data params ?_
+  intro Λ p _hp
+  rcases hwick_bad Λ with
+    ⟨B, C, α, hC, hα, hbad_le, hΛ_meas, hΛ_finite, hwick_int⟩
+  exact exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params := params) (Λ := Λ) (B := B) (C := C) (α := α)
+    hC hα hbad_le hΛ_meas hΛ_finite hwick_int
+
 /-- Construct `InteractionWeightModel` from per-volume eventually-in-`n`
     cutoff-sequence almost-everywhere lower bounds. -/
 theorem interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds
@@ -2067,6 +2294,88 @@ theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponent
             -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)) :
     Nonempty (InteractionIntegrabilityModel params) := by
   rcases interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_bad_sets
+      (params := params) hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. shifted-index summable tails of natural Wick sublevel bad events
+       `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_summable_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ,
+        (∑' n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}) ≠ ∞ ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_summable_wick_sublevel_bad_sets
+      (params := params) hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. shifted-index geometric tails of natural Wick sublevel bad events
+       `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C r : ℝ≥0∞,
+        C ≠ ⊤ ∧ r < 1 ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * r ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_geometric_wick_sublevel_bad_sets
+      (params := params) hwick_bad with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact ⟨inferInstance⟩
+
+/-- Construct `InteractionIntegrabilityModel` from:
+    1. UV/L² interaction control (`InteractionUVModel`), and
+    2. shifted-index exponential tails of natural Wick sublevel bad events
+       `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
+theorem interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+    (params : Phi4Params)
+    [InteractionUVModel params]
+    (hwick_bad :
+      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ℝ≥0∞, ∃ α : ℝ,
+        C ≠ ⊤ ∧ 0 < α ∧
+        (∀ n : ℕ,
+          (freeFieldMeasure params.mass params.mass_pos)
+            {ω : FieldConfig2D |
+              ∃ x ∈ Λ.toSet,
+                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
+            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
+        MeasurableSet Λ.toSet ∧
+        volume Λ.toSet ≠ ∞ ∧
+        (∀ n : ℕ, ∀ ω : FieldConfig2D,
+          IntegrableOn
+            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
+            Λ.toSet volume)) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
       (params := params) hwick_bad with ⟨hW⟩
   letI : InteractionWeightModel params := hW
   exact ⟨inferInstance⟩
