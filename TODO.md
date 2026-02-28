@@ -31,6 +31,11 @@ the local Glimm-Jaffe objective.
   `scripts/upstream_blockers_workpack.sh`.
 - Upstream OS→Wightman bridge is isolated in `Phi4/ReconstructionUpstream.lean`;
   core reconstruction remains backend-abstract (`WightmanReconstructionModel`).
+- `Phi4/Regularity.lean` now includes concrete constructor chains from explicit
+  data to full regularity packaging, including
+  `uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform`,
+  `nonlocalPhi4BoundModel_nonempty_of_global_uniform`, and
+  `regularityModel_nonempty_of_wick_eom_exhaustion_limit_global_uniform`.
 - New WP1 infrastructure module `Phi4/FeynmanGraphs/LocalizedBounds.lean` adds
   reusable factorial occupancy bounds for localized graph estimates.
 - `Phi4/FeynmanGraphs/LocalizedBounds.lean` now also provides weighted occupancy

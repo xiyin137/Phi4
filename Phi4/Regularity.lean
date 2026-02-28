@@ -250,6 +250,90 @@ theorem regularityModel_nonempty_of_data
     generating_functional_bound_uniform := huniform
   }⟩
 
+/-- Construct `WickCubicConvergenceModel` from explicit a.e.-convergence data. -/
+theorem wickCubicConvergenceModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hwick_cubic :
+      ∀ (f : TestFun2D),
+        ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+          Filter.Tendsto
+            (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+            Filter.atTop
+            (nhds (wickCubicSmeared params f ω))) :
+    Nonempty (WickCubicConvergenceModel params) := by
+  exact ⟨{ wickCubicSmeared_tendsto_ae := hwick_cubic }⟩
+
+/-- Construct `EuclideanEquationModel` from an explicit equation-of-motion identity. -/
+theorem euclideanEquationModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (heom :
+      ∀ (f g : TestFun2D),
+        ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
+          GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
+          params.coupling *
+            ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params)) :
+    Nonempty (EuclideanEquationModel params) := by
+  exact ⟨{ euclidean_equation_of_motion := heom }⟩
+
+/-- Construct `GeneratingFunctionalBoundModel` from explicit OS1 bound data. -/
+theorem generatingFunctionalBoundModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hgf :
+      ∃ c : ℝ, ∀ f : TestFun2D,
+        |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
+          Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)) :
+    Nonempty (GeneratingFunctionalBoundModel params) := by
+  exact ⟨{ generating_functional_bound := hgf }⟩
+
+/-- Construct `NonlocalPhi4BoundModel` from explicit nonlocal finite-volume bounds. -/
+theorem nonlocalPhi4BoundModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hnonlocal :
+      ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
+        |generatingFunctional params Λ g| ≤
+          Real.exp (C₁ * Λ.area + C₂)) :
+    Nonempty (NonlocalPhi4BoundModel params) := by
+  exact ⟨{ nonlocal_phi4_bound := hnonlocal }⟩
+
+/-- Construct `UniformGeneratingFunctionalBoundModel` from explicit pointwise-in-`f`
+    finite-volume uniform bounds. -/
+theorem uniformGeneratingFunctionalBoundModel_nonempty_of_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (huniform :
+      ∀ (f : TestFun2D),
+        ∃ c : ℝ, ∀ Λ : Rectangle,
+          |generatingFunctional params Λ f| ≤
+            Real.exp (c * SchwartzMap.seminorm ℝ 2 2 f)) :
+    Nonempty (UniformGeneratingFunctionalBoundModel params) := by
+  exact ⟨{ generating_functional_bound_uniform := huniform }⟩
+
+/-- Construct `RegularityModel` from nonempty witnesses of its five submodels. -/
+theorem regularityModel_nonempty_of_submodel_nonempty
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hwick : Nonempty (WickCubicConvergenceModel params))
+    (heom : Nonempty (EuclideanEquationModel params))
+    (hgf : Nonempty (GeneratingFunctionalBoundModel params))
+    (hnonlocal : Nonempty (NonlocalPhi4BoundModel params))
+    (huniform : Nonempty (UniformGeneratingFunctionalBoundModel params)) :
+    Nonempty (RegularityModel params) := by
+  rcases hwick with ⟨hwickInst⟩
+  rcases heom with ⟨heomInst⟩
+  rcases hgf with ⟨hgfInst⟩
+  rcases hnonlocal with ⟨hnonlocalInst⟩
+  rcases huniform with ⟨huniformInst⟩
+  letI : WickCubicConvergenceModel params := hwickInst
+  letI : EuclideanEquationModel params := heomInst
+  letI : GeneratingFunctionalBoundModel params := hgfInst
+  letI : NonlocalPhi4BoundModel params := hnonlocalInst
+  letI : UniformGeneratingFunctionalBoundModel params := huniformInst
+  exact ⟨inferInstance⟩
+
 /-- **Euclidean equation of motion** (Glimm-Jaffe 12.1.1):
     For the infinite volume φ⁴₂ theory,
       ⟨φ(f)φ(g)⟩ = C(f,g) - λ ⟨(:φ³: · f) φ(g)⟩
@@ -906,6 +990,101 @@ theorem generating_functional_bound_of_exhaustion_limit_global_uniform
   exact generating_functional_bound_of_exhaustion_limit params hlim
     (generatingFunctionalOnExhaustion_bound_of_global_uniform params hglobal)
 
+/-- Construct `GeneratingFunctionalBoundModel` from:
+    1) convergence of exhaustion generating functionals to the infinite-volume one,
+    2) a global finite-volume uniform exponential bound. -/
+theorem generatingFunctionalBoundModel_nonempty_of_exhaustion_limit_global_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    Nonempty (GeneratingFunctionalBoundModel params) := by
+  exact generatingFunctionalBoundModel_nonempty_of_data
+    (params := params)
+    (hgf := generating_functional_bound_of_exhaustion_limit_global_uniform
+      params hlim hglobal)
+
+/-- Construct `UniformGeneratingFunctionalBoundModel` from a single global
+    finite-volume exponential bound constant. -/
+theorem uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    Nonempty (UniformGeneratingFunctionalBoundModel params) := by
+  rcases hglobal with ⟨c, hc⟩
+  exact uniformGeneratingFunctionalBoundModel_nonempty_of_data
+    (params := params)
+    (huniform := by
+      intro f
+      refine ⟨c, ?_⟩
+      intro Λ
+      simpa [normFunctional] using hc f Λ)
+
+/-- Construct `NonlocalPhi4BoundModel` from a global finite-volume
+    generating-functional exponential bound. -/
+theorem nonlocalPhi4BoundModel_nonempty_of_global_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    Nonempty (NonlocalPhi4BoundModel params) := by
+  rcases hglobal with ⟨c, hc⟩
+  exact nonlocalPhi4BoundModel_nonempty_of_data
+    (params := params)
+    (hnonlocal := by
+      intro g
+      refine ⟨0, c * normFunctional g, ?_⟩
+      intro Λ
+      simpa [zero_mul, add_comm, add_left_comm, add_assoc] using hc g Λ)
+
+/-- Construct `RegularityModel` from:
+    1) Wick-cubic a.e. convergence,
+    2) Euclidean equation of motion,
+    3) exhaustion-limit convergence of generating functionals, and
+    4) a single global finite-volume exponential bound. -/
+theorem regularityModel_nonempty_of_wick_eom_exhaustion_limit_global_uniform
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (hwick_cubic :
+      ∀ (f : TestFun2D),
+        ∀ᵐ ω ∂(infiniteVolumeMeasure params),
+          Filter.Tendsto
+            (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+            Filter.atTop
+            (nhds (wickCubicSmeared params f ω)))
+    (heom :
+      ∀ (f g : TestFun2D),
+        ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
+          GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
+          params.coupling *
+            ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params))
+    (hlim : ∀ f : TestFun2D,
+      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
+        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
+    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    Nonempty (RegularityModel params) := by
+  have hwick : Nonempty (WickCubicConvergenceModel params) :=
+    wickCubicConvergenceModel_nonempty_of_data (params := params) hwick_cubic
+  have heomModel : Nonempty (EuclideanEquationModel params) :=
+    euclideanEquationModel_nonempty_of_data (params := params) heom
+  have hgf : Nonempty (GeneratingFunctionalBoundModel params) :=
+    generatingFunctionalBoundModel_nonempty_of_exhaustion_limit_global_uniform
+      (params := params) hlim hglobal
+  have hnonlocal : Nonempty (NonlocalPhi4BoundModel params) :=
+    nonlocalPhi4BoundModel_nonempty_of_global_uniform
+      (params := params) hglobal
+  have huniform : Nonempty (UniformGeneratingFunctionalBoundModel params) :=
+    uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform
+      (params := params) hglobal
+  exact regularityModel_nonempty_of_submodel_nonempty
+    (params := params)
+    hwick heomModel hgf hnonlocal huniform
+
 /-- Pointwise-in-`f` finite-volume uniform bounds plus exhaustion convergence
     yield a pointwise-in-`f` infinite-volume exponential bound. -/
 theorem generating_functional_pointwise_bound_of_exhaustion_limit
@@ -1029,6 +1208,18 @@ theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
   refine ⟨0, c * normFunctional g, ?_⟩
   intro Λ
   simpa [zero_mul] using hc Λ
+
+/-- Construct `NonlocalPhi4BoundModel` from explicit pointwise-in-`f`
+    finite-volume uniform generating-functional bounds. -/
+theorem nonlocalPhi4BoundModel_nonempty_of_uniform_data
+    (params : Phi4Params)
+    [InfiniteVolumeMeasureModel params]
+    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
+    Nonempty (NonlocalPhi4BoundModel params) := by
+  exact nonlocalPhi4BoundModel_nonempty_of_data
+    (params := params)
+    (hnonlocal := gap_nonlocal_phi4_bound params huniform)
 
 /-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
 theorem nonlocal_phi4_bound (params : Phi4Params) :

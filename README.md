@@ -68,6 +68,11 @@ project objective.
   `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Regularity.lean` now includes concrete constructor chains from explicit
+  Wick/EOM/exhaustion/global-bound data to regularity interfaces, including
+  `uniformGeneratingFunctionalBoundModel_nonempty_of_global_uniform`,
+  `nonlocalPhi4BoundModel_nonempty_of_global_uniform`, and
+  `regularityModel_nonempty_of_wick_eom_exhaustion_limit_global_uniform`.
 - `Phi4/FreeField.lean`, `Phi4/CovarianceOperators.lean`, and
   `Phi4/CorrelationInequalities.lean` include `*_nonempty_of_data` constructors
   so constructive proof data can be attached to interfaces without ad hoc
