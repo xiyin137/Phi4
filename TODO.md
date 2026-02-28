@@ -481,6 +481,11 @@ the local Glimm-Jaffe objective.
 - `Phi4/HonestGaps.lean` now forwards to canonical core frontiers and contains no local `sorry`.
 - FKG-derived connected two-point nonnegativity statements now explicitly
   require nonnegative test functions (corrected soundness of statement direction).
+- `gap_phi4_linear_growth` in `Phi4/Reconstruction.lean` is no longer an
+  identity frontier wrapper: it now derives E0' from explicit weak-coupling OS
+  packaging plus concrete generating-functional/product-tensor hypotheses
+  (`huniform`, `hcompat`, `hreduce`, `hdense`) via
+  `phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0`.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Main Blocking Gaps (2026-02-27)
