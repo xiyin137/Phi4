@@ -183,6 +183,13 @@ the local Glimm-Jaffe objective.
   constructors (`∀ ω`, `∀ n`) feeding the same pipeline:
   `interactionWeightModel_nonempty_of_cutoff_seq_pointwise_lower_bounds` and
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_pointwise_lower_bounds`.
+- `Phi4/Interaction.lean` now also has generic summable-bad-set entry points
+  (arbitrary bad sets with good-set cutoff lower bounds), including
+  `interaction_ae_lower_bound_of_cutoff_seq_bad_set_summable`,
+  `exp_interaction_Lp_of_cutoff_seq_bad_set_summable`,
+  and model constructors
+  `interactionWeightModel_nonempty_of_cutoff_seq_summable_bad_sets`,
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_summable_bad_sets`.
 - `docs/CLAUDE_TO_CODEX_TRACKER.md` now tracks systematic remediation of
   issues raised in `claude_to_codex.md`.
 - `Phi4/LatticeApproximation.lean` now provides rectangular mesh geometry,
