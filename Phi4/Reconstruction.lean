@@ -934,19 +934,15 @@ theorem wightmanReconstructionModel_nonempty_of_data (params : Phi4Params)
     Nonempty (WightmanReconstructionModel params) := by
   exact ⟨{ wightman_reconstruction := hreconstruct }⟩
 
-/-- Honest frontier: reconstruction step from explicit OS+linear-growth
-    reconstruction data. -/
-theorem gap_phi4_wightman_reconstruction_step (_params : Phi4Params)
-    (hreconstruct :
-      ∀ (OS : OsterwalderSchraderAxioms 1),
-        OSLinearGrowthCondition 1 OS →
-          ∃ (Wfn : WightmanFunctions 1),
-            IsWickRotationPair OS.S Wfn.W) :
+/-- Honest frontier: reconstruction step from OS+linear-growth data via the
+    abstract reconstruction backend interface. -/
+theorem gap_phi4_wightman_reconstruction_step (params : Phi4Params)
+    [WightmanReconstructionModel params] :
     ∀ (OS : OsterwalderSchraderAxioms 1),
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
-  exact hreconstruct
+  exact phi4_wightman_reconstruction_step_of_interface params
 
 /-- Public reconstruction step from OS + linear growth to Wightman data,
     routed through `WightmanReconstructionModel`. -/

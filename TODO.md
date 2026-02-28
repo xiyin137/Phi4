@@ -486,6 +486,9 @@ the local Glimm-Jaffe objective.
   packaging plus concrete generating-functional/product-tensor hypotheses
   (`huniform`, `hcompat`, `hreduce`, `hdense`) via
   `phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0`.
+- `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean` now
+  routes through `WightmanReconstructionModel` (interface-backed theorem) rather
+  than taking a raw reconstruction function argument.
 - Remaining gap to final theorem is not placeholder closure; it is replacement of high-level assumption interfaces with internal constructive proofs.
 
 ## Main Blocking Gaps (2026-02-27)
