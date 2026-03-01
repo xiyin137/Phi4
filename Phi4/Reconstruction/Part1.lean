@@ -1359,12 +1359,14 @@ theorem gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_integ
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  refine gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_uniform_integral_bound
-    (params := params) (C := C) (β := β) hC hβmom hInt hM hcutoff_meas ?_
-    hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  intro Λ p hpTop
-  exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
-    (params := params) (Λ := Λ) (q := p.toReal) (hgeom := hgeom Λ p hpTop)
+  rcases interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_integral_bound
+      (params := params) (C := C) (β := β) hC hβmom hInt hM
+      (hcutoff_meas := fun Λ n => by
+        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+      (hgeom := fun Λ {p} hpTop => hgeom Λ p hpTop) with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with assumption-explicit real-parameterized UV
     convergence and per-exponent geometric shifted-cutoff moment bounds.

@@ -2160,11 +2160,38 @@ theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geomet
               Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
               ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
     Nonempty (InteractionWeightModel params) := by
-  refine interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_uniform_integral_bound
-    (params := params) (C := C) (β := β) hC hβ hInt hM hcutoff_meas ?_
-  intro Λ p hpTop
-  exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
-    (params := params) (Λ := Λ) (q := p.toReal) (hgeom := hgeom Λ hpTop)
+  have htend :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)) := by
+    intro Λ
+    have htend0 :=
+      interactionCutoff_standardSeq_succ_tendsto_ae_of_sq_moment_polynomial_bound
+        (params := params) (Λ := Λ) (C := C) (β := β) hC hβ (hInt Λ) (hM Λ)
+    filter_upwards [htend0] with ω hω
+    have hadd :
+        Filter.Tendsto
+          (fun n : ℕ =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) +
+              interaction params Λ ω)
+          Filter.atTop
+          (nhds (interaction params Λ ω)) := by
+      simpa [zero_add] using (hω.const_add (interaction params Λ ω))
+    have heq :
+        (fun n : ℕ =>
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) +
+            interaction params Λ ω)
+          =ᶠ[Filter.atTop]
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :=
+      Filter.Eventually.of_forall (fun n => by
+        simp [sub_eq_add_neg, add_comm])
+    exact hadd.congr' heq
+  exact
+    interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_integral_bound
+      (params := params) htend hcutoff_meas hgeom
 
 /-- If shifted-index squared cutoff-to-limit moments converge to `0`, then for
     every fixed threshold `a > 0`, the corresponding shifted bad-event
