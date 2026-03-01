@@ -32,6 +32,14 @@ the local Glimm-Jaffe objective.
   Chernoff infrastructure:
   `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and
   `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_abs_bound`.
+- `Phi4/Interaction.lean` now also includes direct shifted absolute-moment to
+  signed-moment WP1 bridges and downstream interfaces/endpoints:
+  `shifted_exponential_moment_geometric_bound_of_abs`,
+  `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`,
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`,
+  and
+  `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`
+  (plus square-data variants).
 - The shifted exponential Wick-sublevel branch now also has assumption-explicit
   cores for interaction, reconstruction-linear-growth/input, and Wightman
   endpoints (with class-based theorem forms retained only as compatibility
