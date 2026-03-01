@@ -34,6 +34,13 @@ the local Glimm-Jaffe objective.
   and
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`,
   with `[InteractionUVModel]` theorem forms retained as wrappers.
+- `Phi4/Interaction/Part1Core.lean` and `Phi4/Reconstruction/Part1Core.lean`
+  now also provide direct `q > 0` geometric exponential-moment entry points
+  (`interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`,
+  `interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound`,
+  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`),
+  aligning WP1 assumptions with the Glimm-Jaffe 8.6.2 shape and avoiding
+  unrealistic geometric hypotheses at `p = 0`.
 - `Phi4/Interaction.lean` now also includes absolute-exponential-moment
   Chernoff infrastructure:
   `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and

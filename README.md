@@ -99,6 +99,14 @@ Local per-folder guides are available at:
   - constructor paths to instantiate
     `InteractionWeightModel`/`InteractionIntegrabilityModel` from cutoff lower
     bound data.
+- `Phi4/Interaction/Part1Core.lean` and `Phi4/Reconstruction/Part1Core.lean`
+  now also expose direct `q > 0` geometric exponential-moment WP1 entry points:
+  `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`,
+  `interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound`,
+  and
+  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`,
+  matching the Glimm-Jaffe 8.6.2 hypothesis shape without requiring a geometric
+  assumption at `p = 0`.
 - `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
   infrastructure:
   `abs_pow_level_set_eq`,
