@@ -1296,6 +1296,69 @@ theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment_b
     exact div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
   exact hbase.trans (ENNReal.ofReal_le_ofReal hdiv)
 
+/-- If shifted-index squared cutoff-to-limit moments converge to `0`, then for
+    every fixed threshold `a > 0`, the corresponding shifted bad-event
+    probabilities
+    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| }`
+    converge to `0` (Chebyshev + squeeze). -/
+theorem tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_sq_moment
+    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
+    (hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hSq_tendsto :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          ∫ ω : FieldConfig2D,
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+            ∂(freeFieldMeasure params.mass params.mass_pos))
+        Filter.atTop
+        (nhds 0)) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            a ≤
+              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+                interaction params Λ ω|})
+      Filter.atTop
+      (nhds 0) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let E : ℕ → ℝ := fun n =>
+    ∫ ω : FieldConfig2D,
+      (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2 ∂μ
+  let b : ℕ → ENNReal := fun n =>
+    ENNReal.ofReal (E n / (a ^ 2))
+  have hle :
+      ∀ n : ℕ,
+        μ {ω : FieldConfig2D |
+            a ≤
+              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+                interaction params Λ ω|}
+          ≤ b n := by
+    intro n
+    simpa [μ, E, b] using
+      shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
+        (params := params) (Λ := Λ) (a := a) ha n (hInt n)
+  have hb_tendsto : Filter.Tendsto b Filter.atTop (nhds 0) := by
+    have hratio :
+        Filter.Tendsto (fun n : ℕ => E n / (a ^ 2)) Filter.atTop (nhds 0) := by
+      simpa [E] using hSq_tendsto.div_const (a ^ 2)
+    have htmp :
+        Filter.Tendsto (fun n : ℕ => ENNReal.ofReal (E n / (a ^ 2)))
+          Filter.atTop (nhds (ENNReal.ofReal 0)) :=
+      (ENNReal.continuous_ofReal.tendsto 0).comp hratio
+    simpa [b] using htmp
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le
+      (tendsto_const_nhds) hb_tendsto ?_ ?_
+  · intro n
+    exact bot_le
+  · intro n
+    exact hle n
+
 /-- Shifted-index cutoff bad-event bound from exponential moments (Chernoff):
     for `θ > 0`,
     `μ{interactionCutoff(κ_{n+1}) < -B} ≤ exp(-θ B) * E[exp(-θ interactionCutoff(κ_{n+1}))]`.
