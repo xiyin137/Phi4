@@ -742,6 +742,111 @@ theorem shifted_cutoff_interaction_sq_moment_tendsto_zero_of_converges_L2
       simp [standardUVCutoffSeq, μ, hκ, hn3])
   exact hseq_raw.congr' hseq_eq
 
+/-- Fatou bridge for shifted canonical UV cutoffs:
+    if `interactionCutoff(κ_{n+1})` converges almost everywhere to `interaction`
+    and the nonnegative sequence `exp(-q·interactionCutoff(κ_{n+1}))` has a
+    uniform `lintegral` bound, then `exp(-q·interaction)` is integrable. -/
+theorem integrable_exp_neg_mul_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_lintegral_bound
+    (params : Phi4Params) (Λ : Rectangle) (q : ℝ)
+    (htend :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          Filter.atTop
+          (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∃ C : ℝ≥0∞, C ≠ ⊤ ∧
+        ∀ n : ℕ,
+          ∫⁻ ω,
+              ENNReal.ofReal
+                (Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ C) :
+    Integrable
+      (fun ω : FieldConfig2D => Real.exp (-(q * interaction params Λ ω)))
+      (freeFieldMeasure params.mass params.mass_pos) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  rcases hbound with ⟨C, hC_top, hC_bound⟩
+  let g : ℕ → FieldConfig2D → ℝ :=
+    fun n ω => Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+  let gLim : FieldConfig2D → ℝ :=
+    fun ω => Real.exp (-(q * interaction params Λ ω))
+  let F : ℕ → FieldConfig2D → ℝ≥0∞ := fun n ω => ENNReal.ofReal (g n ω)
+
+  have hg_meas : ∀ n : ℕ, AEStronglyMeasurable (g n) μ := by
+    intro n
+    have htmp :
+        AEMeasurable
+          (fun ω : FieldConfig2D =>
+            -(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) μ := by
+      simpa [μ, neg_mul] using (((hcutoff_meas n).aemeasurable.const_mul q).neg)
+    exact htmp.exp.aestronglyMeasurable
+
+  have hF_meas : ∀ n : ℕ, AEMeasurable (F n) μ := by
+    intro n
+    exact (hg_meas n).aemeasurable.ennreal_ofReal
+
+  have hg_tendsto :
+      ∀ᵐ ω ∂μ, Filter.Tendsto (fun n : ℕ => g n ω) Filter.atTop (nhds (gLim ω)) := by
+    have hcont : Continuous fun x : ℝ => Real.exp (-(q * x)) := by
+      continuity
+    filter_upwards [htend] with ω hω
+    exact (hcont.tendsto _).comp hω
+
+  have hgLim_meas : AEStronglyMeasurable gLim μ :=
+    aestronglyMeasurable_of_tendsto_ae Filter.atTop hg_meas hg_tendsto
+
+  have hF_liminf_ae :
+      ∀ᵐ ω ∂μ, Filter.liminf (fun n : ℕ => F n ω) Filter.atTop = ENNReal.ofReal (gLim ω) := by
+    filter_upwards [hg_tendsto] with ω hω
+    have hωF :
+        Filter.Tendsto (fun n : ℕ => F n ω) Filter.atTop (nhds (ENNReal.ofReal (gLim ω))) := by
+      exact (ENNReal.continuous_ofReal.tendsto _).comp hω
+    simpa [F, gLim] using hωF.liminf_eq
+
+  have hF_liminf_ae_eq :
+      (fun ω => Filter.liminf (fun n : ℕ => F n ω) Filter.atTop) =ᵐ[μ]
+        (fun ω => ENNReal.ofReal (gLim ω)) := by
+    filter_upwards [hF_liminf_ae] with ω hω
+    exact hω
+
+  have hlintegral_liminf_le :
+      ∫⁻ ω, ENNReal.ofReal (gLim ω) ∂μ ≤
+        Filter.liminf (fun n : ℕ => ∫⁻ ω, F n ω ∂μ) Filter.atTop := by
+    calc
+      ∫⁻ ω, ENNReal.ofReal (gLim ω) ∂μ
+          = ∫⁻ ω, Filter.liminf (fun n : ℕ => F n ω) Filter.atTop ∂μ := by
+            exact lintegral_congr_ae hF_liminf_ae_eq.symm
+      _ ≤ Filter.liminf (fun n : ℕ => ∫⁻ ω, F n ω ∂μ) Filter.atTop :=
+            MeasureTheory.lintegral_liminf_le' hF_meas
+
+  have hliminf_le_C :
+      Filter.liminf (fun n : ℕ => ∫⁻ ω, F n ω ∂μ) Filter.atTop ≤ C := by
+    have hbound_ev :
+        ∀ᶠ n in Filter.atTop, (fun n : ℕ => ∫⁻ ω, F n ω ∂μ) n ≤ (fun _ : ℕ => C) n :=
+      Filter.Eventually.of_forall (fun n => by
+        simpa [F, g, μ] using hC_bound n)
+    have hliminf_const :
+        Filter.liminf (fun _ : ℕ => C) Filter.atTop = C := by
+      simpa using
+        (Filter.Tendsto.liminf_eq (tendsto_const_nhds : Filter.Tendsto (fun _ : ℕ => C) Filter.atTop (nhds C)))
+    exact (Filter.liminf_le_liminf hbound_ev).trans_eq hliminf_const
+
+  have hlintegral_ne_top :
+      ∫⁻ ω, ENNReal.ofReal (gLim ω) ∂μ ≠ ⊤ := by
+    have hC_lt_top : C < ⊤ := lt_top_iff_ne_top.mpr hC_top
+    exact (lt_of_le_of_lt (hlintegral_liminf_le.trans hliminf_le_C) hC_lt_top).ne
+
+  have hgLim_nonneg : 0 ≤ᵐ[μ] gLim := by
+    filter_upwards [] with ω
+    exact Real.exp_nonneg _
+
+  exact (lintegral_ofReal_ne_top_iff_integrable hgLim_meas hgLim_nonneg).1 hlintegral_ne_top
+
 /-- If the canonical cutoff sequence is eventually bounded below almost surely,
     and one has explicit almost-everywhere convergence of that sequence to the
     limiting interaction, then the limit inherits the same lower bound.
