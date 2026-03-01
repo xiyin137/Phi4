@@ -1581,6 +1581,63 @@ theorem gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound
   exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
     huniform hcompat hreduce hdense
 
+/-- Linear-growth frontier with assumption-explicit real-parameterized UV
+    convergence, cutoff measurability, and deterministic linear shifted-cutoff
+    lower bounds:
+    `a * n - b ≤ interactionCutoff(κ_{n+1})` with `a > 0`.
+    This yields the required geometric exponential-moment input
+    constructively before applying `gap_phi4_linear_growth`. -/
+theorem gap_phi4_linear_growth_of_tendsto_ae_and_linear_lower_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ Λ : Rectangle, ∃ a b : ℝ, 0 < a ∧
+        ∀ (n : ℕ) (ω : FieldConfig2D),
+          a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  rcases interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound
+      (params := params) hcutoff_tendsto_ae hcutoff_meas hlin with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
+
 /-- Linear-growth frontier with an explicit WP1-style interaction input:
     replace direct `[InteractionWeightModel params]` by geometric decay of
     shifted cutoff exponential moments, together with explicit measurability

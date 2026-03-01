@@ -111,6 +111,14 @@ Local per-folder guides are available at:
   `gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`,
   matching the Glimm-Jaffe 8.6.2 hypothesis shape without requiring a geometric
   assumption at `p = 0`.
+- `Phi4/Interaction/Part1Tail.lean` now includes a deterministic-growth bridge
+  from linear shifted-cutoff lower bounds to geometric exponential moments:
+  `standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound`,
+  plus the direct model constructor
+  `interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound`; this
+  is propagated to reconstruction via
+  `gap_phi4_linear_growth_of_tendsto_ae_and_linear_lower_bound` in
+  `Phi4/Reconstruction/Part1Core.lean`.
 - `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
   infrastructure:
   `abs_pow_level_set_eq`,

@@ -525,6 +525,129 @@ theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geomet
       (params := params) (Λ := Λ) (q := p.toReal)
       (hgeom := ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩)
 
+/-- Deterministic linear-in-index lower bounds on shifted cutoffs imply
+    geometric shifted-cutoff exponential-moment bounds:
+    if `a * n - b ≤ interactionCutoff(κ_{n+1})` pointwise with `a > 0`, then
+    `E[exp(-(q * interactionCutoff(κ_{n+1})))] ≤ exp(q*b) * exp(-q*a)^n`
+    for every `q > 0`. -/
+theorem standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound
+    (params : Phi4Params) (Λ : Rectangle) (q a b : ℝ)
+    (hq : 0 < q) (ha : 0 < a)
+    (hcutoff_meas :
+      ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ (n : ℕ) (ω : FieldConfig2D),
+        a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    ∃ D r : ℝ,
+      0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+      (∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+          (freeFieldMeasure params.mass params.mass_pos)) ∧
+      (∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+          Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let D : ℝ := Real.exp (q * b)
+  let r : ℝ := Real.exp (-q * a)
+  have hD : 0 ≤ D := by
+    positivity
+  have hr0 : 0 ≤ r := by
+    positivity
+  have hr1 : r < 1 := by
+    have hneg : -q * a < 0 := by nlinarith [hq, ha]
+    simpa [r] using (Real.exp_lt_one_iff.mpr hneg)
+  have hle :
+      ∀ n : ℕ, ∀ ω : FieldConfig2D,
+        Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+          ≤ D * r ^ n := by
+    intro n ω
+    have harg :
+        -(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) ≤
+          q * b + (n : ℝ) * (-q * a) := by
+      nlinarith [hlin n ω]
+    have hexp : Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+        ≤ Real.exp (q * b + (n : ℝ) * (-q * a)) := (Real.exp_le_exp).2 harg
+    have hrepr : Real.exp (q * b + (n : ℝ) * (-q * a)) = D * r ^ n := by
+      calc
+        Real.exp (q * b + (n : ℝ) * (-q * a))
+            = Real.exp (q * b) * Real.exp ((n : ℝ) * (-q * a)) := by
+              rw [Real.exp_add]
+        _ = Real.exp (q * b) * (Real.exp (-q * a)) ^ n := by
+              rw [Real.exp_nat_mul]
+        _ = D * r ^ n := by simp [D, r]
+    exact hexp.trans_eq hrepr
+  have hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+          μ := by
+    intro n
+    have hAe :
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D =>
+            Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+          μ := by
+      simpa [μ, mul_assoc, mul_comm, mul_left_comm] using
+        (Real.continuous_exp.comp_aestronglyMeasurable ((hcutoff_meas n).const_mul (-q)))
+    have hIntConst : Integrable (fun _ : FieldConfig2D => D * r ^ n) μ :=
+      integrable_const _
+    refine Integrable.mono' hIntConst hAe ?_
+    filter_upwards with ω
+    have hnonneg_rhs : 0 ≤ D * r ^ n := mul_nonneg hD (pow_nonneg hr0 n)
+    simpa [Real.norm_of_nonneg (Real.exp_nonneg _), Real.norm_of_nonneg hnonneg_rhs] using hle n ω
+  refine ⟨D, r, hD, hr0, hr1, hInt, ?_⟩
+  intro n
+  have hle_ae :
+      (fun ω : FieldConfig2D =>
+        Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+        ≤ᵐ[μ] (fun _ : FieldConfig2D => D * r ^ n) :=
+    Filter.Eventually.of_forall (hle n)
+  have hIntConst : Integrable (fun _ : FieldConfig2D => D * r ^ n) μ := integrable_const _
+  have hmono := integral_mono_ae (hInt n) hIntConst hle_ae
+  letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+  have hconst : ∫ _ω : FieldConfig2D, D * r ^ n ∂μ = D * r ^ n := by simp [μ]
+  exact hmono.trans (by simpa [hconst])
+
+/-- Construct `InteractionWeightModel` from explicit real-parameterized a.e.
+    UV convergence, cutoff measurability data, and deterministic linear
+    shifted-cutoff lower bounds in the canonical index:
+    `a * n - b ≤ interactionCutoff(κ_{n+1})` with `a > 0`.
+    This yields geometric exponential-moment decay constructively. -/
+theorem interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound
+    (params : Phi4Params)
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ Λ : Rectangle, ∃ a b : ℝ, 0 < a ∧
+        ∀ (n : ℕ) (ω : FieldConfig2D),
+          a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound
+    (params := params) hcutoff_tendsto_ae hcutoff_meas ?_
+  intro Λ q hq
+  rcases hlin Λ with ⟨a, b, ha, hlinΛ⟩
+  exact standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound
+    (params := params) (Λ := Λ) (q := q) (a := a) (b := b) hq ha
+    (hcutoff_meas := fun n => by
+      simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+    hlinΛ
+
 /-- If shifted-index squared cutoff-to-limit moments converge to `0`, then for
     every fixed threshold `a > 0`, the corresponding shifted bad-event
     probabilities
