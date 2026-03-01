@@ -389,7 +389,10 @@ theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_unifor
     2) per-exponent geometric shifted-cutoff real-integral bounds.
     This theorem converts geometric decay to the uniform-integral hypotheses
     required by
-    `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_uniform_integral_bound`. -/
+    `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_uniform_integral_bound`.
+    Compatibility endpoint: prefer
+    `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`
+    when assumptions are naturally stated for real exponents `q > 0`. -/
 theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_integral_bound
     (params : Phi4Params)
     (C β : ℝ) (hC : 0 ≤ C) (hβ : 1 < β)

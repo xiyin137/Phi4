@@ -1218,7 +1218,10 @@ theorem uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
     per-exponent geometric shifted-cutoff exponential-moment bounds
     `∫ exp(-(p.toReal)*V_{n+1}) ≤ D * r^n` with `0 ≤ r < 1`.
     This theorem converts geometric decay to the uniform real-integral bounds
-    required by the preceding Fatou-based constructor. -/
+    required by the preceding Fatou-based constructor.
+    Compatibility endpoint: prefer
+    `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`
+    when hypotheses are naturally stated for real exponents `q > 0`. -/
 theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_integral_bound
     (params : Phi4Params)
     (htend :
@@ -1372,7 +1375,10 @@ theorem interactionWeightModel_nonempty_of_tendsto_ae_and_uniform_exp_moment_bou
 /-- Construct `InteractionWeightModel` from explicit real-parameterized a.e.
     UV convergence, cutoff measurability data, and per-exponent geometric
     shifted-cutoff integral bounds. This theorem bridges real-parameter UV data
-    to the shifted canonical-sequence geometric/Fatou route without class bundles. -/
+    to the shifted canonical-sequence geometric/Fatou route without class
+    bundles. Compatibility endpoint: prefer
+    `interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound`
+    when hypotheses are naturally stated for real exponents `q > 0`. -/
 theorem interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_integral_bound
     (params : Phi4Params)
     (hcutoff_tendsto_ae :

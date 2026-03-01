@@ -1298,7 +1298,9 @@ theorem gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_uniform_integra
     exponential integral bounds.
     This route keeps assumptions explicit, constructs
     `InteractionWeightModel` via the geometric-to-uniform conversion, then
-    applies `gap_phi4_linear_growth`. -/
+    applies `gap_phi4_linear_growth`. Compatibility endpoint: prefer
+    `gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`
+    when assumptions are naturally stated for real exponents `q > 0`. -/
 theorem gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_integral_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
@@ -1447,7 +1449,9 @@ theorem gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_exp_m
     convergence and per-exponent geometric shifted-cutoff moment bounds.
     This route instantiates `InteractionWeightModel` directly from explicit
     theorem inputs (no `InteractionUVModel` bundle assumption) and then applies
-    `gap_phi4_linear_growth`. -/
+    `gap_phi4_linear_growth`. Compatibility endpoint: prefer
+    `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound` when
+    assumptions are naturally stated for real exponents `q > 0`. -/
 theorem gap_phi4_linear_growth_of_tendsto_ae_and_geometric_integral_bound
     (params : Phi4Params)
     [SchwingerLimitModel params]
