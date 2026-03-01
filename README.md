@@ -119,6 +119,10 @@ Local per-folder guides are available at:
   is propagated to reconstruction via
   `gap_phi4_linear_growth_of_tendsto_ae_and_linear_lower_bound` in
   `Phi4/Reconstruction/Part1Core.lean`.
+- `Phi4/Interaction/Part3.lean` now also provides the corresponding full-model
+  constructor from square-data UV control plus deterministic linear shifted
+  lower bounds:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound`.
 - `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
   infrastructure:
   `abs_pow_level_set_eq`,

@@ -930,6 +930,60 @@ theorem
     (params := params) ⟨huv⟩ hW
 
 /-- Construct `InteractionIntegrabilityModel` from:
+    1. square-integrability/measurability UV data (promoted to `InteractionUVModel`),
+    2. deterministic linear shifted-cutoff lower bounds
+       `a * n - b ≤ interactionCutoff(κ_{n+1})` (with `a > 0`), which are used
+       to construct `InteractionWeightModel` via geometric moment control. -/
+theorem interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ Λ : Rectangle, ∃ a b : ℝ, 0 < a ∧
+        ∀ (n : ℕ) (ω : FieldConfig2D),
+          a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
+    Nonempty (InteractionIntegrabilityModel params) := by
+  rcases interactionUVModel_nonempty_of_sq_integrable_data
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq with ⟨huv⟩
+  have hW : Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound
+      (params := params) hcutoff_ae hcutoff_meas hlin
+  exact interactionIntegrabilityModel_nonempty_of_uv_weight_nonempty
+    (params := params) ⟨huv⟩ hW
+
+/-- Construct `InteractionIntegrabilityModel` from:
     1. UV/L² interaction control (`InteractionUVModel`), and
     2. direct per-volume almost-everywhere lower bounds on the limiting
        interaction `interaction params Λ`. -/

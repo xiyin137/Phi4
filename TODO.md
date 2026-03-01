@@ -53,6 +53,10 @@ the local Glimm-Jaffe objective.
   `Phi4/Reconstruction/Part1Core.lean` now exposes the corresponding
   linear-growth frontier
   (`gap_phi4_linear_growth_of_tendsto_ae_and_linear_lower_bound`).
+- `Phi4/Interaction/Part3.lean` now also includes the corresponding full-model
+  constructor from square-data UV control plus deterministic linear shifted
+  lower bounds:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound`.
 - `Phi4/Interaction.lean` now also includes absolute-exponential-moment
   Chernoff infrastructure:
   `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and
