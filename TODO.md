@@ -57,6 +57,13 @@ the local Glimm-Jaffe objective.
   constructor from square-data UV control plus deterministic linear shifted
   lower bounds:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound`.
+- This explicit linear-lower-bound route is now also available at concrete
+  partition-function/Wightman endpoints:
+  `partition_function_pos_of_tendsto_ae_and_linear_lower_bound`,
+  `partition_function_integrable_of_tendsto_ae_and_linear_lower_bound`
+  (`Phi4/Interaction/Part3.lean`), and
+  `phi4_wightman_exists_of_interfaces_of_tendsto_ae_and_linear_lower_bound`
+  (`Phi4/Reconstruction/Part3.lean`).
 - `Phi4/Interaction.lean` now also includes absolute-exponential-moment
   Chernoff infrastructure:
   `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and

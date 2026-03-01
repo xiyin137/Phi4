@@ -123,6 +123,13 @@ Local per-folder guides are available at:
   constructor from square-data UV control plus deterministic linear shifted
   lower bounds:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound`.
+- The same explicit linear-lower-bound route is now exposed at concrete
+  endpoints:
+  `partition_function_pos_of_tendsto_ae_and_linear_lower_bound`,
+  `partition_function_integrable_of_tendsto_ae_and_linear_lower_bound`
+  (`Phi4/Interaction/Part3.lean`), and
+  `phi4_wightman_exists_of_interfaces_of_tendsto_ae_and_linear_lower_bound`
+  (`Phi4/Reconstruction/Part3.lean`).
 - `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
   infrastructure:
   `abs_pow_level_set_eq`,

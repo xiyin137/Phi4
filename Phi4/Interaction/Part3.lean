@@ -1127,6 +1127,66 @@ theorem partition_function_integrable_of_uv_cutoff_seq_shifted_exponential_momen
   exact partition_function_integrable_of_nonempty_interactionWeightModel
     (params := params) (Λ := Λ) hW
 
+/-- Concrete partition-function positivity from explicit real-parameterized a.e.
+    UV convergence, cutoff measurability, and deterministic linear shifted
+    lower bounds `a * n - b ≤ interactionCutoff(κ_{n+1})` (`a > 0`). -/
+theorem partition_function_pos_of_tendsto_ae_and_linear_lower_bound
+    (params : Phi4Params)
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ Λ : Rectangle, ∃ a b : ℝ, 0 < a ∧
+        ∀ (n : ℕ) (ω : FieldConfig2D),
+          a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+    (Λ : Rectangle) :
+    0 < ∫ ω, Real.exp (-(interaction params Λ ω))
+        ∂(freeFieldMeasure params.mass params.mass_pos) := by
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound
+      (params := params) hcutoff_tendsto_ae hcutoff_meas hlin
+  exact partition_function_pos_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete partition-function integrability from explicit real-parameterized
+    a.e. UV convergence, cutoff measurability, and deterministic linear shifted
+    lower bounds `a * n - b ≤ interactionCutoff(κ_{n+1})` (`a > 0`). -/
+theorem partition_function_integrable_of_tendsto_ae_and_linear_lower_bound
+    (params : Phi4Params)
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hlin :
+      ∀ Λ : Rectangle, ∃ a b : ℝ, 0 < a ∧
+        ∀ (n : ℕ) (ω : FieldConfig2D),
+          a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+    (Λ : Rectangle) :
+    Integrable (fun ω => Real.exp (-(interaction params Λ ω)))
+      (freeFieldMeasure params.mass params.mass_pos) := by
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_tendsto_ae_and_linear_lower_bound
+      (params := params) hcutoff_tendsto_ae hcutoff_meas hlin
+  exact partition_function_integrable_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
 /-- Concrete partition-function positivity from:
     1) square-integrable/measurable UV interaction data, and
     2) shifted-cutoff geometric exponential-moment decay.
