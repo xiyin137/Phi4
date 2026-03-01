@@ -651,22 +651,21 @@ theorem interaction_lower_bound_of_cutoff_seq (params : Phi4Params) (Λ : Rectan
   exact Filter.le_limsup_of_frequently_le hfreq (hbounded ω)
 
 /-- Almost-everywhere convergence of the canonical cutoff sequence
-    `κ_n = n + 1` to the limiting interaction. -/
-theorem interactionCutoff_standardSeq_tendsto_ae
+    `κ_n = n + 1` to the limiting interaction, from explicit real-parameterized
+    a.e. UV convergence data. -/
+theorem interactionCutoff_standardSeq_tendsto_ae_of_tendsto_ae
     (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params] :
+    (htend :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+          Filter.atTop
+          (nhds (interaction params Λ ω))) :
     ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
       Filter.Tendsto
         (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
         Filter.atTop
         (nhds (interaction params Λ ω)) := by
-  have htend :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        Filter.Tendsto
-          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
-          Filter.atTop
-          (nhds (interaction params Λ ω)) :=
-    interactionCutoff_tendsto_ae params Λ
   filter_upwards [htend] with ω hωt
   have hnat' : Filter.Tendsto ((Nat.cast : ℕ → ℝ) ∘ fun a : ℕ => a + 1) Filter.atTop Filter.atTop :=
     (tendsto_natCast_atTop_atTop (R := ℝ)).comp (Filter.tendsto_add_atTop_nat 1)
@@ -689,6 +688,45 @@ theorem interactionCutoff_standardSeq_tendsto_ae
       have hn : 0 < (n + 1 : ℝ) := by exact_mod_cast Nat.succ_pos n
       simp [standardUVCutoffSeq, hn])
   exact hseq_raw.congr' hseq_eq
+
+/-- Almost-everywhere convergence of the canonical cutoff sequence
+    `κ_n = n + 1` to the limiting interaction. -/
+theorem interactionCutoff_standardSeq_tendsto_ae
+    (params : Phi4Params) (Λ : Rectangle)
+    [InteractionUVModel params] :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) := by
+  exact interactionCutoff_standardSeq_tendsto_ae_of_tendsto_ae
+    (params := params) (Λ := Λ) (interactionCutoff_tendsto_ae params Λ)
+
+/-- Shifted canonical-sequence (`κ_{n+1}`) specialization of the explicit
+    real-parameterized a.e. UV convergence data. -/
+theorem interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
+    (params : Phi4Params) (Λ : Rectangle)
+    (htend :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+          Filter.atTop
+          (nhds (interaction params Λ ω))) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) := by
+  have hstd :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+          Filter.atTop
+          (nhds (interaction params Λ ω)) :=
+    interactionCutoff_standardSeq_tendsto_ae_of_tendsto_ae
+      (params := params) (Λ := Λ) htend
+  filter_upwards [hstd] with ω hω
+  exact hω.comp (Filter.tendsto_add_atTop_nat 1)
 
 /-- Shifted canonical-sequence (`κ_{n+1}`) specialization of L² cutoff
     convergence:
@@ -1128,6 +1166,44 @@ theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geome
       D * r ^ n ≤ D * 1 := mul_le_mul_of_nonneg_left hrpow_le hD
       _ = D := by ring
   exact (hM n).trans hDr_le_D
+
+/-- Construct `InteractionWeightModel` from explicit real-parameterized a.e.
+    UV convergence, cutoff measurability data, and per-exponent uniform
+    shifted-cutoff integral bounds. This theorem bridges real-parameter UV data
+    to the shifted canonical-sequence Fatou route without using class bundles. -/
+theorem interactionWeightModel_nonempty_of_tendsto_ae_and_uniform_integral_bound
+    (params : Phi4Params)
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_integral_bound
+    (params := params) ?_ ?_ hbound
+  · intro Λ
+    exact interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
+      (params := params) (Λ := Λ) (hcutoff_tendsto_ae Λ)
+  · intro Λ n
+    simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
 
 /-- If the canonical cutoff sequence is eventually bounded below almost surely,
     and one has explicit almost-everywhere convergence of that sequence to the
