@@ -1190,6 +1190,112 @@ theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hcutoff_ev
 
+/-- Shifted-index cutoff-to-limit deviation bad-event bound from squared moments
+    (Chebyshev):
+    for `a > 0`,
+    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| }`
+    is bounded by the squared-moment ratio
+    `E[(interactionCutoff(κ_{n+1}) - interaction)^2] / a^2`. -/
+theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
+    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a) (n : ℕ)
+    (hInt :
+      Integrable
+        (fun ω : FieldConfig2D =>
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+        (freeFieldMeasure params.mass params.mass_pos)) :
+    (freeFieldMeasure params.mass params.mass_pos)
+      {ω : FieldConfig2D |
+        a ≤
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+            interaction params Λ ω|}
+      ≤ ENNReal.ofReal
+          ((∫ ω : FieldConfig2D,
+              (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)) /
+            (a ^ 2)) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let X : FieldConfig2D → ℝ :=
+    fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω
+  have hmarkov :
+      (a ^ 2) * μ.real {ω : FieldConfig2D | a ^ 2 ≤ (X ω) ^ 2}
+        ≤ ∫ ω : FieldConfig2D, (X ω) ^ 2 ∂μ := by
+    exact mul_meas_ge_le_integral_of_nonneg
+      (μ := μ)
+      (hf_nonneg := Filter.Eventually.of_forall fun ω => sq_nonneg (X ω))
+      (hf_int := by simpa [X, μ] using hInt)
+      (ε := a ^ 2)
+  have hset :
+      {ω : FieldConfig2D | a ≤ |X ω|} =
+        {ω : FieldConfig2D | a ^ 2 ≤ (X ω) ^ 2} := by
+    ext ω
+    constructor
+    · intro hω
+      have hsq : a ^ 2 ≤ |X ω| ^ 2 := by
+        exact (sq_le_sq₀ (le_of_lt ha) (abs_nonneg (X ω))).2 hω
+      simpa [sq_abs] using hsq
+    · intro hω
+      have hsq : a ^ 2 ≤ |X ω| ^ 2 := by simpa [sq_abs] using hω
+      have hω' : a ≤ |X ω| := by
+        exact (sq_le_sq₀ (le_of_lt ha) (abs_nonneg (X ω))).1 hsq
+      simpa using hω'
+  have hreal :
+      μ.real {ω : FieldConfig2D | a ≤ |X ω|}
+        ≤ (∫ ω : FieldConfig2D, (X ω) ^ 2 ∂μ) / (a ^ 2) := by
+    have hreal' :
+        μ.real {ω : FieldConfig2D | a ^ 2 ≤ (X ω) ^ 2}
+          ≤ (∫ ω : FieldConfig2D, (X ω) ^ 2 ∂μ) / (a ^ 2) := by
+      exact (le_div_iff₀ (by positivity : 0 < a ^ 2)).2 (by simpa [mul_comm] using hmarkov)
+    simpa [hset] using hreal'
+  have hrhs_nonneg :
+      0 ≤ (∫ ω : FieldConfig2D, (X ω) ^ 2 ∂μ) / (a ^ 2) := by
+    refine div_nonneg ?_ (sq_nonneg a)
+    exact integral_nonneg (fun _ => sq_nonneg _)
+  have hle :
+      μ {ω : FieldConfig2D | a ≤ |X ω|}
+        ≤ ENNReal.ofReal ((∫ ω : FieldConfig2D, (X ω) ^ 2 ∂μ) / (a ^ 2)) := by
+    exact
+      (ENNReal.le_ofReal_iff_toReal_le
+        (ha := measure_ne_top μ _)
+        (hb := hrhs_nonneg)).2 (by simpa [Measure.real, μ] using hreal)
+  simpa [X, μ] using hle
+
+/-- Shifted-index cutoff-to-limit deviation bad-event majorant from squared
+    moment majorants:
+    if `E[(interactionCutoff(κ_{n+1}) - interaction)^2] ≤ Mₙ`, then
+    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| } ≤ Mₙ / a^2`. -/
+theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment_bound
+    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
+    (M : ℕ → ℝ)
+    (hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ M n) :
+    ∀ n : ℕ,
+      (freeFieldMeasure params.mass params.mass_pos)
+        {ω : FieldConfig2D |
+          a ≤
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+              interaction params Λ ω|}
+        ≤ ENNReal.ofReal ((M n) / (a ^ 2)) := by
+  intro n
+  have hbase :=
+    shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
+      (params := params) (Λ := Λ) (a := a) ha n (hInt n)
+  have hdiv :
+      (∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)) / (a ^ 2)
+        ≤ (M n) / (a ^ 2) := by
+    exact div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
+  exact hbase.trans (ENNReal.ofReal_le_ofReal hdiv)
+
 /-- Shifted-index cutoff bad-event bound from exponential moments (Chernoff):
     for `θ > 0`,
     `μ{interactionCutoff(κ_{n+1}) < -B} ≤ exp(-θ B) * E[exp(-θ interactionCutoff(κ_{n+1}))]`.
