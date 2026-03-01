@@ -902,6 +902,92 @@ theorem memLp_exp_neg_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_lint
 
   exact (integrable_norm_rpow_iff hf_meas hp0 hpTop).1 hnorm_rpow_int
 
+/-- Convert shifted-cutoff uniform real-integral bounds into the ENNReal
+    `lintegral` bound format used by the Fatou bridge. -/
+theorem uniform_lintegral_bound_of_standardSeq_succ_uniform_integral_bound
+    (params : Phi4Params) (Λ : Rectangle) (q : ℝ)
+    (hbound :
+      ∃ D : ℝ,
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    ∃ C : ℝ≥0∞, C ≠ ⊤ ∧
+      ∀ n : ℕ,
+        ∫⁻ ω,
+            ENNReal.ofReal
+              (Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ C := by
+  rcases hbound with ⟨D, hInt, hD⟩
+  refine ⟨ENNReal.ofReal D, by simp, ?_⟩
+  intro n
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  have hnonneg :
+      0 ≤ᵐ[μ]
+        (fun ω : FieldConfig2D =>
+          Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))) :=
+    Filter.Eventually.of_forall (fun _ => Real.exp_nonneg _)
+  have hlin_eq :
+      ∫⁻ ω,
+          ENNReal.ofReal
+            (Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+        ∂μ =
+      ENNReal.ofReal
+        (∫ ω : FieldConfig2D,
+          Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ∂μ) := by
+    exact (ofReal_integral_eq_lintegral_ofReal (hInt n) hnonneg).symm
+  calc
+    ∫⁻ ω,
+        ENNReal.ofReal
+          (Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+      ∂(freeFieldMeasure params.mass params.mass_pos)
+      = ENNReal.ofReal
+          (∫ ω : FieldConfig2D,
+            Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            ∂(freeFieldMeasure params.mass params.mass_pos)) := by
+            simpa [μ] using hlin_eq
+    _ ≤ ENNReal.ofReal D := ENNReal.ofReal_le_ofReal (hD n)
+
+/-- Finite nonzero-`p` `Lᵖ` bridge from shifted-cutoff uniform real-integral
+    exponential-moment bounds. -/
+theorem memLp_exp_neg_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_integral_bound
+    (params : Phi4Params) (Λ : Rectangle)
+    {p : ℝ≥0∞} (hp0 : p ≠ 0) (hpTop : p ≠ ⊤)
+    (htend :
+      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+        Filter.Tendsto
+          (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          Filter.atTop
+          (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∃ D : ℝ,
+        (∀ n : ℕ,
+          Integrable
+            (fun ω : FieldConfig2D =>
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+            (freeFieldMeasure params.mass params.mass_pos)) ∧
+        (∀ n : ℕ,
+          ∫ ω : FieldConfig2D,
+            Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    MemLp (fun ω : FieldConfig2D => Real.exp (-(interaction params Λ ω)))
+      p (freeFieldMeasure params.mass params.mass_pos) := by
+  rcases uniform_lintegral_bound_of_standardSeq_succ_uniform_integral_bound
+      (params := params) (Λ := Λ) (q := p.toReal) hbound with ⟨C, hCtop, hCbound⟩
+  exact memLp_exp_neg_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_lintegral_bound
+    (params := params) (Λ := Λ) (hp0 := hp0) (hpTop := hpTop)
+    htend hcutoff_meas ⟨C, hCtop, hCbound⟩
+
 /-- Construct `InteractionWeightModel` from shifted-cutoff a.e. convergence and
     uniform shifted-cutoff exponential moments for every finite exponent.
     This is an assumption-explicit Fatou/`Lᵖ` packaging route that does not
@@ -944,6 +1030,55 @@ theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_unifo
       aestronglyMeasurable_of_tendsto_ae Filter.atTop hmeas_cut (htend Λ)
     exact (hmeas_lim.aemeasurable.neg.exp).aestronglyMeasurable
   · exact memLp_exp_neg_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_lintegral_bound
+      (params := params) (Λ := Λ) (hp0 := hp0) (hpTop := hpTop)
+      (htend Λ) (hcutoff_meas Λ) (hbound Λ hpTop)
+
+/-- Construct `InteractionWeightModel` from shifted-cutoff a.e. convergence and
+    uniform shifted-cutoff real-integral exponential-moment bounds for every
+    finite exponent. This is the real-integral variant of the Fatou route and
+    matches constructive Theorem 8.6.2-style hypotheses. -/
+theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_integral_bound
+    (params : Phi4Params)
+    (htend :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_data (params := params) ?_
+  intro Λ p hpTop
+  by_cases hp0 : p = 0
+  · rw [hp0]
+    rw [memLp_zero_iff_aestronglyMeasurable]
+    have hmeas_cut : ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos) :=
+      hcutoff_meas Λ
+    have hmeas_lim : AEStronglyMeasurable (interaction params Λ)
+        (freeFieldMeasure params.mass params.mass_pos) :=
+      aestronglyMeasurable_of_tendsto_ae Filter.atTop hmeas_cut (htend Λ)
+    exact (hmeas_lim.aemeasurable.neg.exp).aestronglyMeasurable
+  · exact memLp_exp_neg_interaction_of_standardSeq_succ_tendsto_ae_of_uniform_integral_bound
       (params := params) (Λ := Λ) (hp0 := hp0) (hpTop := hpTop)
       (htend Λ) (hcutoff_meas Λ) (hbound Λ hpTop)
 
