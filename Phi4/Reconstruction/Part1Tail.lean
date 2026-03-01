@@ -148,6 +148,863 @@ theorem
         hmom hsmall alpha beta gamma hbeta
         huniform hcompat hreduce hdense)
 
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume polynomial-decay squared-moment bounds for shifted UV
+       differences,
+    3) per-volume uniform shifted-cutoff partition-function bounds, and
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+    This is the hard-core WP1 route through
+    `InteractionIntegrabilityModel`. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        betaMom hbetaMom C hC_nonneg hInt hM hpartition with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) explicit cutoff a.e. convergence,
+    3) per-volume bad-set decomposition data (linear lower bounds off bad sets,
+       geometric second moments, ENNReal geometric bad-set tails), and
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+
+    This is the ENNReal-tail bad-set hard-core WP1 route to reconstruction
+    linear growth. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hdecomp :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a b : ℝ, 0 < a ∧
+          ∃ bad : ℕ → Set FieldConfig2D,
+            (∀ n : ℕ, MeasurableSet (bad n)) ∧
+            (∀ n : ℕ,
+              Integrable
+                (fun ω : FieldConfig2D =>
+                  Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            (∀ (n : ℕ) (ω : FieldConfig2D), ω ∉ bad n →
+              a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) ∧
+            (∀ n : ℕ,
+              MemLp
+                (fun ω : FieldConfig2D =>
+                  Real.exp ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+                2
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            ∃ D2 r2 : ℝ,
+              0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+              (∀ n : ℕ,
+                ∫ ω : FieldConfig2D,
+                  (Real.exp
+                    ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ^ (2 : ℝ)
+                  ∂(freeFieldMeasure params.mass params.mass_pos)
+                ≤ D2 * r2 ^ n) ∧
+              ∃ Cb rb : ℝ≥0∞,
+                Cb ≠ ⊤ ∧ rb < 1 ∧
+                (∀ n : ℕ,
+                  (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤ Cb * rb ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hdecomp with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume geometric shifted-cutoff exponential moments with
+       linear-threshold ratio control `exp(q * a) * r < 1`,
+    3) geometric shifted-cutoff second moments for `exp(-q * interactionCutoff)`,
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+
+    This uses the canonical measurable bad-set construction from the
+    linear-threshold Chernoff bridge, so no explicit `hdecomp` payload is
+    required at this layer. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_sq_exp_moment_geometric
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            MemLp
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              2
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          ∃ D2 r2 : ℝ,
+            0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+            (∀ n : ℕ,
+              ∫ ω : FieldConfig2D,
+                (Real.exp
+                  ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ^ (2 : ℝ)
+                ∂(freeFieldMeasure params.mass params.mass_pos)
+              ≤ D2 * r2 ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_sq_exp_moment_geometric
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hcore with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume geometric shifted-cutoff exponential moments at `q` with
+       linear-threshold ratio control `exp(q * a) * r < 1`,
+    3) per-volume geometric shifted-cutoff exponential moments at doubled
+       parameter `2q`,
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+
+    The doubled-parameter data is converted internally to the square-data
+    decomposition inputs required by the hard-core ENNReal bad-tail route. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r D2 r2 : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D2 * r2 ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hcore with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Same endpoint as
+    `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`,
+    with weaker core assumptions: no separate `q`-level integrability
+    hypothesis is required. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r D2 r2 : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D2 * r2 ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hcore with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) a fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds,
+    3) per-volume uniform shifted-cutoff partition-function bounds, and
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+    This generalizes the hard-core WP1 route beyond the squared-moment case. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume polynomial-decay squared-moment shifted UV-difference bounds
+       on the graph-natural `(n+2)` index,
+    3) per-volume uniform shifted-cutoff partition-function bounds,
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+    This is the hard-core WP1 route without index-shift conversion. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        betaMom hbetaMom C hC_nonneg hInt hM hpartition with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
+/-- Construct `ReconstructionLinearGrowthModel` from:
+    1) square-integrable/measurable UV interaction data,
+    2) a fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds on the graph-natural
+       `(n+2)` index,
+    3) per-volume uniform shifted-cutoff partition-function bounds,
+    4) weak-coupling OS + product-tensor linear-growth reduction hypotheses.
+    This is the higher-moment hard-core WP1 route without index-shift
+    conversion. -/
+theorem
+    reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionLinearGrowthModel params) := by
+  rcases
+      interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition with ⟨hIntModel⟩
+  letI : InteractionIntegrabilityModel params := hIntModel
+  exact reconstructionLinearGrowthModel_nonempty_of_data params
+    (hlinear :=
+      gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense)
+
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure,
     2) UV Wick-sublevel-tail interaction control,
@@ -332,6 +1189,115 @@ theorem reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_m
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure,
     2) square-integrable/measurable UV interaction data,
+    3) explicit cutoff a.e. convergence,
+    4) per-volume bad-set decomposition data (linear lower bounds off bad sets,
+       geometric second moments, ENNReal geometric bad-set tails), and
+    5) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hdecomp :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a b : ℝ, 0 < a ∧
+          ∃ bad : ℕ → Set FieldConfig2D,
+            (∀ n : ℕ, MeasurableSet (bad n)) ∧
+            (∀ n : ℕ,
+              Integrable
+                (fun ω : FieldConfig2D =>
+                  Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            (∀ (n : ℕ) (ω : FieldConfig2D), ω ∉ bad n →
+              a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) ∧
+            (∀ n : ℕ,
+              MemLp
+                (fun ω : FieldConfig2D =>
+                  Real.exp ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+                2
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            ∃ D2 r2 : ℝ,
+              0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+              (∀ n : ℕ,
+                ∫ ω : FieldConfig2D,
+                  (Real.exp
+                    ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ^ (2 : ℝ)
+                  ∂(freeFieldMeasure params.mass params.mass_pos)
+                ≤ D2 * r2 ^ n) ∧
+              ∃ Cb rb : ℝ≥0∞,
+                Cb ≠ ⊤ ∧ rb < 1 ∧
+                (∀ n : ℕ,
+                  (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤ Cb * rb ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq hdecomp
+        hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) square-integrable/measurable UV interaction data,
     3) shifted-cutoff geometric moment decay, and
     4) explicit product-tensor reduction/approximation hypotheses.
     This uses the direct square-data linear-growth constructor. -/
@@ -415,6 +1381,436 @@ theorem
         hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
         hinteraction_meas hinteraction_sq
         hmom hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) square-integrable/measurable UV interaction data,
+    3) per-volume polynomial-decay squared-moment shifted UV-difference bounds,
+    4) per-volume uniform shifted-cutoff partition-function bounds, and
+    5) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        betaMom hbetaMom C hC_nonneg hInt hM hpartition
+        hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) square-integrable/measurable UV interaction data,
+    3) a fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds,
+    4) per-volume uniform shifted-cutoff partition-function bounds, and
+    5) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition
+        hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) square-integrable/measurable UV interaction data,
+    3) per-volume polynomial-decay squared-moment shifted UV-difference bounds
+       on the graph-natural `(n+2)` index,
+    4) per-volume uniform shifted-cutoff partition-function bounds,
+    5) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        betaMom hbetaMom C hC_nonneg hInt hM hpartition
+        hsmall alpha beta gamma hbeta
+        huniform hcompat hreduce hdense with ⟨hlin⟩
+  letI : ReconstructionLinearGrowthModel params := hlin
+  exact ⟨inferInstance⟩
+
+/-- Construct `ReconstructionInputModel` from:
+    1) weak-coupling decay infrastructure,
+    2) square-integrable/measurable UV interaction data,
+    3) a fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds on the graph-natural
+       `(n+2)` index,
+    4) per-volume uniform shifted-cutoff partition-function bounds,
+    5) explicit product-tensor reduction/approximation hypotheses. -/
+theorem
+    reconstructionInputModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    [ReconstructionWeakCouplingModel params]
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    Nonempty (ReconstructionInputModel params) := by
+  rcases
+      reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+        (params := params)
+        hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+        hinteraction_meas hinteraction_sq
+        j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition
+        hsmall alpha beta gamma hbeta
         huniform hcompat hreduce hdense with ⟨hlin⟩
   letI : ReconstructionLinearGrowthModel params := hlin
   exact ⟨inferInstance⟩

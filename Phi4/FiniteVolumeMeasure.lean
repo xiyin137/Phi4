@@ -198,6 +198,679 @@ theorem
     (params := params) (Λ := Λ) hW
 
 /-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume polynomial-decay squared-moment shifted UV-difference bounds,
+    3) per-volume uniform shifted-cutoff partition-function bounds.
+    This is the hard-core WP1 per-volume route. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq
+      betaMom hbetaMom C hC_nonneg hInt hM hpartition
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) explicit cutoff a.e. convergence data, and
+    3) per-volume bad-set decomposition assumptions:
+       linear lower bounds off bad sets, geometric second moments of shifted
+       exponential cutoffs, and ENNReal geometric bad-set tails.
+
+    This is the ENNReal-tail hard-core WP1 route to finite-volume measure
+    existence. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hdecomp :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a b : ℝ, 0 < a ∧
+          ∃ bad : ℕ → Set FieldConfig2D,
+            (∀ n : ℕ, MeasurableSet (bad n)) ∧
+            (∀ n : ℕ,
+              Integrable
+                (fun ω : FieldConfig2D =>
+                  Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            (∀ (n : ℕ) (ω : FieldConfig2D), ω ∉ bad n →
+              a * (n : ℝ) - b ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) ∧
+            (∀ n : ℕ,
+              MemLp
+                (fun ω : FieldConfig2D =>
+                  Real.exp ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+                2
+                (freeFieldMeasure params.mass params.mass_pos)) ∧
+            ∃ D2 r2 : ℝ,
+              0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+              (∀ n : ℕ,
+                ∫ ω : FieldConfig2D,
+                  (Real.exp
+                    ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ^ (2 : ℝ)
+                  ∂(freeFieldMeasure params.mass params.mass_pos)
+                ≤ D2 * r2 ^ n) ∧
+              ∃ Cb rb : ℝ≥0∞,
+                Cb ≠ ⊤ ∧ rb < 1 ∧
+                (∀ n : ℕ,
+                  (freeFieldMeasure params.mass params.mass_pos) (bad n) ≤ Cb * rb ^ n))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq hdecomp
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume geometric shifted-cutoff exponential moments with
+       linear-threshold ratio control `exp(q * a) * r < 1`,
+    3) geometric shifted-cutoff second moments for `exp(-q * interactionCutoff)`.
+
+    This route constructs the bad-set decomposition canonically via measurable
+    shifted sublevel events and uses the linear-threshold Chernoff bridge to
+    discharge ENNReal geometric bad-tail obligations automatically. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_sq_exp_moment_geometric
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            MemLp
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              2
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          ∃ D2 r2 : ℝ,
+            0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+            (∀ n : ℕ,
+              ∫ ω : FieldConfig2D,
+                (Real.exp
+                  ((-q) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)) ^ (2 : ℝ)
+                ∂(freeFieldMeasure params.mass params.mass_pos)
+              ≤ D2 * r2 ^ n))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_sq_exp_moment_geometric
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq hcore
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume geometric shifted-cutoff exponential moments at `q` with
+       linear-threshold ratio control `exp(q * a) * r < 1`,
+    3) per-volume geometric shifted-cutoff exponential moments at doubled
+       parameter `2q`.
+
+    The doubled-parameter data is converted internally to the square-data
+    decomposition inputs needed by the hard-core ENNReal bad-tail route. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r D2 r2 : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D2 * r2 ^ n))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq hcore
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Same endpoint as
+    `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`,
+    with weaker core assumptions: no separate `q`-level integrability
+    hypothesis is required. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcore :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ a D r D2 r2 : ℝ,
+          0 < a ∧ 0 ≤ D ∧ 0 ≤ r ∧ Real.exp (q * a) * r < 1 ∧
+          0 ≤ D2 ∧ 0 ≤ r2 ∧ r2 < 1 ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D * r ^ n) ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp ((-(2 * q)) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            ≤ D2 * r2 ^ n))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq hcore
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds,
+    3) per-volume uniform shifted-cutoff partition-function bounds.
+    This is the higher-moment hard-core WP1 per-volume route. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 1) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq
+      j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) per-volume polynomial-decay squared-moment shifted UV-difference bounds
+       on the graph-natural `(n+2)` index,
+    3) per-volume uniform shifted-cutoff partition-function bounds.
+    This is the hard-core WP1 per-volume route without index-shift conversion. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq
+      betaMom hbetaMom C hC_nonneg hInt hM hpartition
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
+    1) square-integrable/measurable UV interaction data,
+    2) fixed higher even moment order `2j` (`j > 0`) with per-volume
+       polynomial-decay shifted UV-difference bounds on the graph-natural
+       `(n+2)` index,
+    3) per-volume uniform shifted-cutoff partition-function bounds.
+    This is the higher-moment hard-core WP1 route without index-shift
+    conversion. -/
+theorem
+    finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_sq :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      ∀ (Λ : Rectangle),
+        Filter.Tendsto
+          (fun (κ : ℝ) => if h : 0 < κ then
+            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+            else 0)
+          Filter.atTop
+          (nhds 0))
+    (hcutoff_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hinteraction_meas :
+      ∀ (Λ : Rectangle),
+        AEStronglyMeasurable (interaction params Λ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hinteraction_sq :
+      ∀ (Λ : Rectangle),
+        Integrable (fun ω => (interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (j : ℕ) (hj : 0 < j)
+    (betaMom : ℝ) (hbetaMom : 1 < betaMom)
+    (C : Rectangle → ℝ)
+    (hC_nonneg : ∀ Λ : Rectangle, 0 ≤ C Λ)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C Λ * (↑(n + 2) : ℝ) ^ (-betaMom))
+    (hpartition :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D))
+    (Λ : Rectangle) :
+    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
+  have hI :
+      Nonempty (InteractionIntegrabilityModel params) :=
+    interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+      (params := params)
+      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
+      hinteraction_meas hinteraction_sq
+      j hj betaMom hbetaMom C hC_nonneg hInt hM hpartition
+  have hW :
+      Nonempty (InteractionWeightModel params) :=
+    interactionWeightModel_nonempty_of_integrability_nonempty
+      (params := params) hI
+  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
+    (params := params) (Λ := Λ) hW
+
+/-- Concrete finite-volume probability theorem from:
     shifted-index exponential tails of natural Wick sublevel bad events
     `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}`. -/
 theorem

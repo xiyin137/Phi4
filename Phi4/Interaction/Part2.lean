@@ -1521,6 +1521,75 @@ theorem interaction_ae_nonneg_of_sq_integrable_data_and_uv_cutoff_seq_shifted_ex
 /-- Convert shifted-index geometric bounds on absolute exponential moments
     `E[exp(θ |interactionCutoff(κ_{n+1})|)]` into shifted-index geometric
     bounds on signed moments `E[exp(-θ interactionCutoff(κ_{n+1}))]`. -/
+theorem shifted_exponential_moment_geometric_bound_of_abs_at_theta
+    (params : Phi4Params) (Λ : Rectangle) (θ D r : ℝ)
+    [InteractionUVModel params]
+    (hθ : 0 < θ)
+    (hIntAbs :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            Real.exp (θ * |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω|))
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hMAbs :
+      ∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+          Real.exp (θ * |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω|)
+          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) :
+    (∀ n : ℕ,
+      Integrable
+        (fun ω : FieldConfig2D =>
+          Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+        (freeFieldMeasure params.mass params.mass_pos)) ∧
+    (∀ n : ℕ,
+      ∫ ω : FieldConfig2D,
+        Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+        ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) := by
+  have hIntNeg :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+          (freeFieldMeasure params.mass params.mass_pos) := by
+    intro n
+    let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+    let X : FieldConfig2D → ℝ :=
+      fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
+    have hXae : AEStronglyMeasurable X μ := by
+      simpa [X, μ] using
+        (interactionCutoff_in_L2 params Λ (standardUVCutoffSeq (n + 1))).aestronglyMeasurable
+    have hAeExpNeg : AEStronglyMeasurable (fun ω => Real.exp ((-θ) * X ω)) μ := by
+      exact Real.continuous_exp.comp_aestronglyMeasurable (hXae.const_mul (-θ))
+    refine Integrable.mono' (hIntAbs n) hAeExpNeg ?_
+    filter_upwards with ω
+    have hArg : (-θ) * X ω ≤ θ * |X ω| := by
+      have hmul : θ * (-X ω) ≤ θ * |X ω| :=
+        mul_le_mul_of_nonneg_left (neg_le_abs (X ω)) (le_of_lt hθ)
+      nlinarith
+    have hExp : Real.exp ((-θ) * X ω) ≤ Real.exp (θ * |X ω|) :=
+      (Real.exp_le_exp).2 hArg
+    simpa [Real.norm_eq_abs, abs_of_nonneg (Real.exp_nonneg _)] using hExp
+  refine ⟨hIntNeg, ?_⟩
+  intro n
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let X : FieldConfig2D → ℝ :=
+    fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
+  have hle_ae :
+      (fun ω => Real.exp ((-θ) * X ω)) ≤ᵐ[μ] (fun ω => Real.exp (θ * |X ω|)) := by
+    filter_upwards with ω
+    exact (Real.exp_le_exp).2 (by
+      have hmul : θ * (-X ω) ≤ θ * |X ω| :=
+        mul_le_mul_of_nonneg_left (neg_le_abs (X ω)) (le_of_lt hθ)
+      nlinarith)
+  have hIntBound :
+      ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ ≤
+        ∫ ω : FieldConfig2D, Real.exp (θ * |X ω|) ∂μ :=
+    integral_mono_ae (hIntNeg n) (hIntAbs n) hle_ae
+  exact hIntBound.trans (by simpa [X, μ] using hMAbs n)
+
+/-- Convert shifted-index geometric bounds on absolute exponential moments
+    `E[exp(θ |interactionCutoff(κ_{n+1})|)]` into shifted-index geometric
+    bounds on signed moments `E[exp(-θ interactionCutoff(κ_{n+1}))]`. -/
 theorem shifted_exponential_moment_geometric_bound_of_abs
     (params : Phi4Params) (Λ : Rectangle)
     [InteractionUVModel params]
@@ -1548,47 +1617,12 @@ theorem shifted_exponential_moment_geometric_bound_of_abs
           Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
           ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) := by
   rcases hmomAbs with ⟨θ, D, r, hθ, hD, hr0, hr1, hIntAbs, hMAbs⟩
-  have hIntNeg :
-      ∀ n : ℕ,
-        Integrable
-          (fun ω : FieldConfig2D =>
-            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-          (freeFieldMeasure params.mass params.mass_pos) := by
-    intro n
-    let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-    let X : FieldConfig2D → ℝ :=
-      fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
-    have hXae : AEStronglyMeasurable X μ := by
-      simpa [X, μ] using
-        (interactionCutoff_in_L2 params Λ (standardUVCutoffSeq (n + 1))).aestronglyMeasurable
-    have hAeExpNeg : AEStronglyMeasurable (fun ω => Real.exp ((-θ) * X ω)) μ := by
-      exact Real.continuous_exp.comp_aestronglyMeasurable (hXae.const_mul (-θ))
-    refine Integrable.mono' (hIntAbs n) hAeExpNeg ?_
-    filter_upwards with ω
-    have hArg : (-θ) * X ω ≤ θ * |X ω| := by
-      have hmul : θ * (-X ω) ≤ θ * |X ω| :=
-        mul_le_mul_of_nonneg_left (neg_le_abs (X ω)) (le_of_lt hθ)
-      nlinarith
-    have hExp : Real.exp ((-θ) * X ω) ≤ Real.exp (θ * |X ω|) :=
-      (Real.exp_le_exp).2 hArg
-    simpa [Real.norm_eq_abs, abs_of_nonneg (Real.exp_nonneg _)] using hExp
-  refine ⟨θ, D, r, hθ, hD, hr0, hr1, hIntNeg, ?_⟩
-  intro n
-  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-  let X : FieldConfig2D → ℝ :=
-    fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
-  have hle_ae :
-      (fun ω => Real.exp ((-θ) * X ω)) ≤ᵐ[μ] (fun ω => Real.exp (θ * |X ω|)) := by
-    filter_upwards with ω
-    exact (Real.exp_le_exp).2 (by
-      have hmul : θ * (-X ω) ≤ θ * |X ω| :=
-        mul_le_mul_of_nonneg_left (neg_le_abs (X ω)) (le_of_lt hθ)
-      nlinarith)
-  have hIntBound :
-      ∫ ω : FieldConfig2D, Real.exp ((-θ) * X ω) ∂μ ≤
-        ∫ ω : FieldConfig2D, Real.exp (θ * |X ω|) ∂μ :=
-    integral_mono_ae (hIntNeg n) (hIntAbs n) hle_ae
-  exact hIntBound.trans (by simpa [X, μ] using hMAbs n)
+  rcases
+      shifted_exponential_moment_geometric_bound_of_abs_at_theta
+        (params := params) (Λ := Λ) (θ := θ) (D := D) (r := r)
+        hθ hIntAbs hMAbs with
+    ⟨hIntNeg, hMNeg⟩
+  exact ⟨θ, D, r, hθ, hD, hr0, hr1, hIntNeg, hMNeg⟩
 
 /-- `Lᵖ` integrability from geometric decay of shifted-index exponential moments
     of the cutoff interaction, given explicit measurability of `interaction`

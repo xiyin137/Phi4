@@ -63,9 +63,14 @@ Local per-folder guides are available at:
   `gap_infiniteVolumeSchwingerModel_nonempty` is the direct constructor rather
   than an alias wrapper.
 - Current sharpest WP1 blocker (Glimm-Jaffe Theorem 8.6.2 hard core):
-  prove per-rectangle geometric cutoff exponential-moment decay
-  `E[exp(-θ · interactionCutoff(κ_{n+1}))] ≤ D * r^n` (`r < 1`), which is the
-  exact input shape consumed by the production Part3 interaction-weight bridges.
+  prove per-rectangle uniform cutoff partition-function control
+  `∫ exp(-q · interactionCutoff(κ_{n+1})) dφ_C ≤ D(Λ, q)` (for each `q > 0`,
+  uniform in `n`), together with quantitative shifted UV-difference control.
+  This is now consumed directly by the production hard-core bridges
+  `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`
+  (`Part1Tail`) and
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`
+  (`Part3`).
 
 ### Recent Infrastructure Progress
 
@@ -119,10 +124,85 @@ Local per-folder guides are available at:
   is propagated to reconstruction via
   `gap_phi4_linear_growth_of_tendsto_ae_and_linear_lower_bound` in
   `Phi4/Reconstruction/Part1Core.lean`.
+- `Phi4/Interaction/Part1Tail.lean` now also includes a hard-core WP1 assembly
+  route with per-volume constants:
+  `interactionCutoff_standardSeq_succ_tendsto_ae_of_sq_moment_polynomial_bound_to_interaction`
+  and
+  `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+  The same route is now generalized to higher even moments (`2j`, `j > 0`) via
+  `interactionCutoff_standardSeq_succ_tendsto_ae_to_interaction_of_higher_moment_polynomial_bound`
+  and
+  `interactionWeightModel_nonempty_of_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+- `Phi4/Interaction/Part1Tail.lean` now also includes a Cauchy/AM-GM bad-part
+  infrastructure for the Theorem 8.6.2 decomposition chain:
+  - `standardSeq_succ_exp_moment_integral_on_bad_set_le_of_memLp_two`,
+  - `toReal_geometric_bad_set_bound_of_ennreal`,
+  - `standardSeq_succ_geometric_bad_part_integral_bound_of_sq_exp_moment_geometric_and_bad_measure_geometric`,
+  - `standardSeq_succ_geometric_bad_part_integral_bound_of_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`,
+  - `standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric`.
+  - `standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
+  - `standardSeq_succ_sq_exp_moment_data_of_double_exponential_moment_geometric_bound`.
+  - `standardSeq_succ_geometric_exp_moment_bound_of_linear_lower_bound_off_bad_sets_and_double_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
+  It now also includes linear-threshold Chernoff bridges that turn geometric
+  shifted-cutoff exponential-moment hypotheses directly into ENNReal geometric
+  bad-set tails for sublevel events `{interactionCutoff(κ_{n+1}) < a*n - b}`:
+  - `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound_linear_threshold`,
+  - `shifted_cutoff_bad_event_exists_ennreal_geometric_bound_of_exponential_moment_bound_linear_threshold`,
+  - `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_abs_bound_linear_threshold`,
+  - `shifted_cutoff_bad_event_exists_ennreal_geometric_bound_of_exponential_moment_abs_bound_linear_threshold`.
+  This isolates the remaining hard core to proving the two quantitative inputs:
+  geometric second-moment bounds and geometric bad-set measure bounds.
+- `Phi4/Interaction/Part3.lean` now also exposes the matching full-model
+  constructor from explicit bad-set decomposition data with ENNReal tails:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
+  A doubled-moment entry point is now also available:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`,
+  which derives the `MemLp`-2 and squared-moment decomposition inputs
+  internally from geometric `exp(-(2q) * interactionCutoff)` bounds.
+  A weaker-assumption variant is also available:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds`,
+  which additionally derives `q`-level integrability from `MemLp(·,2)` under
+  the free-field probability measure.
+  A mixed signed/absolute doubled-moment route is also available:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_abs_geometric_of_moment_bounds`,
+  which keeps the `q` branch signed while accepting the `2q` branch in
+  absolute form `exp((2q) * |interactionCutoff|)`.
+  The same route now also has concrete partition-function endpoints:
+  `partition_function_pos_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`
+  and
+  `partition_function_integrable_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
 - `Phi4/Interaction/Part3.lean` now also provides the corresponding full-model
   constructor from square-data UV control plus deterministic linear shifted
   lower bounds:
   `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_lower_bound`.
+- `Phi4/Interaction/Part3.lean` now also provides the corresponding full-model
+  constructor for the hard-core WP1 route:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+  A higher-moment counterpart is also available:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+  The same per-volume routes now also expose concrete partition-function
+  endpoints:
+  `partition_function_pos_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  `partition_function_integrable_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  and higher-moment (`2j`) counterparts.
+- `Phi4/Interaction/Part1Tail.lean` now also includes graph-index alignment
+  lemmas for hard-core per-volume WP1 assembly:
+  `natCast_succ_two_rpow_neg_le_succ_one_rpow_neg`,
+  `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+  and
+  `interactionWeightModel_nonempty_of_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+  so graph-natural `(n+2)^(-β)` decay hypotheses can feed the production
+  `(n+1)^(-β)` constructors directly.
+  `Phi4/Interaction/Part3.lean` now also exposes the matching full-model
+  constructors:
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`
+  and
+  `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`.
+  The same `(n+2)^(-β)` route now also has concrete partition-function
+  endpoints:
+  `partition_function_pos_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+  `partition_function_integrable_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+  and higher-moment (`2j`) counterparts.
 - The same explicit linear-lower-bound route is now exposed at concrete
   endpoints:
   `partition_function_pos_of_tendsto_ae_and_linear_lower_bound`,
@@ -155,6 +235,21 @@ Local per-folder guides are available at:
   `partition_function_integrable_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/FiniteVolumeMeasure.lean` now also includes hard-core per-volume WP1
+  probability-measure endpoints (squared-moment and higher-moment):
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`
+  and
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+  Matching graph-natural `(n+2)^(-β)` decay endpoints are also available:
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`
+  and
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`.
+  It now also includes the ENNReal-tail bad-set decomposition endpoint:
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
+  A doubled-moment linear-threshold endpoint is also available:
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`.
+  A weaker-assumption variant is also available:
+  `finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds`.
 - `Phi4/Interaction.lean` now also provides direct `exp(-V_Λ) ∈ L^p` endpoints
   from shifted-cutoff exponential-moment geometric decay:
   `exp_interaction_Lp_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
@@ -211,6 +306,32 @@ Local per-folder guides are available at:
   `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
   and
   `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Reconstruction/Part1Tail.lean` and `Phi4/Reconstruction/Part3.lean`
+  now also expose the hard-core per-volume WP1 reconstruction chain (and its
+  higher-moment generalization) from square-data UV assumptions:
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  `reconstructionInputModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound`,
+  plus the corresponding higher-moment (`2j`) theorem family with
+  `_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound`.
+  The ENNReal-tail bad-set decomposition branch is also exposed at both dense
+  and interface-level Wightman endpoints:
+  `phi4_wightman_exists_of_os_and_productTensor_dense_and_normalized_order0_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`
+  and
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_linear_lower_bound_off_bad_sets_and_sq_exp_moment_geometric_and_bad_measure_geometric_ennreal`.
+  The doubled-parameter (`q`, `2q`) linear-threshold branch is now also
+  exposed through reconstruction linear-growth and interface Wightman
+  endpoints:
+  `reconstructionLinearGrowthModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`
+  and
+  `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`.
+  Weaker-assumption (`_of_moment_bounds`) variants are also available for both
+  endpoints.
+  Matching graph-natural `(n+2)^(-β)` decay theorem families are now also
+  available (with `_of_succ_succ` suffix) at all four reconstruction stages:
+  linear-growth model, reconstruction-input model, dense-product endpoint, and
+  interface-level Wightman endpoint (for both squared and higher moments).
 - `Phi4/Reconstruction.lean` now also includes UV-level and square-integrable
   reconstruction-chain endpoints driven by shifted-index exponential Wick
   sublevel-tail hypotheses:
