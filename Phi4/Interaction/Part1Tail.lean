@@ -209,42 +209,24 @@ theorem shifted_cutoff_interaction_deviation_bad_event_summable_of_sq_moment_pol
             |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
               interaction params Λ ω|}) ≠ ⊤ := by
   let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-  let ε : ℕ → ℝ≥0∞ := fun n =>
-    ENNReal.ofReal ((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β))
-  have hdom :
-      ∀ n : ℕ,
-        μ
-          {ω : FieldConfig2D |
-            a ≤
-              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
-                interaction params Λ ω|}
-        ≤ ε n := by
+  let X : ℕ → FieldConfig2D → ℝ := fun n ω =>
+    interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω
+  letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+  have hintAbs : ∀ n : ℕ, Integrable (fun ω : FieldConfig2D => |X n ω| ^ (2 * (1 : ℕ))) μ := by
     intro n
-    have hbase :=
-      shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
-        (params := params) (Λ := Λ) (a := a) ha n (hInt n)
-    have hdiv :
-        (∫ ω : FieldConfig2D,
-            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
-            ∂μ) / (a ^ 2)
-          ≤ ((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β)) := by
-      calc
-        (∫ ω : FieldConfig2D,
-            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
-            ∂μ) / (a ^ 2)
-            ≤ (C * (↑(n + 1) : ℝ) ^ (-β)) / (a ^ 2) :=
-              div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
-        _ = (C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β) := by
-              field_simp [pow_two, ha.ne']
-    exact (hbase.trans (ENNReal.ofReal_le_ofReal hdiv)).trans_eq (by simp [ε])
-  have hεsum :
-      (∑' n : ℕ, ε n) ≠ ⊤ := by
-    change (∑' n : ℕ, ENNReal.ofReal (((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β)))) ≠ ⊤
-    exact tsum_ofReal_ne_top_of_polynomial_decay
-      (hα := hβ)
-      (hf_nonneg := fun n => mul_nonneg (div_nonneg hC (sq_nonneg a)) (by positivity))
-      (hle := fun n => le_rfl)
-  exact ne_top_of_le_ne_top hεsum (ENNReal.tsum_le_tsum hdom)
+    refine (hInt n).congr ?_
+    filter_upwards with ω
+    simp [X, pow_two]
+  have hmomentAbs :
+      ∀ n : ℕ, ∫ ω : FieldConfig2D, |X n ω| ^ (2 * (1 : ℕ)) ∂μ ≤
+        C * (↑(n + 1) : ℝ) ^ (-β) := by
+    intro n
+    simpa [X, pow_two] using hM n
+  simpa [μ, X] using
+    (tail_summable_of_moment_polynomial_decay
+      (μ := μ) (X := X) (j := 1) (hj := by decide)
+      (a := a) ha (K := C) (β := β) hC hβ
+      hintAbs hmomentAbs)
 
 /-- Borel-Cantelli criterion for almost-sure convergence to `0`:
     if for every reciprocal threshold `1/(m+1)` the level-set events
