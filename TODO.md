@@ -28,11 +28,10 @@ the local Glimm-Jaffe objective.
   and
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`,
   with `[InteractionUVModel]` theorem forms retained as wrappers.
-- `Phi4/Interaction.lean` now also includes explicit power-moment to
-  exponential-moment Chernoff infrastructure:
-  `abs_tsum_pow_div_factorial_mul_le_exp_of_abs_moment_bound`,
-  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound`, and
-  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_power_series`.
+- `Phi4/Interaction.lean` now also includes absolute-exponential-moment
+  Chernoff infrastructure:
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and
+  `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_abs_bound`.
 - The shifted exponential Wick-sublevel branch now also has assumption-explicit
   cores for interaction, reconstruction-linear-growth/input, and Wightman
   endpoints (with class-based theorem forms retained only as compatibility

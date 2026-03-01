@@ -118,11 +118,10 @@ Local per-folder guides are available at:
   shifted-cutoff exponential-moment geometric decay to shifted geometric
   bad-event tails at threshold `0`:
   `shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
-- `Phi4/Interaction.lean` now also includes explicit power-moment to Chernoff
-  bridges for shifted cutoff events:
-  `abs_tsum_pow_div_factorial_mul_le_exp_of_abs_moment_bound`,
-  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound`, and
-  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_power_series`.
+- `Phi4/Interaction.lean` now also includes absolute-exponential-moment
+  Chernoff bridges for shifted cutoff events:
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound` and
+  `shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_abs_bound`.
 - `Phi4/Interaction.lean` now also provides derived positivity-transfer
   endpoints from the same shifted-cutoff moment-decay hypotheses:
   `cutoff_seq_eventually_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
