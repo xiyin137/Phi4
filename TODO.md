@@ -28,6 +28,11 @@ the local Glimm-Jaffe objective.
   and
   `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`,
   with `[InteractionUVModel]` theorem forms retained as wrappers.
+- `Phi4/Interaction.lean` now also includes explicit power-moment to
+  exponential-moment Chernoff infrastructure:
+  `abs_tsum_pow_div_factorial_mul_le_exp_of_abs_moment_bound`,
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound`, and
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_power_series`.
 - The shifted exponential Wick-sublevel branch now also has assumption-explicit
   cores for interaction, reconstruction-linear-growth/input, and Wightman
   endpoints (with class-based theorem forms retained only as compatibility
@@ -729,6 +734,38 @@ Distance-to-goal assessment:
 9. `gap_osE4Cluster_nonempty` in `Phi4/OSAxioms.lean`.
 10. `gap_phi4_linear_growth` in `Phi4/Reconstruction.lean`.
 11. `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean`.
+
+### Strict Theorem-Dependency Frontier (Current)
+
+```mermaid
+flowchart TD
+  WP1I["WP1 analytic proof:<br/>`exp(-V_Λ) ∈ L^p`"]
+  WP1G["WP1 analytic proof:<br/>localized graph bounds (GJ Thm 8.5.5)"]
+  IV["`gap_infiniteVolumeSchwingerModel_nonempty`"]
+
+  OSC["`gap_osaCoreModel_nonempty`"]
+  OSE2["`gap_osDistributionE2_nonempty`"]
+  OSE4["`gap_osE4Cluster_nonempty`"]
+  OSPKG["OS closure:<br/>`phi4_satisfies_OS_of_interfaces` / `gap_phi4_satisfies_OS`"]
+
+  REG1["`gap_generating_functional_bound`"]
+  REG2["`gap_generating_functional_bound_uniform`"]
+  REG3["`gap_nonlocal_phi4_bound`"]
+  LG["`gap_phi4_linear_growth`"]
+  WREC["`gap_phi4_wightman_reconstruction_step`"]
+
+  WP1I --> IV
+  WP1G --> IV
+  IV --> OSC
+  OSC --> OSPKG
+  OSE2 --> OSPKG
+  OSE4 --> OSPKG
+
+  REG1 --> LG
+  REG2 --> LG
+  REG3 --> LG
+  LG --> WREC
+```
 
 Current execution policy:
 - Freeze additional interface splitting unless it is required by a concrete proof.

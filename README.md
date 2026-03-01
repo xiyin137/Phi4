@@ -26,6 +26,19 @@ Architecture is interpreted in this order:
 upstream `OSReconstruction` blocker triage is secondary support work, not the
 project objective.
 
+## Module Guide Index
+
+Local per-folder guides are available at:
+
+- `Phi4/Bessel/README.md`
+- `Phi4/Combinatorics/README.md`
+- `Phi4/FeynmanGraphs/README.md`
+- `Phi4/GreenFunction/README.md`
+- `Phi4/Interaction/README.md`
+- `Phi4/InfiniteVolumeLimit/README.md`
+- `Phi4/Reconstruction/README.md`
+- `Phi4/Scratch/README.md`
+
 ## Status Snapshot (2026-02-27)
 
 - Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`):
@@ -105,6 +118,11 @@ project objective.
   shifted-cutoff exponential-moment geometric decay to shifted geometric
   bad-event tails at threshold `0`:
   `shifted_cutoff_bad_event_geometric_bound_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`.
+- `Phi4/Interaction.lean` now also includes explicit power-moment to Chernoff
+  bridges for shifted cutoff events:
+  `abs_tsum_pow_div_factorial_mul_le_exp_of_abs_moment_bound`,
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound`, and
+  `shifted_cutoff_bad_event_measure_le_of_exponential_moment_power_series`.
 - `Phi4/Interaction.lean` now also provides derived positivity-transfer
   endpoints from the same shifted-cutoff moment-decay hypotheses:
   `cutoff_seq_eventually_nonneg_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
@@ -291,6 +309,36 @@ flowchart LR
   K --> L[OS axioms package]
   L --> M[Wightman reconstruction input]
 ```
+
+## Remaining Gaps To Close OS Axioms
+
+The current frontier for proving 2D `φ⁴` satisfies OS axioms is the following
+dependency chain (explicit theorem-level gaps only, no hidden placeholders):
+
+```mermaid
+flowchart TD
+  WP1A["WP1 analytic blocker:<br/>interaction integrability `exp(-V_Λ) ∈ L^p`"]
+  WP1B["WP1 analytic blocker:<br/>localized graph bounds (GJ Thm 8.5.5)"]
+  IV["`gap_infiniteVolumeSchwingerModel_nonempty`<br/>(Phi4/InfiniteVolumeLimit.lean)"]
+  CORE["`gap_osaCoreModel_nonempty`<br/>(Phi4/OSAxioms.lean)"]
+  E2["`gap_osDistributionE2_nonempty`<br/>(Phi4/OSAxioms.lean)"]
+  E4["`gap_osE4Cluster_nonempty`<br/>(Phi4/OSAxioms.lean)"]
+  OS["OS package closure:<br/>`phi4_satisfies_OS_of_interfaces` / `gap_phi4_satisfies_OS`"]
+
+  WP1A --> IV
+  WP1B --> IV
+  IV --> CORE
+  CORE --> OS
+  E2 --> OS
+  E4 --> OS
+```
+
+Additional open frontiers on the reconstruction side (post-OS package path):
+- `gap_generating_functional_bound` (`Phi4/Regularity.lean`)
+- `gap_generating_functional_bound_uniform` (`Phi4/Regularity.lean`)
+- `gap_nonlocal_phi4_bound` (`Phi4/Regularity.lean`)
+- `gap_phi4_linear_growth` (`Phi4/Reconstruction.lean`)
+- `gap_phi4_wightman_reconstruction_step` (`Phi4/Reconstruction.lean`)
 
 ## Assumption Interface Layer (Current)
 
