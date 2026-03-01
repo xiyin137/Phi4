@@ -99,6 +99,12 @@ Local per-folder guides are available at:
   - constructor paths to instantiate
     `InteractionWeightModel`/`InteractionIntegrabilityModel` from cutoff lower
     bound data.
+- `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
+  infrastructure:
+  `abs_pow_level_set_eq`,
+  `higher_moment_markov_ennreal`,
+  and `tail_summable_of_moment_polynomial_decay`, providing a generic
+  `2j`-moment (`j > 0`) route to summable bad-event tails.
 - `Phi4/Interaction.lean` now also includes nonempty witness-composition
   constructors across UV/weight/full interaction interfaces:
   `interactionUVModel_nonempty_of_integrability_nonempty`,

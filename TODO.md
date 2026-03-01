@@ -46,6 +46,11 @@ the local Glimm-Jaffe objective.
   and
   `interactionIntegrabilityModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`
   (plus square-data variants).
+- `Phi4/Interaction/Part1Tail.lean` now also provides reusable higher-moment
+  tail infrastructure (`abs_pow_level_set_eq`,
+  `higher_moment_markov_ennreal`,
+  `tail_summable_of_moment_polynomial_decay`), extending the existing squared-
+  moment Chebyshev route to general `2j`-moment (`j > 0`) summability inputs.
 - The shifted exponential Wick-sublevel branch now also has assumption-explicit
   cores for interaction, reconstruction-linear-growth/input, and Wightman
   endpoints (with class-based theorem forms retained only as compatibility

@@ -141,6 +141,47 @@ theorem tsum_ofReal_ne_top_of_polynomial_decay
     Summable.of_nonneg_of_le hf_nonneg hle hs_major
   exact hs_f.tsum_ofReal_ne_top
 
+/-- Moment-decay to tail-summability bridge:
+    if `E[|Xₙ|^(2j)] ≤ K * (n+1)^(-β)` with `β > 1`, then
+    `∑ μ{|Xₙ| ≥ a}` is finite for every fixed `a > 0`. -/
+theorem tail_summable_of_moment_polynomial_decay
+    {Ω : Type*} [MeasurableSpace Ω]
+    {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {X : ℕ → Ω → ℝ} {j : ℕ} (hj : 0 < j)
+    {a : ℝ} (ha : 0 < a)
+    {K β : ℝ} (hK : 0 ≤ K) (hβ : 1 < β)
+    (hint : ∀ n : ℕ, Integrable (fun ω : Ω => |X n ω| ^ (2 * j)) μ)
+    (hmoment :
+      ∀ n : ℕ, ∫ ω : Ω, |X n ω| ^ (2 * j) ∂μ ≤ K * (↑(n + 1) : ℝ) ^ (-β)) :
+    (∑' n : ℕ, μ {ω : Ω | a ≤ |X n ω|}) ≠ ⊤ := by
+  let ε : ℕ → ℝ≥0∞ := fun n =>
+    ENNReal.ofReal ((K / (a ^ (2 * j))) * (↑(n + 1) : ℝ) ^ (-β))
+  have hdom :
+      ∀ n : ℕ, μ {ω : Ω | a ≤ |X n ω|} ≤ ε n := by
+    intro n
+    have hbase :=
+      higher_moment_markov_ennreal (μ := μ) (X := X n) (j := j) hj (a := a) ha (hint n)
+    have hdiv :
+        (∫ ω : Ω, |X n ω| ^ (2 * j) ∂μ) / (a ^ (2 * j))
+          ≤ (K / (a ^ (2 * j))) * (↑(n + 1) : ℝ) ^ (-β) := by
+      calc
+        (∫ ω : Ω, |X n ω| ^ (2 * j) ∂μ) / (a ^ (2 * j))
+            ≤ (K * (↑(n + 1) : ℝ) ^ (-β)) / (a ^ (2 * j)) :=
+              div_le_div_of_nonneg_right (hmoment n) (pow_nonneg (le_of_lt ha) _)
+        _ = (K / (a ^ (2 * j))) * (↑(n + 1) : ℝ) ^ (-β) := by
+              field_simp [pow_ne_zero _ ha.ne']
+    exact (hbase.trans (ENNReal.ofReal_le_ofReal hdiv)).trans_eq (by simp [ε])
+  have hεsum : (∑' n : ℕ, ε n) ≠ ⊤ := by
+    change (∑' n : ℕ, ENNReal.ofReal ((K / (a ^ (2 * j))) * (↑(n + 1) : ℝ) ^ (-β))) ≠ ⊤
+    exact tsum_ofReal_ne_top_of_polynomial_decay
+      (hα := hβ)
+      (hf_nonneg := fun n =>
+        mul_nonneg
+          (div_nonneg hK (pow_nonneg (le_of_lt ha) _))
+          (by positivity))
+      (hle := fun n => le_rfl)
+  exact ne_top_of_le_ne_top hεsum (ENNReal.tsum_le_tsum hdom)
+
 /-- Summable shifted cutoff-to-limit deviation tails from polynomial-decay
     squared-moment bounds.
     If `E[(interactionCutoff(κ_{n+1}) - interaction)^2]` decays like
