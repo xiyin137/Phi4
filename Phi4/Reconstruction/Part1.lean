@@ -1128,6 +1128,86 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
   exact gap_phi4_linear_growth_of_zero_mode_normalization
     params hsmall alpha beta gamma hbeta hmixed hcompat hzero hreduce hdense
 
+/-- Linear-growth frontier with assumption-explicit real-parameterized UV
+    convergence and per-exponent geometric shifted-cutoff moment bounds.
+    This route instantiates `InteractionWeightModel` directly from explicit
+    theorem inputs (no `InteractionUVModel` bundle assumption) and then applies
+    `gap_phi4_linear_growth`. -/
+theorem gap_phi4_linear_growth_of_tendsto_ae_and_geometric_integral_bound
+    (params : Phi4Params)
+    [SchwingerLimitModel params]
+    [OSAxiomCoreModel params]
+    [OSDistributionE2Model params]
+    [OSE4ClusterModel params]
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hgeom :
+      ∀ (Λ : Rectangle) (p : ENNReal), p ≠ ⊤ →
+        ∃ D r : ℝ,
+          0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
+    (hsmall : params.coupling < os4WeakCouplingThreshold params)
+    (alpha beta gamma : ℝ)
+    (hbeta : 0 < beta)
+    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
+      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hcompat :
+      ∀ (n : ℕ) (f : Fin n → TestFun2D),
+        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
+          (infiniteVolumeSchwinger params n f : ℂ))
+    (hreduce :
+      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
+        ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) ≤
+          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
+            SchwartzMap.seminorm ℝ 0 0
+              (schwartzProductTensorFromTestFamily f))
+    (hdense :
+      ∀ (n : ℕ) (_hn : 0 < n),
+        DenseRange (fun f : Fin n → TestFun2D =>
+          schwartzProductTensorFromTestFamily f)) :
+    ∃ OS : OsterwalderSchraderAxioms 1,
+      OS.S = phi4SchwingerFunctions params ∧
+      Nonempty (OSLinearGrowthCondition 1 OS) := by
+  have hgeom' :
+      ∀ (Λ : Rectangle) {p : ENNReal}, p ≠ ⊤ →
+        ∃ D r : ℝ,
+          0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) := by
+    intro Λ p hp
+    exact hgeom Λ p hp
+  rcases interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_integral_bound
+      (params := params) hcutoff_tendsto_ae hcutoff_meas hgeom' with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
+
 /-- Linear-growth frontier with an explicit WP1-style interaction input:
     replace direct `[InteractionWeightModel params]` by geometric decay of
     shifted cutoff exponential moments, together with explicit measurability
@@ -2313,4 +2393,3 @@ theorem phi4_wightman_reconstruction_step (params : Phi4Params)
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
   exact phi4_wightman_reconstruction_step_of_interface params
-
