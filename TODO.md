@@ -38,7 +38,11 @@ the local Glimm-Jaffe objective.
   now also provide direct `q > 0` geometric exponential-moment entry points
   (`interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`,
   `interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound`,
-  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`),
+  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`), and
+  the same `q > 0` shape is now propagated through the squared-moment WP1
+  bridge
+  (`interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`,
+  `gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`),
   aligning WP1 assumptions with the Glimm-Jaffe 8.6.2 shape and avoiding
   unrealistic geometric hypotheses at `p = 0`.
 - `Phi4/Interaction.lean` now also includes absolute-exponential-moment

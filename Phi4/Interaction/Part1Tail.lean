@@ -457,6 +457,71 @@ theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geomet
     interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_integral_bound
       (params := params) htend hcutoff_meas hgeom
 
+/-- Construct `InteractionWeightModel` directly from:
+    1) polynomial-decay squared-moment bounds for shifted cutoff deviations, and
+    2) per-exponent geometric shifted-cutoff real-parameter exponential-moment
+    bounds for each `q > 0`.
+    This keeps the Glimm-Jaffe 8.6.2 input shape explicit while avoiding
+    geometric assumptions at `p = 0`. -/
+theorem interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound
+    (params : Phi4Params)
+    (C β : ℝ) (hC : 0 ≤ C) (hβ : 1 < β)
+    (hInt :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C * (↑(n + 1) : ℝ) ^ (-β))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hgeom :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D r : ℝ,
+          0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_uniform_integral_bound
+    (params := params) (C := C) (β := β) hC hβ hInt hM hcutoff_meas ?_
+  intro Λ p hpTop
+  by_cases hp0 : p = 0
+  · refine ⟨1, ?_, ?_⟩
+    · intro n
+      let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+      letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+      simpa [μ, hp0] using
+        (integrable_const (1 : ℝ) : Integrable (fun _ : FieldConfig2D => (1 : ℝ)) μ)
+    · intro n
+      let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+      letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+      have hlin :
+          ∫ ω : FieldConfig2D,
+            Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+            ∂μ = 1 := by
+        simp [hp0, μ]
+      simpa [μ] using hlin.le
+  · have hq : 0 < p.toReal := ENNReal.toReal_pos hp0 hpTop
+    rcases hgeom Λ p.toReal hq with ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩
+    exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
+      (params := params) (Λ := Λ) (q := p.toReal)
+      (hgeom := ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩)
+
 /-- If shifted-index squared cutoff-to-limit moments converge to `0`, then for
     every fixed threshold `a > 0`, the corresponding shifted bad-event
     probabilities

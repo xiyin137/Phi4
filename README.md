@@ -104,7 +104,11 @@ Local per-folder guides are available at:
   `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`,
   `interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_exp_moment_bound`,
   and
-  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`,
+  `gap_phi4_linear_growth_of_tendsto_ae_and_geometric_exp_moment_bound`; the
+  same shape is now propagated through the squared-moment bridge via
+  `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`
+  and
+  `gap_phi4_linear_growth_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`,
   matching the Glimm-Jaffe 8.6.2 hypothesis shape without requiring a geometric
   assumption at `p = 0`.
 - `Phi4/Interaction/Part1Tail.lean` now includes reusable higher-moment tail
