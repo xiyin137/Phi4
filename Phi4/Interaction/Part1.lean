@@ -5,6 +5,7 @@ Released under Apache 2.0 license.
 import Mathlib.Order.Filter.AtTopBot.Basic
 import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
 import Mathlib.MeasureTheory.Function.L2Space
+import Mathlib.Analysis.PSeries
 import Phi4.WickProduct
 
 /-!
@@ -1879,6 +1880,89 @@ theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment_b
         ≤ (M n) / (a ^ 2) := by
     exact div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
   exact hbase.trans (ENNReal.ofReal_le_ofReal hdiv)
+
+/-- Polynomial-decay majorants produce finite ENNReal sums.
+    This is a reusable p-series bridge for bad-event summability arguments. -/
+theorem tsum_ofReal_ne_top_of_polynomial_decay
+    {f : ℕ → ℝ} {K : ℝ} {α : ℝ}
+    (hα : 1 < α)
+    (hf_nonneg : ∀ n, 0 ≤ f n)
+    (hle : ∀ n, f n ≤ K * (↑(n + 1) : ℝ) ^ (-α)) :
+    ∑' n, ENNReal.ofReal (f n) ≠ ⊤ := by
+  have hs_rpow : Summable (fun n : ℕ => (n : ℝ) ^ (-α)) := by
+    exact (Real.summable_nat_rpow).2 (by linarith)
+  have hs_shift : Summable (fun n : ℕ => (↑(n + 1) : ℝ) ^ (-α)) := by
+    simpa [Nat.cast_add, Nat.cast_one, add_comm, add_left_comm, add_assoc] using
+      (_root_.summable_nat_add_iff 1).2 hs_rpow
+  have hs_major : Summable (fun n : ℕ => K * (↑(n + 1) : ℝ) ^ (-α)) :=
+    hs_shift.mul_left K
+  have hs_f : Summable f :=
+    Summable.of_nonneg_of_le hf_nonneg hle hs_major
+  exact hs_f.tsum_ofReal_ne_top
+
+/-- Summable shifted cutoff-to-limit deviation tails from polynomial-decay
+    squared-moment bounds.
+    If `E[(interactionCutoff(κ_{n+1}) - interaction)^2]` decays like
+    `(n+1)^(-β)` with `β > 1`, then the deviation bad-event probabilities
+    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| }` are summable. -/
+theorem shifted_cutoff_interaction_deviation_bad_event_summable_of_sq_moment_polynomial_bound
+    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
+    (C β : ℝ) (hC : 0 ≤ C) (hβ : 1 < β)
+    (hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hM :
+      ∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ C * (↑(n + 1) : ℝ) ^ (-β)) :
+    (∑' n : ℕ,
+      (freeFieldMeasure params.mass params.mass_pos)
+        {ω : FieldConfig2D |
+          a ≤
+            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+              interaction params Λ ω|}) ≠ ⊤ := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let ε : ℕ → ℝ≥0∞ := fun n =>
+    ENNReal.ofReal ((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β))
+  have hdom :
+      ∀ n : ℕ,
+        μ
+          {ω : FieldConfig2D |
+            a ≤
+              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+                interaction params Λ ω|}
+        ≤ ε n := by
+    intro n
+    have hbase :=
+      shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
+        (params := params) (Λ := Λ) (a := a) ha n (hInt n)
+    have hdiv :
+        (∫ ω : FieldConfig2D,
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+            ∂μ) / (a ^ 2)
+          ≤ ((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β)) := by
+      calc
+        (∫ ω : FieldConfig2D,
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+            ∂μ) / (a ^ 2)
+            ≤ (C * (↑(n + 1) : ℝ) ^ (-β)) / (a ^ 2) :=
+              div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
+        _ = (C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β) := by
+              field_simp [pow_two, ha.ne']
+    exact (hbase.trans (ENNReal.ofReal_le_ofReal hdiv)).trans_eq (by simp [ε])
+  have hεsum :
+      (∑' n : ℕ, ε n) ≠ ⊤ := by
+    change (∑' n : ℕ, ENNReal.ofReal (((C / (a ^ 2)) * (↑(n + 1) : ℝ) ^ (-β)))) ≠ ⊤
+    exact tsum_ofReal_ne_top_of_polynomial_decay
+      (hα := hβ)
+      (hf_nonneg := fun n => mul_nonneg (div_nonneg hC (sq_nonneg a)) (by positivity))
+      (hle := fun n => le_rfl)
+  exact ne_top_of_le_ne_top hεsum (ENNReal.tsum_le_tsum hdom)
 
 /-- If shifted-index squared cutoff-to-limit moments converge to `0`, then for
     every fixed threshold `a > 0`, the corresponding shifted bad-event
