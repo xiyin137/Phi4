@@ -22,6 +22,12 @@ the local Glimm-Jaffe objective.
 - `lake build Phi4` succeeds.
 - `scripts/check_phi4_trust.sh` now also enforces that selected trusted
   interface/bundle endpoints are free of `sorryAx` dependencies (`#print axioms` check).
+- `Phi4/InfiniteVolumeLimit/Part1.lean` now reduces assumption smuggling at the
+  public endpoint layer: `schwinger_uniformly_bounded` no longer carries an
+  unused limit hypothesis, `infinite_volume_schwinger_exists` no longer carries
+  an unused uniform-bound hypothesis, and
+  `gap_infiniteVolumeSchwingerModel_nonempty` is now the direct constructor
+  (not a theorem-alias wrapper).
 - The shifted geometric-moment WP1 bridge now has assumption-explicit cores in
   both `Interaction` and `Reconstruction`:
   `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`

@@ -1250,9 +1250,9 @@ theorem schwinger_uniformly_bounded_of_interface (params : Phi4Params)
 
 /-! ## Honest frontiers for infinite-volume package construction -/
 
-/-- Construct `InfiniteVolumeSchwingerModel` from explicit uniform bounds and
-    convergence data along the standard exhaustion sequence. -/
-theorem infiniteVolumeSchwingerModel_nonempty_of_limit_data (params : Phi4Params)
+/-- Honest frontier: construct the infinite-volume Schwinger package from
+    correlation inequalities and multiple-reflection bounds. -/
+theorem gap_infiniteVolumeSchwingerModel_nonempty (params : Phi4Params)
     (hbound : ∀ (k : ℕ) (f : Fin k → TestFun2D),
       ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
         |schwingerN params (exhaustingRectangles n hn) k f| ≤ C)
@@ -1268,37 +1268,15 @@ theorem infiniteVolumeSchwingerModel_nonempty_of_limit_data (params : Phi4Params
   letI : SchwingerLimitModel params := hlimModel
   exact ⟨inferInstance⟩
 
-/-- Honest frontier: construct the infinite-volume Schwinger package from
-    correlation inequalities and multiple-reflection bounds. -/
-theorem gap_infiniteVolumeSchwingerModel_nonempty (params : Phi4Params)
-    (hbound : ∀ (k : ℕ) (f : Fin k → TestFun2D),
-      ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
-        |schwingerN params (exhaustingRectangles n hn) k f| ≤ C)
-    (hlim : ∀ (k : ℕ) (f : Fin k → TestFun2D),
-      ∃ S : ℝ, Filter.Tendsto
-        (fun n : ℕ =>
-          if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
-        Filter.atTop (nhds S)) :
-    Nonempty (InfiniteVolumeSchwingerModel params) := by
-  exact infiniteVolumeSchwingerModel_nonempty_of_limit_data params hbound hlim
-
-/-- Public uniform-bound endpoint via explicit theorem-level frontier gap. -/
+/-- Public uniform-bound endpoint from explicit uniform-bound data. -/
 theorem schwinger_uniformly_bounded (params : Phi4Params)
     (hbound : ∀ (k : ℕ) (f : Fin k → TestFun2D),
       ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
         |schwingerN params (exhaustingRectangles n hn) k f| ≤ C)
-    (hlim : ∀ (k : ℕ) (f : Fin k → TestFun2D),
-      ∃ S : ℝ, Filter.Tendsto
-        (fun n : ℕ =>
-          if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
-        Filter.atTop (nhds S))
     (k : ℕ) (f : Fin k → TestFun2D) :
     ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
       |schwingerN params (exhaustingRectangles n hn) k f| ≤ C := by
-  classical
-  rcases gap_infiniteVolumeSchwingerModel_nonempty params hbound hlim with ⟨hiv⟩
-  letI : InfiniteVolumeSchwingerModel params := hiv
-  exact schwinger_uniformly_bounded_of_interface params k f
+  exact hbound k f
 
 /-! ## Existence of the infinite volume limit -/
 
@@ -1322,9 +1300,6 @@ theorem infinite_volume_schwinger_exists_of_interface (params : Phi4Params)
     For general (signed) test functions, existence follows by decomposing
     f = f⁺ - f⁻ and using multilinearity. -/
 theorem infinite_volume_schwinger_exists (params : Phi4Params)
-    (hbound : ∀ (k : ℕ) (f : Fin k → TestFun2D),
-      ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
-        |schwingerN params (exhaustingRectangles n hn) k f| ≤ C)
     (hlim : ∀ (k : ℕ) (f : Fin k → TestFun2D),
       ∃ S : ℝ, Filter.Tendsto
         (fun n : ℕ =>
@@ -1334,10 +1309,7 @@ theorem infinite_volume_schwinger_exists (params : Phi4Params)
     ∃ S : ℝ, Filter.Tendsto
       (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
       Filter.atTop (nhds S) := by
-  classical
-  rcases gap_infiniteVolumeSchwingerModel_nonempty params hbound hlim with ⟨hiv⟩
-  letI : InfiniteVolumeSchwingerModel params := hiv
-  exact infinite_volume_schwinger_exists_of_interface params k f
+  exact hlim k f
 
 /-- Constructive infinite-volume Schwinger existence in interface-sequence form
     for fixed arity `k`, from `k`-point monotonicity and multiple-reflection
@@ -1710,4 +1682,3 @@ theorem connectedTwoPoint_symm (params : Phi4Params)
   unfold connectedTwoPoint
   rw [infiniteVolumeSchwinger_two_symm]
   ring
-
