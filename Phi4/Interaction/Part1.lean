@@ -690,6 +690,58 @@ theorem interactionCutoff_standardSeq_tendsto_ae
       simp [standardUVCutoffSeq, hn])
   exact hseq_raw.congr' hseq_eq
 
+/-- Shifted canonical-sequence (`κ_{n+1}`) specialization of L² cutoff
+    convergence:
+    if the real-parameterized L² convergence hypothesis holds, then the shifted
+    canonical sequence satisfies
+    `∫ (interactionCutoff(κ_{n+1}) - interaction)^2 → 0`. -/
+theorem shifted_cutoff_interaction_sq_moment_tendsto_zero_of_converges_L2
+    (params : Phi4Params) (Λ : Rectangle)
+    (hcutoff_conv :
+      Filter.Tendsto
+        (fun (κ : ℝ) => if h : 0 < κ then
+          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+            ∂(freeFieldMeasure params.mass params.mass_pos)
+          else 0)
+        Filter.atTop
+        (nhds 0)) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        ∫ ω, (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos))
+      Filter.atTop
+      (nhds 0) := by
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  have hnat' :
+      Filter.Tendsto ((Nat.cast : ℕ → ℝ) ∘ fun a : ℕ => a + 2) Filter.atTop Filter.atTop :=
+    (tendsto_natCast_atTop_atTop (R := ℝ)).comp (Filter.tendsto_add_atTop_nat 2)
+  have hseq_raw :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) then
+            ∫ ω, (interactionCutoff params Λ
+              ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n), h⟩ ω - interaction params Λ ω) ^ 2 ∂μ
+          else 0)
+        Filter.atTop
+        (nhds 0) :=
+    hcutoff_conv.comp hnat'
+  have hseq_eq :
+      (fun n : ℕ =>
+        if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) then
+          ∫ ω, (interactionCutoff params Λ
+            ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n), h⟩ ω - interaction params Λ ω) ^ 2 ∂μ
+        else 0) =ᶠ[Filter.atTop]
+      (fun n : ℕ =>
+        ∫ ω, (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2 ∂μ) := by
+    exact Filter.Eventually.of_forall (fun n => by
+      have hn : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) := by
+        exact_mod_cast Nat.succ_pos (n + 1)
+      have hn2 : 0 < (↑n + 2 : ℝ) := by simpa using hn
+      have hκ : (↑n + 2 : ℝ) = (↑n + 1 + 1 : ℝ) := by ring
+      have hn3 : 0 < (↑n + 1 + 1 : ℝ) := by nlinarith [hn2, hκ]
+      simp [standardUVCutoffSeq, μ, hκ, hn3])
+  exact hseq_raw.congr' hseq_eq
+
 /-- If the canonical cutoff sequence is eventually bounded below almost surely,
     and one has explicit almost-everywhere convergence of that sequence to the
     limiting interaction, then the limit inherits the same lower bound.
@@ -1358,6 +1410,40 @@ theorem tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_s
     exact bot_le
   · intro n
     exact hle n
+
+/-- If the real-parameterized L² cutoff convergence hypothesis holds and the
+    shifted cutoff-to-limit squared deviations are integrable, then for every
+    fixed threshold `a > 0` the shifted bad-event probabilities
+    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| }` converge to `0`. -/
+theorem tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_converges_L2
+    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
+    (hInt :
+      ∀ n : ℕ,
+        Integrable
+          (fun ω : FieldConfig2D =>
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hcutoff_conv :
+      Filter.Tendsto
+        (fun (κ : ℝ) => if h : 0 < κ then
+          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
+            ∂(freeFieldMeasure params.mass params.mass_pos)
+          else 0)
+        Filter.atTop
+        (nhds 0)) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        (freeFieldMeasure params.mass params.mass_pos)
+          {ω : FieldConfig2D |
+            a ≤
+              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+                interaction params Λ ω|})
+      Filter.atTop
+      (nhds 0) := by
+  exact tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_sq_moment
+    (params := params) (Λ := Λ) (a := a) ha hInt
+    (shifted_cutoff_interaction_sq_moment_tendsto_zero_of_converges_L2
+      (params := params) (Λ := Λ) hcutoff_conv)
 
 /-- Shifted-index cutoff bad-event bound from exponential moments (Chernoff):
     for `θ > 0`,
