@@ -1121,6 +1121,61 @@ theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_unifo
       (params := params) (Λ := Λ) (hp0 := hp0) (hpTop := hpTop)
       (htend Λ) (hcutoff_meas Λ) (hbound Λ hpTop)
 
+/-- Construct `InteractionWeightModel` from shifted-cutoff a.e. convergence and
+    uniform shifted-cutoff real-parameter exponential moment bounds:
+    for every rectangle `Λ` and every real `q > 0`, assume
+    `∫ exp(-(q * interactionCutoff(κ_{n+1}))) ≤ D(Λ,q)` uniformly in `n`.
+    This is a direct theorem-level Fatou route matching the natural
+    Glimm-Jaffe Theorem 8.6.2 input shape. -/
+theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_exp_moment_bound
+    (params : Phi4Params)
+    (htend :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_lintegral_bound
+    (params := params) htend hcutoff_meas ?_
+  intro Λ p hpTop
+  by_cases hp0 : p = 0
+  · refine ⟨1, by simp, ?_⟩
+    intro n
+    let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+    letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
+    have hlin :
+        ∫⁻ ω,
+            ENNReal.ofReal
+              (Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+          ∂μ = 1 := by
+      simp [hp0, μ]
+    simpa [μ] using hlin.le
+  · have hq : 0 < p.toReal := ENNReal.toReal_pos hp0 hpTop
+    rcases hbound Λ p.toReal hq with ⟨D, hInt, hD⟩
+    rcases uniform_lintegral_bound_of_standardSeq_succ_uniform_integral_bound
+        (params := params) (Λ := Λ) (q := p.toReal) ⟨D, hInt, hD⟩ with
+      ⟨C, hCtop, hCbound⟩
+    exact ⟨C, hCtop, hCbound⟩
+
 /-- Convert geometric shifted-cutoff real-integral bounds
     `∫ exp(-(q)*V_{n+1}) ≤ D * r^n` with `0 ≤ r < 1` to uniform
     shifted-cutoff real-integral bounds `∫ exp(-(q)*V_{n+1}) ≤ D`. -/
@@ -1229,6 +1284,43 @@ theorem interactionWeightModel_nonempty_of_tendsto_ae_and_uniform_integral_bound
               ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
     Nonempty (InteractionWeightModel params) := by
   refine interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_integral_bound
+    (params := params) ?_ ?_ hbound
+  · intro Λ
+    exact interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
+      (params := params) (Λ := Λ) (hcutoff_tendsto_ae Λ)
+  · intro Λ n
+    simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
+
+/-- Construct `InteractionWeightModel` from explicit real-parameterized a.e. UV
+    convergence, cutoff measurability, and uniform real-parameter exponential
+    moment bounds on shifted canonical cutoffs. -/
+theorem interactionWeightModel_nonempty_of_tendsto_ae_and_uniform_exp_moment_bound
+    (params : Phi4Params)
+    (hcutoff_tendsto_ae :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hbound :
+      ∀ (Λ : Rectangle) (q : ℝ), 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_exp_moment_bound
     (params := params) ?_ ?_ hbound
   · intro Λ
     exact interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
@@ -1774,4 +1866,3 @@ theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure
       params Λ B hbad_sum
   exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
     (params := params) (Λ := Λ) (B := B) hcutoff_ev
-
