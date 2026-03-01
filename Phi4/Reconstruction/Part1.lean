@@ -1548,12 +1548,11 @@ theorem gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geome
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact
-    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
-      (params := params)
-      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
-      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
-      hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
+  rcases interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
+      (params := params) hmom with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with explicit square-integrable UV data and shifted
     geometric cutoff-moment decay.
