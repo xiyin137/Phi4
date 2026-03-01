@@ -10,6 +10,8 @@ and reconstruction bridges.
 ## File map
 
 - `Part1.lean`
+  - Thin compatibility import shim for the `Part1*` split.
+- `Part1Core.lean`
   - Core definitions:
     `interactionCutoff`, `standardUVCutoffSeq`, `interaction`.
   - Wick quartic semiboundedness and cutoff lower-bound infrastructure.
@@ -17,6 +19,10 @@ and reconstruction bridges.
     `InteractionUVModel`, `InteractionWeightModel`,
     `InteractionIntegrabilityModel`.
   - Early `L^p` routes from a.e. lower bounds and summable bad-event control.
+- `Part1Tail.lean`
+  - Continuation of Part 1 infrastructure:
+    shifted bad-event/moment deviation controls, Chernoff bridges, and
+    polynomial-to-geometric constructor chains.
 - `Part2.lean`
   - Extended cutoff-sequence lower-bound and bad-event-tail pipelines
     (summable/geometric/exponential variants).

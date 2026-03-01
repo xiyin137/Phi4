@@ -62,6 +62,10 @@ Local per-folder guides are available at:
   `infinite_volume_schwinger_exists` drops an unused uniform-bound input, and
   `gap_infiniteVolumeSchwingerModel_nonempty` is the direct constructor rather
   than an alias wrapper.
+- Current sharpest WP1 blocker (Glimm-Jaffe Theorem 8.6.2 hard core):
+  prove per-rectangle geometric cutoff exponential-moment decay
+  `E[exp(-θ · interactionCutoff(κ_{n+1}))] ≤ D * r^n` (`r < 1`), which is the
+  exact input shape consumed by the production Part3 interaction-weight bridges.
 
 ### Recent Infrastructure Progress
 

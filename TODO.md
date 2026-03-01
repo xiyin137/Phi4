@@ -737,6 +737,12 @@ Distance-to-goal assessment:
   honestly until those WP1/WP2 analytic inputs are grounded constructively.
 
 1. `WP1` interaction integrability (`exp(-V_Λ) ∈ L^p`) is not constructively grounded.
+   Sharpest unresolved theorem target:
+   for each `Λ`, prove geometric cutoff-moment decay
+   `∃ θ D r, 0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+      ∀ n, E[exp(-θ · interactionCutoff(κ_{n+1}))] ≤ D * r^n`.
+   This is the hard analytic core of Glimm-Jaffe Theorem 8.6.2 and is the
+   direct input expected by the production Part3 bridge chain.
 2. `WP1` localized graph bound (GJ Theorem 8.5.5) is not yet proved in production.
 3. `gap_infiniteVolumeSchwingerModel_nonempty` in `Phi4/InfiniteVolumeLimit.lean`.
 4. `gap_generating_functional_bound` in `Phi4/Regularity.lean`.
@@ -884,6 +890,13 @@ flowchart TD
 ## WP1: Interaction Integrability Closure
 
 Goal: replace `InteractionIntegrabilityModel` assumptions by internal proofs of the key Chapter 8 integrability statements.
+
+Current sharpest blocking subgoal (Theorem 8.6.2 core):
+- prove per-rectangle geometric cutoff exponential-moment bounds
+  `E[exp(-θ · interactionCutoff(κ_{n+1}))] ≤ D * r^n` with `r < 1`.
+  This is the exact hypothesis shape consumed by
+  `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
+  and downstream reconstruction/Wightman interface endpoints.
 
 Deliverables:
 - prove `exp_interaction_Lp` from semibounded Wick-4 + tail control,
