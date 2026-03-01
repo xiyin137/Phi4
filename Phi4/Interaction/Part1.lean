@@ -1082,6 +1082,53 @@ theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_unifo
       (params := params) (Λ := Λ) (hp0 := hp0) (hpTop := hpTop)
       (htend Λ) (hcutoff_meas Λ) (hbound Λ hpTop)
 
+/-- Construct `InteractionWeightModel` from shifted-cutoff a.e. convergence and
+    per-exponent geometric shifted-cutoff exponential-moment bounds
+    `∫ exp(-(p.toReal)*V_{n+1}) ≤ D * r^n` with `0 ≤ r < 1`.
+    This theorem converts geometric decay to the uniform real-integral bounds
+    required by the preceding Fatou-based constructor. -/
+theorem interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_integral_bound
+    (params : Phi4Params)
+    (htend :
+      ∀ (Λ : Rectangle),
+        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+          Filter.Tendsto
+            (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+            Filter.atTop
+            (nhds (interaction params Λ ω)))
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (n : ℕ),
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (hgeom :
+      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
+        ∃ D r : ℝ,
+          0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
+    Nonempty (InteractionWeightModel params) := by
+  refine interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_integral_bound
+    (params := params) htend hcutoff_meas ?_
+  intro Λ p hpTop
+  rcases hgeom Λ hpTop with ⟨D, r, hD, hr0, hr1, hInt, hM⟩
+  refine ⟨D, hInt, ?_⟩
+  intro n
+  have hrpow_le : r ^ n ≤ 1 := by
+    exact pow_le_one₀ hr0 (le_of_lt hr1)
+  have hDr_le_D : D * r ^ n ≤ D := by
+    calc
+      D * r ^ n ≤ D * 1 := mul_le_mul_of_nonneg_left hrpow_le hD
+      _ = D := by ring
+  exact (hM n).trans hDr_le_D
+
 /-- If the canonical cutoff sequence is eventually bounded below almost surely,
     and one has explicit almost-everywhere convergence of that sequence to the
     limiting interaction, then the limit inherits the same lower bound.
