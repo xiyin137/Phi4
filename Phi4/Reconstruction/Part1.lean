@@ -1427,12 +1427,13 @@ theorem gap_phi4_linear_growth_of_tendsto_ae_and_geometric_integral_bound
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  refine gap_phi4_linear_growth_of_tendsto_ae_and_uniform_integral_bound
-    (params := params) hcutoff_tendsto_ae hcutoff_meas ?_
-    hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-  intro Λ p hpTop
-  exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
-    (params := params) (Λ := Λ) (q := p.toReal) (hgeom := hgeom Λ p hpTop)
+  rcases interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_integral_bound
+      (params := params) hcutoff_tendsto_ae
+      (hcutoff_meas := hcutoff_meas)
+      (hgeom := fun Λ {p} hpTop => hgeom Λ p hpTop) with ⟨hW⟩
+  letI : InteractionWeightModel params := hW
+  exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
+    huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier with an explicit WP1-style interaction input:
     replace direct `[InteractionWeightModel params]` by geometric decay of
