@@ -9,8 +9,15 @@ Wightman QFT data for `phi^4_2`.
 ## File map
 
 - `Part1.lean`
+  - Thin compatibility import shim for the `Part1*` split.
+- `Part1Core.lean`
   - Linear-growth and product-tensor infrastructure.
   - Interfaces and bridge lemmas used to feed reconstruction inputs.
+- `Part1Tail.lean`
+  - Continuation of Part 1 infrastructure:
+    shifted-moment/Wick-sublevel constructive routes to
+    `ReconstructionLinearGrowthModel` and `ReconstructionInputModel`,
+    plus reconstruction-step endpoint bridges.
   - Key declarations include
     `gap_phi4_linear_growth_of_zero_mode_normalization`,
     `gap_phi4_linear_growth`,
