@@ -5,6 +5,21 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, Reconstruction Part3 corollary trim)
+
+- Removed four no-caller Wightman corollary wrappers from
+  `Phi4/Reconstruction/Part3.lean`:
+  - `phi4_selfadjoint_fields`,
+  - `phi4_locality`,
+  - `phi4_lorentz_covariance`,
+  - `phi4_unique_vacuum`.
+- Tightened guard baseline in `scripts/route_bloat_guard.sh`:
+  - `Reconstruction.Part3` theorem cap `9 -> 5`
+    (`phi4_wightman_exists*` cap remains `4`).
+- Verification passed:
+  - `lake build Phi4.Reconstruction.Part3 Phi4.Reconstruction`,
+  - `bash scripts/quick_gate.sh`.
+
 ## Session Update (2026-03-04, Correlation wrapper collapse)
 
 - Removed eight no-caller wrapper constructors/routes in

@@ -14,7 +14,7 @@ cd "$ROOT_DIR"
 # - Reconstruction/Part2 top-level theorem count: 1
 # - Reconstruction/Part2 *_explicit* theorem count: 0
 # - ModelBundle top-level theorem count: 0
-# - Reconstruction/Part3 top-level theorem count: 9
+# - Reconstruction/Part3 top-level theorem count: 5
 # - Reconstruction/Part3 phi4_wightman_exists* theorem count: 4
 # - InfiniteVolumeLimit/Part1 top-level theorem count: 24
 # - InfiniteVolumeLimit/Part1 schwingerTwo_* theorem count: 1
@@ -31,7 +31,7 @@ MAX_INTERACTION_PART2_THEOREMS=8
 MAX_RECON_PART2_THEOREMS=1
 MAX_RECON_PART2_EXPLICIT_ROUTES=0
 MAX_MODELBUNDLE_THEOREMS=0
-MAX_RECON_PART3_THEOREMS=9
+MAX_RECON_PART3_THEOREMS=5
 MAX_RECON_PART3_WIGHTMAN_ROUTES=4
 MAX_IVL_PART1_THEOREMS=24
 MAX_IVL_PART1_SCHWINGERTWO_ROUTES=1

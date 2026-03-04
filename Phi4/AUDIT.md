@@ -2,6 +2,22 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, reconstruction corollary-wrapper trim):
+- Removed four no-caller Wightman corollary wrappers from
+  `Reconstruction/Part3.lean`:
+  - `phi4_selfadjoint_fields`,
+  - `phi4_locality`,
+  - `phi4_lorentz_covariance`,
+  - `phi4_unique_vacuum`.
+- Surface-size impact:
+  - `Reconstruction/Part3` theorem count reduced `9 -> 5`.
+- Guard hardening:
+  - tightened `Reconstruction/Part3` theorem cap in
+    `scripts/route_bloat_guard.sh` to `5`.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part3 Phi4.Reconstruction` passes.
+  - `bash scripts/quick_gate.sh` passes with updated caps.
+
 Update (2026-03-04, correlation-wrapper collapse):
 - Removed eight no-caller forwarding wrappers in
   `CorrelationInequalities.lean`:
