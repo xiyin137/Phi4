@@ -21,6 +21,24 @@ Each line item is actionable, testable, and tied to concrete files/modules.
   - `lakefile.lean` now pins `GaussianField` and `OSReconstruction` to concrete
     git commits.
 
+## Session Update (2026-03-04, OSAxioms content-aware wrapper pruning)
+
+- `Phi4/OSAxioms.lean`:
+  - removed three no-caller forwarding wrappers with no additional mathematical
+    proof content:
+    `osaCoreModel_nonempty_of_data`,
+    `osDistributionE2Model_nonempty_of_data`,
+    `osE4ClusterModel_nonempty_of_data`.
+  - kept canonical frontier theorems (`gap_osaCoreModel_nonempty`,
+    `gap_osDistributionE2_nonempty`, `gap_osE4Cluster_nonempty`) and inlined
+    direct witness construction there.
+- `scripts/route_bloat_guard.sh`:
+  - tightened `_nonempty_of_` cap `62 -> 59`,
+  - added exact-zero checks for the removed OSAxioms wrapper names.
+- Verification passed:
+  - `lake build Phi4.OSAxioms Phi4.Reconstruction`,
+  - `bash scripts/route_bloat_guard.sh`.
+
 ## Session Update (2026-03-04, linear-growth frontier assumption-explicit refactor)
 
 - `Phi4/Reconstruction/Part1Core.lean`:

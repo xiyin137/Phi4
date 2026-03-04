@@ -2,6 +2,22 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, OSAxioms wrapper pruning with content check):
+- Removed three no-caller theorem wrappers in `OSAxioms.lean` that added no
+  mathematical content (each was a direct forwarding layer):
+  - `osaCoreModel_nonempty_of_data`,
+  - `osDistributionE2Model_nonempty_of_data`,
+  - `osE4ClusterModel_nonempty_of_data`.
+- Kept canonical frontier names (`gap_osaCoreModel_nonempty`,
+  `gap_osDistributionE2_nonempty`, `gap_osE4Cluster_nonempty`) and made them
+  construct model witnesses directly.
+- Route-bloat guard hardening (`scripts/route_bloat_guard.sh`):
+  - tightened `_nonempty_of_` cap `62 -> 59`,
+  - added exact-zero checks for the three removed OSAxioms wrappers.
+- Verification:
+  - `lake build Phi4.OSAxioms Phi4.Reconstruction` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with tightened caps.
+
 Update (2026-03-04, critical-issues framing/scope correction):
 - Status framing tightened across local docs:
   - "zero theorem-level `sorry`" now explicitly means no hidden placeholders in
