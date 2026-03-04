@@ -10,58 +10,6 @@ open MeasureTheory
 open scoped ENNReal NNReal
 
 /-- Construct `ReconstructionLinearGrowthModel` from:
-    1) UV interaction control plus shifted-cutoff geometric exponential-moment
-       decay (used to instantiate `InteractionWeightModel` constructively),
-    2) weak-coupling OS interfaces, and
-    3) explicit product-tensor linear-growth reduction hypotheses. -/
-
-theorem reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    (params : Phi4Params)
-    [InteractionUVModel params]
-    [SchwingerLimitModel params]
-    [OSAxiomCoreModel params]
-    [OSDistributionE2Model params]
-    [OSE4ClusterModel params]
-    (hmom :
-      ∀ Λ : Rectangle, ∃ θ D r : ℝ,
-        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
-        (∀ n : ℕ,
-          Integrable
-            (fun ω : FieldConfig2D =>
-              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-            (freeFieldMeasure params.mass params.mass_pos)) ∧
-        (∀ n : ℕ,
-          ∫ ω : FieldConfig2D,
-            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
-            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
-    (hsmall : params.coupling < os4WeakCouplingThreshold params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (hdense :
-      ∀ (n : ℕ) (_hn : 0 < n),
-        DenseRange (fun f : Fin n → TestFun2D =>
-          schwartzProductTensorFromTestFamily f)) :
-    Nonempty (ReconstructionLinearGrowthModel params) := by
-  exact reconstructionLinearGrowthModel_nonempty_of_data params
-    (hlinear :=
-      gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-        params hmom hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense)
-
-/-- Construct `ReconstructionLinearGrowthModel` from:
     1) square-integrable/measurable UV interaction data,
     2) shifted-cutoff geometric exponential-moment decay, and
     3) weak-coupling OS + product-tensor linear-growth reduction hypotheses.

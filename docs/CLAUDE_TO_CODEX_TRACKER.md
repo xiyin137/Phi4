@@ -248,6 +248,14 @@ primary local Glimm-Jaffe work queue.
   - `interactionCutoff_standardSeq_succ_aestronglyMeasurable`,
     then rewired repeated local conversions in `Interaction/Part2.lean` and
     `Interaction/Part3.lean` to this single infrastructure lemma.
+- Removed two no-caller reconstruction wrappers:
+  - `reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound`
+    (`Reconstruction/Part1Core.lean`),
+  - `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`
+    (`Reconstruction/Part1Tail.lean`).
+- Tightened `scripts/route_bloat_guard.sh` `_nonempty_of_` cap:
+  - `79 -> 77`.
 - Verification:
   - `lake build Phi4.Interaction.Part1Core Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
-  - `bash scripts/quick_gate.sh` passes with route-bloat caps unchanged.
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction.Part3` passes.
+  - `bash scripts/quick_gate.sh` passes with tightened route-bloat caps.

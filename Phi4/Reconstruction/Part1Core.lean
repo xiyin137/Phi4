@@ -1005,28 +1005,6 @@ theorem reconstructionLinearGrowthModel_nonempty_of_explicit_bound
     (hlinear := phi4_linear_growth_of_explicit_bound params OS hS
       sobolev_index alpha beta gamma halpha hbeta hgrowth)
 
-/-- Build `ReconstructionLinearGrowthModel` from:
-    1) an interface-level OS package theorem under weak coupling, and
-    2) an explicit seminorm-growth estimate for `phi4SchwingerFunctions`. -/
-theorem reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound
-    (params : Phi4Params)
-    [OSAxiomCoreModel params]
-    [OSDistributionE2Model params]
-    [OSE4ClusterModel params]
-    (hsmall : params.coupling < os4WeakCouplingThreshold params)
-    (sobolev_index : ℕ)
-    (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
-    (hbeta : 0 < beta)
-    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
-      ‖phi4SchwingerFunctions params n f‖ ≤
-        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
-    Nonempty (ReconstructionLinearGrowthModel params) := by
-  rcases phi4_satisfies_OS_of_interfaces params hsmall with ⟨OS, hS⟩
-  exact reconstructionLinearGrowthModel_nonempty_of_explicit_bound params OS hS
-    sobolev_index alpha beta gamma halpha hbeta hgrowth
-
 /-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions, with
     explicit zeroth-mode normalization of `infiniteVolumeSchwinger`.
     This is the assumption-minimal frontier form: no interaction-weight

@@ -490,6 +490,12 @@ local `sorry`.
     `Interaction/Part2.lean`/`Interaction/Part3.lean` now consume this helper
     instead of duplicating local `simpa` conversions from UV-measurability
     assumptions.
+21. No-caller reconstruction wrappers were removed from
+    `Reconstruction/Part1Core.lean` and `Reconstruction/Part1Tail.lean`
+    (`reconstructionLinearGrowthModel_nonempty_of_os_and_explicit_bound`,
+    `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`),
+    reducing global `_nonempty_of_` route surface (`79 -> 77`) and tightening
+    the bloat guard baseline accordingly.
 
 ### Low
 
