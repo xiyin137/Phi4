@@ -955,16 +955,6 @@ def correlationInequalityModelOfLattice
   schwinger_four_monotone := CorrelationInequalityCoreModel.schwinger_four_monotone (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
 
-/-- Lattice bridge data and core assumptions provide a concrete
-    `CorrelationInequalityModel`. -/
-theorem correlationInequalityModel_nonempty_of_lattice
-    (params : Phi4Params)
-    [LatticeGriffithsFirstModel params]
-    [LatticeSchwingerTwoMonotoneModel params]
-    [CorrelationInequalityCoreModel params] :
-    Nonempty (CorrelationInequalityModel params) := by
-  exact ⟨correlationInequalityModelOfLattice params⟩
-
 /-- Low-priority instance: if lattice bridge data and the remaining core
     inequalities are available, synthesize the full correlation-inequality model. -/
 instance (priority := 100) correlationInequalityModel_of_lattice

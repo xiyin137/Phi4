@@ -61,6 +61,23 @@ Each line item is actionable, testable, and tied to concrete files/modules.
   - `lake env lean Phi4/Regularity.lean`,
   - `bash scripts/route_bloat_guard.sh`.
 
+## Session Update (2026-03-04, correlation-lattice content-aware wrapper pruning)
+
+- `Phi4/CorrelationInequalities.lean`:
+  - removed no-caller forwarding wrapper
+    `correlationInequalityModel_nonempty_of_lattice`.
+  - kept canonical constructor/instance path via
+    `correlationInequalityModelOfLattice` and
+    `correlationInequalityModel_of_lattice`.
+- `scripts/route_bloat_guard.sh`:
+  - tightened `_nonempty_of_` cap `58 -> 57`,
+  - tightened `CorrelationInequalities` theorem cap `53 -> 52`,
+  - added exact-zero check for
+    `correlationInequalityModel_nonempty_of_lattice`.
+- Verification passed:
+  - `lake env lean Phi4/CorrelationInequalities.lean`,
+  - `bash scripts/route_bloat_guard.sh`.
+
 ## Session Update (2026-03-04, linear-growth frontier assumption-explicit refactor)
 
 - `Phi4/Reconstruction/Part1Core.lean`:

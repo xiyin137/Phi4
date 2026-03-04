@@ -2,6 +2,24 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, correlation-lattice wrapper pruning with content check):
+- Removed one no-caller forwarding wrapper with no additional mathematical
+  content:
+  - `CorrelationInequalities.lean`:
+    - `correlationInequalityModel_nonempty_of_lattice`.
+- Rationale:
+  - the theorem was only `exact ⟨correlationInequalityModelOfLattice params⟩`,
+    and the canonical instance `correlationInequalityModel_of_lattice` already
+    uses `correlationInequalityModelOfLattice` directly.
+- Route-bloat guard hardening (`scripts/route_bloat_guard.sh`):
+  - tightened `_nonempty_of_` cap `58 -> 57`,
+  - tightened `CorrelationInequalities` theorem cap `53 -> 52`,
+  - added exact-zero check for
+    `correlationInequalityModel_nonempty_of_lattice`.
+- Verification:
+  - `lake env lean Phi4/CorrelationInequalities.lean` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with tightened caps.
+
 Update (2026-03-04, reconstruction/regularity wrapper pruning with content check):
 - Removed three no-caller wrappers with no additional mathematical proof content:
   - `Reconstruction/Part1Core.lean`:

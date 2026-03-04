@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 # Baselines captured after bloat-reduction refactor (2026-03-04):
 # - class .*Model count: 58
-# - theorem .*_nonempty_of_ count: 58
+# - theorem .*_nonempty_of_ count: 57
 # - interactionWeightModel_nonempty_of_* count: 7
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
 # - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 2
@@ -48,8 +48,10 @@ cd "$ROOT_DIR"
 #   - phi4_wightman_reconstruction_step_of_interface
 # - Regularity removed no-caller uniform-data wrapper kept at exact zero:
 #   - nonlocalPhi4BoundModel_nonempty_of_uniform_data
+# - CorrelationInequalities removed no-caller lattice nonempty wrapper kept at exact zero:
+#   - correlationInequalityModel_nonempty_of_lattice
 MAX_MODEL_CLASSES=58
-MAX_NONEMPTY_CONSTRUCTORS=58
+MAX_NONEMPTY_CONSTRUCTORS=57
 MAX_WEIGHT_ROUTES=7
 MAX_INTEGRABILITY_ROUTES=2
 MAX_LINEAR_GROWTH_ROUTES=2
@@ -79,7 +81,7 @@ MAX_IVL_PART1_SCHWINGERTWO_ROUTES=1
 MAX_IVL_PART1_EXISTS_ROUTES=4
 MAX_IVL_PART2_THEOREMS=11
 MAX_IVL_PART3_THEOREMS=16
-MAX_CORRELATION_THEOREMS=53
+MAX_CORRELATION_THEOREMS=52
 MAX_INTERACTION_PART2_EVENTUAL_LOWER_WRAPPER=0
 MAX_INTERACTION_PART2_GLOBAL_NONNEG_WRAPPER=0
 MAX_IVL_PART1_LATTICE_MONO_TWO_WRAPPER=0
@@ -90,6 +92,7 @@ MAX_OSAXIOMS_E4_DATA_WRAPPER=0
 MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER=0
 MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER=0
 MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER=0
+MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER=0
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
@@ -131,6 +134,7 @@ osaxioms_e4_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+osE4Cluster
 recon_part1core_linear_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+phi4_linear_growth_of_interface\\b' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
 recon_part1core_wightman_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+phi4_wightman_reconstruction_step_of_interface\\b' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
 regularity_nonlocal_uniform_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+nonlocalPhi4BoundModel_nonempty_of_uniform_data\\b' Phi4/Regularity.lean || true) | wc -l | tr -d ' ' )"
+correlation_lattice_nonempty_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+correlationInequalityModel_nonempty_of_lattice\\b' Phi4/CorrelationInequalities.lean || true) | wc -l | tr -d ' ' )"
 part3_theorem_names="$(
   awk '
   /^[[:space:]]*theorem([[:space:]]|$)/{
@@ -200,6 +204,7 @@ echo "[route_bloat_guard] OSAxioms E4-data wrapper: $osaxioms_e4_data_wrapper (m
 echo "[route_bloat_guard] Reconstruction.Part1Core linear-interface wrapper: $recon_part1core_linear_interface_wrapper (max $MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER)"
 echo "[route_bloat_guard] Reconstruction.Part1Core wightman-interface wrapper: $recon_part1core_wightman_interface_wrapper (max $MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER)"
 echo "[route_bloat_guard] Regularity nonlocal-uniform wrapper: $regularity_nonlocal_uniform_wrapper (max $MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER)"
+echo "[route_bloat_guard] Correlation lattice nonempty wrapper: $correlation_lattice_nonempty_wrapper (max $MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER)"
 
 fail=0
 if (( model_classes > MAX_MODEL_CLASSES )); then
@@ -368,6 +373,10 @@ if (( recon_part1core_wightman_interface_wrapper > MAX_RECON_PART1CORE_WIGHTMAN_
 fi
 if (( regularity_nonlocal_uniform_wrapper > MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER )); then
   echo "[FAIL] Regularity nonlocal-uniform wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( correlation_lattice_nonempty_wrapper > MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER )); then
+  echo "[FAIL] Correlation lattice nonempty wrapper count exceeded baseline." >&2
   fail=1
 fi
 
