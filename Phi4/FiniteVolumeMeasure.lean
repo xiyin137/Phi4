@@ -107,33 +107,6 @@ theorem finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
   letI : InteractionWeightModel params := hWinst
   exact finiteVolumeMeasure_isProbability params Λ
 
-/-- Concrete finite-volume probability theorem from geometric decay of shifted
-    exponential moments of cutoff interactions. This discharges the
-    `InteractionWeightModel` interface via proved interaction bridges. -/
-theorem finiteVolumeMeasure_isProbability_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-    (params : Phi4Params)
-    [InteractionUVModel params]
-    (hmom :
-      ∀ Λ : Rectangle, ∃ θ D r : ℝ,
-        0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
-        (∀ n : ℕ,
-          Integrable
-            (fun ω : FieldConfig2D =>
-              Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-            (freeFieldMeasure params.mass params.mass_pos)) ∧
-        (∀ n : ℕ,
-          ∫ ω : FieldConfig2D,
-            Real.exp ((-θ) * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
-            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n))
-    (Λ : Rectangle) :
-    IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
-  have hW :
-      Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
-      (params := params) hmom
-  exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
-    (params := params) (Λ := Λ) hW
-
 /-- Concrete finite-volume probability theorem from:
     1) square-integrable/measurable UV interaction data, and
     2) shifted-cutoff geometric exponential-moment decay.
@@ -896,8 +869,11 @@ theorem
     IsProbabilityMeasure (finiteVolumeMeasure params Λ) := by
   have hW :
       Nonempty (InteractionWeightModel params) :=
-    interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-      (params := params) hwick_bad
+    interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+      (params := params)
+      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
+      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
+      hwick_bad
   exact finiteVolumeMeasure_isProbability_of_nonempty_interactionWeightModel
     (params := params) (Λ := Λ) hW
 

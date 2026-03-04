@@ -40,7 +40,7 @@ OSReconstruction maintenance items are tracked only as dependency-risk controls.
 | CTC-A-01 | Core reconstruction mixed with upstream adapter | Split adapter into `Phi4/ReconstructionUpstream.lean` | done |
 | CTC-A-02 | Need reusable infrastructure, not one-off theorem wrappers | Add reusable localized combinatorial lemmas for graph bounds | done |
 | CTC-A-03 | Keep model-class surface from expanding | No new model classes unless mathematically distinct obligation | done |
-| CTC-A-04 | Preserve compatibility split/recombine pattern | Continue `_of_submodels`/`nonempty_of_data` architecture when grounding; reduced Regularity/Wick interfaces from `InfiniteVolumeLimitModel` to measure-only subinterfaces, decoupled `ReconstructionLinearGrowthModel` and fixed-parameter Wightman interface endpoints from unnecessary Schwinger package assumptions, trimmed `phi4_satisfies_OS` to OS-core assumptions, split measure-vs-moment data (`InfiniteVolumeMeasureModel` vs `InfiniteVolumeMomentModel`), made `MeasureOS3Model` purely measure-level, added canonical OS-core reconstruction from subinterfaces (`osaCoreModel_of_submodels`) now used by bundle inference, weakened connected-two-point weak-coupling interfaces to `SchwingerLimitModel` where uniform-bound data is unused, split E0' linear-growth routing into an explicit zero-mode normalization frontier (`gap_phi4_linear_growth_of_zero_mode_normalization`) plus compatibility-backed wrapper (`gap_phi4_linear_growth`), added an explicit mixed-bound core bridge (`phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0`) so the zero-mode frontier no longer hides `InteractionWeightModel` as an implicit dependency, split the shifted geometric-moment reconstruction route into an explicit-data core (`gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`) plus a class-based wrapper, and now applied the same explicit-core split to shifted exponential Wick-sublevel reconstruction/Wightman routes | in_progress |
+| CTC-A-04 | Preserve compatibility split/recombine pattern | Continue `_of_submodels`/`nonempty_of_data` architecture when grounding; reduced Regularity/Wick interfaces from `InfiniteVolumeLimitModel` to measure-only subinterfaces, decoupled `ReconstructionLinearGrowthModel` and fixed-parameter Wightman interface endpoints from unnecessary Schwinger package assumptions, trimmed `phi4_satisfies_OS` to OS-core assumptions, split measure-vs-moment data (`InfiniteVolumeMeasureModel` vs `InfiniteVolumeMomentModel`), made `MeasureOS3Model` purely measure-level, added canonical OS-core reconstruction from subinterfaces (`osaCoreModel_of_submodels`) now used by bundle inference, weakened connected-two-point weak-coupling interfaces to `SchwingerLimitModel` where uniform-bound data is unused, split E0' linear-growth routing into an explicit zero-mode normalization frontier (`gap_phi4_linear_growth_of_zero_mode_normalization`) plus compatibility-backed wrapper (`gap_phi4_linear_growth`), added an explicit mixed-bound core bridge (`phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0`) so the zero-mode frontier no longer hides `InteractionWeightModel` as an implicit dependency, applied the same explicit-core split to shifted exponential Wick-sublevel reconstruction/Wightman routes, removed all no-caller weak-coupling forwarding wrappers in `Reconstruction/Part2.lean` (now only one nontrivial theorem remains), dropped the now-unused `_of_bundle` theorem layer from `ModelBundle.lean`, pruned no-caller theorem routes in `Interaction/Part3.lean` to keep only actively consumed constructive endpoints, removed remaining nonempty-forwarding partition-function wrappers in `Interaction/Part3.lean`, removed interface-only no-caller corollary wrappers in `Reconstruction/Part3.lean` (`*_of_interfaces`), inlined the last class-based geometric-moment weight-model wrapper by switching callers to the assumption-explicit core constructor directly, removed an additional no-caller finite-volume geometric-moment probability alias in `FiniteVolumeMeasure.lean`, pruned declaration-only interaction/linear-growth wrappers across `Interaction/Part1Core.lean`, `Interaction/Part2.lean`, and `Reconstruction/Part1Tail.lean`, and then removed a further block of declaration-only `interactionWeightModel_nonempty_of_cutoff_seq_*` route aliases from `Interaction/Part2.lean` | in_progress |
 
 ## Work Package Issues (Sections 5 and 9)
 
@@ -126,7 +126,76 @@ primary local Glimm-Jaffe work queue.
   - `scripts/upstream_blockers_status.sh` provides queue operations
     (`list`, `claim-next`, `set`, `stats`) for status-driven execution.
   - `scripts/upstream_blockers_prompt.sh` generates declaration-specific
-    Gemini consultation prompts using the repository policy template.
+    consultation prompts using the repository policy template.
   - `scripts/upstream_blockers_workpack.sh` produces top-N actionable workpacks
     with build targets, claim commands, and per-declaration prompt files.
   - `docs/upstream_blockers/status.tsv` tracks per-declaration status/owner.
+
+## Session Update (2026-03-04, Route-Bloat Reduction Continuation)
+
+- Continued CTC-A-04 de-bloating with no-caller route deletion and explicit-core
+  rewiring:
+  - removed class-based shifted Wick-sublevel wrappers in
+    `Phi4/Interaction/Part2.lean`,
+  - rewired finite-volume and square-data callers to
+    `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`,
+  - removed four additional no-caller linear-growth/weight-route variants in
+    `Phi4/Interaction/Part1Core.lean` and `Phi4/Interaction/Part1Tail.lean`,
+  - removed eleven no-caller `exp_interaction_Lp_of_*` route aliases in
+    `Phi4/Interaction/Part2.lean`.
+- Updated guard baselines in `scripts/route_bloat_guard.sh`:
+  - `_nonempty_of_` cap tightened to `84`,
+  - `interactionWeightModel_nonempty_of_*` cap tightened to `13`.
+- Current measured surface after this pass:
+  - `_nonempty_of_` constructors: `84`,
+  - `interactionWeightModel_nonempty_of_*`: `13`,
+  - `interactionIntegrabilityModel_nonempty_of_*`: `2`,
+  - `gap_phi4_linear_growth*`: `3`,
+  - `Interaction/Part2` theorem count: `17` (line count `993`).
+- Verification:
+  - `lake build Phi4.Interaction.Part2 Phi4.Interaction.Part3 Phi4.FiniteVolumeMeasure Phi4.Reconstruction.Part1Core` passes.
+  - `scripts/route_bloat_guard.sh` passes.
+  - `scripts/quick_gate.sh` passes end-to-end.
+
+### Follow-up trim (same session)
+
+- Removed four more no-caller `Interaction/Part2` bridges:
+  - `exp_interaction_Lp_of_cutoff_seq_shifted_exponential_wick_bad_sets`,
+  - `cutoff_seq_eventually_lower_bound_of_exponential_bad_event_bound`,
+  - `cutoff_seq_eventually_lower_bound_of_shifted_exponential_bad_event_bound`,
+  - `cutoff_seq_eventually_uniform_lower_bound_of_pointwise_bounds`.
+- `Interaction/Part2` now has `13` theorems (`890` lines), down from `17` / `993`
+  at the previous checkpoint; guard metrics (`_nonempty_of_ = 84`,
+  `interactionWeightModel_nonempty_of_* = 13`) remain unchanged and passing.
+
+### Follow-up trim 2 (same session)
+
+- Removed two further no-caller `Interaction/Part2` routes:
+  - `exp_interaction_Lp_of_cutoff_seq_shifted_geometric_wick_bad_sets`,
+  - `cutoff_seq_eventually_lower_bound_of_geometric_bad_event_bound`.
+- `Interaction/Part2` now has `11` theorems (`830` lines), down from `13` / `890`;
+  guard metrics still hold (`_nonempty_of_ = 84`,
+  `interactionWeightModel_nonempty_of_* = 13`).
+- `scripts/route_bloat_guard.sh` was extended to hard-cap
+  `Interaction.Part2` theorem count at `11`.
+
+### Follow-up trim 3 + core-chain collapse (same session)
+
+- Removed one more no-caller `Interaction/Part2` route:
+  - `exp_interaction_Lp_of_cutoff_seq_shifted_summable_wick_bad_sets`.
+- Removed two no-caller forwarding routes from `Interaction/Part1Tail.lean`:
+  - `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_geometric_exp_moment_bound`,
+  - `interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_and_uniform_integral_bound`.
+- Removed two single-use forwarding constructors from
+  `Interaction/Part1Core.lean` by inlining into remaining callers:
+  - `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_exp_moment_bound`,
+  - `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_integral_bound`.
+- Updated guard baselines in `scripts/route_bloat_guard.sh`:
+  - `_nonempty_of_` cap: `80`,
+  - `interactionWeightModel_nonempty_of_*` cap: `9`,
+  - `Interaction.Part2` theorem cap: `10`.
+- Current measured surface after this pass:
+  - `_nonempty_of_`: `80`,
+  - `interactionWeightModel_nonempty_of_*`: `9`,
+  - `interactionIntegrabilityModel_nonempty_of_*`: `2`,
+  - `Interaction/Part2` theorem count: `10`.

@@ -65,48 +65,30 @@ These are the key endpoint theorems and their remaining assumptions:
    - Derived consequence already formalized:
      - `connectedTwoPoint_decay_eventually_small` gives `ε`-`R` clustering for
        fixed test-function pairs from the exponential-decay interface.
-     - `phi4_connectedTwoPoint_decay_below_threshold_eventually_small_explicit`
-       exposes the same `ε`-`R` control directly in Schwinger-moment form.
-     - `phi4_os4_weak_coupling_eventually_small` and
-       `phi4_os4_weak_coupling_eventually_small_explicit` provide global
-       weak-coupling `ε`-`R` forms (uniform in parameter choices below a common
-       coupling threshold).
-     - `ModelBundle.lean` exports bundled wrappers for both base global OS4
-       decay forms and these global `ε`-`R` forms.
    - Trusted interface alternative:
      - `phi4_wightman_exists_of_interfaces` requires
        `ReconstructionLinearGrowthModel params` and
-       `WightmanReconstructionModel params` explicitly; this is the path used by
-       `phi4_wightman_exists_of_bundle`.
-   - Downstream trusted corollaries:
-     - interface-level:
-       `phi4_selfadjoint_fields_of_interfaces`,
-       `phi4_locality_of_interfaces`,
-       `phi4_lorentz_covariance_of_interfaces`,
-       `phi4_unique_vacuum_of_interfaces`
-     - bundle-level:
-       `phi4_selfadjoint_fields_of_bundle`,
-       `phi4_locality_of_bundle`,
-       `phi4_lorentz_covariance_of_bundle`,
-       `phi4_unique_vacuum_of_bundle`.
+       `WightmanReconstructionModel params` explicitly.
+   - Downstream corollaries:
+     - `phi4_selfadjoint_fields`
+     - `phi4_locality`
+     - `phi4_lorentz_covariance`
+     - `phi4_unique_vacuum`
 
 3. `phi4_os1` in `Phi4/OSAxioms.lean`
    - Assumptions:
      - `InfiniteVolumeLimitModel params`
      - theorem-level gap `gap_generating_functional_bound`
    - Meaning: OS1 endpoint is present, but the Chapter 12.5 generating-functional estimate is still an explicit theorem frontier.
-   - Trusted interface/bundle alternatives:
+   - Trusted interface alternatives:
      - `phi4_os1_of_interface` (in `OSAxioms.lean`)
      - `generating_functional_bound_of_interface` (in `Regularity.lean`)
-     - `phi4_os1_of_bundle` (in `ModelBundle.lean`)
-     - `generating_functional_bound_of_bundle` (in `ModelBundle.lean`)
 
-4. `phi4_satisfies_OS` in `Phi4/OSAxioms.lean` vs trusted bundle path
+4. `phi4_satisfies_OS` in `Phi4/OSAxioms.lean` vs trusted interface path
    - Frontier theorem `phi4_satisfies_OS` still traverses theorem-level gaps
      (`gap_osDistributionE2_nonempty`, `gap_osE4Cluster_nonempty`).
-   - Trusted bundle alternative:
-     - `phi4_satisfies_OS_of_bundle`, routed through
-       `phi4_satisfies_OS_of_interfaces` with explicit weak-coupling smallness.
+   - Trusted interface alternative:
+     - `phi4_satisfies_OS_of_interfaces` with explicit weak-coupling smallness.
 
 ## 3. Interface Inventory (Current Assumption Surface)
 

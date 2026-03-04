@@ -22,7 +22,7 @@ scripts/upstream_blockers_status.sh claim-next codex 2
 scripts/upstream_blockers_status.sh set "vNA/KMS.lean" theorem modular_state_is_kms blocked codex "needs bridge lemma"
 scripts/upstream_blockers_status.sh stats
 
-# 4) Generate declaration prompt template (Gemini-ready)
+# 4) Generate declaration prompt template (consultation-ready)
 scripts/upstream_blockers_prompt.sh "Wightman/Reconstruction/WickRotation/OSToWightman.lean" theorem full_analytic_continuation
 
 # 5) Generate top-N execution workpack (+ prompt files)
@@ -43,7 +43,7 @@ The scan script writes to `docs/upstream_blockers/generated/`:
 - `file_stats.tsv`: blocker counts per file.
 - `file_priority.tsv`: file-level scoring + reverse importer fanout.
 - `declaration_queue.tsv`: declaration queue with status and score.
-- `prompts/*.txt`: declaration-specific Gemini consultation prompt templates.
+- `prompts/*.txt`: declaration-specific consultation prompt templates.
 
 ## Status Tracking
 
