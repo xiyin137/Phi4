@@ -554,58 +554,6 @@ theorem phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normali
   exact phi4_linear_growth_of_productTensor_approx_and_zero
     params OS hS 0 alpha' beta gamma halpha' hbeta hprod happrox hzero
 
-/-- Construct φ⁴ linear-growth witness data from:
-    1) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
-    2) explicit product-tensor approximation of general Schwartz `n`-point tests
-       for `n > 0`,
-    3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`,
-    with normalization provided explicitly. -/
-theorem phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    (OS : OsterwalderSchraderAxioms 1)
-    (hS : OS.S = phi4SchwingerFunctions params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (happrox :
-      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
-        ∃ u : ℕ → Fin n → TestFun2D,
-          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g))
-    (hnormalized :
-      ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0) :
-    ∃ OS' : OsterwalderSchraderAxioms 1,
-      OS'.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS') := by
-  have hmixed :
-      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
-        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-          ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) := by
-    intro n hn f
-    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
-      params huniform hcompat n hn f
-  exact phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0
-    params OS hS alpha beta gamma hbeta hmixed hreduce happrox hnormalized
-
 /-- Sequence approximation by product tensors from dense image of the
     product-tensor map at fixed positive order. -/
 theorem phi4_productTensor_approx_of_dense_range

@@ -327,3 +327,23 @@ primary local Glimm-Jaffe work queue.
 - Verification:
   - `lake build Phi4.InfiniteVolumeLimit.Part1 Phi4.InfiniteVolumeLimit Phi4.CorrelationInequalities Phi4.Regularity Phi4.OSAxioms` passes.
   - `bash scripts/quick_gate.sh` passes.
+
+### Final wrapper-prune pass + guard hardening (same session)
+
+- Removed six additional no-caller wrapper routes:
+  - `phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0`
+    (`Reconstruction/Part1Core.lean`),
+  - `schwingerTwo_tendsto_iSup_of_monotone_bounded`,
+    `schwingerTwo_tendsto_if_exhaustion_of_models`,
+    `schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded`,
+    `infinite_volume_schwinger_exists_four_of_correlationCore_models`,
+    `infinite_volume_schwinger_exists_two_of_models`
+    (`InfiniteVolumeLimit/Part1.lean`).
+- Extended `scripts/route_bloat_guard.sh` with
+  `InfiniteVolumeLimit/Part1` non-growth caps:
+  - theorem count: `34`,
+  - `schwingerTwo_*` routes: `5`,
+  - `infinite_volume_schwinger_exists_*_of_*` routes: `4`.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.InfiniteVolumeLimit.Part1 Phi4.InfiniteVolumeLimit Phi4.Regularity Phi4.OSAxioms` passes.
+  - `bash scripts/quick_gate.sh` passes.

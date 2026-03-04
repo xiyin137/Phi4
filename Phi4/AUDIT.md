@@ -2,6 +2,26 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, final wrapper-prune pass + guard hardening):
+- Removed six additional no-caller wrapper routes:
+  - `Reconstruction/Part1Core.lean`:
+    `phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0`.
+  - `InfiniteVolumeLimit/Part1.lean`:
+    `schwingerTwo_tendsto_iSup_of_monotone_bounded`,
+    `schwingerTwo_tendsto_if_exhaustion_of_models`,
+    `schwingerTwo_tendsto_iSup_of_lattice_monotone_bounded`,
+    `infinite_volume_schwinger_exists_four_of_correlationCore_models`,
+    `infinite_volume_schwinger_exists_two_of_models`.
+- Guard hardening:
+  - Extended `scripts/route_bloat_guard.sh` with new
+    `InfiniteVolumeLimit/Part1` non-growth caps:
+    theorem count `34`,
+    `schwingerTwo_*` route count `5`,
+    `infinite_volume_schwinger_exists_*_of_*` route count `4`.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.InfiniteVolumeLimit.Part1 Phi4.InfiniteVolumeLimit Phi4.Regularity Phi4.OSAxioms` passes.
+  - `bash scripts/quick_gate.sh` passes with the new guard checks.
+
 Update (2026-03-04, deep infinite-volume route thinning):
 - Removed twelve additional no-caller route/wrapper theorems:
   - `InfiniteVolumeLimit/Part1.lean`:
