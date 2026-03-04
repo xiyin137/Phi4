@@ -2,6 +2,33 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, finite-volume and interaction route-pruning pass):
+- Removed 11 no-caller `finiteVolumeMeasure_isProbability_of_*` wrappers from
+  `FiniteVolumeMeasure.lean`, including sq-data, wick-sublevel, linear-threshold,
+  and higher-moment route variants.
+- Removed five additional no-caller interaction route wrappers:
+  - `Interaction/Part1Core.lean`:
+    `interactionUVModel_nonempty_of_integrability_nonempty`,
+    `interactionWeightModel_nonempty_of_integrability_nonempty`.
+  - `Interaction/Part2.lean`:
+    `interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+    `interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae`.
+  - `Interaction/Part3.lean`:
+    `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+    `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ`,
+    `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds`.
+- Surface-size impact:
+  - global `_nonempty_of_` constructor count reduced `64 -> 62`,
+  - `interactionWeightModel_nonempty_of_*` route count reduced `8 -> 7`.
+- Guard hardening in `scripts/route_bloat_guard.sh`:
+  - tightened caps to `_nonempty_of_ = 62` and `interactionWeightModel routes = 7`,
+  - added exact-zero checks for the removed `Interaction/Part1Core`,
+    `Interaction/Part2`, and `Interaction/Part3` route names above.
+- Verification:
+  - `lake build Phi4.Interaction Phi4.FiniteVolumeMeasure Phi4.Reconstruction` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with tightened caps/checks.
+  - `bash scripts/quick_gate.sh` passes.
+
 Update (2026-03-04, Interaction.Part3 abs-moment wrapper removal):
 - Removed one no-caller forwarding wrapper from
   `Interaction/Part3.lean`:

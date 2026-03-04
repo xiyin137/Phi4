@@ -6,8 +6,8 @@ cd "$ROOT_DIR"
 
 # Baselines captured after bloat-reduction refactor (2026-03-04):
 # - class .*Model count: 58
-# - theorem .*_nonempty_of_ count: 64
-# - interactionWeightModel_nonempty_of_* count: 8
+# - theorem .*_nonempty_of_ count: 62
+# - interactionWeightModel_nonempty_of_* count: 7
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
 # - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 2
 # - Reconstruction/Part1Core explicit shifted-moment linear-growth wrapper count: 0
@@ -15,10 +15,21 @@ cd "$ROOT_DIR"
 # - Reconstruction/Part1Core InteractionUVModel wrapper count: 0
 # - Reconstruction/Part1Tail InteractionUVModel wrapper count: 0
 # - Reconstruction/Part1Tail reconstructionInputModel_nonempty_of_* route count: 0
+# - Interaction/Part1Core integrability-to-submodel wrappers: 0
 # - Interaction/Part2 top-level theorem count: 8
+# - Interaction/Part2 zero-caller weight routes kept at exact zero:
+#   - interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
+#   - interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
+# - Interaction/Part3 zero-caller integrability routes kept at exact zero:
+#   - interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+#   - interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
+#   - interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds
 # - Reconstruction/Part2 top-level theorem count: 1
 # - Reconstruction/Part2 *_explicit* theorem count: 0
 # - ModelBundle top-level theorem count: 0
+# - FiniteVolumeMeasure top-level theorem count: 29
+# - FiniteVolumeMeasure finiteVolumeMeasure_isProbability_of_* route count: 1
+# - FiniteVolumeMeasure finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_* route count: 0
 # - Reconstruction/Part3 top-level theorem count: 5
 # - Reconstruction/Part3 phi4_wightman_exists* theorem count: 4
 # - InfiniteVolumeLimit/Part1 top-level theorem count: 23
@@ -29,8 +40,8 @@ cd "$ROOT_DIR"
 # - CorrelationInequalities top-level theorem count: 53
 # - Interaction/Part3 abs-moment forwarding wrapper count: 0
 MAX_MODEL_CLASSES=58
-MAX_NONEMPTY_CONSTRUCTORS=64
-MAX_WEIGHT_ROUTES=8
+MAX_NONEMPTY_CONSTRUCTORS=62
+MAX_WEIGHT_ROUTES=7
 MAX_INTEGRABILITY_ROUTES=2
 MAX_LINEAR_GROWTH_ROUTES=2
 MAX_RECON_PART1CORE_EXPLICIT_MOMENT_ROUTE=0
@@ -38,10 +49,20 @@ MAX_RECON_PART1CORE_EXPLICIT_WICK_MODEL_ROUTE=0
 MAX_RECON_PART1CORE_INTERACTIONUV_WRAPPERS=0
 MAX_RECON_PART1TAIL_INTERACTIONUV_WRAPPERS=0
 MAX_RECON_PART1TAIL_INPUT_ROUTES=0
+MAX_INTERACTION_PART1CORE_UV_FROM_INTEGRABILITY_WRAPPER=0
+MAX_INTERACTION_PART1CORE_WEIGHT_FROM_INTEGRABILITY_WRAPPER=0
 MAX_INTERACTION_PART2_THEOREMS=8
+MAX_INTERACTION_PART2_SQDATA_WICK_WEIGHT_ROUTE=0
+MAX_INTERACTION_PART2_EXPLICIT_GEOM_WEIGHT_ROUTE=0
+MAX_INTERACTION_PART3_SQMOMENT_SUCCSUCC_ROUTE=0
+MAX_INTERACTION_PART3_HIGHERMOMENT_SUCCSUCC_ROUTE=0
+MAX_INTERACTION_PART3_DOUBLEEXP_MOMENTBOUNDS_ROUTE=0
 MAX_RECON_PART2_THEOREMS=1
 MAX_RECON_PART2_EXPLICIT_ROUTES=0
 MAX_MODELBUNDLE_THEOREMS=0
+MAX_FINITE_VOLUME_THEOREMS=29
+MAX_FVM_ISPROB_ROUTES=1
+MAX_FVM_SQDATA_ROUTES=0
 MAX_RECON_PART3_THEOREMS=5
 MAX_RECON_PART3_WIGHTMAN_ROUTES=4
 MAX_IVL_PART1_THEOREMS=23
@@ -65,10 +86,20 @@ recon_part1core_explicit_wick_model_route="$( (rg -n 'reconstructionLinearGrowth
 recon_part1core_interactionuv_wrappers="$( (rg -n '^[[:space:]]*\\[InteractionUVModel params\\]' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
 recon_part1tail_interactionuv_wrappers="$( (rg -n '^[[:space:]]*\\[InteractionUVModel params\\]' Phi4/Reconstruction/Part1Tail.lean || true) | wc -l | tr -d ' ' )"
 recon_part1tail_input_routes="$( (rg -n '^[[:space:]]*reconstructionInputModel_nonempty_of_' Phi4/Reconstruction/Part1Tail.lean || true) | wc -l | tr -d ' ' )"
+interaction_part1core_uv_from_integrability_wrapper="$( (rg -n 'interactionUVModel_nonempty_of_integrability_nonempty' Phi4/Interaction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+interaction_part1core_weight_from_integrability_wrapper="$( (rg -n 'interactionWeightModel_nonempty_of_integrability_nonempty' Phi4/Interaction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
 interaction_part2_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/Interaction/Part2.lean | wc -l | tr -d ' ')"
+interaction_part2_sqdata_wick_weight_route="$( (rg -n 'interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets' Phi4/Interaction/Part2.lean || true) | wc -l | tr -d ' ' )"
+interaction_part2_explicit_geom_weight_route="$( (rg -n 'interactionWeightModel_nonempty_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae' Phi4/Interaction/Part2.lean || true) | wc -l | tr -d ' ' )"
+interaction_part3_sqmoment_succsucc_route="$( (rg -n 'interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ' Phi4/Interaction/Part3.lean || true) | wc -l | tr -d ' ' )"
+interaction_part3_highermoment_succsucc_route="$( (rg -n 'interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ' Phi4/Interaction/Part3.lean || true) | wc -l | tr -d ' ' )"
+interaction_part3_doubleexp_momentbounds_route="$( (rg -n 'interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric_of_moment_bounds' Phi4/Interaction/Part3.lean || true) | wc -l | tr -d ' ' )"
 part2_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/Reconstruction/Part2.lean | wc -l | tr -d ' ')"
 part2_explicit_routes="$( (rg -n '^theorem[[:space:]]+.*_explicit(_|$)' Phi4/Reconstruction/Part2.lean || true) | wc -l | tr -d ' ' )"
 modelbundle_theorem_count="$( (rg -n '^theorem[[:space:]]' Phi4/ModelBundle.lean || true) | wc -l | tr -d ' ' )"
+finite_volume_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/FiniteVolumeMeasure.lean | wc -l | tr -d ' ')"
+fvm_isprob_routes="$( (rg -n 'finiteVolumeMeasure_isProbability_of_' Phi4/FiniteVolumeMeasure.lean || true) | wc -l | tr -d ' ' )"
+fvm_sqdata_routes="$( (rg -n 'finiteVolumeMeasure_isProbability_of_sq_integrable_data_and_' Phi4/FiniteVolumeMeasure.lean || true) | wc -l | tr -d ' ' )"
 ivl_part1_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/InfiniteVolumeLimit/Part1.lean | wc -l | tr -d ' ')"
 ivl_part1_schwingerTwo_routes="$( (rg -n '^theorem[[:space:]]+schwingerTwo_' Phi4/InfiniteVolumeLimit/Part1.lean || true) | wc -l | tr -d ' ' )"
 ivl_part1_exists_routes="$( (rg -n '^theorem[[:space:]]+infinite_volume_schwinger_exists_.*_of_' Phi4/InfiniteVolumeLimit/Part1.lean || true) | wc -l | tr -d ' ' )"
@@ -116,10 +147,20 @@ echo "[route_bloat_guard] Reconstruction.Part1Core explicit Wick-model wrapper: 
 echo "[route_bloat_guard] Reconstruction.Part1Core InteractionUV wrappers: $recon_part1core_interactionuv_wrappers (max $MAX_RECON_PART1CORE_INTERACTIONUV_WRAPPERS)"
 echo "[route_bloat_guard] Reconstruction.Part1Tail InteractionUV wrappers: $recon_part1tail_interactionuv_wrappers (max $MAX_RECON_PART1TAIL_INTERACTIONUV_WRAPPERS)"
 echo "[route_bloat_guard] Reconstruction.Part1Tail reconstructionInput routes: $recon_part1tail_input_routes (max $MAX_RECON_PART1TAIL_INPUT_ROUTES)"
+echo "[route_bloat_guard] Interaction.Part1Core UV-from-integrability wrapper: $interaction_part1core_uv_from_integrability_wrapper (max $MAX_INTERACTION_PART1CORE_UV_FROM_INTEGRABILITY_WRAPPER)"
+echo "[route_bloat_guard] Interaction.Part1Core weight-from-integrability wrapper: $interaction_part1core_weight_from_integrability_wrapper (max $MAX_INTERACTION_PART1CORE_WEIGHT_FROM_INTEGRABILITY_WRAPPER)"
 echo "[route_bloat_guard] Interaction.Part2 theorem count: $interaction_part2_theorem_count (max $MAX_INTERACTION_PART2_THEOREMS)"
+echo "[route_bloat_guard] Interaction.Part2 sq-data Wick weight route: $interaction_part2_sqdata_wick_weight_route (max $MAX_INTERACTION_PART2_SQDATA_WICK_WEIGHT_ROUTE)"
+echo "[route_bloat_guard] Interaction.Part2 explicit geometric weight route: $interaction_part2_explicit_geom_weight_route (max $MAX_INTERACTION_PART2_EXPLICIT_GEOM_WEIGHT_ROUTE)"
+echo "[route_bloat_guard] Interaction.Part3 sq-moment succ-succ route: $interaction_part3_sqmoment_succsucc_route (max $MAX_INTERACTION_PART3_SQMOMENT_SUCCSUCC_ROUTE)"
+echo "[route_bloat_guard] Interaction.Part3 higher-moment succ-succ route: $interaction_part3_highermoment_succsucc_route (max $MAX_INTERACTION_PART3_HIGHERMOMENT_SUCCSUCC_ROUTE)"
+echo "[route_bloat_guard] Interaction.Part3 double-exp moment-bounds route: $interaction_part3_doubleexp_momentbounds_route (max $MAX_INTERACTION_PART3_DOUBLEEXP_MOMENTBOUNDS_ROUTE)"
 echo "[route_bloat_guard] Reconstruction.Part2 theorem count: $part2_theorem_count (max $MAX_RECON_PART2_THEOREMS)"
 echo "[route_bloat_guard] Reconstruction.Part2 *_explicit* theorem count: $part2_explicit_routes (max $MAX_RECON_PART2_EXPLICIT_ROUTES)"
 echo "[route_bloat_guard] ModelBundle theorem count: $modelbundle_theorem_count (max $MAX_MODELBUNDLE_THEOREMS)"
+echo "[route_bloat_guard] FiniteVolumeMeasure theorem count: $finite_volume_theorem_count (max $MAX_FINITE_VOLUME_THEOREMS)"
+echo "[route_bloat_guard] FiniteVolumeMeasure isProbability_of routes: $fvm_isprob_routes (max $MAX_FVM_ISPROB_ROUTES)"
+echo "[route_bloat_guard] FiniteVolumeMeasure sq-data isProbability routes: $fvm_sqdata_routes (max $MAX_FVM_SQDATA_ROUTES)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 theorem count: $ivl_part1_theorem_count (max $MAX_IVL_PART1_THEOREMS)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 schwingerTwo_* routes: $ivl_part1_schwingerTwo_routes (max $MAX_IVL_PART1_SCHWINGERTWO_ROUTES)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 infinite_volume_schwinger_exists_*_of_* routes: $ivl_part1_exists_routes (max $MAX_IVL_PART1_EXISTS_ROUTES)"
@@ -174,8 +215,36 @@ if (( recon_part1tail_input_routes > MAX_RECON_PART1TAIL_INPUT_ROUTES )); then
   echo "[FAIL] Reconstruction.Part1Tail reconstructionInput route count exceeded baseline." >&2
   fail=1
 fi
+if (( interaction_part1core_uv_from_integrability_wrapper > MAX_INTERACTION_PART1CORE_UV_FROM_INTEGRABILITY_WRAPPER )); then
+  echo "[FAIL] Interaction.Part1Core UV-from-integrability wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part1core_weight_from_integrability_wrapper > MAX_INTERACTION_PART1CORE_WEIGHT_FROM_INTEGRABILITY_WRAPPER )); then
+  echo "[FAIL] Interaction.Part1Core weight-from-integrability wrapper count exceeded baseline." >&2
+  fail=1
+fi
 if (( interaction_part2_theorem_count > MAX_INTERACTION_PART2_THEOREMS )); then
   echo "[FAIL] Interaction.Part2 theorem count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part2_sqdata_wick_weight_route > MAX_INTERACTION_PART2_SQDATA_WICK_WEIGHT_ROUTE )); then
+  echo "[FAIL] Interaction.Part2 sq-data Wick weight route count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part2_explicit_geom_weight_route > MAX_INTERACTION_PART2_EXPLICIT_GEOM_WEIGHT_ROUTE )); then
+  echo "[FAIL] Interaction.Part2 explicit geometric weight route count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part3_sqmoment_succsucc_route > MAX_INTERACTION_PART3_SQMOMENT_SUCCSUCC_ROUTE )); then
+  echo "[FAIL] Interaction.Part3 sq-moment succ-succ route count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part3_highermoment_succsucc_route > MAX_INTERACTION_PART3_HIGHERMOMENT_SUCCSUCC_ROUTE )); then
+  echo "[FAIL] Interaction.Part3 higher-moment succ-succ route count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part3_doubleexp_momentbounds_route > MAX_INTERACTION_PART3_DOUBLEEXP_MOMENTBOUNDS_ROUTE )); then
+  echo "[FAIL] Interaction.Part3 double-exp moment-bounds route count exceeded baseline." >&2
   fail=1
 fi
 if (( part2_theorem_count > MAX_RECON_PART2_THEOREMS )); then
@@ -188,6 +257,18 @@ if (( part2_explicit_routes > MAX_RECON_PART2_EXPLICIT_ROUTES )); then
 fi
 if (( modelbundle_theorem_count > MAX_MODELBUNDLE_THEOREMS )); then
   echo "[FAIL] ModelBundle theorem count exceeded baseline." >&2
+  fail=1
+fi
+if (( finite_volume_theorem_count > MAX_FINITE_VOLUME_THEOREMS )); then
+  echo "[FAIL] FiniteVolumeMeasure theorem count exceeded baseline." >&2
+  fail=1
+fi
+if (( fvm_isprob_routes > MAX_FVM_ISPROB_ROUTES )); then
+  echo "[FAIL] FiniteVolumeMeasure isProbability_of route count exceeded baseline." >&2
+  fail=1
+fi
+if (( fvm_sqdata_routes > MAX_FVM_SQDATA_ROUTES )); then
+  echo "[FAIL] FiniteVolumeMeasure sq-data isProbability route count exceeded baseline." >&2
   fail=1
 fi
 if (( ivl_part1_theorem_count > MAX_IVL_PART1_THEOREMS )); then

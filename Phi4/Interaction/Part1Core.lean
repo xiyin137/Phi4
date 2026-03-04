@@ -483,26 +483,6 @@ instance (priority := 100) interactionWeightModel_of_integrability
     InteractionWeightModel params where
   exp_interaction_Lp := InteractionIntegrabilityModel.exp_interaction_Lp (params := params)
 
-/-- Any nonempty full interaction-integrability witness yields a nonempty
-    UV/L² subinterface witness. -/
-theorem interactionUVModel_nonempty_of_integrability_nonempty
-    (params : Phi4Params)
-    (hint : Nonempty (InteractionIntegrabilityModel params)) :
-    Nonempty (InteractionUVModel params) := by
-  rcases hint with ⟨hintInst⟩
-  letI : InteractionIntegrabilityModel params := hintInst
-  exact ⟨inferInstance⟩
-
-/-- Any nonempty full interaction-integrability witness yields a nonempty
-    weight-integrability subinterface witness. -/
-theorem interactionWeightModel_nonempty_of_integrability_nonempty
-    (params : Phi4Params)
-    (hint : Nonempty (InteractionIntegrabilityModel params)) :
-    Nonempty (InteractionWeightModel params) := by
-  rcases hint with ⟨hintInst⟩
-  letI : InteractionIntegrabilityModel params := hintInst
-  exact ⟨inferInstance⟩
-
 /-- The combined UV/L² and weight-integrability subinterfaces reconstruct the
     original interaction-integrability interface. -/
 instance (priority := 100) interactionIntegrabilityModel_of_uv_weight
