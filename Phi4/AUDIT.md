@@ -2,6 +2,28 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, infinite-volume existence-wrapper cleanup):
+- Removed six no-caller `InfiniteVolumeLimit/Part1.lean` forwarding routes:
+  - `schwingerN_limit_exists_of_monotone_bounded`,
+  - `schwingerN_limit_exists_of_models`,
+  - `schwingerTwo_tendsto_iSup_of_models`,
+  - `schwingerTwo_limit_exists_of_models`,
+  - `schwingerTwo_limit_exists_if_exhaustion_of_lattice_models`,
+  - `schwingerN_two_limit_exists_if_exhaustion_of_lattice_models`.
+- Rewired `test/task3_lattice_audit.lean` to the canonical explicit route
+  `schwingerN_limit_exists_if_exhaustion_of_models` at `k = 2`.
+- Guard hardening:
+  - tightened `scripts/route_bloat_guard.sh` caps for
+    `InfiniteVolumeLimit/Part1` to
+    theorem count `28`,
+    `schwingerTwo_*` route count `2`,
+    `infinite_volume_schwinger_exists_*_of_*` route count `4`.
+- Verification:
+  - `lake build Phi4.InfiniteVolumeLimit.Part1 Phi4.InfiniteVolumeLimit` passes.
+  - `lake env lean test/task3_lattice_audit.lean` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.
+  - `bash scripts/quick_gate.sh` passes.
+
 Update (2026-03-04, final wrapper-prune pass + guard hardening):
 - Removed six additional no-caller wrapper routes:
   - `Reconstruction/Part1Core.lean`:

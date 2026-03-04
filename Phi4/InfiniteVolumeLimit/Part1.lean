@@ -278,26 +278,6 @@ theorem schwingerN_tendsto_iSup_of_monotone_bounded
     (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
     hmono hbound
 
-/-- Existence form of `schwingerN_tendsto_iSup_of_monotone_bounded`. -/
-theorem schwingerN_limit_exists_of_monotone_bounded
-    (params : Phi4Params)
-    (k : ℕ)
-    [SchwingerNMonotoneModel params k]
-    (n0 : ℕ)
-    (f : Fin k → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfsupp0 : ∀ i,
-      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0)
-    (hbound : ∃ C : ℝ, ∀ n : ℕ,
-      |schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f| ≤ C) :
-    ∃ S : ℝ,
-      Filter.Tendsto
-        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
-        Filter.atTop (nhds S) := by
-  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f, ?_⟩
-  exact schwingerN_tendsto_iSup_of_monotone_bounded
-    params k n0 f hf hfsupp0 hbound
-
 /-- Monotone-convergence form for finite-volume `k`-point moments along the
     exhausting rectangles, under:
     1. `SchwingerNMonotoneModel params k` for volume monotonicity, and
@@ -320,24 +300,6 @@ theorem schwingerN_tendsto_iSup_of_models
   have hbound := schwingerN_uniformly_bounded_on_exhaustion params n0 k f hfsupp0
   exact schwingerN_tendsto_iSup_of_monotone_bounded
     params k n0 f hf hfsupp0 hbound
-
-/-- Existence form of `schwingerN_tendsto_iSup_of_models`. -/
-theorem schwingerN_limit_exists_of_models
-    (params : Phi4Params)
-    (k : ℕ)
-    [SchwingerNMonotoneModel params k]
-    [MultipleReflectionModel params]
-    (n0 : ℕ)
-    (f : Fin k → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfsupp0 : ∀ i,
-      ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f i x = 0) :
-    ∃ S : ℝ,
-      Filter.Tendsto
-        (fun n : ℕ => schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f)
-        Filter.atTop (nhds S) := by
-  refine ⟨⨆ n : ℕ, schwingerN params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) k f, ?_⟩
-  exact schwingerN_tendsto_iSup_of_models params k n0 f hf hfsupp0
 
 /-- Existence of the interface-shaped exhausting-sequence limit
     `if h : 0 < n then S_k^{Λₙ}(f) else 0` from:
@@ -465,69 +427,6 @@ theorem schwingerTwo_uniformly_bounded_on_exhaustion
   intro n
   simpa [schwingerN_two_eq_schwingerTwo] using hC n
 
-/-- Monotone-convergence form for the two-point exhausting sequence, with the
-    absolute bound discharged by `MultipleReflectionModel`. -/
-theorem schwingerTwo_tendsto_iSup_of_models
-    (params : Phi4Params)
-    [SchwingerNMonotoneModel params 2]
-    [MultipleReflectionModel params]
-    (n0 : ℕ)
-    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
-    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
-    Filter.Tendsto
-      (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
-      Filter.atTop
-      (nhds (⨆ n : ℕ,
-        schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)) := by
-  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
-    intro i x
-    fin_cases i
-    · simpa using hf x
-    · simpa using hg x
-  have hsuppvec :
-      ∀ i, ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet,
-        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
-    intro i x hx
-    fin_cases i
-    · simpa using hfsupp0 x hx
-    · simpa using hgsupp0 x hx
-  have hlim := schwingerN_tendsto_iSup_of_models
-    (params := params) (k := 2) n0 (![f, g] : Fin 2 → TestFun2D)
-    hfvec hsuppvec
-  simpa [schwingerN_two_eq_schwingerTwo] using hlim
-
-/-- Existence form of `schwingerTwo_tendsto_iSup_of_models`. -/
-theorem schwingerTwo_limit_exists_of_models
-    (params : Phi4Params)
-    [SchwingerNMonotoneModel params 2]
-    [MultipleReflectionModel params]
-    (n0 : ℕ)
-    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-    (hfsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, f x = 0)
-    (hgsupp0 : ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet, g x = 0) :
-    ∃ S : ℝ,
-      Filter.Tendsto
-        (fun n : ℕ => schwingerTwo params (exhaustingRectangles (n + n0 + 1) (Nat.succ_pos _)) f g)
-        Filter.atTop (nhds S) := by
-  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
-    intro i x
-    fin_cases i
-    · simpa using hf x
-    · simpa using hg x
-  have hsuppvec :
-      ∀ i, ∀ x ∉ (exhaustingRectangles (n0 + 1) (Nat.succ_pos n0)).toSet,
-        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
-    intro i x hx
-    fin_cases i
-    · simpa using hfsupp0 x hx
-    · simpa using hgsupp0 x hx
-  rcases schwingerN_limit_exists_of_models
-      (params := params) (k := 2) n0 (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec with
-      ⟨S, hS⟩
-  refine ⟨S, ?_⟩
-  simpa [schwingerN_two_eq_schwingerTwo] using hS
-
 /-- Lattice-bridge `n + 1`-shifted exhaustion form of two-point convergence. -/
 theorem schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     (params : Phi4Params)
@@ -562,39 +461,6 @@ theorem schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     hfvec hsuppvec
   simpa [schwingerN_two_eq_schwingerTwo] using hlim
 
-/-- Existence form of `schwingerTwo_tendsto_if_exhaustion_of_lattice_models`. -/
-theorem schwingerTwo_limit_exists_if_exhaustion_of_lattice_models
-    (params : Phi4Params)
-    [LatticeSchwingerTwoMonotoneModel params]
-    [MultipleReflectionModel params]
-    (f g : TestFun2D)
-    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
-    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
-    ∃ S : ℝ,
-      Filter.Tendsto
-        (fun n : ℕ => if h : 0 < n then schwingerTwo params (exhaustingRectangles n h) f g else 0)
-        Filter.atTop (nhds S) := by
-  rcases schwingerNMonotoneModel_two_nonempty_of_lattice (params := params) with ⟨hmono⟩
-  letI : SchwingerNMonotoneModel params 2 := hmono
-  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
-    intro i x
-    fin_cases i
-    · simpa using hf x
-    · simpa using hg x
-  have hsuppvec :
-      ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet,
-        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
-    intro i x hx
-    fin_cases i
-    · simpa using hfsupp x hx
-    · simpa using hgsupp x hx
-  rcases schwingerN_limit_exists_if_exhaustion_of_models
-      (params := params) (k := 2) (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec with
-      ⟨S, hS⟩
-  refine ⟨S, ?_⟩
-  simpa [schwingerN_two_eq_schwingerTwo] using hS
-
 /-- Lattice-bridge `schwingerN` (`k = 2`) shifted-exhaustion convergence form. -/
 theorem schwingerN_two_tendsto_if_exhaustion_of_lattice_models
     (params : Phi4Params)
@@ -615,38 +481,6 @@ theorem schwingerN_two_tendsto_if_exhaustion_of_lattice_models
   have hlimA := schwingerTwo_tendsto_if_exhaustion_of_lattice_models
     params f g hf hg hfsupp hgsupp
   simpa [schwingerN_two_eq_schwingerTwo] using hlimA
-
-/-- Existence form of `schwingerN_two_tendsto_if_exhaustion_of_lattice_models`. -/
-theorem schwingerN_two_limit_exists_if_exhaustion_of_lattice_models
-    (params : Phi4Params)
-    [LatticeSchwingerTwoMonotoneModel params]
-    [MultipleReflectionModel params]
-    (f g : TestFun2D)
-    (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-    (hfsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f x = 0)
-    (hgsupp : ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, g x = 0) :
-    ∃ S : ℝ,
-      Filter.Tendsto
-        (fun n : ℕ =>
-          if h : 0 < n then schwingerN params (exhaustingRectangles n h) 2
-            (![f, g] : Fin 2 → TestFun2D) else 0)
-        Filter.atTop (nhds S) := by
-  rcases schwingerNMonotoneModel_two_nonempty_of_lattice (params := params) with ⟨hmono⟩
-  letI : SchwingerNMonotoneModel params 2 := hmono
-  have hfvec : ∀ i, ∀ x, 0 ≤ (![f, g] : Fin 2 → TestFun2D) i x := by
-    intro i x
-    fin_cases i
-    · simpa using hf x
-    · simpa using hg x
-  have hsuppvec :
-      ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet,
-        (![f, g] : Fin 2 → TestFun2D) i x = 0 := by
-    intro i x hx
-    fin_cases i
-    · simpa using hfsupp x hx
-    · simpa using hgsupp x hx
-  exact schwingerN_limit_exists_if_exhaustion_of_models
-    (params := params) (k := 2) (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec
 
 /-! ## Uniform upper bounds -/
 

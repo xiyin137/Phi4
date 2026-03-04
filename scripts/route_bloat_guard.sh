@@ -16,8 +16,8 @@ cd "$ROOT_DIR"
 # - ModelBundle top-level theorem count: 0
 # - Reconstruction/Part3 top-level theorem count: 9
 # - Reconstruction/Part3 phi4_wightman_exists* theorem count: 4
-# - InfiniteVolumeLimit/Part1 top-level theorem count: 34
-# - InfiniteVolumeLimit/Part1 schwingerTwo_* theorem count: 5
+# - InfiniteVolumeLimit/Part1 top-level theorem count: 28
+# - InfiniteVolumeLimit/Part1 schwingerTwo_* theorem count: 2
 # - InfiniteVolumeLimit/Part1 infinite_volume_schwinger_exists_*_of_* theorem count: 4
 MAX_MODEL_CLASSES=58
 MAX_NONEMPTY_CONSTRUCTORS=75
@@ -30,8 +30,8 @@ MAX_RECON_PART2_EXPLICIT_ROUTES=0
 MAX_MODELBUNDLE_THEOREMS=0
 MAX_RECON_PART3_THEOREMS=9
 MAX_RECON_PART3_WIGHTMAN_ROUTES=4
-MAX_IVL_PART1_THEOREMS=34
-MAX_IVL_PART1_SCHWINGERTWO_ROUTES=5
+MAX_IVL_PART1_THEOREMS=28
+MAX_IVL_PART1_SCHWINGERTWO_ROUTES=2
 MAX_IVL_PART1_EXISTS_ROUTES=4
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
