@@ -157,8 +157,8 @@ theorem
         huniform hcompat hreduce hdense with ⟨hlin⟩
   letI : ReconstructionLinearGrowthModel params := hlin
   exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := phi4_linear_growth_of_interface params)
-    (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
+    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
+    (hreconstruct := WightmanReconstructionModel.wightman_reconstruction (params := params))
 
 /-- Same endpoint as
     `phi4_wightman_exists_of_interfaces_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_double_exp_moment_geometric`,
@@ -173,8 +173,8 @@ theorem phi4_wightman_exists_of_interfaces (params : Phi4Params)
         OS.S = phi4SchwingerFunctions params ∧
         IsWickRotationPair OS.S Wfn.W := by
   exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := phi4_linear_growth_of_interface params)
-    (hreconstruct := phi4_wightman_reconstruction_step_of_interface params)
+    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
+    (hreconstruct := WightmanReconstructionModel.wightman_reconstruction (params := params))
 
 /-- **Main Theorem**: The φ⁴₂ theory defines a Wightman quantum field theory.
 

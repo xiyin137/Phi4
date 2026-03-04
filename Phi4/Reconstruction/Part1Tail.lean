@@ -170,4 +170,4 @@ theorem phi4_wightman_reconstruction_step (params : Phi4Params)
       OSLinearGrowthCondition 1 OS →
         ∃ (Wfn : WightmanFunctions 1),
           IsWickRotationPair OS.S Wfn.W := by
-  exact phi4_wightman_reconstruction_step_of_interface params
+  exact WightmanReconstructionModel.wightman_reconstruction (params := params)

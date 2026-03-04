@@ -39,6 +39,28 @@ Each line item is actionable, testable, and tied to concrete files/modules.
   - `lake build Phi4.OSAxioms Phi4.Reconstruction`,
   - `bash scripts/route_bloat_guard.sh`.
 
+## Session Update (2026-03-04, reconstruction/regularity content-aware wrapper pruning)
+
+- Removed three no-caller forwarding wrappers with no additional mathematical
+  content:
+  - `Phi4/Reconstruction/Part1Core.lean`:
+    - `phi4_linear_growth_of_interface`,
+    - `phi4_wightman_reconstruction_step_of_interface`.
+  - `Phi4/Regularity.lean`:
+    - `nonlocalPhi4BoundModel_nonempty_of_uniform_data`.
+- Updated callers to use canonical model fields directly:
+  - `ReconstructionLinearGrowthModel.phi4_linear_growth`,
+  - `WightmanReconstructionModel.wightman_reconstruction`.
+- Guard updates in `scripts/route_bloat_guard.sh`:
+  - tightened `_nonempty_of_` cap `59 -> 58`,
+  - added exact-zero checks for the three removed wrapper names.
+- Verification passed (fresh sequential checks):
+  - `lake env lean Phi4/Reconstruction/Part1Core.lean`,
+  - `lake env lean Phi4/Reconstruction/Part1Tail.lean`,
+  - `lake env lean Phi4/Reconstruction/Part3.lean`,
+  - `lake env lean Phi4/Regularity.lean`,
+  - `bash scripts/route_bloat_guard.sh`.
+
 ## Session Update (2026-03-04, linear-growth frontier assumption-explicit refactor)
 
 - `Phi4/Reconstruction/Part1Core.lean`:

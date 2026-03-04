@@ -177,27 +177,6 @@ abbrev ConnectedTwoPointDecayThreshold (params : Phi4Params)
     (params.coupling < coupling_bound →
       ConnectedTwoPointDecayAtParams params)
 
-/-! ## Interface-level reconstruction wrappers -/
-
-/-- Linear-growth input extracted from `ReconstructionLinearGrowthModel`. -/
-theorem phi4_linear_growth_of_interface (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [ReconstructionLinearGrowthModel params] :
-    ∃ OS : OsterwalderSchraderAxioms 1,
-      OS.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
-
-/-- Canonical Wightman-reconstruction step extracted from upstream
-    `WightmanReconstructionModel`. -/
-theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
-    [WightmanReconstructionModel params] :
-    ∀ (OS : OsterwalderSchraderAxioms 1),
-      OSLinearGrowthCondition 1 OS →
-        ∃ (Wfn : WightmanFunctions 1),
-          IsWickRotationPair OS.S Wfn.W := by
-  exact WightmanReconstructionModel.wightman_reconstruction (params := params)
-
 /-! ## Product-Tensor Bridge Towards E0' -/
 
 /-- Complexification of a real-valued 2D test function. -/

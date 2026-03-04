@@ -2,6 +2,26 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, reconstruction/regularity wrapper pruning with content check):
+- Removed three no-caller wrappers with no additional mathematical proof content:
+  - `Reconstruction/Part1Core.lean`:
+    - `phi4_linear_growth_of_interface`,
+    - `phi4_wightman_reconstruction_step_of_interface`.
+  - `Regularity.lean`:
+    - `nonlocalPhi4BoundModel_nonempty_of_uniform_data`.
+- Updated downstream callers to use canonical model fields directly:
+  - `ReconstructionLinearGrowthModel.phi4_linear_growth`,
+  - `WightmanReconstructionModel.wightman_reconstruction`.
+- Route-bloat guard hardening (`scripts/route_bloat_guard.sh`):
+  - tightened `_nonempty_of_` cap `59 -> 58`,
+  - added exact-zero checks for the three removed wrapper names above.
+- Verification (fresh sequential run after clearing stale processes/locks):
+  - `lake env lean Phi4/Reconstruction/Part1Core.lean` passes.
+  - `lake env lean Phi4/Reconstruction/Part1Tail.lean` passes.
+  - `lake env lean Phi4/Reconstruction/Part3.lean` passes.
+  - `lake env lean Phi4/Regularity.lean` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with tightened caps.
+
 Update (2026-03-04, OSAxioms wrapper pruning with content check):
 - Removed three no-caller theorem wrappers in `OSAxioms.lean` that added no
   mathematical content (each was a direct forwarding layer):

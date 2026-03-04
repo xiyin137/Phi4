@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 # Baselines captured after bloat-reduction refactor (2026-03-04):
 # - class .*Model count: 58
-# - theorem .*_nonempty_of_ count: 59
+# - theorem .*_nonempty_of_ count: 58
 # - interactionWeightModel_nonempty_of_* count: 7
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
 # - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 2
@@ -43,8 +43,13 @@ cd "$ROOT_DIR"
 #   - osaCoreModel_nonempty_of_data
 #   - osDistributionE2Model_nonempty_of_data
 #   - osE4ClusterModel_nonempty_of_data
+# - Reconstruction/Part1Core removed interface-forwarding wrappers kept at exact zero:
+#   - phi4_linear_growth_of_interface
+#   - phi4_wightman_reconstruction_step_of_interface
+# - Regularity removed no-caller uniform-data wrapper kept at exact zero:
+#   - nonlocalPhi4BoundModel_nonempty_of_uniform_data
 MAX_MODEL_CLASSES=58
-MAX_NONEMPTY_CONSTRUCTORS=59
+MAX_NONEMPTY_CONSTRUCTORS=58
 MAX_WEIGHT_ROUTES=7
 MAX_INTEGRABILITY_ROUTES=2
 MAX_LINEAR_GROWTH_ROUTES=2
@@ -82,6 +87,9 @@ MAX_INTERACTION_PART3_ABS_GEOM_WRAPPER=0
 MAX_OSAXIOMS_CORE_DATA_WRAPPER=0
 MAX_OSAXIOMS_E2_DATA_WRAPPER=0
 MAX_OSAXIOMS_E4_DATA_WRAPPER=0
+MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER=0
+MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER=0
+MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER=0
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
@@ -120,6 +128,9 @@ interaction_part3_abs_geom_wrapper="$( (rg -n 'interactionWeightModel_nonempty_o
 osaxioms_core_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+osaCoreModel_nonempty_of_data\\b' Phi4/OSAxioms.lean || true) | wc -l | tr -d ' ' )"
 osaxioms_e2_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+osDistributionE2Model_nonempty_of_data\\b' Phi4/OSAxioms.lean || true) | wc -l | tr -d ' ' )"
 osaxioms_e4_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+osE4ClusterModel_nonempty_of_data\\b' Phi4/OSAxioms.lean || true) | wc -l | tr -d ' ' )"
+recon_part1core_linear_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+phi4_linear_growth_of_interface\\b' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+recon_part1core_wightman_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+phi4_wightman_reconstruction_step_of_interface\\b' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+regularity_nonlocal_uniform_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+nonlocalPhi4BoundModel_nonempty_of_uniform_data\\b' Phi4/Regularity.lean || true) | wc -l | tr -d ' ' )"
 part3_theorem_names="$(
   awk '
   /^[[:space:]]*theorem([[:space:]]|$)/{
@@ -186,6 +197,9 @@ echo "[route_bloat_guard] Interaction.Part3 abs-moment wrapper: $interaction_par
 echo "[route_bloat_guard] OSAxioms core-data wrapper: $osaxioms_core_data_wrapper (max $MAX_OSAXIOMS_CORE_DATA_WRAPPER)"
 echo "[route_bloat_guard] OSAxioms E2-data wrapper: $osaxioms_e2_data_wrapper (max $MAX_OSAXIOMS_E2_DATA_WRAPPER)"
 echo "[route_bloat_guard] OSAxioms E4-data wrapper: $osaxioms_e4_data_wrapper (max $MAX_OSAXIOMS_E4_DATA_WRAPPER)"
+echo "[route_bloat_guard] Reconstruction.Part1Core linear-interface wrapper: $recon_part1core_linear_interface_wrapper (max $MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER)"
+echo "[route_bloat_guard] Reconstruction.Part1Core wightman-interface wrapper: $recon_part1core_wightman_interface_wrapper (max $MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER)"
+echo "[route_bloat_guard] Regularity nonlocal-uniform wrapper: $regularity_nonlocal_uniform_wrapper (max $MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER)"
 
 fail=0
 if (( model_classes > MAX_MODEL_CLASSES )); then
@@ -342,6 +356,18 @@ if (( osaxioms_e2_data_wrapper > MAX_OSAXIOMS_E2_DATA_WRAPPER )); then
 fi
 if (( osaxioms_e4_data_wrapper > MAX_OSAXIOMS_E4_DATA_WRAPPER )); then
   echo "[FAIL] OSAxioms E4-data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( recon_part1core_linear_interface_wrapper > MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER )); then
+  echo "[FAIL] Reconstruction.Part1Core linear-interface wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( recon_part1core_wightman_interface_wrapper > MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER )); then
+  echo "[FAIL] Reconstruction.Part1Core wightman-interface wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( regularity_nonlocal_uniform_wrapper > MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER )); then
+  echo "[FAIL] Regularity nonlocal-uniform wrapper count exceeded baseline." >&2
   fail=1
 fi
 

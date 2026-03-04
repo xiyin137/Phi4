@@ -1153,18 +1153,6 @@ theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
   intro Λ
   simpa [zero_mul] using hc Λ
 
-/-- Construct `NonlocalPhi4BoundModel` from explicit pointwise-in-`f`
-    finite-volume uniform generating-functional bounds. -/
-theorem nonlocalPhi4BoundModel_nonempty_of_uniform_data
-    (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
-    Nonempty (NonlocalPhi4BoundModel params) := by
-  exact nonlocalPhi4BoundModel_nonempty_of_data
-    (params := params)
-    (hnonlocal := gap_nonlocal_phi4_bound params huniform)
-
 /-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
 theorem nonlocal_phi4_bound (params : Phi4Params) :
     [InfiniteVolumeMeasureModel params] →
