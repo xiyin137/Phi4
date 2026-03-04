@@ -601,73 +601,6 @@ theorem phi4_zero_linear_growth_of_normalized_order0
           SchwartzMap.seminorm ℝ 0 0 g := by
       simp
 
-/-- Order-zero normalization from:
-    1) core linearity of `phi4SchwingerFunctions params 0`, and
-    2) compatibility with `infiniteVolumeSchwinger` on product tensors. -/
-theorem phi4_normalized_order0_of_linear_and_compat
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ)) :
-    ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 := by
-  have hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0) :=
-    phi4_os0_linear params 0
-  intro g
-  let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
-  have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
-    phi4_productTensor_zero_of_compat params hcompat f0
-  have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
-    ext x
-    have hx : x = 0 := Subsingleton.elim x 0
-    subst hx
-    simp [schwartzProductTensorFromTestFamily]
-  calc
-    phi4SchwingerFunctions params 0 g
-        = phi4SchwingerFunctions params 0 ((g 0) • schwartzProductTensorFromTestFamily f0) := by
-            exact congrArg (phi4SchwingerFunctions params 0) hdecomp
-    _ = (g 0) * phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) := by
-            exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
-    _ = g 0 := by simp [hone]
-
-/-- Measure-representation variant of order-zero normalization from:
-    1) core linearity of `phi4SchwingerFunctions params 0`, and
-    2) compatibility with `infiniteVolumeSchwinger` on product tensors. -/
-theorem phi4_normalized_order0_of_linear_and_compat_of_moment
-    (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params]
-    [InfiniteVolumeMomentModel params]
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ)) :
-    ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 := by
-  have hlin0 : IsLinearMap ℂ (phi4SchwingerFunctions params 0) :=
-    phi4_os0_linear params 0
-  intro g
-  let f0 : Fin 0 → TestFun2D := fun i => False.elim (Fin.elim0 i)
-  have hone : phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) = 1 :=
-    phi4_productTensor_zero_of_compat_of_moment params hcompat f0
-  have hdecomp : g = (g 0) • schwartzProductTensorFromTestFamily f0 := by
-    ext x
-    have hx : x = 0 := Subsingleton.elim x 0
-    subst hx
-    simp [schwartzProductTensorFromTestFamily]
-  calc
-    phi4SchwingerFunctions params 0 g
-        = phi4SchwingerFunctions params 0 ((g 0) • schwartzProductTensorFromTestFamily f0) := by
-            exact congrArg (phi4SchwingerFunctions params 0) hdecomp
-    _ = (g 0) * phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f0) := by
-            exact (hlin0.mk' _).map_smul (g 0) (schwartzProductTensorFromTestFamily f0)
-    _ = g 0 := by simp [hone]
-
 /-- Explicit-zero-mode variant of order-zero normalization from:
     1) core linearity of `phi4SchwingerFunctions params 0`,
     2) compatibility with `infiniteVolumeSchwinger` on product tensors, and
@@ -840,51 +773,6 @@ theorem phi4_linear_growth_of_interface_productTensor_approx_and_given_normalize
   exact phi4_linear_growth_of_mixed_bound_productTensor_approx_and_given_normalized_order0
     params OS hS alpha beta gamma hbeta hmixed hreduce happrox hnormalized
 
-/-- Construct φ⁴ linear-growth witness data from:
-    1) explicit pointwise-in-`f` finite-volume uniform generating-functional bounds,
-    2) explicit product-tensor approximation of general Schwartz `n`-point tests
-       for `n > 0`,
-    3) order-zero normalization (`S₀(g) = g(0)`), using Sobolev index `0`. -/
-theorem phi4_linear_growth_of_interface_productTensor_approx_and_normalized_order0
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    [OSTemperedModel params]
-    (OS : OsterwalderSchraderAxioms 1)
-    (hS : OS.S = phi4SchwingerFunctions params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (happrox :
-      ∀ (n : ℕ) (_hn : 0 < n) (g : SchwartzNPoint 1 n),
-        ∃ u : ℕ → Fin n → TestFun2D,
-          Filter.Tendsto (fun k => schwartzProductTensorFromTestFamily (u k))
-            Filter.atTop (nhds g)) :
-    ∃ OS' : OsterwalderSchraderAxioms 1,
-      OS'.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS') := by
-  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
-    intro f
-    exact infiniteVolumeSchwinger_zero (params := params) f
-  have hnormalized : ∀ g : SchwartzNPoint 1 0, phi4SchwingerFunctions params 0 g = g 0 :=
-    phi4_normalized_order0_of_linear_and_compat_of_zero params hcompat hzero
-  exact phi4_linear_growth_of_interface_productTensor_approx_and_given_normalized_order0
-    params OS hS alpha beta gamma hbeta huniform hcompat hreduce happrox hnormalized
-
 /-- Sequence approximation by product tensors from dense image of the
     product-tensor map at fixed positive order. -/
 theorem phi4_productTensor_approx_of_dense_range
@@ -945,29 +833,6 @@ theorem osLinearGrowthCondition_nonempty_of_bound
     beta_pos := hbeta
     growth_estimate := hgrowth
   }⟩
-
-/-- Construct φ⁴ linear-growth witness data from explicit seminorm-growth
-    constants for one OS package matching `phi4SchwingerFunctions`. -/
-theorem phi4_linear_growth_of_explicit_bound (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    (OS : OsterwalderSchraderAxioms 1)
-    (hS : OS.S = phi4SchwingerFunctions params)
-    (sobolev_index : ℕ)
-    (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
-    (hbeta : 0 < beta)
-    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
-      ‖phi4SchwingerFunctions params n f‖ ≤
-        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-          SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
-    ∃ OS' : OsterwalderSchraderAxioms 1,
-      OS'.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS') := by
-  refine ⟨OS, hS, ?_⟩
-  refine osLinearGrowthCondition_nonempty_of_bound OS sobolev_index
-    alpha beta gamma halpha hbeta ?_
-  intro n f
-  simpa [hS] using hgrowth n f
 
 /-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)
