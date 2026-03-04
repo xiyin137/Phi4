@@ -468,6 +468,14 @@ local `sorry`.
 16. `Reconstruction.lean` now includes
     the canonical reconstruction interface exports from `Part1Core`/`Part3`
     with trimmed forwarding-route surface.
+17. `Interaction/Part2.lean` now exposes the absolute-to-signed shifted
+    exponential-moment bridge
+    (`shifted_exponential_moment_geometric_bound_of_abs_at_theta`,
+    `shifted_exponential_moment_geometric_bound_of_abs`) with explicit
+    canonical-sequence measurability hypotheses instead of hidden
+    `[InteractionUVModel]` assumptions; downstream square-data callers in
+    `Interaction/Part2.lean` and `Interaction/Part3.lean` were rewired to this
+    assumption-explicit infrastructure.
 
 ### Low
 

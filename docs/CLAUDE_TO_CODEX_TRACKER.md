@@ -217,3 +217,21 @@ primary local Glimm-Jaffe work queue.
   - `interactionWeightModel_nonempty_of_*`: `8`,
   - `interactionIntegrabilityModel_nonempty_of_*`: `2`,
   - `Interaction/Part2` theorem count: `8`.
+
+### Infrastructure follow-up (same session)
+
+- Hardened the shifted absolute-moment bridge as an explicit core:
+  - `shifted_exponential_moment_geometric_bound_of_abs_at_theta` and
+    `shifted_exponential_moment_geometric_bound_of_abs` in
+    `Phi4/Interaction/Part2.lean` now take explicit canonical-sequence
+    measurability input instead of relying on `[InteractionUVModel params]`.
+- Rewired square-data callers to the explicit bridge:
+  - removed the temporary `InteractionUVModel` instantiation step in
+    `exp_interaction_Lp_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`
+    (`Interaction/Part2.lean`),
+  - removed the same class-instantiation detour in
+    `interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`
+    (`Interaction/Part3.lean`).
+- Verification:
+  - `lake build Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
+  - `bash scripts/quick_gate.sh` passes with route-bloat caps unchanged.

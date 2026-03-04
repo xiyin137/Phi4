@@ -121,18 +121,16 @@ theorem
             Real.exp (θ * |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω|)
             ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
     Nonempty (InteractionWeightModel params) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
   refine interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params := params)
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq ?_
   intro Λ
   exact shifted_exponential_moment_geometric_bound_of_abs
-    (params := params) (Λ := Λ) (hmomAbs Λ)
+    (params := params) (Λ := Λ)
+    (hcutoff_meas := fun n => by
+      simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+    (hmomAbs Λ)
 
 /-
   NOTE:

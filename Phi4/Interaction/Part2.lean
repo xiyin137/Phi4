@@ -442,7 +442,12 @@ theorem interaction_ae_nonneg_of_sq_integrable_data_and_uv_cutoff_seq_shifted_ex
     bounds on signed moments `E[exp(-θ interactionCutoff(κ_{n+1}))]`. -/
 theorem shifted_exponential_moment_geometric_bound_of_abs_at_theta
     (params : Phi4Params) (Λ : Rectangle) (θ D r : ℝ)
-    [InteractionUVModel params]
+    (hcutoff_meas :
+      ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D =>
+            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
     (hθ : 0 < θ)
     (hIntAbs :
       ∀ n : ℕ,
@@ -475,8 +480,7 @@ theorem shifted_exponential_moment_geometric_bound_of_abs_at_theta
     let X : FieldConfig2D → ℝ :=
       fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
     have hXae : AEStronglyMeasurable X μ := by
-      simpa [X, μ] using
-        (interactionCutoff_in_L2 params Λ (standardUVCutoffSeq (n + 1))).aestronglyMeasurable
+      simpa [X, μ] using hcutoff_meas n
     have hAeExpNeg : AEStronglyMeasurable (fun ω => Real.exp ((-θ) * X ω)) μ := by
       exact Real.continuous_exp.comp_aestronglyMeasurable (hXae.const_mul (-θ))
     refine Integrable.mono' (hIntAbs n) hAeExpNeg ?_
@@ -511,7 +515,12 @@ theorem shifted_exponential_moment_geometric_bound_of_abs_at_theta
     bounds on signed moments `E[exp(-θ interactionCutoff(κ_{n+1}))]`. -/
 theorem shifted_exponential_moment_geometric_bound_of_abs
     (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
+    (hcutoff_meas :
+      ∀ n : ℕ,
+        AEStronglyMeasurable
+          (fun ω : FieldConfig2D =>
+            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+          (freeFieldMeasure params.mass params.mass_pos))
     (hmomAbs :
       ∃ θ D r : ℝ,
         0 < θ ∧ 0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
@@ -539,7 +548,7 @@ theorem shifted_exponential_moment_geometric_bound_of_abs
   rcases
       shifted_exponential_moment_geometric_bound_of_abs_at_theta
         (params := params) (Λ := Λ) (θ := θ) (D := D) (r := r)
-        hθ hIntAbs hMAbs with
+        (hcutoff_meas := hcutoff_meas) hθ hIntAbs hMAbs with
     ⟨hIntNeg, hMNeg⟩
   exact ⟨θ, D, r, hθ, hD, hr0, hr1, hIntNeg, hMNeg⟩
 
@@ -702,17 +711,15 @@ theorem
     {p : ℝ≥0∞} :
     MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
       p (freeFieldMeasure params.mass params.mass_pos) := by
-  rcases interactionUVModel_nonempty_of_sq_integrable_data
-      (params := params)
-      hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
-      hinteraction_meas hinteraction_sq with ⟨huv⟩
-  letI : InteractionUVModel params := huv
   exact exp_interaction_Lp_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_geometric_bound
     (params := params) (Λ := Λ)
     hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
     hinteraction_meas hinteraction_sq
     (shifted_exponential_moment_geometric_bound_of_abs
-      (params := params) (Λ := Λ) hmomAbs)
+      (params := params) (Λ := Λ)
+      (hcutoff_meas := fun n => by
+        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+      hmomAbs)
 
 /-- Construct `InteractionWeightModel` from geometric decay of shifted-index
     exponential moments of the cutoff interaction:
