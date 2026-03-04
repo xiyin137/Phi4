@@ -2,6 +2,18 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, Interaction.Part3 abs-moment wrapper removal):
+- Removed one no-caller forwarding wrapper from
+  `Interaction/Part3.lean`:
+  - `interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound`.
+- Guard hardening:
+  - added exact-zero cap in `scripts/route_bloat_guard.sh` for the removed
+    `Interaction/Part3` abs-moment forwarding wrapper.
+- Verification:
+  - `lake build Phi4.Interaction.Part3 Phi4.Interaction Phi4.FiniteVolumeMeasure` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with new check.
+  - `bash scripts/quick_gate.sh` passes.
+
 Update (2026-03-04, continued wrapper-pruning follow-up):
 - Removed eleven no-caller forwarding routes from
   `Reconstruction/Part1Tail.lean`:

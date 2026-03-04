@@ -27,6 +27,7 @@ cd "$ROOT_DIR"
 # - InfiniteVolumeLimit/Part2 top-level theorem count: 11
 # - InfiniteVolumeLimit/Part3 top-level theorem count: 16
 # - CorrelationInequalities top-level theorem count: 53
+# - Interaction/Part3 abs-moment forwarding wrapper count: 0
 MAX_MODEL_CLASSES=58
 MAX_NONEMPTY_CONSTRUCTORS=64
 MAX_WEIGHT_ROUTES=8
@@ -52,6 +53,7 @@ MAX_CORRELATION_THEOREMS=53
 MAX_INTERACTION_PART2_EVENTUAL_LOWER_WRAPPER=0
 MAX_INTERACTION_PART2_GLOBAL_NONNEG_WRAPPER=0
 MAX_IVL_PART1_LATTICE_MONO_TWO_WRAPPER=0
+MAX_INTERACTION_PART3_ABS_GEOM_WRAPPER=0
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
@@ -76,6 +78,7 @@ correlation_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/CorrelationInequal
 interaction_part2_eventual_lower_wrapper="$( (rg -n 'interactionWeightModel_nonempty_of_cutoff_seq_eventually_lower_bounds_of_aestronglyMeasurable_and_standardSeq_tendsto_ae' Phi4/Interaction/Part2.lean || true) | wc -l | tr -d ' ' )"
 interaction_part2_global_nonneg_wrapper="$( (rg -n 'interaction_ae_nonneg_all_rectangles_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound_of_standardSeq_tendsto_ae' Phi4/Interaction/Part2.lean || true) | wc -l | tr -d ' ' )"
 ivl_part1_lattice_mono_two_wrapper="$( (rg -n 'schwingerN_monotone_in_volume_two_from_lattice' Phi4/InfiniteVolumeLimit/Part1.lean || true) | wc -l | tr -d ' ' )"
+interaction_part3_abs_geom_wrapper="$( (rg -n 'interactionWeightModel_nonempty_of_sq_integrable_data_and_uv_cutoff_seq_shifted_exponential_moment_abs_geometric_bound' Phi4/Interaction/Part3.lean || true) | wc -l | tr -d ' ' )"
 part3_theorem_names="$(
   awk '
   /^[[:space:]]*theorem([[:space:]]|$)/{
@@ -128,6 +131,7 @@ echo "[route_bloat_guard] Reconstruction.Part3 phi4_wightman_exists* routes: $pa
 echo "[route_bloat_guard] Interaction.Part2 eventual-lower wrapper: $interaction_part2_eventual_lower_wrapper (max $MAX_INTERACTION_PART2_EVENTUAL_LOWER_WRAPPER)"
 echo "[route_bloat_guard] Interaction.Part2 global nonneg wrapper: $interaction_part2_global_nonneg_wrapper (max $MAX_INTERACTION_PART2_GLOBAL_NONNEG_WRAPPER)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 lattice mono-two wrapper: $ivl_part1_lattice_mono_two_wrapper (max $MAX_IVL_PART1_LATTICE_MONO_TWO_WRAPPER)"
+echo "[route_bloat_guard] Interaction.Part3 abs-moment wrapper: $interaction_part3_abs_geom_wrapper (max $MAX_INTERACTION_PART3_ABS_GEOM_WRAPPER)"
 
 fail=0
 if (( model_classes > MAX_MODEL_CLASSES )); then
@@ -228,6 +232,10 @@ if (( interaction_part2_global_nonneg_wrapper > MAX_INTERACTION_PART2_GLOBAL_NON
 fi
 if (( ivl_part1_lattice_mono_two_wrapper > MAX_IVL_PART1_LATTICE_MONO_TWO_WRAPPER )); then
   echo "[FAIL] InfiniteVolumeLimit.Part1 lattice mono-two wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_part3_abs_geom_wrapper > MAX_INTERACTION_PART3_ABS_GEOM_WRAPPER )); then
+  echo "[FAIL] Interaction.Part3 abs-moment wrapper count exceeded baseline." >&2
   fail=1
 fi
 
