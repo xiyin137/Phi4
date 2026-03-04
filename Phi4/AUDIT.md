@@ -2,6 +2,22 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, correlation constructor-wrapper trim follow-up):
+- Removed three additional no-caller constructor wrappers from
+  `CorrelationInequalities.lean`:
+  - `correlationInequalityModel_nonempty_of_submodels`,
+  - `correlationInequalityModel_nonempty_of_lattice_and_core_data`,
+  - `correlationInequalityModel_nonempty_of_lattice_and_core_models`.
+- Surface-size impact:
+  - `CorrelationInequalities` theorem count reduced `56 -> 53`,
+  - global `_nonempty_of_` constructor count reduced `67 -> 64`.
+- Guard hardening:
+  - tightened `_nonempty_of_` cap to `64`,
+  - tightened `CorrelationInequalities` theorem cap to `53`.
+- Verification:
+  - `lake build Phi4.CorrelationInequalities Phi4.InfiniteVolumeLimit Phi4.Reconstruction` passes.
+  - `bash scripts/quick_gate.sh` passes with new caps.
+
 Update (2026-03-04, unused wrapper module removal):
 - Deleted [HonestGaps.lean](/Users/xiyin/Phi4/Phi4/HonestGaps.lean), which consisted of
   forwarding alias theorems and was not imported by any module in `Phi4/` or `test/`.

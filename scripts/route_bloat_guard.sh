@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 # Baselines captured after bloat-reduction refactor (2026-03-04):
 # - class .*Model count: 58
-# - theorem .*_nonempty_of_ count: 67
+# - theorem .*_nonempty_of_ count: 64
 # - interactionWeightModel_nonempty_of_* count: 8
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
 # - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 3
@@ -21,9 +21,9 @@ cd "$ROOT_DIR"
 # - InfiniteVolumeLimit/Part1 infinite_volume_schwinger_exists_*_of_* theorem count: 4
 # - InfiniteVolumeLimit/Part2 top-level theorem count: 11
 # - InfiniteVolumeLimit/Part3 top-level theorem count: 16
-# - CorrelationInequalities top-level theorem count: 56
+# - CorrelationInequalities top-level theorem count: 53
 MAX_MODEL_CLASSES=58
-MAX_NONEMPTY_CONSTRUCTORS=67
+MAX_NONEMPTY_CONSTRUCTORS=64
 MAX_WEIGHT_ROUTES=8
 MAX_INTEGRABILITY_ROUTES=2
 MAX_LINEAR_GROWTH_ROUTES=3
@@ -38,7 +38,7 @@ MAX_IVL_PART1_SCHWINGERTWO_ROUTES=1
 MAX_IVL_PART1_EXISTS_ROUTES=4
 MAX_IVL_PART2_THEOREMS=11
 MAX_IVL_PART3_THEOREMS=16
-MAX_CORRELATION_THEOREMS=56
+MAX_CORRELATION_THEOREMS=53
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
