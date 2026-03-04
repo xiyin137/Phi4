@@ -2,6 +2,24 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, linear-growth frontier assumption-explicit refactor):
+- `Reconstruction/Part1Core.lean`:
+  - `gap_phi4_linear_growth` no longer requires
+    `[InteractionWeightModel params]` or a uniform generating-functional bound
+    hypothesis.
+  - The theorem now takes only the explicit inputs actually consumed at this
+    frontier level:
+    - mixed product-tensor Schwinger bound hypothesis `hmixed`,
+    - zeroth-mode normalization hypothesis `hzero`,
+    - compatibility/reduction/density data.
+- `Reconstruction/Part1Core.lean` and `Reconstruction/Part1Tail.lean` callers
+  now construct `hmixed` and `hzero` explicitly from local assumptions when
+  needed, instead of smuggling them through the gap theorem interface.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction` passes.
+  - `bash scripts/quick_gate.sh` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.
+
 Update (2026-03-04, hard-theorem assumption tightening pass):
 - `Reconstruction/Part1Tail.lean`:
   - converted `gap_phi4_wightman_reconstruction_step` from a class-based

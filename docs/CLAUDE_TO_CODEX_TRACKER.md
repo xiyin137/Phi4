@@ -5,6 +5,23 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, linear-growth frontier assumption-explicit refactor)
+
+- `Phi4/Reconstruction/Part1Core.lean`:
+  - refactored `gap_phi4_linear_growth` to remove
+    `[InteractionWeightModel params]` and direct uniform generating-functional
+    assumptions from the frontier theorem interface.
+  - the theorem now consumes explicit `hmixed` and `hzero` hypotheses plus the
+    existing compatibility/reduction/density inputs.
+- `Phi4/Reconstruction/Part1Core.lean` and
+  `Phi4/Reconstruction/Part1Tail.lean`:
+  - updated callers to derive `hmixed` and `hzero` explicitly from local
+    assumptions before invoking `gap_phi4_linear_growth`.
+- Verification passed:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction`,
+  - `bash scripts/quick_gate.sh`,
+  - `bash scripts/route_bloat_guard.sh`.
+
 ## Session Update (2026-03-04, hard-theorem assumption tightening pass)
 
 - `Phi4/Reconstruction/Part1Tail.lean`:

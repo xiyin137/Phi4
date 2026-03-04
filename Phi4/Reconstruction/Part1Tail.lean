@@ -111,10 +111,22 @@ theorem
         hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
         hinteraction_meas hinteraction_sq hcore with ⟨hIntModel⟩
   letI : InteractionIntegrabilityModel params := hIntModel
+  have hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) := by
+    intro n hn f
+    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
+      params huniform hcompat n hn f
+  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
+    intro f
+    exact infiniteVolumeSchwinger_zero (params := params) f
   exact reconstructionLinearGrowthModel_nonempty_of_data params
     (hlinear :=
       gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
-        huniform hcompat hreduce hdense)
+        hmixed hcompat hzero hreduce hdense)
 
 /-- Public linear-growth endpoint from `ReconstructionLinearGrowthModel`. -/
 theorem phi4_linear_growth (params : Phi4Params)

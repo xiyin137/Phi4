@@ -666,7 +666,6 @@ theorem gap_phi4_linear_growth_of_zero_mode_normalization (params : Phi4Params)
     For the φ⁴₂ theory, this follows from the generating functional bound
     (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
 theorem gap_phi4_linear_growth (params : Phi4Params)
-    [InteractionWeightModel params]
     [SchwingerLimitModel params]
     [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
@@ -674,12 +673,17 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
     (hsmall : params.coupling < os4WeakCouplingThreshold params)
     (alpha beta gamma : ℝ)
     (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
+    (hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))))
     (hcompat :
       ∀ (n : ℕ) (f : Fin n → TestFun2D),
         phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
           (infiniteVolumeSchwinger params n f : ℂ))
+    (hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1)
     (hreduce :
       ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
         ∑ i : Fin n, (Nat.factorial n : ℝ) *
@@ -695,18 +699,6 @@ theorem gap_phi4_linear_growth (params : Phi4Params)
     ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
       Nonempty (OSLinearGrowthCondition 1 OS) := by
-  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
-    intro f
-    exact infiniteVolumeSchwinger_zero (params := params) f
-  have hmixed :
-      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
-        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-          ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) := by
-    intro n hn f
-    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
-      params huniform hcompat n hn f
   exact gap_phi4_linear_growth_of_zero_mode_normalization
     params hsmall alpha beta gamma hbeta hmixed hcompat hzero hreduce hdense
 
@@ -799,5 +791,17 @@ theorem
       hcutoff_meas hcutoff_sq hcutoff_conv hcutoff_ae
       hinteraction_meas hinteraction_sq hmom with ⟨hW⟩
   letI : InteractionWeightModel params := hW
+  have hmixed :
+      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
+        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
+          ∑ i : Fin n, (Nat.factorial n : ℝ) *
+            (Real.exp (c * normFunctional (f i)) +
+              Real.exp (c * normFunctional (-(f i)))) := by
+    intro n hn f
+    exact phi4_productTensor_mixed_bound_of_uniform_generating_bound
+      params huniform hcompat n hn f
+  have hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1 := by
+    intro f
+    exact infiniteVolumeSchwinger_zero (params := params) f
   exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
-    huniform hcompat hreduce hdense
+    hmixed hcompat hzero hreduce hdense
