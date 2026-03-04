@@ -5,6 +5,25 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, IV Part2 alias cleanup)
+
+- Removed nine no-caller alias theorems from
+  `Phi4/InfiniteVolumeLimit/Part2.lean`:
+  - `infiniteCumulantFourPoint_abs_bound_alt13`,
+  - `infiniteCumulantFourPoint_abs_bound_alt14`,
+  - `infiniteTruncatedFourPoint12_abs_bound`,
+  - `infiniteTruncatedFourPoint13_abs_bound`,
+  - `infiniteTruncatedFourPoint14_abs_bound`,
+  - `infiniteTruncatedFourPoint12_bounds`,
+  - `infiniteTruncatedFourPoint13_bounds`,
+  - `infiniteTruncatedFourPoint14_bounds`,
+  - `infiniteTruncatedFourPoint_bounds_all_channels`.
+- Added a new non-growth guard in `scripts/route_bloat_guard.sh`:
+  - `InfiniteVolumeLimit/Part2` theorem cap `11`.
+- Verification passed:
+  - `lake build Phi4.InfiniteVolumeLimit.Part2 Phi4.InfiniteVolumeLimit`,
+  - `bash scripts/route_bloat_guard.sh`.
+
 ## Session Update (2026-03-04, Regularity/OS wrapper trim)
 
 - Removed five no-caller interface-forwarding wrappers:

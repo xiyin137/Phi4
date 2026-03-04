@@ -2,6 +2,29 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, infinite-volume 4-point alias pruning):
+- Removed nine no-caller alias theorems in
+  `InfiniteVolumeLimit/Part2.lean`:
+  - `infiniteCumulantFourPoint_abs_bound_alt13`,
+  - `infiniteCumulantFourPoint_abs_bound_alt14`,
+  - `infiniteTruncatedFourPoint12_abs_bound`,
+  - `infiniteTruncatedFourPoint13_abs_bound`,
+  - `infiniteTruncatedFourPoint14_abs_bound`,
+  - `infiniteTruncatedFourPoint12_bounds`,
+  - `infiniteTruncatedFourPoint13_bounds`,
+  - `infiniteTruncatedFourPoint14_bounds`,
+  - `infiniteTruncatedFourPoint_bounds_all_channels`.
+- Kept the constructive core (`*_nonneg`, `*_upper`,
+  `infiniteSchwinger_four_bounds_all_channels`) unchanged.
+- Surface-size impact:
+  - `InfiniteVolumeLimit/Part2` theorem count reduced to `11`.
+- Guard hardening:
+  - added `InfiniteVolumeLimit/Part2` theorem cap (`11`) to
+    `scripts/route_bloat_guard.sh`.
+- Verification:
+  - `lake build Phi4.InfiniteVolumeLimit.Part2 Phi4.InfiniteVolumeLimit` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with the new cap.
+
 Update (2026-03-04, regularity/OS interface-wrapper trim):
 - Removed five no-caller forwarding wrappers:
   - `Regularity.lean`:

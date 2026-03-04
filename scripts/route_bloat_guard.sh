@@ -19,6 +19,7 @@ cd "$ROOT_DIR"
 # - InfiniteVolumeLimit/Part1 top-level theorem count: 24
 # - InfiniteVolumeLimit/Part1 schwingerTwo_* theorem count: 1
 # - InfiniteVolumeLimit/Part1 infinite_volume_schwinger_exists_*_of_* theorem count: 4
+# - InfiniteVolumeLimit/Part2 top-level theorem count: 11
 MAX_MODEL_CLASSES=58
 MAX_NONEMPTY_CONSTRUCTORS=75
 MAX_WEIGHT_ROUTES=8
@@ -33,6 +34,7 @@ MAX_RECON_PART3_WIGHTMAN_ROUTES=4
 MAX_IVL_PART1_THEOREMS=24
 MAX_IVL_PART1_SCHWINGERTWO_ROUTES=1
 MAX_IVL_PART1_EXISTS_ROUTES=4
+MAX_IVL_PART2_THEOREMS=11
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
@@ -46,6 +48,7 @@ modelbundle_theorem_count="$( (rg -n '^theorem[[:space:]]' Phi4/ModelBundle.lean
 ivl_part1_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/InfiniteVolumeLimit/Part1.lean | wc -l | tr -d ' ')"
 ivl_part1_schwingerTwo_routes="$( (rg -n '^theorem[[:space:]]+schwingerTwo_' Phi4/InfiniteVolumeLimit/Part1.lean || true) | wc -l | tr -d ' ' )"
 ivl_part1_exists_routes="$( (rg -n '^theorem[[:space:]]+infinite_volume_schwinger_exists_.*_of_' Phi4/InfiniteVolumeLimit/Part1.lean || true) | wc -l | tr -d ' ' )"
+ivl_part2_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/InfiniteVolumeLimit/Part2.lean | wc -l | tr -d ' ')"
 part3_theorem_names="$(
   awk '
   /^[[:space:]]*theorem([[:space:]]|$)/{
@@ -85,6 +88,7 @@ echo "[route_bloat_guard] ModelBundle theorem count: $modelbundle_theorem_count 
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 theorem count: $ivl_part1_theorem_count (max $MAX_IVL_PART1_THEOREMS)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 schwingerTwo_* routes: $ivl_part1_schwingerTwo_routes (max $MAX_IVL_PART1_SCHWINGERTWO_ROUTES)"
 echo "[route_bloat_guard] InfiniteVolumeLimit.Part1 infinite_volume_schwinger_exists_*_of_* routes: $ivl_part1_exists_routes (max $MAX_IVL_PART1_EXISTS_ROUTES)"
+echo "[route_bloat_guard] InfiniteVolumeLimit.Part2 theorem count: $ivl_part2_theorem_count (max $MAX_IVL_PART2_THEOREMS)"
 echo "[route_bloat_guard] Reconstruction.Part3 theorem count: $part3_theorem_count (max $MAX_RECON_PART3_THEOREMS)"
 echo "[route_bloat_guard] Reconstruction.Part3 phi4_wightman_exists* routes: $part3_wightman_routes (max $MAX_RECON_PART3_WIGHTMAN_ROUTES)"
 
@@ -135,6 +139,10 @@ if (( ivl_part1_schwingerTwo_routes > MAX_IVL_PART1_SCHWINGERTWO_ROUTES )); then
 fi
 if (( ivl_part1_exists_routes > MAX_IVL_PART1_EXISTS_ROUTES )); then
   echo "[FAIL] InfiniteVolumeLimit.Part1 existence-route count exceeded baseline." >&2
+  fail=1
+fi
+if (( ivl_part2_theorem_count > MAX_IVL_PART2_THEOREMS )); then
+  echo "[FAIL] InfiniteVolumeLimit.Part2 theorem count exceeded baseline." >&2
   fail=1
 fi
 if (( part3_theorem_count > MAX_RECON_PART3_THEOREMS )); then
