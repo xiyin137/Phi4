@@ -1232,22 +1232,6 @@ instance (priority := 100) infiniteVolumeLimitModel_of_submodels
   infiniteVolumeSchwinger_is_moment :=
     InfiniteVolumeMomentModel.infiniteVolumeSchwinger_is_moment (params := params)
 
-/-- **Uniform upper bound**: The Schwinger functions are bounded uniformly in Λ:
-    |S_n^Λ(f₁,...,fₙ)| ≤ C(f₁,...,fₙ)
-    for all Λ (with Dirichlet BC).
-
-    This combines:
-    - Chessboard estimates (multiple reflections) to reduce to unit-square expectations
-    - The Lᵖ bounds from Theorem 8.6.2 for each unit square
-    - Exponential decay of the propagator for cross-square contributions -/
-theorem schwinger_uniformly_bounded_of_interface (params : Phi4Params)
-    [SchwingerUniformBoundModel params]
-    (k : ℕ) (f : Fin k → TestFun2D) :
-    ∃ C : ℝ, ∀ (n : ℕ) (hn : 0 < n),
-      |schwingerN params (exhaustingRectangles n hn) k f| ≤ C := by
-  exact SchwingerUniformBoundModel.schwinger_uniformly_bounded
-    (params := params) k f
-
 /-! ## Honest frontiers for infinite-volume package construction -/
 
 /-- Honest frontier: construct the infinite-volume Schwinger package from
@@ -1279,18 +1263,6 @@ theorem schwinger_uniformly_bounded (params : Phi4Params)
   exact hbound k f
 
 /-! ## Existence of the infinite volume limit -/
-
-/-- Interface-level existence of infinite-volume Schwinger functions from
-    `InfiniteVolumeSchwingerModel`. -/
-theorem infinite_volume_schwinger_exists_of_interface (params : Phi4Params)
-    [SchwingerLimitModel params]
-    (k : ℕ) (f : Fin k → TestFun2D) :
-    ∃ S : ℝ, Filter.Tendsto
-      (fun n : ℕ => if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
-      Filter.atTop (nhds S) := by
-  refine ⟨SchwingerLimitModel.infiniteVolumeSchwinger (params := params) k f, ?_⟩
-  exact SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
-    (params := params) k f
 
 /-- **Existence of infinite volume Schwinger functions** (Theorem 11.2.1):
     For non-negative test functions, the limit

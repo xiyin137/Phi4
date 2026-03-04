@@ -199,17 +199,6 @@ theorem schwingerN_monotone_of_interface
   exact SchwingerNMonotoneModel.schwingerN_monotone
     (params := params) Λ₁ Λ₂ h f hf hfΛ
 
-/-- Interface-level access to finite-volume `k`-point nonnegativity. -/
-theorem schwingerN_nonneg_of_interface
-    (params : Phi4Params) (k : ℕ)
-    [SchwingerNNonnegModel params k]
-    (Λ : Rectangle)
-    (f : Fin k → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x) :
-    0 ≤ schwingerN params Λ k f := by
-  exact SchwingerNNonnegModel.schwingerN_nonneg
-    (params := params) Λ f hf
-
 /-- Interface-level access to finite-volume monotonicity from the family-level
     monotonicity interface. -/
 theorem schwingerN_monotone_of_family

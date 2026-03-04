@@ -280,3 +280,14 @@ primary local Glimm-Jaffe work queue.
 - Verification:
   - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1 Phi4.Reconstruction.Part2 Phi4.Reconstruction.Part3` passes.
   - `bash scripts/route_bloat_guard.sh` passes with the tightened cap.
+
+### Cross-module interface-wrapper trim (same session)
+
+- Removed four no-caller interface wrappers:
+  - `infiniteVolumeSchwinger_mixed_bound_of_interface` (`Regularity.lean`),
+  - `schwingerN_nonneg_of_interface` (`CorrelationInequalities.lean`),
+  - `schwinger_uniformly_bounded_of_interface` (`InfiniteVolumeLimit/Part1.lean`),
+  - `infinite_volume_schwinger_exists_of_interface` (`InfiniteVolumeLimit/Part1.lean`).
+- Verification:
+  - `lake build Phi4.CorrelationInequalities Phi4.InfiniteVolumeLimit.Part1 Phi4.Regularity Phi4.OSAxioms` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.

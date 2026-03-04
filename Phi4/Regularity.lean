@@ -881,26 +881,6 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     simpa [C] using hc (exhaustingRectangles (k + 1) (Nat.succ_pos k))
   simpa [C] using abs_limit_le_of_abs_bound hlim hbound
 
-/-- Interface-level infinite-volume mixed `n`-point Schwinger bound obtained
-    from `RegularityModel` via its pointwise-in-`f` finite-volume uniform
-    generating-functional estimate. -/
-theorem infiniteVolumeSchwinger_mixed_bound_of_interface
-    (params : Phi4Params) [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [InfiniteVolumeMeasureModel params]
-    [UniformGeneratingFunctionalBoundModel params]
-    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
-    ∃ c : ℝ,
-      |infiniteVolumeSchwinger params n f| ≤
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := by
-  exact infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
-    params
-    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
-      (params := params))
-    n hn f
-
 /-- Infinite-volume 2-point Schwinger bound from global finite-volume
     generating-functional control, via polarization and exhaustion limits. -/
 theorem infiniteVolume_twoPoint_bound_of_global_uniform

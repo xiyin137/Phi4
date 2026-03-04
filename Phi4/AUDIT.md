@@ -2,6 +2,19 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, cross-module interface-wrapper trim):
+- Removed four no-caller interface wrappers:
+  - `Regularity.lean`: `infiniteVolumeSchwinger_mixed_bound_of_interface`,
+  - `CorrelationInequalities.lean`: `schwingerN_nonneg_of_interface`,
+  - `InfiniteVolumeLimit/Part1.lean`: `schwinger_uniformly_bounded_of_interface`,
+  - `InfiniteVolumeLimit/Part1.lean`: `infinite_volume_schwinger_exists_of_interface`.
+- Surface-size impact:
+  - no change to `_nonempty_of_` route counts (still `75`);
+    reduction is in wrapper theorem surface only.
+- Verification:
+  - `lake build Phi4.CorrelationInequalities Phi4.InfiniteVolumeLimit.Part1 Phi4.Regularity Phi4.OSAxioms` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.
+
 Update (2026-03-04, Reconstruction/Part1Core zero-caller theorem pruning):
 - Removed seven no-caller declarations from `Phi4/Reconstruction/Part1Core.lean`:
   - `phi4_linear_growth_constants_of_interface`,
