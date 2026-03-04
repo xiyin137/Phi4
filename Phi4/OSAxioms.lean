@@ -210,18 +210,6 @@ theorem phi4_os0_linear (params : Phi4Params)
 
 /-! ## OS1: Regularity (Linear Growth) -/
 
-/-- **OS1 (Regularity), trusted interface path**:
-    when the dedicated OS1 generating-functional bound interface is available,
-    the generating-functional bound is obtained directly from interface data
-    (without frontier-gap wrappers). -/
-theorem phi4_os1_of_interface (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [GeneratingFunctionalBoundModel params] :
-    ∃ c : ℝ, ∀ f : TestFun2D,
-      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
-        Real.exp (c * normFunctional f) := by
-  exact generating_functional_bound_of_interface params
-
 /-- **OS1 (Regularity)**: The generating functional satisfies the linear growth bound
     |S{f}| ≤ exp(c · N'(f)).
 
@@ -540,13 +528,6 @@ theorem phi4_satisfies_OS_of_explicit_data (params : Phi4Params)
   rcases phi4_satisfies_OS_of_interfaces params hsmall' with ⟨OS, hOS⟩
   refine ⟨OS, ?_⟩
   simpa [phi4SchwingerFunctions, core] using hOS
-
-/-- Explicit weak-coupling smallness assumption wrapper for E4 usage. -/
-theorem os4_weak_coupling_small_of_assumption (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [OSE4ClusterModel params]
-    (hsmall : params.coupling < os4WeakCouplingThreshold params) :
-    params.coupling < os4WeakCouplingThreshold params := hsmall
 
 /-- **Theorem 12.1.1 (Glimm-Jaffe), interface form**: under weak coupling and
     explicit OS subinterfaces, the φ⁴₂ generating functional satisfies

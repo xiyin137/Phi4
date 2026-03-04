@@ -5,6 +5,24 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, Regularity/OS wrapper trim)
+
+- Removed five no-caller interface-forwarding wrappers:
+  - `Phi4/Regularity.lean`:
+    `generating_functional_bound_of_interface`,
+    `generating_functional_bound_uniform_of_interface`,
+    `nonlocal_phi4_bound_of_interface`.
+  - `Phi4/OSAxioms.lean`:
+    `phi4_os1_of_interface`,
+    `os4_weak_coupling_small_of_assumption`.
+- Rewired public regularity endpoints to direct class-field projections:
+  - `generating_functional_bound`,
+  - `generating_functional_bound_uniform`,
+  - `nonlocal_phi4_bound`.
+- Verification passed:
+  - `lake build Phi4.Regularity Phi4.OSAxioms`,
+  - `bash scripts/quick_gate.sh`.
+
 ## Session Update (2026-03-04, IV monotonicity-route trim)
 
 - Removed four no-caller forwarding wrappers from

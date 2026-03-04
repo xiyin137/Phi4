@@ -2,6 +2,23 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, regularity/OS interface-wrapper trim):
+- Removed five no-caller forwarding wrappers:
+  - `Regularity.lean`:
+    `generating_functional_bound_of_interface`,
+    `generating_functional_bound_uniform_of_interface`,
+    `nonlocal_phi4_bound_of_interface`.
+  - `OSAxioms.lean`:
+    `phi4_os1_of_interface`,
+    `os4_weak_coupling_small_of_assumption`.
+- Rewired retained public endpoints to direct model-field access:
+  - `generating_functional_bound`,
+  - `generating_functional_bound_uniform`,
+  - `nonlocal_phi4_bound`.
+- Verification:
+  - `lake build Phi4.Regularity Phi4.OSAxioms` passes.
+  - `bash scripts/quick_gate.sh` passes.
+
 Update (2026-03-04, infinite-volume monotonicity-wrapper trim):
 - Removed four no-caller forwarding wrappers in
   `InfiniteVolumeLimit/Part1.lean`:

@@ -1083,19 +1083,6 @@ theorem generating_functional_pointwise_bound_of_exhaustion_limit
   refine ⟨c, ?_⟩
   exact abs_limit_le_of_abs_bound (hlim f) (fun n => hc n)
 
-/-- Interface-level generating-functional bound extracted from
-    `RegularityModel`. -/
-theorem generating_functional_bound_of_interface (params : Phi4Params) :
-    [InfiniteVolumeMeasureModel params] →
-    [GeneratingFunctionalBoundModel params] →
-    ∃ c : ℝ, ∀ f : TestFun2D,
-      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
-        Real.exp (c * normFunctional f) := by
-  intro hmeas hreg
-  simpa [normFunctional] using
-    (GeneratingFunctionalBoundModel.generating_functional_bound
-      (params := params))
-
 /-- Honest frontier: generating-functional bound (OS1 / E0') from
     explicit exhaustion convergence and finite-volume uniform bounds. -/
 theorem gap_generating_functional_bound (params : Phi4Params) :
@@ -1123,34 +1110,11 @@ theorem generating_functional_bound (params : Phi4Params) :
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
   intro hmeas hreg
-  exact generating_functional_bound_of_interface params
-
-/-! ## Nonlocal φ⁴ bounds -/
-
-/-- Interface-level nonlocal φ⁴ bound extracted from `RegularityModel`. -/
-theorem nonlocal_phi4_bound_of_interface (params : Phi4Params) :
-    [InfiniteVolumeMeasureModel params] →
-    [NonlocalPhi4BoundModel params] →
-    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤
-        Real.exp (C₁ * Λ.area + C₂) := by
-  intro hmeas hreg
-  exact NonlocalPhi4BoundModel.nonlocal_phi4_bound
-    (params := params)
+  simpa [normFunctional] using
+    (GeneratingFunctionalBoundModel.generating_functional_bound
+      (params := params))
 
 /-! ## Uniformity in volume -/
-
-/-- Interface-level uniform-in-volume generating-functional bound extracted from
-    `RegularityModel`. -/
-theorem generating_functional_bound_uniform_of_interface (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [UniformGeneratingFunctionalBoundModel params]
-    (f : TestFun2D) :
-    ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  simpa [normFunctional] using
-    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
-      (params := params) f)
 
 /-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4)
     from explicit pointwise-in-`f` finite-volume data. -/
@@ -1170,7 +1134,9 @@ theorem generating_functional_bound_uniform (params : Phi4Params)
     (f : TestFun2D) :
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  exact generating_functional_bound_uniform_of_interface params f
+  simpa [normFunctional] using
+    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
+      (params := params) f)
 
 /-! ## Nonlocal φ⁴ bounds -/
 
@@ -1207,8 +1173,9 @@ theorem nonlocal_phi4_bound (params : Phi4Params) :
     [NonlocalPhi4BoundModel params] →
     ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
-        Real.exp (C₁ * Λ.area + C₂) := by
+      Real.exp (C₁ * Λ.area + C₂) := by
   intro hmeas hreg
-  exact nonlocal_phi4_bound_of_interface params
+  exact NonlocalPhi4BoundModel.nonlocal_phi4_bound
+    (params := params)
 
 end
