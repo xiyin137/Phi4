@@ -576,28 +576,26 @@ theorem standardSeq_succ_uniform_integral_bound_of_geometric_exp_moment_bound
           ∫ ω : FieldConfig2D,
             Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
             ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D) := by
-  intro p hpTop
-  by_cases hp0 : p = 0
-  · refine ⟨1, ?_, ?_⟩
-    · intro n
-      let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-      letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
-      simpa [μ, hp0] using
-        (integrable_const (1 : ℝ) : Integrable (fun _ : FieldConfig2D => (1 : ℝ)) μ)
-    · intro n
-      let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-      letI : IsProbabilityMeasure μ := freeFieldMeasure_isProbability params.mass params.mass_pos
-      have hlin :
-          ∫ ω : FieldConfig2D,
-            Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-            ∂μ = 1 := by
-        simp [hp0, μ]
-      simpa [μ] using hlin.le
-  · have hq : 0 < p.toReal := ENNReal.toReal_pos hp0 hpTop
-    rcases hgeom p.toReal hq with ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩
+  have hpartition :
+      ∀ q : ℝ, 0 < q →
+        ∃ D : ℝ,
+          (∀ n : ℕ,
+            Integrable
+              (fun ω : FieldConfig2D =>
+                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
+              (freeFieldMeasure params.mass params.mass_pos)) ∧
+          (∀ n : ℕ,
+            ∫ ω : FieldConfig2D,
+              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
+              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D) := by
+    intro q hq
+    rcases hgeom q hq with ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩
     exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
-      (params := params) (Λ := Λ) (q := p.toReal)
+      (params := params) (Λ := Λ) (q := q)
       (hgeom := ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩)
+  intro p hpTop
+  exact standardSeq_succ_uniform_integral_bound_of_partition_bound
+    (params := params) (Λ := Λ) (hpartition := hpartition) (p := p) hpTop
 
 /-- Index-shift monotonicity for negative powers used in graph-to-WP1 bridges:
     for `β > 0`, `(n+2)^(-β) ≤ (n+1)^(-β)`. -/

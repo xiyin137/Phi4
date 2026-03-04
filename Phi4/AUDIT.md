@@ -480,6 +480,10 @@ local `sorry`.
     core (`interactionIntegrabilityModel_nonempty_from_sq_integrable_data_and_weight`)
     to eliminate repeated UV-model assembly plumbing across constructive
     `InteractionIntegrabilityModel` endpoints without increasing route counts.
+19. `Interaction/Part1Tail.lean` now routes geometric shifted-cutoff moment
+    hypotheses through the canonical partition-bound bridge
+    (`standardSeq_succ_uniform_integral_bound_of_partition_bound`), removing
+    duplicated `p = 0` / `p > 0` case-split logic in the geometric endpoint.
 
 ### Low
 

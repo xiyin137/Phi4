@@ -237,6 +237,12 @@ primary local Glimm-Jaffe work queue.
     factoring the repeated
     `interactionUVModel_nonempty_of_sq_integrable_data` + `...uv_weight_nonempty`
     assembly used by multiple hard-core integrability constructors.
+- Refactored the geometric-to-uniform cutoff integral bridge in
+  `Interaction/Part1Tail.lean`:
+  - `standardSeq_succ_uniform_integral_bound_of_geometric_exp_moment_bound`
+    now reuses `standardSeq_succ_uniform_integral_bound_of_partition_bound`
+    through an internal geometric→partition conversion, eliminating duplicated
+    `p = 0` / `p > 0` proof branching.
 - Verification:
-  - `lake build Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
+  - `lake build Phi4.Interaction.Part1Tail Phi4.Interaction.Part3` passes.
   - `bash scripts/quick_gate.sh` passes with route-bloat caps unchanged.
