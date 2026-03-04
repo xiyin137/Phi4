@@ -1119,7 +1119,6 @@ theorem generating_functional_bound (params : Phi4Params) :
 /-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4)
     from explicit pointwise-in-`f` finite-volume data. -/
 theorem gap_generating_functional_bound_uniform (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
     (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f))
     (f : TestFun2D) :
@@ -1143,13 +1142,12 @@ theorem generating_functional_bound_uniform (params : Phi4Params)
 /-- Honest frontier: nonlocal φ⁴ bounds (GJ §12.3) from explicit
     pointwise-in-`f` uniform finite-volume bounds. -/
 theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
-    [InfiniteVolumeMeasureModel params] →
     (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) →
     ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
       |generatingFunctional params Λ g| ≤
         Real.exp (C₁ * Λ.area + C₂) := by
-  intro hmeas huniform g
+  intro huniform g
   rcases gap_generating_functional_bound_uniform params huniform g with ⟨c, hc⟩
   refine ⟨0, c * normFunctional g, ?_⟩
   intro Λ

@@ -2,6 +2,22 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, hard-theorem assumption tightening pass):
+- `Reconstruction/Part1Tail.lean`:
+  - converted `gap_phi4_wightman_reconstruction_step` from a class-based
+    wrapper (`[WightmanReconstructionModel params]`) to an
+    assumption-explicit frontier theorem parameterized directly by
+    `hreconstruct`.
+- `Regularity.lean`:
+  - removed unused `InfiniteVolumeMeasureModel` assumptions from:
+    - `gap_generating_functional_bound_uniform`,
+    - `gap_nonlocal_phi4_bound`.
+  - these frontier statements now expose only the finite-volume uniform
+    generating-functional hypotheses they actually consume.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Tail Phi4.Regularity Phi4.Reconstruction` passes.
+  - `bash scripts/quick_gate.sh` passes.
+
 Update (2026-03-04, finite-volume and interaction route-pruning pass):
 - Removed 11 no-caller `finiteVolumeMeasure_isProbability_of_*` wrappers from
   `FiniteVolumeMeasure.lean`, including sq-data, wick-sublevel, linear-threshold,

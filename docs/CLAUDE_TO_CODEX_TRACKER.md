@@ -5,6 +5,20 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, hard-theorem assumption tightening pass)
+
+- `Phi4/Reconstruction/Part1Tail.lean`:
+  - converted `gap_phi4_wightman_reconstruction_step` from class-based
+    interface forwarding to an assumption-explicit frontier theorem
+    parameterized directly by `hreconstruct`.
+- `Phi4/Regularity.lean`:
+  - removed unused `InfiniteVolumeMeasureModel` assumptions from
+    `gap_generating_functional_bound_uniform` and
+    `gap_nonlocal_phi4_bound`.
+- Verification passed:
+  - `lake build Phi4.Reconstruction.Part1Tail Phi4.Regularity Phi4.Reconstruction`,
+  - `bash scripts/quick_gate.sh`.
+
 ## Session Update (2026-03-04, finite-volume and interaction route-pruning pass)
 
 - Removed 11 no-caller `finiteVolumeMeasure_isProbability_of_*` wrappers from
