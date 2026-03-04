@@ -188,25 +188,6 @@ theorem phi4_linear_growth_of_interface (params : Phi4Params)
       Nonempty (OSLinearGrowthCondition 1 OS) := by
   exact ReconstructionLinearGrowthModel.phi4_linear_growth (params := params)
 
-/-- Explicit linear-growth constants extracted from
-    `ReconstructionLinearGrowthModel`. -/
-theorem phi4_linear_growth_constants_of_interface (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [ReconstructionLinearGrowthModel params] :
-    ∃ (sobolev_index : ℕ) (alpha beta gamma : ℝ),
-      0 < alpha ∧ 0 < beta ∧
-      ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
-        ‖phi4SchwingerFunctions params n f‖ ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ sobolev_index sobolev_index f := by
-  let OS := ReconstructionLinearGrowthModel.os_package (params := params)
-  let hS := ReconstructionLinearGrowthModel.os_package_eq (params := params)
-  let hlg := ReconstructionLinearGrowthModel.linear_growth (params := params)
-  refine ⟨hlg.sobolev_index, hlg.alpha, hlg.beta, hlg.gamma,
-    hlg.alpha_pos, hlg.beta_pos, ?_⟩
-  intro n f
-  simpa [OS, hS] using hlg.growth_estimate n f
-
 /-- Canonical Wightman-reconstruction step extracted from upstream
     `WightmanReconstructionModel`. -/
 theorem phi4_wightman_reconstruction_step_of_interface (params : Phi4Params)
@@ -244,49 +225,6 @@ def schwartzProductTensorFromTestFamily {n : ℕ} (f : Fin n → TestFun2D) :
   SchwartzMap.productTensor (fun i => testFunToSchwartzSpacetime (f i))
 
 /-- Zero-point normalization on product tensors from compatibility with
-    `infiniteVolumeSchwinger`. -/
-theorem phi4_productTensor_zero_of_compat
-    (params : Phi4Params)
-    [SchwingerLimitModel params]
-    [InteractionWeightModel params]
-    [SchwingerFunctionModel params]
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (f : Fin 0 → TestFun2D) :
-    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f) = 1 := by
-  calc
-    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f)
-        = (infiniteVolumeSchwinger params 0 f : ℂ) := by
-          simpa using hcompat 0 f
-    _ = 1 := by
-          norm_num [infiniteVolumeSchwinger_zero]
-
-/-- Measure-representation variant of zero-point normalization on product
-    tensors from compatibility with `infiniteVolumeSchwinger`. -/
-theorem phi4_productTensor_zero_of_compat_of_moment
-    (params : Phi4Params)
-    [InfiniteVolumeSchwingerModel params]
-    [InfiniteVolumeMeasureModel params]
-    [InfiniteVolumeMomentModel params]
-    [SchwingerFunctionModel params]
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (f : Fin 0 → TestFun2D) :
-    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f) = 1 := by
-  calc
-    phi4SchwingerFunctions params 0 (schwartzProductTensorFromTestFamily f)
-        = (infiniteVolumeSchwinger params 0 f : ℂ) := by
-          simpa using hcompat 0 f
-    _ = 1 := by
-          have hzero : infiniteVolumeSchwinger params 0 f = 1 :=
-            infiniteVolumeSchwinger_zero_of_moment (params := params) f
-          simp [hzero]
-
-/-- Zero-point normalization on product tensors from compatibility with
     `infiniteVolumeSchwinger`, assuming explicit zeroth-mode normalization
     for `infiniteVolumeSchwinger`. -/
 theorem phi4_productTensor_zero_of_compat_of_zero
@@ -306,39 +244,6 @@ theorem phi4_productTensor_zero_of_compat_of_zero
           simpa using hcompat 0 f
     _ = 1 := by
           simpa using hzero f
-
-/-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
-    from a global finite-volume uniform generating-functional estimate, plus an
-    explicit compatibility bridge to `infiniteVolumeSchwinger`. -/
-theorem phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
-    ∃ c : ℝ,
-      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := by
-  rcases infiniteVolumeSchwinger_mixed_bound_of_global_uniform
-      (params := params) hglobal n hn f with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  calc
-    ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖
-        = ‖(infiniteVolumeSchwinger params n f : ℂ)‖ := by
-          simp [hcompat n f]
-    _ = |infiniteVolumeSchwinger params n f| := by
-          simp
-    _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := hc
 
 /-- Mixed `n`-point bound for `phi4SchwingerFunctions` on product tensors,
     from explicit pointwise-in-`f` finite-volume uniform generating-functional
@@ -373,78 +278,6 @@ theorem phi4_productTensor_mixed_bound_of_uniform_generating_bound
     _ ≤ ∑ i : Fin n, (Nat.factorial n : ℝ) *
           (Real.exp (c * normFunctional (f i)) +
             Real.exp (c * normFunctional (-(f i)))) := hc
-
-/-- Product-tensor linear-growth estimate from:
-    1) a global finite-volume uniform generating-functional bound,
-    2) compatibility with `infiniteVolumeSchwinger`, and
-    3) an explicit reduction of the mixed exponential-sum bound to one
-       Schwartz seminorm on product tensors. -/
-theorem phi4_productTensor_linear_growth_of_global_uniform_generating_bound
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    (sobolev_index : ℕ) (alpha beta gamma : ℝ)
-    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-              (schwartzProductTensorFromTestFamily f)) :
-    ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-          SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-            (schwartzProductTensorFromTestFamily f) := by
-  intro n hn f
-  have hmixed := phi4_productTensor_mixed_bound_of_global_uniform_generating_bound
-    params hglobal hcompat n hn f
-  rcases hmixed with ⟨c, hc⟩
-  exact hc.trans (hreduce c n hn f)
-
-/-- Product-tensor linear-growth estimate from:
-    1) pointwise-in-`f` finite-volume uniform generating-functional bounds,
-    2) compatibility with `infiniteVolumeSchwinger`, and
-    3) an explicit reduction of the mixed exponential-sum bound to one
-       Schwartz seminorm on product tensors. -/
-theorem phi4_productTensor_linear_growth_of_uniform_generating_bound
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    [SchwingerFunctionModel params]
-    (sobolev_index : ℕ) (alpha beta gamma : ℝ)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-              (schwartzProductTensorFromTestFamily f)) :
-    ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-      ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-        alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-          SchwartzMap.seminorm ℝ sobolev_index sobolev_index
-            (schwartzProductTensorFromTestFamily f) := by
-  intro n hn f
-  have hmixed := phi4_productTensor_mixed_bound_of_uniform_generating_bound
-    params huniform hcompat n hn f
-  rcases hmixed with ⟨c, hc⟩
-  exact hc.trans (hreduce c n hn f)
 
 /-- Positive-order linear growth on all `SchwartzNPoint` test functions from:
     1) product-tensor linear-growth bounds, and
@@ -811,28 +644,6 @@ theorem phi4_productTensor_approx_family_of_dense_range
   exact phi4_productTensor_approx_of_dense_range hn g (hdense n hn)
 
 /-! ## Linear growth condition (E0') -/
-
-/-- Build `OSLinearGrowthCondition` from explicit seminorm-growth constants
-    for a fixed OS package. -/
-theorem osLinearGrowthCondition_nonempty_of_bound
-    (OS : OsterwalderSchraderAxioms 1)
-    (sobolev_index : ℕ)
-    (alpha beta gamma : ℝ)
-    (halpha : 0 < alpha)
-    (hbeta : 0 < beta)
-    (hgrowth : ∀ (n : ℕ) (f : SchwartzNPoint 1 n),
-      ‖OS.S n f‖ ≤ alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-        SchwartzMap.seminorm ℝ sobolev_index sobolev_index f) :
-    Nonempty (OSLinearGrowthCondition 1 OS) := by
-  refine ⟨{
-    sobolev_index := sobolev_index
-    alpha := alpha
-    beta := beta
-    gamma := gamma
-    alpha_pos := halpha
-    beta_pos := hbeta
-    growth_estimate := hgrowth
-  }⟩
 
 /-- Construct `ReconstructionLinearGrowthModel` from explicit linear-growth data. -/
 theorem reconstructionLinearGrowthModel_nonempty_of_data (params : Phi4Params)

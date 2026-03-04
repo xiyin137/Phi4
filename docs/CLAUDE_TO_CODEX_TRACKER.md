@@ -264,3 +264,19 @@ primary local Glimm-Jaffe work queue.
   - `lake build Phi4.Interaction.Part1Core Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
   - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction.Part3` passes.
   - `bash scripts/quick_gate.sh` passes with tightened route-bloat caps.
+
+### Reconstruction/Part1Core no-caller cleanup (same session)
+
+- Removed seven no-caller declarations in `Phi4/Reconstruction/Part1Core.lean`:
+  - `phi4_linear_growth_constants_of_interface`,
+  - `phi4_productTensor_zero_of_compat`,
+  - `phi4_productTensor_zero_of_compat_of_moment`,
+  - `phi4_productTensor_mixed_bound_of_global_uniform_generating_bound`,
+  - `phi4_productTensor_linear_growth_of_global_uniform_generating_bound`,
+  - `phi4_productTensor_linear_growth_of_uniform_generating_bound`,
+  - `osLinearGrowthCondition_nonempty_of_bound`.
+- Tightened `scripts/route_bloat_guard.sh` `_nonempty_of_` cap:
+  - `76 -> 75`.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1 Phi4.Reconstruction.Part2 Phi4.Reconstruction.Part3` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with the tightened cap.

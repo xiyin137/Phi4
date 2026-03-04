@@ -2,6 +2,23 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, Reconstruction/Part1Core zero-caller theorem pruning):
+- Removed seven no-caller declarations from `Phi4/Reconstruction/Part1Core.lean`:
+  - `phi4_linear_growth_constants_of_interface`,
+  - `phi4_productTensor_zero_of_compat`,
+  - `phi4_productTensor_zero_of_compat_of_moment`,
+  - `phi4_productTensor_mixed_bound_of_global_uniform_generating_bound`,
+  - `phi4_productTensor_linear_growth_of_global_uniform_generating_bound`,
+  - `phi4_productTensor_linear_growth_of_uniform_generating_bound`,
+  - `osLinearGrowthCondition_nonempty_of_bound`.
+- Surface-size impact:
+  - global `_nonempty_of_` theorem count reduced `76 → 75`.
+- Guard tightening:
+  - `scripts/route_bloat_guard.sh` `_nonempty_of_` cap tightened to `75`.
+- Verification:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1 Phi4.Reconstruction.Part2 Phi4.Reconstruction.Part3` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with the tightened cap.
+
 Update (2026-02-27):
 - Automated trust audit now reports theorem-level `sorry` count (core): `0`.
 - Trusted interface/bundle endpoints remain `sorryAx`-free.
