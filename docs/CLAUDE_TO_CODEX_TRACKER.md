@@ -5,6 +5,22 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, critical-issues policy/doc pass)
+
+- `AGENTS.md` updated to enforce:
+  - explicit status framing (zero-`sorry` is not completion),
+  - hard interface/route-bloat budget discipline,
+  - WP1-first execution policy for theorem work,
+  - dependency pinning policy (no floating `@ "main"`),
+  - scratch hygiene requirements.
+- Local status docs aligned with the same framing:
+  - `README.md`,
+  - `TODO.md`,
+  - `Phi4/AUDIT.md`.
+- Dependency reproducibility hardening:
+  - `lakefile.lean` now pins `GaussianField` and `OSReconstruction` to concrete
+    git commits.
+
 ## Session Update (2026-03-04, linear-growth frontier assumption-explicit refactor)
 
 - `Phi4/Reconstruction/Part1Core.lean`:

@@ -2,6 +2,21 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, critical-issues framing/scope correction):
+- Status framing tightened across local docs:
+  - "zero theorem-level `sorry`" now explicitly means no hidden placeholders in
+    proved statements, not completion of the full construction.
+  - frontier debt is stated explicitly as `58` interface obligations plus `10`
+    canonical theorem-level `gap_*` frontiers.
+- Critical-path policy is now explicit: WP1 (Glimm-Jaffe 8.6.2 style
+  partition-function/integrability closure) remains the primary blocker.
+- Reproducibility risk is now tracked as a first-class issue:
+  - external core dependencies are pinned in `lakefile.lean` to immutable
+    commits (no floating `@ "main"`).
+- Scratch hygiene is now explicit policy:
+  - `Phi4/Scratch` remains out of the core trust boundary and is tracked as
+    exploratory inventory to be pruned/ported deliberately.
+
 Update (2026-03-04, linear-growth frontier assumption-explicit refactor):
 - `Reconstruction/Part1Core.lean`:
   - `gap_phi4_linear_growth` no longer requires
@@ -810,6 +825,11 @@ Policy basis (from `AGENTS.md`):
 - theorem-level `sorry` count (core): **0**
 - theorem-level `sorry` count (scratch): **0**
 - `class ...Model` declarations in `Phi4/**/*.lean`: **58**
+- theorem-level `gap_*` frontiers in core modules: **10**
+
+Interpretation note:
+- Zero theorem-level `sorry` is a trust/soundness hygiene signal, not a claim
+  that the project has discharged all mathematical obligations.
 
 ## Core Theorem-Level Gap Inventory
 

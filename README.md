@@ -39,18 +39,27 @@ Local per-folder guides are available at:
 - `Phi4/Reconstruction/README.md`
 - `Phi4/Scratch/README.md`
 
-## Status Snapshot (2026-02-27)
+## Status Snapshot (2026-03-04)
 
 - Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`):
   - theorem-level `sorry` count: `0`,
   - `axiom` declarations: `0`,
   - `def`/`abbrev`-level `sorry`: `0`.
 - Scratch modules (`Phi4/Scratch/**/*.lean`) theorem-level `sorry` count: `0`.
-- Build status: `lake build Phi4` succeeds.
+- Build status: targeted gates (`scripts/quick_gate.sh`,
+  `scripts/route_bloat_guard.sh`) pass.
 - Trust audit script checks:
   - no explicit axioms,
   - no `def/abbrev := by sorry`,
   - selected trusted interface/bundle endpoints are free of `sorryAx`.
+- Completion framing:
+  - zero theorem-level `sorry` in core means no hidden placeholders in proved
+    statements, not that the full construction is complete.
+  - remaining frontier obligations are explicit: `58` `...Model` interfaces and
+    `10` canonical theorem-level `gap_*` frontiers.
+- Dependency reproducibility:
+  - `GaussianField` and `OSReconstruction` are pinned to commit hashes in
+    `lakefile.lean` (no floating `@ "main"`).
 - Open frontier obligations are represented explicitly as theorem-level `gap_*`
   endpoints and interface assumptions (`...Model` classes), not hidden in
   definitions.

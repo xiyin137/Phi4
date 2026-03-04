@@ -13,13 +13,20 @@ All work packages and checklists in this file are interpreted in that order.
 Upstream blocker inventories are supporting context only and must not override
 the local Glimm-Jaffe objective.
 
-## Status Snapshot (2026-02-27)
+## Status Snapshot (2026-03-04)
 
-- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) have `0` theorem-level `sorry` (intentional honest frontiers remain as theorem-level gaps via `gap_*` endpoints).
+- Core modules (`Phi4/**/*.lean`, excluding `Phi4/Scratch`) have `0`
+  theorem-level `sorry`.
+- This does not imply construction closure: open obligations are intentionally
+  explicit at the frontier boundary (`58` `...Model` interfaces, `10` canonical
+  theorem-level `gap_*` frontiers).
 - Scratch modules (`Phi4/Scratch/**/*.lean`) have `0` theorem-level `sorry`.
 - `Phi4/**/*.lean` has `0` `axiom` declarations.
 - `Phi4/**/*.lean` has `0` `def/abbrev := by sorry`.
-- `lake build Phi4` succeeds.
+- Targeted verification gates (`scripts/quick_gate.sh`,
+  `scripts/route_bloat_guard.sh`) pass.
+- `lakefile.lean` pins `GaussianField` and `OSReconstruction` to immutable
+  commit hashes for reproducible builds.
 - `scripts/check_phi4_trust.sh` now also enforces that selected trusted
   interface/bundle endpoints are free of `sorryAx` dependencies (`#print axioms` check).
 - `Phi4/InfiniteVolumeLimit/Part1.lean` now reduces assumption smuggling at the
