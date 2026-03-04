@@ -243,6 +243,11 @@ primary local Glimm-Jaffe work queue.
     now reuses `standardSeq_succ_uniform_integral_bound_of_partition_bound`
     through an internal geometric→partition conversion, eliminating duplicated
     `p = 0` / `p > 0` proof branching.
+- Added a reusable shifted-cutoff measurability bridge in
+  `Interaction/Part1Core.lean`:
+  - `interactionCutoff_standardSeq_succ_aestronglyMeasurable`,
+    then rewired repeated local conversions in `Interaction/Part2.lean` and
+    `Interaction/Part3.lean` to this single infrastructure lemma.
 - Verification:
-  - `lake build Phi4.Interaction.Part1Tail Phi4.Interaction.Part3` passes.
+  - `lake build Phi4.Interaction.Part1Core Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
   - `bash scripts/quick_gate.sh` passes with route-bloat caps unchanged.

@@ -680,6 +680,21 @@ theorem interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
   filter_upwards [hstd] with ω hω
   exact hω.comp (Filter.tendsto_add_atTop_nat 1)
 
+/-- Shifted canonical-sequence (`κ_{n+1}`) measurability transfer:
+    UV-cutoff measurability data yields measurability for each shifted
+    canonical cutoff `interactionCutoff(κ_{n+1})`. -/
+theorem interactionCutoff_standardSeq_succ_aestronglyMeasurable
+    (params : Phi4Params)
+    (hcutoff_meas :
+      ∀ (Λ : Rectangle) (κ : UVCutoff),
+        AEStronglyMeasurable (interactionCutoff params Λ κ)
+          (freeFieldMeasure params.mass params.mass_pos))
+    (Λ : Rectangle) (n : ℕ) :
+    AEStronglyMeasurable
+      (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
+      (freeFieldMeasure params.mass params.mass_pos) := by
+  simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
+
 /-- Shifted canonical-sequence (`κ_{n+1}`) specialization of L² cutoff
     convergence:
     if the real-parameterized L² convergence hypothesis holds, then the shifted
@@ -1209,7 +1224,8 @@ theorem interactionWeightModel_nonempty_of_tendsto_ae_and_geometric_integral_bou
     exact interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
       (params := params) (Λ := Λ) (hcutoff_tendsto_ae Λ)
   · intro Λ n
-    simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
+    exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+      (params := params) hcutoff_meas Λ n
   · intro Λ p hpTop
     exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
       (params := params) (Λ := Λ) (q := p.toReal) (hgeom := hgeom Λ hpTop)

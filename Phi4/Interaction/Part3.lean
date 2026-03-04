@@ -129,7 +129,8 @@ theorem
   exact shifted_exponential_moment_geometric_bound_of_abs
     (params := params) (Λ := Λ)
     (hcutoff_meas := fun n => by
-      simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+      exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+        (params := params) hcutoff_meas Λ n)
     (hmomAbs Λ)
 
 /-
@@ -262,7 +263,8 @@ theorem
     interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
       (params := params) (β := β) hβ (C := C) hC_nonneg hInt hM
       (hcutoff_meas := fun Λ n => by
-        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+        exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+          (params := params) hcutoff_meas Λ n)
       hpartition
 
 /-- Construct `InteractionIntegrabilityModel` from:
@@ -347,7 +349,8 @@ theorem
     interactionWeightModel_nonempty_of_sq_moment_polynomial_bound_per_volume_and_uniform_partition_bound
       (params := params) (β := β) hβ (C := C) hC_nonneg hInt hM
       (hcutoff_meas := fun Λ n => by
-        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+        exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+          (params := params) hcutoff_meas Λ n)
       hpartition
 
 /-- Construct `InteractionIntegrabilityModel` from:
@@ -434,7 +437,8 @@ theorem
       (params := params) (j := j) (hj := hj)
       (β := β) hβ (C := C) hC_nonneg hInt hM
       (hcutoff_meas := fun Λ n => by
-        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+        exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+          (params := params) hcutoff_meas Λ n)
       hpartition
 
 /-- Construct `InteractionIntegrabilityModel` from:
@@ -520,7 +524,8 @@ theorem
     interactionWeightModel_nonempty_of_higher_moment_polynomial_bound_per_volume_and_uniform_partition_bound_of_succ_succ
       (params := params) (j := j) (hj := hj) (β := β) hβ (C := C) hC_nonneg hInt hM
       (hcutoff_meas := fun Λ n => by
-        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+        exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+          (params := params) hcutoff_meas Λ n)
       hpartition
 
 /-- Construct `InteractionIntegrabilityModel` from:
@@ -610,7 +615,8 @@ theorem
     exact interactionCutoff_standardSeq_succ_tendsto_ae_of_tendsto_ae
       (params := params) (Λ := Λ) (hcutoff_ae Λ)
   · intro Λ n
-    simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
+    exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+      (params := params) hcutoff_meas Λ n
   intro Λ q hq
   rcases hdecomp Λ q hq with
     ⟨a, b, ha, bad, hbad_meas, hInt, hgood, hmem2, D2, r2, hD2, hr20, hr21, hMoment2,
@@ -823,7 +829,8 @@ theorem
       standardSeq_succ_sq_exp_moment_data_of_double_exponential_moment_geometric_bound
         (params := params) (Λ := Λ) (q := q)
         (hcutoff_meas := fun n => by
-          simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+          exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+            (params := params) hcutoff_meas Λ n)
         hInt2 D2 r2 hMoment2raw with
     ⟨hmem2, hMoment2⟩
   rcases
@@ -928,7 +935,8 @@ theorem
       standardSeq_succ_sq_exp_moment_data_of_double_exponential_moment_geometric_bound
         (params := params) (Λ := Λ) (q := q)
         (hcutoff_meas := fun n => by
-          simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+          exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+            (params := params) hcutoff_meas Λ n)
         hInt2 D2 r2 hMoment2raw with
     ⟨hmem2, _hMoment2⟩
   let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos

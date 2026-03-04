@@ -484,6 +484,12 @@ local `sorry`.
     hypotheses through the canonical partition-bound bridge
     (`standardSeq_succ_uniform_integral_bound_of_partition_bound`), removing
     duplicated `p = 0` / `p > 0` case-split logic in the geometric endpoint.
+20. `Interaction/Part1Core.lean` now exports a reusable shifted-cutoff
+    measurability bridge
+    (`interactionCutoff_standardSeq_succ_aestronglyMeasurable`), and
+    `Interaction/Part2.lean`/`Interaction/Part3.lean` now consume this helper
+    instead of duplicating local `simpa` conversions from UV-measurability
+    assumptions.
 
 ### Low
 

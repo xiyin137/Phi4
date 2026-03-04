@@ -718,7 +718,8 @@ theorem
     (shifted_exponential_moment_geometric_bound_of_abs
       (params := params) (Λ := Λ)
       (hcutoff_meas := fun n => by
-        simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1)))
+        exact interactionCutoff_standardSeq_succ_aestronglyMeasurable
+          (params := params) hcutoff_meas Λ n)
       hmomAbs)
 
 /-- Construct `InteractionWeightModel` from geometric decay of shifted-index
