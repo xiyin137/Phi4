@@ -1025,63 +1025,6 @@ theorem
 
 /-- Construct `ReconstructionInputModel` from:
     1) weak-coupling decay infrastructure,
-    2) UV Wick-sublevel-tail interaction control, and
-    3) explicit product-tensor reduction/approximation hypotheses. -/
-theorem
-    reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params : Phi4Params)
-    [InteractionUVModel params]
-    [SchwingerLimitModel params]
-    [OSAxiomCoreModel params]
-    [OSDistributionE2Model params]
-    [OSE4ClusterModel params]
-    [ReconstructionWeakCouplingModel params]
-    (hwick_bad :
-      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
-        C ≠ ⊤ ∧ 0 < α ∧
-        (∀ n : ℕ,
-          (freeFieldMeasure params.mass params.mass_pos)
-            {ω : FieldConfig2D |
-              ∃ x ∈ Λ.toSet,
-                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
-            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
-        MeasurableSet Λ.toSet ∧
-        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
-        (∀ n : ℕ, ∀ ω : FieldConfig2D,
-          IntegrableOn
-            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
-            Λ.toSet volume))
-    (hsmall : params.coupling < os4WeakCouplingThreshold params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (hdense :
-      ∀ (n : ℕ) (_hn : 0 < n),
-        DenseRange (fun f : Fin n → TestFun2D =>
-          schwartzProductTensorFromTestFamily f)) :
-    Nonempty (ReconstructionInputModel params) := by
-  exact
-    reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
-      (params := params)
-      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
-      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
-      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
-
-/-- Construct `ReconstructionInputModel` from:
-    1) weak-coupling decay infrastructure,
     2) square-integrable/measurable UV interaction data,
     3) explicit cutoff a.e. convergence,
     4) per-volume bad-set decomposition data (linear lower bounds off bad sets,
@@ -1777,64 +1720,6 @@ theorem
   letI : InteractionWeightModel params := hWinst
   exact gap_phi4_linear_growth params hsmall alpha beta gamma hbeta
     huniform hcompat hreduce hdense
-
-/-- Linear-growth frontier with explicit Wick-sublevel-tail interaction input:
-    shifted-index exponential tails of natural bad events
-    `{ω | ∃ x ∈ Λ, wickPower(κ_{n+1}) ω x < -B}` are routed through the
-    direct `InteractionWeightModel` bridge, then into `gap_phi4_linear_growth`. -/
-theorem
-    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets
-    (params : Phi4Params)
-    [InteractionUVModel params]
-    [SchwingerLimitModel params]
-    [OSAxiomCoreModel params]
-    [OSDistributionE2Model params]
-    [OSE4ClusterModel params]
-    (hwick_bad :
-      ∀ Λ : Rectangle, ∃ B : ℝ, ∃ C : ENNReal, ∃ α : ℝ,
-        C ≠ ⊤ ∧ 0 < α ∧
-        (∀ n : ℕ,
-          (freeFieldMeasure params.mass params.mass_pos)
-            {ω : FieldConfig2D |
-              ∃ x ∈ Λ.toSet,
-                wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x < -B}
-            ≤ C * (ENNReal.ofReal (Real.exp (-α))) ^ n) ∧
-        MeasurableSet Λ.toSet ∧
-        volume Λ.toSet ≠ (⊤ : ENNReal) ∧
-        (∀ n : ℕ, ∀ ω : FieldConfig2D,
-          IntegrableOn
-            (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
-            Λ.toSet volume))
-    (hsmall : params.coupling < os4WeakCouplingThreshold params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (huniform : ∀ h : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (hdense :
-      ∀ (n : ℕ) (_hn : 0 < n),
-        DenseRange (fun f : Fin n → TestFun2D =>
-          schwartzProductTensorFromTestFamily f)) :
-    ∃ OS : OsterwalderSchraderAxioms 1,
-      OS.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact
-    gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
-      (params := params)
-      (hinteraction_meas := fun Λ => (interaction_in_L2 params Λ).aestronglyMeasurable)
-      (hcutoff_tendsto_ae := fun Λ => interactionCutoff_standardSeq_tendsto_ae params Λ)
-      hwick_bad hsmall alpha beta gamma hbeta huniform hcompat hreduce hdense
 
 /-- Linear-growth frontier from:
     1) square-integrable/measurable UV interaction data,

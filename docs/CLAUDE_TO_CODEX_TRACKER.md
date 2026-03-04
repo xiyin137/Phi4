@@ -5,6 +5,28 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, Reconstruction linear-growth wrapper trim)
+
+- Removed four no-caller forwarding wrappers:
+  - `Phi4/Reconstruction/Part1Core.lean`:
+    `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_moment_geometric_bound`,
+    `reconstructionLinearGrowthModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
+  - `Phi4/Reconstruction/Part1Tail.lean`:
+    `gap_phi4_linear_growth_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`,
+    `reconstructionInputModel_nonempty_of_uv_cutoff_seq_shifted_exponential_wick_sublevel_bad_sets`.
+- Measured reduction:
+  - `gap_phi4_linear_growth*` routes in `Part1Core` `3 -> 2`,
+  - class-based `InteractionUVModel` wrappers in `Part1Core` `1 -> 0`,
+  - class-based `InteractionUVModel` wrappers in `Part1Tail` `2 -> 0`.
+- Guard updates in `scripts/route_bloat_guard.sh`:
+  - tightened `gap_phi4_linear_growth` cap `3 -> 2`,
+  - added `Reconstruction.Part1Core InteractionUV wrappers` cap `0`,
+  - added `Reconstruction.Part1Tail InteractionUV wrappers` cap `0`.
+- Verification passed:
+  - `lake build Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction`,
+  - `bash scripts/route_bloat_guard.sh`,
+  - `bash scripts/quick_gate.sh`.
+
 ## Session Update (2026-03-04, Correlation constructor-wrapper follow-up)
 
 - Removed three additional no-caller constructor wrappers from

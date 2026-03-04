@@ -9,7 +9,9 @@ cd "$ROOT_DIR"
 # - theorem .*_nonempty_of_ count: 64
 # - interactionWeightModel_nonempty_of_* count: 8
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
-# - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 3
+# - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 2
+# - Reconstruction/Part1Core InteractionUVModel wrapper count: 0
+# - Reconstruction/Part1Tail InteractionUVModel wrapper count: 0
 # - Interaction/Part2 top-level theorem count: 8
 # - Reconstruction/Part2 top-level theorem count: 1
 # - Reconstruction/Part2 *_explicit* theorem count: 0
@@ -26,7 +28,9 @@ MAX_MODEL_CLASSES=58
 MAX_NONEMPTY_CONSTRUCTORS=64
 MAX_WEIGHT_ROUTES=8
 MAX_INTEGRABILITY_ROUTES=2
-MAX_LINEAR_GROWTH_ROUTES=3
+MAX_LINEAR_GROWTH_ROUTES=2
+MAX_RECON_PART1CORE_INTERACTIONUV_WRAPPERS=0
+MAX_RECON_PART1TAIL_INTERACTIONUV_WRAPPERS=0
 MAX_INTERACTION_PART2_THEOREMS=8
 MAX_RECON_PART2_THEOREMS=1
 MAX_RECON_PART2_EXPLICIT_ROUTES=0
@@ -45,6 +49,8 @@ nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.l
 weight_routes="$( (rg -n '^theorem[[:space:]]+interactionWeightModel_nonempty_of_' Phi4/Interaction --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 integrability_routes="$( (rg -n '^theorem[[:space:]]+interactionIntegrabilityModel_nonempty_of_' Phi4/Interaction --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 linear_growth_routes="$( (rg -n '^theorem[[:space:]]+gap_phi4_linear_growth(_of_[A-Za-z0-9_]+)?' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+recon_part1core_interactionuv_wrappers="$( (rg -n '^[[:space:]]*\\[InteractionUVModel params\\]' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+recon_part1tail_interactionuv_wrappers="$( (rg -n '^[[:space:]]*\\[InteractionUVModel params\\]' Phi4/Reconstruction/Part1Tail.lean || true) | wc -l | tr -d ' ' )"
 interaction_part2_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/Interaction/Part2.lean | wc -l | tr -d ' ')"
 part2_theorem_count="$(rg -n '^theorem[[:space:]]' Phi4/Reconstruction/Part2.lean | wc -l | tr -d ' ')"
 part2_explicit_routes="$( (rg -n '^theorem[[:space:]]+.*_explicit(_|$)' Phi4/Reconstruction/Part2.lean || true) | wc -l | tr -d ' ' )"
@@ -87,6 +93,8 @@ echo "[route_bloat_guard] _nonempty_of_ constructors: $nonempty_ctors (max $MAX_
 echo "[route_bloat_guard] interactionWeightModel routes: $weight_routes (max $MAX_WEIGHT_ROUTES)"
 echo "[route_bloat_guard] interactionIntegrabilityModel routes: $integrability_routes (max $MAX_INTEGRABILITY_ROUTES)"
 echo "[route_bloat_guard] gap_phi4_linear_growth routes: $linear_growth_routes (max $MAX_LINEAR_GROWTH_ROUTES)"
+echo "[route_bloat_guard] Reconstruction.Part1Core InteractionUV wrappers: $recon_part1core_interactionuv_wrappers (max $MAX_RECON_PART1CORE_INTERACTIONUV_WRAPPERS)"
+echo "[route_bloat_guard] Reconstruction.Part1Tail InteractionUV wrappers: $recon_part1tail_interactionuv_wrappers (max $MAX_RECON_PART1TAIL_INTERACTIONUV_WRAPPERS)"
 echo "[route_bloat_guard] Interaction.Part2 theorem count: $interaction_part2_theorem_count (max $MAX_INTERACTION_PART2_THEOREMS)"
 echo "[route_bloat_guard] Reconstruction.Part2 theorem count: $part2_theorem_count (max $MAX_RECON_PART2_THEOREMS)"
 echo "[route_bloat_guard] Reconstruction.Part2 *_explicit* theorem count: $part2_explicit_routes (max $MAX_RECON_PART2_EXPLICIT_ROUTES)"
@@ -119,6 +127,14 @@ if (( integrability_routes > MAX_INTEGRABILITY_ROUTES )); then
 fi
 if (( linear_growth_routes > MAX_LINEAR_GROWTH_ROUTES )); then
   echo "[FAIL] gap_phi4_linear_growth route count exceeded baseline." >&2
+  fail=1
+fi
+if (( recon_part1core_interactionuv_wrappers > MAX_RECON_PART1CORE_INTERACTIONUV_WRAPPERS )); then
+  echo "[FAIL] Reconstruction.Part1Core InteractionUV wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( recon_part1tail_interactionuv_wrappers > MAX_RECON_PART1TAIL_INTERACTIONUV_WRAPPERS )); then
+  echo "[FAIL] Reconstruction.Part1Tail InteractionUV wrapper count exceeded baseline." >&2
   fail=1
 fi
 if (( interaction_part2_theorem_count > MAX_INTERACTION_PART2_THEOREMS )); then
