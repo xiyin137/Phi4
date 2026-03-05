@@ -438,21 +438,6 @@ theorem generating_functional_bound_of_exhaustion_limit
   intro f
   exact abs_limit_le_of_abs_bound (hlim f) (fun n => hc f n)
 
-/-- A global finite-volume uniform bound plus exhaustion convergence yields OS1. -/
-theorem generating_functional_bound_of_exhaustion_limit_global_uniform
-    (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    (hlim : ∀ f : TestFun2D,
-      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
-        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
-    (hglobal : ∃ c : ℝ, ∀ (f : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
-    ∃ c : ℝ, ∀ f : TestFun2D,
-      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
-        Real.exp (c * normFunctional f) := by
-  exact generating_functional_bound_of_exhaustion_limit params hlim
-    (generatingFunctionalOnExhaustion_bound_of_global_uniform params hglobal)
-
 /-- Honest frontier: generating-functional bound (OS1 / E0') from
     explicit exhaustion convergence and finite-volume uniform bounds. -/
 theorem gap_generating_functional_bound (params : Phi4Params) :
@@ -466,8 +451,8 @@ theorem gap_generating_functional_bound (params : Phi4Params) :
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
   intro hmeas hlim hglobal
-  exact generating_functional_bound_of_exhaustion_limit_global_uniform
-    params hlim hglobal
+  exact generating_functional_bound_of_exhaustion_limit params hlim
+    (generatingFunctionalOnExhaustion_bound_of_global_uniform params hglobal)
 
 /-! ## Uniformity in volume -/
 
