@@ -108,7 +108,7 @@ From dμ satisfying OS0-OS3:
 
 ### Lean file mapping
 - `phi4_wightman_exists` (Reconstruction.lean:107) -- full reconstruction
-- `phi4_linear_growth` (Reconstruction.lean:57) -- prerequisite growth condition
+- `gap_phi4_linear_growth` (Reconstruction/Part1Core.lean) -- canonical linear-growth frontier theorem
 
 ## 5. Self-Adjoint Fields (Section 19.3)
 

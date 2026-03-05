@@ -21,7 +21,7 @@ Wightman QFT data for `phi^4_2`.
   - Key declarations include
     `gap_phi4_linear_growth_of_zero_mode_normalization`,
     `gap_phi4_linear_growth`,
-    and `phi4_wightman_reconstruction_step`.
+    and `gap_phi4_wightman_reconstruction_step`.
 - `Part2.lean`
   - OS4 weak-coupling clustering and connected/cumulant bounds.
   - Infinite-volume 2-point bilinear/positivity inequalities reused downstream.

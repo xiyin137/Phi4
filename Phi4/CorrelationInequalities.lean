@@ -135,19 +135,6 @@ instance (priority := 90) schwingerNMonotoneModel_of_family
     exact SchwingerNMonotoneFamilyModel.schwingerN_monotone
       (params := params) k Λ₁ Λ₂ h f hf hfΛ
 
-/-- Interface-level access to finite-volume `k`-point monotonicity. -/
-theorem schwingerN_monotone_of_interface
-    (params : Phi4Params) (k : ℕ)
-    [SchwingerNMonotoneModel params k]
-    (Λ₁ Λ₂ : Rectangle)
-    (h : Λ₁.toSet ⊆ Λ₂.toSet)
-    (f : Fin k → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0) :
-    schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f := by
-  exact SchwingerNMonotoneModel.schwingerN_monotone
-    (params := params) Λ₁ Λ₂ h f hf hfΛ
-
 /-- Two-point monotonicity implies `k = 2` Schwinger-moment monotonicity. -/
 instance (priority := 100) schwingerNMonotoneModel_two_of_correlationTwoPoint
     (params : Phi4Params) [CorrelationTwoPointModel params] :
@@ -576,20 +563,6 @@ instance (priority := 100) schwingerNMonotoneModel_four_of_core
     intro Λ₁ Λ₂ h f hf hfΛ
     exact CorrelationInequalityCoreModel.schwinger_four_monotone
       (params := params) Λ₁ Λ₂ h f hf hfΛ
-
-/-! ## Griffiths' First Inequality (GKS-I) -/
-
-/-- **GKS-I**: For the φ⁴₂ measure dμ_Λ with P = even + linear,
-    ⟨φ(f)φ(g)⟩ ≥ 0 for non-negative test functions f, g ≥ 0.
-
-    This extends from the lattice Griffiths inequality to the continuum
-    via lattice approximation. The key input is that e^{-V} is a function
-    of φ with a "ferromagnetic" structure (all couplings positive). -/
-theorem griffiths_first (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationTwoPointModel params]
-    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x) :
-    0 ≤ schwingerTwo params Λ f g := by
-  exact CorrelationTwoPointModel.griffiths_first (params := params) Λ f g hf hg
 
 /-! ## Griffiths' Second Inequality (GKS-II) -/
 
@@ -1082,37 +1055,5 @@ theorem cumulantFourPoint_abs_bound_min_channels
   have h13 := cumulantFourPoint_abs_bound_alt13 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   have h14 := cumulantFourPoint_abs_bound_alt14 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
   exact le_min h12 (le_min h13 h14)
-
-/-! ## Monotonicity of Schwinger functions in volume
-
-The combination of GKS-II with Dirichlet monotonicity gives:
-  Λ₁ ⊂ Λ₂ ⟹ S_{Λ₁}(f₁,...,fₙ) ≤ S_{Λ₂}(f₁,...,fₙ)
-for non-negative test functions. -/
-
-/-- **Dirichlet monotonicity of 4-point function** under domain inclusion for
-    nonnegative test-function inputs supported in the smaller volume. -/
-theorem schwinger_four_monotone (params : Phi4Params) (Λ₁ Λ₂ : Rectangle)
-    [SchwingerNMonotoneModel params 4]
-    (h : Λ₁.toSet ⊆ Λ₂.toSet)
-    (f : Fin 4 → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0) :
-    schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f := by
-  exact SchwingerNMonotoneModel.schwingerN_monotone
-    (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
-
-/-- **Dirichlet monotonicity of 2-point function**: For Λ₁ ⊂ Λ₂,
-    S₂^{Λ₁}(f,g) ≤ S₂^{Λ₂}(f,g) for f, g ≥ 0.
-
-    Proof: Dirichlet BC on the smaller region gives a smaller covariance,
-    and by GKS-II the 2-point function is monotone in the covariance. -/
-theorem schwinger_two_monotone (params : Phi4Params) (Λ₁ Λ₂ : Rectangle)
-    [CorrelationTwoPointModel params]
-    (h : Λ₁.toSet ⊆ Λ₂.toSet)
-    (f g : TestFun2D) (hf : ∀ x, 0 ≤ f x) (hg : ∀ x, 0 ≤ g x)
-    (hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0) :
-    schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g := by
-  exact CorrelationTwoPointModel.schwinger_two_monotone
-    (params := params) Λ₁ Λ₂ h f g hf hg hfΛ hgΛ
 
 end

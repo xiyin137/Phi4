@@ -60,8 +60,11 @@ SCRATCH_COUNT="$(awk '$0 ~ /\/Scratch\// { c++ } END { print c+0 }' "$TMP_REPORT
 TOTAL_COUNT="$(wc -l < "$TMP_REPORT" | tr -d ' ')"
 
 if [[ "$TOTAL_COUNT" -eq 0 ]]; then
-  echo "[OK] No theorem-level sorry occurrences"
+  echo "[INFO] Theorem-level sorry is allowed by policy."
+  echo "[INFO] Theorem-level sorry count (core): 0"
+  echo "[INFO] Theorem-level sorry count (scratch): 0"
 else
+  echo "[INFO] Theorem-level sorry is allowed by policy."
   echo "[INFO] Theorem-level sorry count (core): $CORE_COUNT"
   echo "[INFO] Theorem-level sorry count (scratch): $SCRATCH_COUNT"
   echo "[INFO] Current core sorry locations:"
@@ -70,12 +73,10 @@ fi
 
 # 4) Trusted endpoints must not depend on sorryAx.
 TRUSTED_THEOREMS=(
-  phi4_satisfies_OS_of_interfaces
   phi4_satisfies_OS
-  phi4_wightman_exists_of_interfaces
   phi4_wightman_exists
-  phi4_linear_growth
-  phi4_wightman_reconstruction_step
+  gap_phi4_linear_growth
+  gap_phi4_wightman_reconstruction_step
 )
 
 {

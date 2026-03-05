@@ -69,6 +69,19 @@ def wickCubicSmeared (params : Phi4Params) (f : TestFun2D)
     (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
     Filter.atTop
 
+/-- If the canonical UV-smearing sequence converges pointwise, then
+    `wickCubicSmeared` agrees with that ordinary limit. -/
+theorem wickCubicSmeared_eq_lim_of_convergent
+    (params : Phi4Params) (f : TestFun2D) (ω : FieldConfig2D) (V : ℝ)
+    (hconv :
+      Filter.Tendsto
+        (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
+        Filter.atTop
+        (nhds V)) :
+    wickCubicSmeared params f ω = V := by
+  unfold wickCubicSmeared
+  simpa using hconv.limsup_eq
+
 /-- Regularity/IBP inputs for the infinite-volume φ⁴₂ theory beyond Wick-power
     existence. -/
 class RegularityModel (params : Phi4Params)
@@ -209,40 +222,6 @@ instance (priority := 100) regularityModel_of_submodels
   generating_functional_bound_uniform :=
     UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
       (params := params)
-
-/-- **Euclidean equation of motion** (Glimm-Jaffe 12.1.1):
-    For the infinite volume φ⁴₂ theory,
-      ⟨φ(f)φ(g)⟩ = C(f,g) - λ ⟨(:φ³: · f) φ(g)⟩
-
-    This is the Schwinger-Dyson equation / integration by parts identity for
-    the interacting measure.
-
-    After analytic continuation to real (Minkowski) time, the δ-function
-    contribution vanishes and this becomes the nonlinear field equation:
-      (-□ + m²) φ(x) + λ :φ(x)³: = 0 -/
-theorem euclidean_equation_of_motion (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [EuclideanEquationModel params]
-    (f g : TestFun2D) :
-    ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
-      GaussianField.covariance (freeCovarianceCLM params.mass params.mass_pos) f g -
-      params.coupling *
-        ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params) := by
-  exact EuclideanEquationModel.euclidean_equation_of_motion
-    (params := params) f g
-
-/-- Almost-everywhere pointwise UV convergence for `wickCubicSmeared`. -/
-theorem wickCubicSmeared_tendsto_ae (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [WickCubicConvergenceModel params]
-    (f : TestFun2D) :
-    ∀ᵐ ω ∂(infiniteVolumeMeasure params),
-      Filter.Tendsto
-        (fun n : ℕ => ∫ x, wickPower 3 params.mass (standardUVCutoffSeq n) ω x * f x)
-        Filter.atTop
-        (nhds (wickCubicSmeared params f ω)) := by
-  exact WickCubicConvergenceModel.wickCubicSmeared_tendsto_ae
-    (params := params) f
 
 /-! ## Generating functional bound (OS1) -/
 
@@ -616,21 +595,6 @@ theorem gap_generating_functional_bound (params : Phi4Params) :
   exact generating_functional_bound_of_exhaustion_limit_global_uniform
     params hlim hglobal
 
-/-- **Generating functional bound** (Theorem 12.5.1 of Glimm-Jaffe):
-    |S{f}| ≤ exp(c · N'(f)).
-
-    Public endpoint routed through the regularity interface. -/
-theorem generating_functional_bound (params : Phi4Params) :
-    [InfiniteVolumeMeasureModel params] →
-    [GeneratingFunctionalBoundModel params] →
-    ∃ c : ℝ, ∀ f : TestFun2D,
-      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
-        Real.exp (c * normFunctional f) := by
-  intro hmeas hreg
-  simpa [normFunctional] using
-    (GeneratingFunctionalBoundModel.generating_functional_bound
-      (params := params))
-
 /-! ## Uniformity in volume -/
 
 /-- Honest frontier: uniform-in-volume generating-functional bound (GJ §12.4)
@@ -642,17 +606,6 @@ theorem gap_generating_functional_bound_uniform (params : Phi4Params)
     ∃ c : ℝ, ∀ Λ : Rectangle,
       |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
   exact huniform f
-
-/-- Public uniformity endpoint via explicit theorem-level frontier gap. -/
-theorem generating_functional_bound_uniform (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [UniformGeneratingFunctionalBoundModel params]
-    (f : TestFun2D) :
-    ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f) := by
-  simpa [normFunctional] using
-    (UniformGeneratingFunctionalBoundModel.generating_functional_bound_uniform
-      (params := params) f)
 
 /-! ## Nonlocal φ⁴ bounds -/
 
@@ -669,16 +622,5 @@ theorem gap_nonlocal_phi4_bound (params : Phi4Params) :
   refine ⟨0, c * normFunctional g, ?_⟩
   intro Λ
   simpa [zero_mul] using hc Λ
-
-/-- Public nonlocal φ⁴ bound endpoint via explicit theorem-level frontier gap. -/
-theorem nonlocal_phi4_bound (params : Phi4Params) :
-    [InfiniteVolumeMeasureModel params] →
-    [NonlocalPhi4BoundModel params] →
-    ∀ (g : TestFun2D), ∃ C₁ C₂ : ℝ, ∀ (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤
-      Real.exp (C₁ * Λ.area + C₂) := by
-  intro hmeas hreg
-  exact NonlocalPhi4BoundModel.nonlocal_phi4_bound
-    (params := params)
 
 end

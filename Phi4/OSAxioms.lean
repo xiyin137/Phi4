@@ -221,7 +221,9 @@ theorem phi4_os1 (params : Phi4Params)
     ∃ c : ℝ, ∀ f : TestFun2D,
       |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
         Real.exp (c * normFunctional f) := by
-  exact generating_functional_bound params
+  simpa [normFunctional] using
+    (GeneratingFunctionalBoundModel.generating_functional_bound
+      (params := params))
 
 /-! ## OS2: Euclidean Covariance -/
 

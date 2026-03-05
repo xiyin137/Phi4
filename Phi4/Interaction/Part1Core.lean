@@ -60,6 +60,19 @@ def standardUVCutoffSeq (n : ℕ) : UVCutoff :=
 def interaction (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) : ℝ :=
   Filter.limsup (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω) Filter.atTop
 
+/-- If the canonical UV-cutoff sequence converges pointwise, then `interaction`
+    agrees with the ordinary limit (so the limsup definition is not ambiguous). -/
+theorem interaction_eq_lim_of_convergent
+    (params : Phi4Params) (Λ : Rectangle) (ω : FieldConfig2D) (V : ℝ)
+    (hconv :
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+        Filter.atTop
+        (nhds V)) :
+    interaction params Λ ω = V := by
+  unfold interaction
+  simpa using hconv.limsup_eq
+
 /-! ## Semiboundedness of the Wick-ordered quartic
 
 Although :φ⁴: = φ⁴ - 6cφ² + 3c² is not pointwise bounded below (the Wick subtractions
@@ -394,54 +407,6 @@ instance (priority := 100) interactionIntegrabilityModel_of_uv_weight
   interaction_in_L2 := InteractionUVModel.interaction_in_L2 (params := params)
   exp_interaction_Lp := InteractionWeightModel.exp_interaction_Lp (params := params)
 
-/-! ## The interaction is in Lᵖ -/
-
-/-- The UV-regularized interaction V_{Λ,κ} is in L²(dφ_C).
-    This follows from the localized Feynman graph bounds (Theorem 8.5.3).
-    The bound is uniform in κ. -/
-theorem interactionCutoff_in_L2 (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (κ : UVCutoff) :
-    MemLp (interactionCutoff params Λ κ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  exact InteractionUVModel.interactionCutoff_in_L2
-    (params := params) Λ κ
-
-/-- Convergence of V_{Λ,κ} → V_Λ in L² as κ → ∞.
-    The limit is taken in the L²(dφ_C) norm:
-      ‖V_{Λ,κ} - V_Λ‖_{L²(dφ_C)} → 0 as κ → ∞. -/
-theorem interactionCutoff_converges_L2 (params : Phi4Params)
-    [InteractionUVModel params]
-    (Λ : Rectangle) :
-    Filter.Tendsto
-      (fun (κ : ℝ) => if h : 0 < κ then
-        ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
-          ∂(freeFieldMeasure params.mass params.mass_pos)
-        else 0)
-      Filter.atTop
-      (nhds 0) := by
-  exact InteractionUVModel.interactionCutoff_converges_L2
-    (params := params) Λ
-
-/-- Almost-everywhere pointwise UV convergence `V_{Λ,κ} → V_Λ`. -/
-theorem interactionCutoff_tendsto_ae (params : Phi4Params)
-    [InteractionUVModel params]
-    (Λ : Rectangle) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      Filter.Tendsto
-        (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
-        Filter.atTop
-        (nhds (interaction params Λ ω)) := by
-  exact InteractionUVModel.interactionCutoff_tendsto_ae
-    (params := params) Λ
-
-/-- The interaction V_Λ is in L²(dφ_C). -/
-theorem interaction_in_L2 (params : Phi4Params)
-    [InteractionUVModel params]
-    (Λ : Rectangle) :
-    MemLp (interaction params Λ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
-  exact InteractionUVModel.interaction_in_L2
-    (params := params) Λ
-
 /-- Almost-everywhere convergence of the canonical cutoff sequence
     `κ_n = n + 1` to the limiting interaction, from explicit real-parameterized
     a.e. UV convergence data. -/
@@ -492,7 +457,8 @@ theorem interactionCutoff_standardSeq_tendsto_ae
         Filter.atTop
         (nhds (interaction params Λ ω)) := by
   exact interactionCutoff_standardSeq_tendsto_ae_of_tendsto_ae
-    (params := params) (Λ := Λ) (interactionCutoff_tendsto_ae params Λ)
+    (params := params) (Λ := Λ)
+    (InteractionUVModel.interactionCutoff_tendsto_ae (params := params) Λ)
 
 /-- Shifted canonical-sequence (`κ_{n+1}`) specialization of the explicit
     real-parameterized a.e. UV convergence data. -/
@@ -1053,7 +1019,7 @@ theorem exp_interaction_Lp_of_ae_lower_bound (params : Phi4Params) (Λ : Rectang
   have hmeas :
       AEStronglyMeasurable (interaction params Λ)
         (freeFieldMeasure params.mass params.mass_pos) :=
-    (interaction_in_L2 params Λ).aestronglyMeasurable
+    (InteractionUVModel.interaction_in_L2 (params := params) Λ).aestronglyMeasurable
   exact memLp_exp_neg_of_ae_lower_bound
     (μ := freeFieldMeasure params.mass params.mass_pos)
     (V := interaction params Λ) hmeas B hbound

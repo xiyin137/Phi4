@@ -1742,7 +1742,8 @@ theorem shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound
     fun ω => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω
   have hXae : AEStronglyMeasurable X μ := by
     simpa [X, μ] using
-      (interactionCutoff_in_L2 params Λ (standardUVCutoffSeq (n + 1))).aestronglyMeasurable
+      (InteractionUVModel.interactionCutoff_in_L2
+        (params := params) Λ (standardUVCutoffSeq (n + 1))).aestronglyMeasurable
   have hAeExpNeg : AEStronglyMeasurable (fun ω => Real.exp ((-θ) * X ω)) μ := by
     exact Real.continuous_exp.comp_aestronglyMeasurable (hXae.const_mul (-θ))
   have hIntNeg : Integrable (fun ω => Real.exp ((-θ) * X ω)) μ := by

@@ -95,10 +95,13 @@ theorem schwinger_monotone_in_volume (params : Phi4Params)
     fin_cases i
     · simpa using hfsupp x hx
     · simpa using hgsupp x hx
-  have hmonoN := schwingerN_monotone_of_interface params 2
-    (exhaustingRectangles n₁ hn₁) (exhaustingRectangles n₂ hn₂)
-    (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
-    (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec
+  have hmonoN :=
+    SchwingerNMonotoneModel.schwingerN_monotone
+      (params := params)
+      (Λ₁ := exhaustingRectangles n₁ hn₁)
+      (Λ₂ := exhaustingRectangles n₂ hn₂)
+      (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
+      (![f, g] : Fin 2 → TestFun2D) hfvec hsuppvec
   simpa [schwingerN_two_eq_schwingerTwo] using hmonoN
 
 /-- Monotonicity of finite-volume `k`-point Schwinger moments along the
@@ -111,8 +114,10 @@ theorem schwingerN_monotone_in_volume_of_model (params : Phi4Params)
     (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
     schwingerN params (exhaustingRectangles n₁ hn₁) k f ≤
       schwingerN params (exhaustingRectangles n₂ hn₂) k f := by
-  exact schwingerN_monotone_of_interface params k
-    (exhaustingRectangles n₁ hn₁) (exhaustingRectangles n₂ hn₂)
+  exact SchwingerNMonotoneModel.schwingerN_monotone
+    (params := params)
+    (Λ₁ := exhaustingRectangles n₁ hn₁)
+    (Λ₂ := exhaustingRectangles n₂ hn₂)
     (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
     f hf hfsupp
 
