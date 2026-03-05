@@ -217,42 +217,6 @@ theorem dirichlet_le_neumann (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
   exact le_trans (dirichlet_le_free Λ mass hmass f hf)
     (free_le_neumann Λ mass hmass f hf)
 
-/-- Nonnegativity of the free-minus-Dirichlet quadratic form on functions
-    supported in `Λ`. -/
-theorem free_minus_dirichlet_quadratic_nonneg
-    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
-    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
-    0 ≤
-      (∫ x, ∫ y, f x * freeCovKernel mass x y * f y) -
-        (∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y) := by
-  have h := dirichlet_le_free Λ mass hmass f hf
-  linarith
-
-/-- Nonnegativity of the Neumann-minus-free quadratic form on functions
-    supported in `Λ`. -/
-theorem neumann_minus_free_quadratic_nonneg
-    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
-    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
-    0 ≤
-      (∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y) -
-        (∫ x, ∫ y, f x * freeCovKernel mass x y * f y) := by
-  have h := free_le_neumann Λ mass hmass f hf
-  linarith
-
-/-- Nonnegativity of the Neumann-minus-Dirichlet quadratic form on functions
-    supported in `Λ`. -/
-theorem neumann_minus_dirichlet_quadratic_nonneg
-    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryKernelModel mass hmass] [BoundaryComparisonModel mass hmass]
-    (f : TestFun2D) (hf : ∀ x ∉ Λ.toSet, f x = 0) :
-    0 ≤
-      (∫ x, ∫ y, f x * neumannCov Λ mass hmass x y * f y) -
-        (∫ x, ∫ y, f x * dirichletCov Λ mass hmass x y * f y) := by
-  have h := dirichlet_le_neumann Λ mass hmass f hf
-  linarith
-
 /-! ## Change of boundary conditions
 
 The difference δC = C - C_D between free and Dirichlet covariances is controlled.
