@@ -968,30 +968,6 @@ theorem connectedSchwingerTwo_quadratic_nonneg
   rw [hvv] at hnonneg
   simpa [B] using hnonneg
 
-/-- Standard-index-order version of `connectedSchwingerTwo_quadratic_nonneg`. -/
-theorem connectedSchwingerTwo_quadratic_nonneg_standard
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    (Λ : Rectangle)
-    {ι : Type*} (s : Finset ι)
-    (f : ι → TestFun2D) (c : ι → ℝ) :
-    0 ≤ Finset.sum s (fun i => Finset.sum s (fun j =>
-      c i * c j * connectedSchwingerTwo params Λ (f i) (f j))) := by
-  have hbase := connectedSchwingerTwo_quadratic_nonneg params Λ s f c
-  have hEq :
-      Finset.sum s (fun i =>
-        c i * Finset.sum s (fun j => c j * connectedSchwingerTwo params Λ (f j) (f i)))
-      =
-      Finset.sum s (fun i => Finset.sum s (fun j =>
-        c i * c j * connectedSchwingerTwo params Λ (f i) (f j))) := by
-    refine Finset.sum_congr rfl (fun i hi => ?_)
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl (fun j hj => ?_)
-    rw [connectedSchwingerTwo_symm params Λ (f j) (f i)]
-    ring
-  rw [hEq] at hbase
-  exact hbase
-
 /-- Two-point absolute-value bound from quadratic positivity:
     `|Cᶜ(f,g)| ≤ (Cᶜ(f,f) + Cᶜ(g,g)) / 2`. -/
 theorem connectedSchwingerTwo_abs_le_half_diag_sum
