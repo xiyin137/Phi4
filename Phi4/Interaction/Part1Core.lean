@@ -109,30 +109,6 @@ theorem wick_fourth_semibounded (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
     -C * (Real.log κ.κ) ^ 2 = -6 * c ^ 2 := hleft
     _ ≤ wickPower 4 mass κ ω x := hbase
 
-/-- Bridge from pointwise Wick lower bounds to a lower bound on the cutoff
-    interaction integral over a fixed volume. -/
-theorem interactionCutoff_lower_bound_of_wick_lower_bound
-    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff) (ω : FieldConfig2D)
-    (B : ℝ)
-    (hΛ_meas : MeasurableSet Λ.toSet)
-    (hΛ_finite : volume Λ.toSet ≠ ∞)
-    (hwick_int :
-      IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume)
-    (hlower : ∀ x ∈ Λ.toSet, -B ≤ wickPower 4 params.mass κ ω x) :
-    params.coupling * ∫ _ in Λ.toSet, (-B : ℝ) ≤
-      interactionCutoff params Λ κ ω := by
-  have hconst_int : IntegrableOn (fun _ : Spacetime2D => (-B : ℝ)) Λ.toSet volume :=
-    integrableOn_const hΛ_finite
-  have hint_le :
-      ∫ x in Λ.toSet, (-B : ℝ) ∂volume ≤
-        ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x ∂volume := by
-    exact setIntegral_mono_on hconst_int hwick_int hΛ_meas hlower
-  have hmul :
-      params.coupling * (∫ x in Λ.toSet, (-B : ℝ) ∂volume) ≤
-        params.coupling * (∫ x in Λ.toSet, wickPower 4 params.mass κ ω x ∂volume) :=
-    mul_le_mul_of_nonneg_left hint_le params.coupling_pos.le
-  simpa [interactionCutoff] using hmul
-
 /-! ## Abstract interaction-integrability interface -/
 
 /-- Analytic interaction estimates used by finite-volume construction. This
