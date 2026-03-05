@@ -600,78 +600,6 @@ theorem pairing_subtracted_four_point_upper_bound_14_23
   unfold truncatedFourPoint14
   linarith
 
-/-- Two-sided estimate for the `(12)(34)` pairing-subtracted 4-point expression. -/
-theorem pairing_subtracted_four_point_bounds
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    0 ≤ truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ ∧
-      truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄ ≤
-      schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-      schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
-  constructor
-  · exact pairing_subtracted_four_point_nonneg
-      params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  · exact pairing_subtracted_four_point_upper_bound
-      params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-
-/-- Absolute-value control of the `(12)(34)` pairing-subtracted 4-point expression:
-    `|S₄ - S₂(12)S₂(34)| ≤ S₂(13)S₂(24) + S₂(14)S₂(23)`. -/
-theorem pairing_subtracted_four_point_abs_bound
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    |truncatedFourPoint12 params Λ f₁ f₂ f₃ f₄| ≤
-      schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-      schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
-  have hnonneg := pairing_subtracted_four_point_nonneg
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have hupper := pairing_subtracted_four_point_upper_bound
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  simpa [abs_of_nonneg hnonneg] using hupper
-
-/-- Absolute-value control of the `(13)(24)` pairing-subtracted expression:
-    `|S₄ - S₂(13)S₂(24)| ≤ S₂(12)S₂(34) + S₂(14)S₂(23)`. -/
-theorem pairing_subtracted_four_point_abs_bound_13_24
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    |truncatedFourPoint13 params Λ f₁ f₂ f₃ f₄| ≤
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-      schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
-  have hnonneg := pairing_subtracted_four_point_nonneg_13_24
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have hupper := pairing_subtracted_four_point_upper_bound_13_24
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  simpa [abs_of_nonneg hnonneg] using hupper
-
-/-- Absolute-value control of the `(14)(23)` pairing-subtracted expression:
-    `|S₄ - S₂(14)S₂(23)| ≤ S₂(12)S₂(34) + S₂(13)S₂(24)`. -/
-theorem pairing_subtracted_four_point_abs_bound_14_23
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    |truncatedFourPoint14 params Λ f₁ f₂ f₃ f₄| ≤
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-      schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ := by
-  have hnonneg := pairing_subtracted_four_point_nonneg_14_23
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have hupper := pairing_subtracted_four_point_upper_bound_14_23
-    params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  simpa [abs_of_nonneg hnonneg] using hupper
-
 /-! ## Fully connected 4-point bounds -/
 
 /-- Fully pairing-subtracted 4-point cumulant:
@@ -727,31 +655,6 @@ theorem cumulantFourPoint_abs_bound
   linarith
 
 /-! ## All-channel combined bounds -/
-
-/-- Combined 4-point bounds:
-    every GKS-II pairing channel gives a lower bound, and Lebowitz gives the upper bound. -/
-theorem schwinger_four_bounds_all_channels
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    max (schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄)
-      (max (schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄)
-        (schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃))
-      ≤ schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ∧
-    schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-      schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-      schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃ := by
-  have h12 := CorrelationGKSSecondModel.griffiths_second (params := params) Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have h13 := griffiths_second_13_24 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have h14 := griffiths_second_14_23 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have hupper := CorrelationLebowitzModel.lebowitz_inequality (params := params) Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  constructor
-  · exact max_le h12 (max_le h13 h14)
-  · exact hupper
 
 /-- Three channel-wise lower bounds on the fully connected 4-point cumulant. -/
 theorem cumulantFourPoint_lower_bounds_all_channels
@@ -814,28 +717,5 @@ theorem cumulantFourPoint_abs_bound_alt14
   rcases hLowerAll with ⟨_, _, h14⟩
   rw [abs_of_nonpos hnonpos]
   linarith
-
-/-- Absolute value of the connected 4-point cumulant is bounded by the minimum
-    of the three two-pair channel sums. -/
-theorem cumulantFourPoint_abs_bound_min_channels
-    (params : Phi4Params) (Λ : Rectangle)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    (f₁ f₂ f₃ f₄ : TestFun2D)
-    (hf₁ : ∀ x, 0 ≤ f₁ x) (hf₂ : ∀ x, 0 ≤ f₂ x)
-    (hf₃ : ∀ x, 0 ≤ f₃ x) (hf₄ : ∀ x, 0 ≤ f₄ x) :
-    |cumulantFourPoint params Λ f₁ f₂ f₃ f₄| ≤
-      min
-        (schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-          schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
-        (min
-          (schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-            schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
-          (schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-            schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄)) := by
-  have h12 := cumulantFourPoint_abs_bound params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have h13 := cumulantFourPoint_abs_bound_alt13 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  have h14 := cumulantFourPoint_abs_bound_alt14 params Λ f₁ f₂ f₃ f₄ hf₁ hf₂ hf₃ hf₄
-  exact le_min h12 (le_min h13 h14)
 
 end
