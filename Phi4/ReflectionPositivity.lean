@@ -49,14 +49,6 @@ theorem timeReflect2D_involution (p : Spacetime2D) :
     timeReflect2D (timeReflect2D p) = p := by
   ext i; by_cases h : i = 0 <;> simp [h]
 
-/-- Time reflection preserves the norm. -/
-theorem timeReflect2D_norm_eq (p : Spacetime2D) :
-    ‖timeReflect2D p‖ = ‖p‖ := by
-  simp only [EuclideanSpace.norm_eq]
-  congr 1
-  apply Finset.sum_congr rfl; intro i _
-  simp [apply_ite (· ^ 2)]
-
 /-- Time reflection as a continuous linear equivalence. -/
 def timeReflectCLE : Spacetime2D ≃L[ℝ] Spacetime2D :=
   let e : Spacetime2D ≃ₗ[ℝ] Spacetime2D :=

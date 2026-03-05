@@ -210,25 +210,6 @@ theorem freeCovKernel_eq_besselK0
     _ = (4 * Real.pi)⁻¹ * (2 * besselK0 (mass * ‖x - y‖)) := by rw [hsch]
     _ = (2 * Real.pi)⁻¹ * besselK0 (mass * ‖x - y‖) := by ring
 
-/-- Off-diagonal positivity of the free covariance kernel. -/
-theorem freeCovKernel_nonneg_offDiagonal
-    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
-    (hxy : 0 < ‖x - y‖) :
-    0 ≤ freeCovKernel mass x y := by
-  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
-  have hK0_nonneg : 0 ≤ besselK0 (mass * ‖x - y‖) :=
-    (besselK0_pos _ (mul_pos hmass hxy)).le
-  exact mul_nonneg (by positivity) hK0_nonneg
-
-/-- Off-diagonal comparison against the `K₁` profile. -/
-theorem freeCovKernel_le_besselK1_offDiagonal
-    (mass : ℝ) (hmass : 0 < mass) (x y : Spacetime2D)
-    (hxy : 0 < ‖x - y‖) :
-    freeCovKernel mass x y ≤ (2 * Real.pi)⁻¹ * besselK1 (mass * ‖x - y‖) := by
-  rw [freeCovKernel_eq_besselK0 mass hmass x y hxy]
-  exact mul_le_mul_of_nonneg_left
-    (besselK0_le_besselK1 _ (mul_pos hmass hxy)) (by positivity)
-
 /-- Positivity of the free covariance as a smeared quadratic form.
     This is the mathematically sound positivity statement used by the Gaussian
     construction: for any finite family of test functions, the covariance matrix
