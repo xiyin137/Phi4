@@ -446,9 +446,4 @@ def regularizedPointCovariance (mass : ℝ) (κ : UVCutoff) : ℝ :=
     GaussianField.covariance (freeCovarianceCLM mass h) (uvMollifier κ 0) (uvMollifier κ 0)
   else 0
 
-/-- The regularized point covariance is nonnegative for positive mass. -/
-theorem regularizedPointCovariance_nonneg (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) :
-    0 ≤ regularizedPointCovariance mass κ := by
-  simp [regularizedPointCovariance, hmass, GaussianField.covariance]
-
 end

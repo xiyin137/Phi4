@@ -80,12 +80,6 @@ theorem wickMonomial_two (c x : ℝ) :
     wickMonomial 2 c x = x ^ 2 - c := by
   simp [wickMonomial_succ_succ]; ring
 
-/-- :x³:_c = x³ - 3cx -/
-@[simp]
-theorem wickMonomial_three (c x : ℝ) :
-    wickMonomial 3 c x = x ^ 3 - 3 * c * x := by
-  simp [wickMonomial_succ_succ]; ring
-
 /-- :x⁴:_c = x⁴ - 6cx² + 3c² -/
 @[simp]
 theorem wickMonomial_four (c x : ℝ) :
@@ -118,14 +112,6 @@ def wickFourth (mass : ℝ) (κ : UVCutoff)
 /-- wickFourth is wickPower 4. -/
 theorem wickFourth_eq (mass : ℝ) (κ : UVCutoff) (ω : FieldConfig2D) (x : Spacetime2D) :
     wickFourth mass κ ω x = wickPower 4 mass κ ω x := rfl
-
-/-- Explicit form of :φ⁴: in terms of the raw field and covariance. -/
-theorem wickFourth_explicit (mass : ℝ) (κ : UVCutoff) (ω : FieldConfig2D) (x : Spacetime2D) :
-    wickFourth mass κ ω x =
-      (rawFieldEval mass κ ω x) ^ 4
-      - 6 * (regularizedPointCovariance mass κ) * (rawFieldEval mass κ ω x) ^ 2
-      + 3 * (regularizedPointCovariance mass κ) ^ 2 := by
-  simp [wickFourth, wickPower]
 
 /-! ## Wick product properties -/
 
@@ -588,11 +574,6 @@ This is the Hermite polynomial addition theorem. For the cases we need:
 
 These are pure algebraic identities, proved by expanding and using `ring`.
 -/
-
-/-- Re-Wick-ordering for the quadratic: :x²:_{c₁} = :x²:_{c₂} - (c₁ - c₂). -/
-theorem wickMonomial_rewick_two (c₁ c₂ x : ℝ) :
-    wickMonomial 2 c₁ x = wickMonomial 2 c₂ x - (c₁ - c₂) := by
-  simp [wickMonomial_two]
 
 /-- **Re-Wick-ordering for the quartic** (Hermite addition theorem, Glimm-Jaffe 8.6.1):
     :x⁴:_{c₁} = :x⁴:_{c₂} - 6(c₁-c₂) :x²:_{c₂} + 3(c₁-c₂)²

@@ -65,15 +65,6 @@ class GaussianWickExpansionModel (mass : ℝ) (hmass : 0 < mass) where
           ∑ π ∈ pairings, ∏ p ∈ π.pairs,
             GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2)
 
-/-- The set of pairings of 2n elements is finite and has cardinality (2n-1)!!. -/
-theorem num_pairings (n : ℕ) :
-    [PairingEnumerationModel] →
-    ∃ (pairings : Finset (Pairing (2 * n))),
-      pairings.card = Nat.doubleFactorial (2 * n - 1) := by
-  intro
-  refine ⟨allPairings n, ?_⟩
-  simpa [allPairings] using PairingEnumerationModel.pairing_card n
-
 theorem wicks_theorem_odd (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : Fin (2 * n + 1) → TestFun2D) :
     ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) = 0 :=

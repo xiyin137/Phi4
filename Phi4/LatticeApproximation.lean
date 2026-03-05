@@ -285,14 +285,6 @@ theorem cellIntegral_nonneg (L : RectLattice Λ) (f : TestFun2D)
   unfold cellIntegral
   exact integral_nonneg_of_ae (Filter.Eventually.of_forall hf)
 
-/-- Positivity of cell averages for nonnegative test functions. -/
-theorem cellAverage_nonneg (L : RectLattice Λ) (f : TestFun2D)
-    (i : Fin L.Nt) (j : Fin L.Nx)
-    (hf : ∀ x, 0 ≤ f x) :
-    0 ≤ L.cellAverage f i j := by
-  unfold cellAverage
-  exact div_nonneg (L.cellIntegral_nonneg f i j hf) (le_of_lt (L.cell_area_pos i j))
-
 /-- Additivity of cell averages. -/
 theorem cellAverage_add
     (L : RectLattice Λ) (f g : TestFun2D) (i : Fin L.Nt) (j : Fin L.Nx) :
@@ -504,13 +496,6 @@ def riemannSumCellAverageLM (L : RectLattice Λ) : TestFun2D →ₗ[ℝ] ℝ whe
 
 @[simp] theorem riemannSumCellAverageLM_apply (L : RectLattice Λ) (f : TestFun2D) :
     L.riemannSumCellAverageLM f = L.riemannSumCellAverage f := rfl
-
-/-- The exact total-cell-integral linear map equals the cell-average Riemann-sum linear map. -/
-theorem totalCellIntegralLM_eq_riemannSumCellAverageLM
-    (L : RectLattice Λ) :
-    L.totalCellIntegralLM = L.riemannSumCellAverageLM := by
-  ext f
-  exact L.totalCellIntegral_eq_riemannSumCellAverage f
 
 /-- Each lattice cell is contained in the ambient rectangle `Λ`. -/
 theorem cell_subset (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :

@@ -190,15 +190,6 @@ def periodicKernelTrunc (mass L₁ L₂ : ℝ) (N : ℕ)
     periodicKernelTrunc mass L₁ L₂ 0 x y = freeCovKernel mass x y := by
   simp [periodicKernelTrunc, periodicKernelTerm]
 
-/-- Truncated image sums are invariant under simultaneous lattice translation
-    of both arguments. -/
-theorem periodicKernelTrunc_shift_both (mass L₁ L₂ : ℝ) (N : ℕ)
-    (a b : ℤ) (x y : Spacetime2D) :
-    periodicKernelTrunc mass L₁ L₂ N
-      (shiftPoint L₁ L₂ a b x) (shiftPoint L₁ L₂ a b y)
-      = periodicKernelTrunc mass L₁ L₂ N x y := by
-  simp [periodicKernelTrunc, periodicKernelTerm_shift_both]
-
 /-- Symmetry of the truncated periodic image kernel. -/
 theorem periodicKernelTrunc_symm (mass L₁ L₂ : ℝ) (N : ℕ)
     (x y : Spacetime2D) :
