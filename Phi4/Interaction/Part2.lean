@@ -31,8 +31,13 @@ theorem cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_bound
           {ω : FieldConfig2D |
             interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}) ≠ ∞ :=
     ne_top_of_le_ne_top hε_sum (ENNReal.tsum_le_tsum hbad_le)
-  exact cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure
-    params Λ B hbad_sum
+  refine cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable
+    (params := params) (Λ := Λ) (B := B)
+    (bad := fun n => {ω : FieldConfig2D |
+      interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B})
+    hbad_sum ?_
+  intro n ω hω
+  exact not_lt.mp hω
 
 /-- Shifted-index geometric bad-event tails imply eventual almost-sure lower
     bounds for the canonical cutoff sequence. -/

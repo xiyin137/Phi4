@@ -901,3 +901,46 @@ primary local Glimm-Jaffe work queue.
 - Verification:
   - `lake build Phi4.Reconstruction.Part1Core Phi4.InfiniteVolumeLimit.Part1 Phi4.InfiniteVolumeLimit Phi4.Regularity Phi4.OSAxioms` passes.
   - `bash scripts/quick_gate.sh` passes.
+
+### Interaction/Regularity dead-route pruning (2026-03-04, same cycle)
+
+- Removed additional no-caller/forwarding routes in `Phi4/Interaction/Part1Core.lean`:
+  - `interaction_lower_bound_of_cutoff_seq`,
+  - `interaction_ae_lower_bound_of_cutoff_seq`,
+  - `exp_interaction_Lp_of_cutoff_seq_lower_bounds`,
+  - `cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_summable_bad_event_measure`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_shifted_bad_set_summable`,
+  - `exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure`,
+  - `exp_interaction_Lp_of_cutoff_seq_succ_lower_bounds`,
+  - `cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_shifted_summable_bad_event_measure`,
+  - `exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_succ`,
+  - `exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_bad_set_summable`,
+  - `interaction_ae_lower_bound_of_cutoff_seq_eventually`,
+  - `cutoff_seq_eventually_lower_bound_of_succ`,
+  - `cutoff_seq_eventually_lower_bound_of_bad_set_summable`,
+  - `interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_semibounded`.
+- Rewired `Phi4/Interaction/Part2.lean` to call canonical
+  `cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable` directly.
+- Removed additional no-caller regularity wrappers in `Phi4/Regularity.lean`:
+  - `euclidean_equation_of_motion_kernel_form`,
+  - `finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound`,
+  - `finiteVolume_mixed_moment_bound_of_global_uniform_generating_bound`,
+  - `finiteVolume_twoPoint_bound_of_global_uniform_generating_bound`,
+  - `infiniteVolumeSchwinger_diagonal_bound_of_global_uniform`,
+  - `infiniteVolumeSchwinger_mixed_bound_of_global_uniform`,
+  - `infiniteVolume_twoPoint_bound_of_global_uniform`,
+  - `generating_functional_pointwise_bound_of_exhaustion_limit`,
+  - `generatingFunctionalOnExhaustion_bound_of_uniform`,
+  - `diagonal_moment_bound_on_exhaustion_of_global_uniform`,
+  - `diagonal_moment_limit_bound_of_exhaustion`.
+- Verification:
+  - `lake build Phi4.Interaction.Part1Core Phi4.Interaction.Part2 Phi4.Interaction.Part3` passes.
+  - `lake build Phi4.Regularity Phi4.OSAxioms Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction.Part3` passes.
+  - `scripts/frontier_report.sh --emit docs/frontier_obligations/frontier.tsv` passes.
+  - `scripts/nonempty_route_inventory.sh --emit docs/route_inventory/nonempty_inventory.tsv` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.
+  - `bash scripts/quick_gate.sh` passes.

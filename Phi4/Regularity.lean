@@ -244,20 +244,6 @@ theorem wickCubicSmeared_tendsto_ae (params : Phi4Params)
   exact WickCubicConvergenceModel.wickCubicSmeared_tendsto_ae
     (params := params) f
 
-/-- Kernel-form rewriting of the Euclidean equation of motion, using the
-    explicit covariance bridge `freeCovariance_eq_kernel`. -/
-theorem euclidean_equation_of_motion_kernel_form (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    [EuclideanEquationModel params]
-    [FreeCovarianceKernelModel params.mass params.mass_pos]
-    (f g : TestFun2D) :
-    ∫ ω, ω f * ω g ∂(infiniteVolumeMeasure params) =
-      (∫ x, ∫ y, f x * freeCovKernel params.mass x y * g y) -
-      params.coupling *
-        ∫ ω, wickCubicSmeared params f ω * ω g ∂(infiniteVolumeMeasure params) := by
-  rw [euclidean_equation_of_motion (params := params) f g]
-  rw [freeCovariance_eq_kernel (mass := params.mass) (hmass := params.mass_pos) f g]
-
 /-! ## Generating functional bound (OS1) -/
 
 /-- Norm functional for the generating functional bound.
@@ -306,22 +292,6 @@ theorem finiteVolume_diagonal_moment_bound_of_generating_bound
   have hfac_nonneg : 0 ≤ (Nat.factorial n : ℝ) := by positivity
   exact hmoment.trans (mul_le_mul_of_nonneg_left hsum_le hfac_nonneg)
 
-/-- Finite-volume diagonal moments from a global finite-volume
-    generating-functional exponential bound. -/
-theorem finiteVolume_diagonal_moment_bound_of_global_uniform_generating_bound
-    (params : Phi4Params) [InteractionWeightModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (Λ : Rectangle) (f : TestFun2D) (n : ℕ) :
-    ∃ c : ℝ,
-      |schwingerN params Λ n (fun _ => f)| ≤
-        (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  exact finiteVolume_diagonal_moment_bound_of_generating_bound
-    params c hc Λ f n
-
 /-- Finite-volume mixed `n`-point moments from a finite-volume generating-functional
     exponential bound at fixed constant `c`. -/
 theorem finiteVolume_mixed_moment_bound_of_generating_bound
@@ -363,23 +333,6 @@ theorem finiteVolume_mixed_moment_bound_of_generating_bound
       add_le_add hgf_le hgneg_le
     exact mul_le_mul_of_nonneg_left hpair_le hfac_nonneg
   exact hmixed.trans hsumBound
-
-/-- Finite-volume mixed `n`-point moments from a global finite-volume
-    generating-functional exponential bound. -/
-theorem finiteVolume_mixed_moment_bound_of_global_uniform_generating_bound
-    (params : Phi4Params) [InteractionWeightModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (Λ : Rectangle) (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
-    ∃ c : ℝ,
-      |schwingerN params Λ n f| ≤
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  exact finiteVolume_mixed_moment_bound_of_generating_bound
-    params c hc Λ n hn f
 
 /-- Uniform-in-volume finite-volume mixed `n`-point moments from a pointwise-in-`f`
     generating-functional exponential estimate. The resulting `c` depends on the
@@ -547,25 +500,6 @@ theorem finiteVolume_twoPoint_bound_of_generating_bound
             Real.exp (c * normFunctional (-(f - g))))) / 4 := by
           simp [Mplus, Mminus]
 
-/-- Finite-volume two-point bound from a global finite-volume generating-functional
-    exponential estimate. -/
-theorem finiteVolume_twoPoint_bound_of_global_uniform_generating_bound
-    (params : Phi4Params) [InteractionWeightModel params]
-    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (Λ : Rectangle) (f g : TestFun2D) :
-    ∃ c : ℝ,
-      |schwingerTwo params Λ f g| ≤
-        ((Nat.factorial 2 : ℝ) *
-            (Real.exp (c * normFunctional (f + g)) +
-              Real.exp (c * normFunctional (-(f + g)))) +
-          (Nat.factorial 2 : ℝ) *
-            (Real.exp (c * normFunctional (f - g)) +
-              Real.exp (c * normFunctional (-(f - g))))) / 4 := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  exact finiteVolume_twoPoint_bound_of_generating_bound params c hc Λ f g
-
 private theorem abs_limit_le_of_abs_bound {u : ℕ → ℝ} {x B : ℝ}
     (hu : Filter.Tendsto u Filter.atTop (nhds x))
     (hbound : ∀ n, |u n| ≤ B) :
@@ -591,131 +525,6 @@ theorem generatingFunctionalOnExhaustion_bound_of_global_uniform
   intro f n
   simpa [generatingFunctionalOnExhaustion] using
     hc f (exhaustingRectangles (n + 1) (Nat.succ_pos n))
-
-/-- Pointwise-in-`f` variant of the previous restriction lemma. -/
-theorem generatingFunctionalOnExhaustion_bound_of_uniform
-    (params : Phi4Params)
-    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
-    ∀ f : TestFun2D, ∃ c : ℝ, ∀ n : ℕ,
-      |generatingFunctionalOnExhaustion params f n| ≤
-        Real.exp (c * normFunctional f) := by
-  intro f
-  rcases huniform f with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  intro n
-  simpa [generatingFunctionalOnExhaustion] using
-    hc (exhaustingRectangles (n + 1) (Nat.succ_pos n))
-
-/-- Uniform diagonal moment bound along exhaustion from a global finite-volume
-    generating-functional exponential estimate. -/
-theorem diagonal_moment_bound_on_exhaustion_of_global_uniform
-    (params : Phi4Params) [InteractionWeightModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (f : TestFun2D) (n : ℕ) :
-    ∃ c : ℝ, ∀ k : ℕ,
-      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f)| ≤
-        (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  intro k
-  exact finiteVolume_diagonal_moment_bound_of_generating_bound
-    params c hc
-    (exhaustingRectangles (k + 1) (Nat.succ_pos k))
-    f n
-
-/-- Transfer the exhaustion diagonal-moment bound to the limit point. -/
-theorem diagonal_moment_limit_bound_of_exhaustion
-    (params : Phi4Params) [InteractionWeightModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (f : TestFun2D) (n : ℕ) (x : ℝ)
-    (hlim : Filter.Tendsto
-      (fun k : ℕ =>
-        schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f))
-      Filter.atTop (nhds x)) :
-    ∃ c : ℝ,
-      |x| ≤ (Nat.factorial n : ℝ) *
-        (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
-  rcases diagonal_moment_bound_on_exhaustion_of_global_uniform
-      params hglobal f n with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  exact abs_limit_le_of_abs_bound hlim (fun k => hc k)
-
-/-- Diagonal infinite-volume Schwinger moments are bounded by the same explicit
-    factorial-exponential expression under a global finite-volume OS1-type
-    generating-functional bound. -/
-theorem infiniteVolumeSchwinger_diagonal_bound_of_global_uniform
-    (params : Phi4Params) [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (f : TestFun2D) (n : ℕ) :
-    ∃ c : ℝ,
-      |infiniteVolumeSchwinger params n (fun _ => f)| ≤
-        (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional f) + Real.exp (c * normFunctional (-f))) := by
-  have hraw :
-      Filter.Tendsto
-        (fun m : ℕ =>
-          if h : 0 < m then schwingerN params (exhaustingRectangles m h) n (fun _ => f) else 0)
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params n (fun _ => f))) :=
-    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
-      (params := params) n (fun _ => f)
-  have hlim :
-      Filter.Tendsto
-        (fun k : ℕ =>
-          schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n (fun _ => f))
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params n (fun _ => f))) := by
-    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
-    simpa using hcomp
-  exact diagonal_moment_limit_bound_of_exhaustion
-    params hglobal f n (infiniteVolumeSchwinger params n (fun _ => f)) hlim
-
-/-- Infinite-volume mixed `n`-point Schwinger bound from global finite-volume
-    generating-functional control, lifted along exhaustion limits. -/
-theorem infiniteVolumeSchwinger_mixed_bound_of_global_uniform
-    (params : Phi4Params) [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    (hglobal : ∃ c : ℝ, ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
-    ∃ c : ℝ,
-      |infiniteVolumeSchwinger params n f| ≤
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  let C : ℝ :=
-    ∑ i : Fin n, (Nat.factorial n : ℝ) *
-      (Real.exp (c * normFunctional (f i)) +
-        Real.exp (c * normFunctional (-(f i))))
-  have hraw :
-      Filter.Tendsto
-        (fun m : ℕ => if h : 0 < m then schwingerN params (exhaustingRectangles m h) n f else 0)
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params n f)) :=
-    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
-      (params := params) n f
-  have hlim :
-      Filter.Tendsto
-        (fun k : ℕ => schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n f)
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params n f)) := by
-    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
-    simpa using hcomp
-  have hbound : ∀ k : ℕ,
-      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n f| ≤ C := by
-    intro k
-    simpa [C] using
-      finiteVolume_mixed_moment_bound_of_generating_bound params c hc
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k)) n hn f
-  simpa [C] using abs_limit_le_of_abs_bound hlim hbound
 
 /-- Infinite-volume mixed `n`-point Schwinger bound from pointwise-in-`f`
     uniform finite-volume generating-functional control. -/
@@ -757,61 +566,6 @@ theorem infiniteVolumeSchwinger_mixed_bound_of_uniform_generating_bound
     simpa [C] using hc (exhaustingRectangles (k + 1) (Nat.succ_pos k))
   simpa [C] using abs_limit_le_of_abs_bound hlim hbound
 
-/-- Infinite-volume 2-point Schwinger bound from global finite-volume
-    generating-functional control, via polarization and exhaustion limits. -/
-theorem infiniteVolume_twoPoint_bound_of_global_uniform
-    (params : Phi4Params) [InteractionWeightModel params]
-    [SchwingerLimitModel params]
-    (hglobal : ∃ c : ℝ, ∀ (h : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (f g : TestFun2D) :
-    ∃ c : ℝ,
-      |infiniteVolumeSchwinger params 2 ![f, g]| ≤
-        ((Nat.factorial 2 : ℝ) *
-            (Real.exp (c * normFunctional (f + g)) +
-              Real.exp (c * normFunctional (-(f + g)))) +
-          (Nat.factorial 2 : ℝ) *
-            (Real.exp (c * normFunctional (f - g)) +
-              Real.exp (c * normFunctional (-(f - g))))) / 4 := by
-  rcases hglobal with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  let C : ℝ :=
-    ((Nat.factorial 2 : ℝ) *
-        (Real.exp (c * normFunctional (f + g)) +
-          Real.exp (c * normFunctional (-(f + g)))) +
-      (Nat.factorial 2 : ℝ) *
-        (Real.exp (c * normFunctional (f - g)) +
-          Real.exp (c * normFunctional (-(f - g))))) / 4
-  have hraw :
-      Filter.Tendsto
-        (fun m : ℕ =>
-          if h : 0 < m then
-            schwingerN params (exhaustingRectangles m h) 2 (![f, g] : Fin 2 → TestFun2D)
-          else 0)
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params 2 ![f, g])) :=
-    SchwingerLimitModel.infiniteVolumeSchwinger_tendsto
-      (params := params) 2 (![f, g] : Fin 2 → TestFun2D)
-  have hlim :
-      Filter.Tendsto
-        (fun k : ℕ =>
-          schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) 2
-            (![f, g] : Fin 2 → TestFun2D))
-        Filter.atTop
-        (nhds (infiniteVolumeSchwinger params 2 ![f, g])) := by
-    have hcomp := hraw.comp (Filter.tendsto_add_atTop_nat 1)
-    simpa using hcomp
-  have hbound : ∀ k : ℕ,
-      |schwingerN params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) 2
-        (![f, g] : Fin 2 → TestFun2D)| ≤ C := by
-    intro k
-    have hfin :
-        |schwingerTwo params (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g| ≤ C := by
-      simpa [C] using finiteVolume_twoPoint_bound_of_generating_bound params c hc
-        (exhaustingRectangles (k + 1) (Nat.succ_pos k)) f g
-    simpa [schwingerN_two_eq_schwingerTwo] using hfin
-  simpa [C] using abs_limit_le_of_abs_bound hlim hbound
-
 /-- If the generating functional along exhaustion converges to the infinite-volume
     generating functional and satisfies a global exponential bound, then OS1 follows. -/
 theorem generating_functional_bound_of_exhaustion_limit
@@ -845,24 +599,6 @@ theorem generating_functional_bound_of_exhaustion_limit_global_uniform
         Real.exp (c * normFunctional f) := by
   exact generating_functional_bound_of_exhaustion_limit params hlim
     (generatingFunctionalOnExhaustion_bound_of_global_uniform params hglobal)
-
-/-- Pointwise-in-`f` finite-volume uniform bounds plus exhaustion convergence
-    yield a pointwise-in-`f` infinite-volume exponential bound. -/
-theorem generating_functional_pointwise_bound_of_exhaustion_limit
-    (params : Phi4Params)
-    [InfiniteVolumeMeasureModel params]
-    (hlim : ∀ f : TestFun2D,
-      Filter.Tendsto (generatingFunctionalOnExhaustion params f) Filter.atTop
-        (nhds (∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params))))
-    (huniform : ∀ f : TestFun2D, ∃ c : ℝ, ∀ Λ : Rectangle,
-      |generatingFunctional params Λ f| ≤ Real.exp (c * normFunctional f)) :
-    ∀ f : TestFun2D, ∃ c : ℝ,
-      |∫ ω, Real.exp (ω f) ∂(infiniteVolumeMeasure params)| ≤
-        Real.exp (c * normFunctional f) := by
-  intro f
-  rcases generatingFunctionalOnExhaustion_bound_of_uniform params huniform f with ⟨c, hc⟩
-  refine ⟨c, ?_⟩
-  exact abs_limit_le_of_abs_bound (hlim f) (fun n => hc n)
 
 /-- Honest frontier: generating-functional bound (OS1 / E0') from
     explicit exhaustion convergence and finite-volume uniform bounds. -/

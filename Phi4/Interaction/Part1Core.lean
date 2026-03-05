@@ -152,31 +152,6 @@ theorem interactionCutoff_lower_bound_of_wick_semibounded
   intro x hx
   simpa [neg_mul] using hC ω x
 
-/-- Along the shifted canonical UV sequence `κ_{n+1} = n + 2`, semibounded Wick
-    control yields pointwise lower bounds for `interactionCutoff`. -/
-theorem interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_semibounded
-    (params : Phi4Params) (Λ : Rectangle)
-    (hΛ_meas : MeasurableSet Λ.toSet)
-    (hΛ_finite : volume Λ.toSet ≠ ∞)
-    (hwick_int :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D,
-        IntegrableOn
-          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
-          Λ.toSet volume) :
-    ∀ n : ℕ, ∃ B : ℝ, ∀ ω : FieldConfig2D,
-      -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
-  intro n
-  have hκ : 1 < (standardUVCutoffSeq (n + 1)).κ := by
-    simpa [standardUVCutoffSeq] using
-      (show (0 : ℝ) < (n : ℝ) + 1 from by positivity)
-  rcases interactionCutoff_lower_bound_of_wick_semibounded
-      (params := params) (Λ := Λ) (κ := standardUVCutoffSeq (n + 1))
-      hκ hΛ_meas hΛ_finite (hwick_int n) with ⟨C, hC⟩
-  refine ⟨-(params.coupling *
-      ∫ x in Λ.toSet, (-(C * (Real.log (standardUVCutoffSeq (n + 1)).κ) ^ 2) : ℝ)), ?_⟩
-  intro ω
-  simpa using hC ω
-
 /-- Good-set variant of `interactionCutoff_lower_bound_of_wick_lower_bound`:
     if a pointwise Wick lower bound holds outside a bad set, then the induced
     cutoff-interaction lower bound also holds outside that bad set. -/
@@ -518,29 +493,6 @@ theorem interaction_in_L2 (params : Phi4Params)
     MemLp (interaction params Λ) 2 (freeFieldMeasure params.mass params.mass_pos) := by
   exact InteractionUVModel.interaction_in_L2
     (params := params) Λ
-
-/-- Pointwise lower bound transfer from all UV-cutoff interactions
-    along the canonical sequence to the limiting interaction
-    `interaction = limsup_n interactionCutoff κ_n`. -/
-theorem interaction_lower_bound_of_cutoff_seq (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (hcutoff :
-      ∀ (n : ℕ) (ω : FieldConfig2D),
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
-    (hbounded :
-      ∀ ω : FieldConfig2D,
-        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)) :
-    ∀ ω : FieldConfig2D, -B ≤ interaction params Λ ω := by
-  intro ω
-  change -B ≤
-    Filter.limsup
-      (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
-      Filter.atTop
-  have hfreq :
-      ∃ᶠ n in Filter.atTop,
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    Filter.Frequently.of_forall (fun n => hcutoff n ω)
-  exact Filter.le_limsup_of_frequently_le hfreq (hbounded ω)
 
 /-- Almost-everywhere convergence of the canonical cutoff sequence
     `κ_n = n + 1` to the limiting interaction, from explicit real-parameterized
@@ -1150,92 +1102,6 @@ theorem interaction_ae_lower_bound_of_cutoff_seq_eventually_of_standardSeq_tends
     hω
   exact isClosed_Ici.mem_of_tendsto hωt hcutoff_mem
 
-/-- If the canonical cutoff sequence is eventually bounded below almost surely,
-    then the limiting interaction inherits the same almost-everywhere lower bound. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_eventually
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hcutoff_ae :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually_of_standardSeq_tendsto_ae
-    (params := params) (Λ := Λ) (B := B)
-    (interactionCutoff_standardSeq_tendsto_ae params Λ)
-    hcutoff_ae
-
-/-- Almost-everywhere lower bound transfer from countably many UV-cutoff
-    lower bounds (uniform in cutoff index) to the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hall :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-    rw [eventually_countable_forall]
-    intro n
-    exact hcutoff_ae n
-  have hevent :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    hall.mono (fun ω hω => Filter.Eventually.of_forall hω)
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hevent
-
-/-- Shifted-sequence transfer: if `-B` bounds all cutoff interactions along
-    `κ_{n+1}`, then the unshifted canonical sequence is eventually bounded below
-    by `-B` almost surely. This isolates the common `n = 0` bookkeeping step. -/
-theorem cutoff_seq_eventually_lower_bound_of_succ
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      ∀ᶠ n in Filter.atTop,
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-  have hall :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ n : ℕ, -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
-    rw [eventually_countable_forall]
-    intro n
-    exact hcutoff_ae n
-  filter_upwards [hall] with ω hω
-  refine Filter.eventually_atTop.2 ?_
-  refine ⟨1, ?_⟩
-  intro n hn
-  cases n with
-  | zero =>
-      exact (False.elim (Nat.not_succ_le_zero 0 hn))
-  | succ m =>
-      simpa [Nat.succ_eq_add_one, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hω m
-
-/-- Shifted-sequence lower bounds (`κ_{n+1}`) imply an almost-everywhere lower
-    bound on the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_succ
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_succ params Λ B hcutoff_ae
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
-
 /-! ## The exponential of the interaction is in Lᵖ
 
 This is the central estimate of the chapter (Theorem 8.6.2 of Glimm-Jaffe).
@@ -1302,23 +1168,6 @@ theorem exp_interaction_Lp_of_ae_lower_bound_of_aestronglyMeasurable
     (μ := freeFieldMeasure params.mass params.mass_pos)
     (V := interaction params Λ) hmeas B hbound
 
-/-- `Lᵖ` integrability of the Boltzmann weight from countably many
-    cutoff-level almost-everywhere lower bounds along the canonical UV sequence. -/
-theorem exp_interaction_Lp_of_cutoff_seq_lower_bounds
-    (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (B : ℝ)
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
-    {p : ℝ≥0∞} :
-    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-      p (freeFieldMeasure params.mass params.mass_pos) := by
-  refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
-    (B := B) ?_
-  exact interaction_ae_lower_bound_of_cutoff_seq params Λ B hcutoff_ae
-
 /-- `Lᵖ` integrability of the Boltzmann weight from an eventually-in-`n`
     almost-everywhere lower bound on the canonical cutoff sequence, using
     explicit measurability of `interaction` and explicit a.e. convergence of
@@ -1351,43 +1200,6 @@ theorem
   exact exp_interaction_Lp_of_ae_lower_bound_of_aestronglyMeasurable
     (params := params) (Λ := Λ) hmeas B hbound
 
-/-- `Lᵖ` integrability of the Boltzmann weight from an eventually-in-`n`
-    almost-everywhere lower bound on the canonical cutoff sequence. -/
-theorem exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
-    (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (B : ℝ)
-    (hcutoff_ae :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω)
-    {p : ℝ≥0∞} :
-    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-      p (freeFieldMeasure params.mass params.mass_pos) := by
-  refine
-    exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound_of_aestronglyMeasurable_and_standardSeq_tendsto_ae
-      (params := params) (Λ := Λ)
-      ((interaction_in_L2 params Λ).aestronglyMeasurable)
-      (interactionCutoff_standardSeq_tendsto_ae params Λ)
-      (B := B) hcutoff_ae
-
-/-- `Lᵖ` integrability of the Boltzmann weight from shifted canonical
-    cutoff-sequence lower bounds (`κ_{n+1}`). -/
-theorem exp_interaction_Lp_of_cutoff_seq_succ_lower_bounds
-    (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (B : ℝ)
-    (hcutoff_ae :
-      ∀ n : ℕ,
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
-    {p : ℝ≥0∞} :
-    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-      p (freeFieldMeasure params.mass params.mass_pos) := by
-  refine exp_interaction_Lp_of_ae_lower_bound (params := params) (Λ := Λ)
-    (B := B) ?_
-  exact interaction_ae_lower_bound_of_cutoff_seq_succ params Λ B hcutoff_ae
-
 /-- Shift eventually-at-top bounds from `n + 1` back to the canonical index `n`.
     This is the index bookkeeping bridge used when analytic estimates are only
     available for UV scales `κ > 1`. -/
@@ -1405,48 +1217,6 @@ theorem eventually_atTop_of_eventually_atTop_succ {P : ℕ → Prop}
       have hm : N ≤ m := by
         exact Nat.succ_le_succ_iff.mp hn
       exact hN m hm
-
-/-- If cutoff lower bounds can fail only on a summable family of bad sets,
-    then the cutoff sequence is eventually bounded below almost surely. -/
-theorem cutoff_seq_eventually_lower_bound_of_bad_set_summable
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (bad : ℕ → Set FieldConfig2D)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞)
-    (hcutoff_good :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      ∀ᶠ n in Filter.atTop,
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-  have hnotbad :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop, ω ∉ bad n :=
-    MeasureTheory.ae_eventually_notMem
-      (μ := freeFieldMeasure params.mass params.mass_pos) hbad_sum
-  filter_upwards [hnotbad] with ω hω
-  exact hω.mono (fun n hn => hcutoff_good n ω hn)
-
-/-- If the bad-event probabilities for a fixed lower bound `-B` are summable,
-    then the cutoff sequence is eventually bounded below by `-B` almost surely. -/
-theorem cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      ∀ᶠ n in Filter.atTop,
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-  refine cutoff_seq_eventually_lower_bound_of_bad_set_summable
-    (params := params) (Λ := Λ) (B := B)
-    (bad := fun n => {ω : FieldConfig2D |
-      interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B})
-    hbad_sum ?_
-  intro n ω hω
-  exact not_lt.mp hω
 
 /-- Shifted-index Borel-Cantelli transfer:
     if lower bounds along `κ_{n+1}` fail only on a summable bad-set family,
@@ -1474,152 +1244,3 @@ theorem cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable
         -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω :=
     hω.mono (fun n hn => hcutoff_good n ω hn)
   exact eventually_atTop_of_eventually_atTop_succ hsucc
-
-/-- Shifted-index specialization of summable bad-event tails:
-    if events `{interactionCutoff(κ_{n+1}) < -B}` are summable, then the
-    canonical sequence is eventually bounded below almost surely. -/
-theorem cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}) ≠ ∞) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      ∀ᶠ n in Filter.atTop,
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω := by
-  refine cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable
-    (params := params) (Λ := Λ) (B := B)
-    (bad := fun n => {ω : FieldConfig2D |
-      interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B})
-    hbad_sum ?_
-  intro n ω hω
-  exact not_lt.mp hω
-
-/-- Summable bad-event tails for cutoff lower bounds imply an almost-everywhere
-    lower bound on the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure params Λ B hbad_sum
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
-
-/-- Shifted-index summable bad-event tails imply an almost-everywhere lower
-    bound on the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_shifted_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}) ≠ ∞) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure
-      params Λ B hbad_sum
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
-
-/-- Shifted-index summable bad sets with good-set lower bounds imply an
-    almost-everywhere lower bound on the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_shifted_bad_set_summable
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (bad : ℕ → Set FieldConfig2D)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞)
-    (hcutoff_good :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_shifted_bad_set_summable
-      params Λ B bad hbad_sum hcutoff_good
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
-
-/-- Summable bad sets with good-set cutoff lower bounds imply an
-    almost-everywhere lower bound on the limiting interaction. -/
-theorem interaction_ae_lower_bound_of_cutoff_seq_bad_set_summable
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    [InteractionUVModel params]
-    (bad : ℕ → Set FieldConfig2D)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos) (bad n)) ≠ ∞)
-    (hcutoff_good :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
-        -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      -B ≤ interaction params Λ ω := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_bad_set_summable
-      params Λ B bad hbad_sum hcutoff_good
-  exact interaction_ae_lower_bound_of_cutoff_seq_eventually params Λ B hcutoff_ev
-
-/-- `Lᵖ` integrability of the Boltzmann weight from summable bad-event tails
-    for cutoff lower bounds. -/
-theorem exp_interaction_Lp_of_cutoff_seq_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (B : ℝ)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq n) ω < -B}) ≠ ∞)
-    {p : ℝ≥0∞} :
-    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-      p (freeFieldMeasure params.mass params.mass_pos) := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_summable_bad_event_measure params Λ B hbad_sum
-  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
-    (params := params) (Λ := Λ) (B := B) hcutoff_ev
-
-/-- `Lᵖ` integrability from shifted-index summable bad-event tails
-    (`κ_{n+1}` events). -/
-theorem exp_interaction_Lp_of_cutoff_seq_shifted_summable_bad_event_measure
-    (params : Phi4Params) (Λ : Rectangle)
-    [InteractionUVModel params]
-    (B : ℝ)
-    (hbad_sum :
-      (∑' n : ℕ,
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}) ≠ ∞)
-    {p : ℝ≥0∞} :
-    MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-      p (freeFieldMeasure params.mass params.mass_pos) := by
-  have hcutoff_ev :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        ∀ᶠ n in Filter.atTop,
-          -B ≤ interactionCutoff params Λ (standardUVCutoffSeq n) ω :=
-    cutoff_seq_eventually_lower_bound_of_shifted_summable_bad_event_measure
-      params Λ B hbad_sum
-  exact exp_interaction_Lp_of_cutoff_seq_eventually_lower_bound
-    (params := params) (Λ := Λ) (B := B) hcutoff_ev
