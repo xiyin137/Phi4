@@ -135,43 +135,6 @@ instance (priority := 90) schwingerNMonotoneModel_of_family
     exact SchwingerNMonotoneFamilyModel.schwingerN_monotone
       (params := params) k Λ₁ Λ₂ h f hf hfΛ
 
-/-- Construct `SchwingerNMonotoneFamilyModel` from explicit all-arity
-    monotonicity data. -/
-theorem schwingerNMonotoneFamilyModel_nonempty_of_data
-    (params : Phi4Params)
-    (hmono : ∀ (k : ℕ) (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin k → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f) :
-    Nonempty (SchwingerNMonotoneFamilyModel params) := by
-  exact ⟨{ schwingerN_monotone := hmono }⟩
-
-/-- Construct `SchwingerNMonotoneModel` from explicit `k`-point monotonicity
-    data. -/
-theorem schwingerNMonotoneModel_nonempty_of_data
-    (params : Phi4Params) (k : ℕ)
-    (hmono : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin k → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f) :
-    Nonempty (SchwingerNMonotoneModel params k) := by
-  exact ⟨{ schwingerN_monotone := hmono }⟩
-
-/-- Construct `SchwingerNNonnegModel` from explicit `k`-point nonnegativity
-    data. -/
-theorem schwingerNNonnegModel_nonempty_of_data
-    (params : Phi4Params) (k : ℕ)
-    (hnonneg : ∀ (Λ : Rectangle)
-      (f : Fin k → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x),
-      0 ≤ schwingerN params Λ k f) :
-    Nonempty (SchwingerNNonnegModel params k) := by
-  exact ⟨{ schwingerN_nonneg := hnonneg }⟩
-
 /-- Interface-level access to finite-volume `k`-point monotonicity. -/
 theorem schwingerN_monotone_of_interface
     (params : Phi4Params) (k : ℕ)
@@ -254,24 +217,6 @@ class CorrelationFKGModel (params : Phi4Params) where
         (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
       ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ)
 
-/-- Construct `CorrelationTwoPointModel` from explicit two-point GKS-I and
-    two-point volume-monotonicity data. -/
-theorem correlationTwoPointModel_nonempty_of_data
-    (params : Phi4Params)
-    (hgriffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
-      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
-      0 ≤ schwingerTwo params Λ f g)
-    (hschwinger_two_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
-      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
-      schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g) :
-    Nonempty (CorrelationTwoPointModel params) := by
-  exact ⟨{
-    griffiths_first := hgriffiths_first
-    schwinger_two_monotone := hschwinger_two_monotone
-  }⟩
-
 /-- Construct `CorrelationGKSSecondModel` from explicit four-point GKS-II data. -/
 theorem correlationGKSSecondModel_nonempty_of_data
     (params : Phi4Params)
@@ -319,65 +264,6 @@ instance (priority := 100) correlationFourPointInequalityModel_of_atomic
     CorrelationFourPointInequalityModel params where
   toCorrelationGKSSecondModel := inferInstance
   toCorrelationLebowitzModel := inferInstance
-
-/-- Construct `CorrelationFourPointInequalityModel` from explicit four-point
-    GKS-II/Lebowitz data. -/
-theorem correlationFourPointInequalityModel_nonempty_of_data
-    (params : Phi4Params)
-    (hgriffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
-    (hlebowitz : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃) :
-    Nonempty (CorrelationFourPointInequalityModel params) := by
-  rcases correlationGKSSecondModel_nonempty_of_data
-      params hgriffiths_second with ⟨hgks⟩
-  rcases correlationLebowitzModel_nonempty_of_data
-      params hlebowitz with ⟨hleb⟩
-  letI : CorrelationGKSSecondModel params := hgks
-  letI : CorrelationLebowitzModel params := hleb
-  exact correlationFourPointInequalityModel_nonempty_of_models params
-
-/-- Construct `CorrelationFourPointModel` from explicit four-point
-    GKS-II/Lebowitz data together with four-point volume monotonicity. -/
-theorem correlationFourPointModel_nonempty_of_data
-    (params : Phi4Params)
-    (hgriffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
-    (hlebowitz : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
-    (hfour_mono : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin 4 → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f) :
-    Nonempty (CorrelationFourPointModel params) := by
-  rcases correlationFourPointInequalityModel_nonempty_of_data
-      params hgriffiths_second hlebowitz with ⟨hineq⟩
-  exact ⟨{
-    toCorrelationFourPointInequalityModel := hineq
-    schwinger_four_monotone := hfour_mono
-  }⟩
 
 /-- Construct `CorrelationFourPointModel` from inequality data plus an explicit
     `k = 4` monotonicity interface. -/
@@ -476,56 +362,6 @@ instance (priority := 100) correlationInequalityModel_of_submodels
       (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
   schwinger_two_monotone := CorrelationTwoPointModel.schwinger_two_monotone (params := params)
 
-/-- Construct `CorrelationInequalityModel` from explicit continuum data. -/
-theorem correlationInequalityModel_nonempty_of_data
-    (params : Phi4Params)
-    (hgriffiths_first : ∀ (Λ : Rectangle) (f g : TestFun2D)
-      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
-      0 ≤ schwingerTwo params Λ f g)
-    (hgriffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
-    (hfkg : ∀ (Λ : Rectangle)
-      (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
-      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
-        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
-      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ))
-    (hlebowitz : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
-    (hfour_mono : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin 4 → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f)
-    (htwo_mono : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
-      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0),
-      schwingerTwo params Λ₁ f g ≤ schwingerTwo params Λ₂ f g) :
-    Nonempty (CorrelationInequalityModel params) := by
-  exact ⟨{
-    griffiths_first := hgriffiths_first
-    griffiths_second := hgriffiths_second
-    fkg_inequality := hfkg
-    lebowitz_inequality := hlebowitz
-    schwinger_four_monotone := hfour_mono
-    schwinger_two_monotone := htwo_mono
-  }⟩
-
 /-! ## Lattice-to-continuum bridge for GKS-I -/
 
 /-- Real-analysis helper: if `x` can be approximated arbitrarily well by
@@ -584,25 +420,6 @@ class LatticeGriffithsFirstModel (params : Phi4Params) where
       (ε : ℝ), 0 < ε →
       ∃ L : Phi4.RectLattice Λ,
         |schwingerTwo params Λ f g - latticeTwo Λ L f g| < ε
-
-/-- Construct `LatticeGriffithsFirstModel` from explicit lattice two-point data,
-    lattice GKS-I, and approximation to the continuum two-point function. -/
-theorem latticeGriffithsFirstModel_nonempty_of_data
-    (params : Phi4Params)
-    (latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ)
-    (hlattice_gks1 : ∀ (Λ : Rectangle) (L : Phi4.RectLattice Λ) (f g : TestFun2D)
-      (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x),
-      0 ≤ latticeTwo Λ L f g)
-    (happrox : ∀ (Λ : Rectangle) (f g : TestFun2D)
-      (ε : ℝ), 0 < ε →
-      ∃ L : Phi4.RectLattice Λ,
-        |schwingerTwo params Λ f g - latticeTwo Λ L f g| < ε) :
-    Nonempty (LatticeGriffithsFirstModel params) := by
-  exact ⟨{
-    latticeTwo := latticeTwo
-    lattice_gks1 := hlattice_gks1
-    schwingerTwo_approx_lattice := happrox
-  }⟩
 
 /-- Continuum GKS-I obtained from lattice GKS-I plus convergence of lattice
     approximants to the continuum two-point function. -/
@@ -677,26 +494,6 @@ instance (priority := 90) latticeSchwingerNMonotoneModel_of_family
     exact LatticeSchwingerNMonotoneFamilyModel.approx_monotone_pair
       (params := params) k Λ₁ Λ₂ h f hf hfΛ ε hε
 
-/-- Construct `LatticeSchwingerTwoMonotoneModel` from explicit lattice two-point
-    data and ordered approximation pairs for nested volumes. -/
-theorem latticeSchwingerTwoMonotoneModel_nonempty_of_data
-    (params : Phi4Params)
-    (latticeTwo : ∀ Λ : Rectangle, Phi4.RectLattice Λ → TestFun2D → TestFun2D → ℝ)
-    (happrox_pair : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f g : TestFun2D) (_hf : ∀ x, 0 ≤ f x) (_hg : ∀ x, 0 ≤ g x)
-      (_hfΛ : ∀ x ∉ Λ₁.toSet, f x = 0) (_hgΛ : ∀ x ∉ Λ₁.toSet, g x = 0)
-      (ε : ℝ), 0 < ε →
-      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
-        latticeTwo Λ₁ L₁ f g ≤ latticeTwo Λ₂ L₂ f g ∧
-        |schwingerTwo params Λ₁ f g - latticeTwo Λ₁ L₁ f g| < ε ∧
-        |schwingerTwo params Λ₂ f g - latticeTwo Λ₂ L₂ f g| < ε) :
-    Nonempty (LatticeSchwingerTwoMonotoneModel params) := by
-  exact ⟨{
-    latticeTwo := latticeTwo
-    approx_monotone_pair := happrox_pair
-  }⟩
-
 /-- Continuum two-point monotonicity from lattice-ordered approximation pairs. -/
 theorem schwinger_two_monotone_from_lattice
     (params : Phi4Params)
@@ -730,27 +527,6 @@ theorem latticeSchwingerNMonotoneModel_nonempty_of_data
         |schwingerN params Λ₁ k f - latticeN Λ₁ L₁ f| < ε ∧
         |schwingerN params Λ₂ k f - latticeN Λ₂ L₂ f| < ε) :
     Nonempty (LatticeSchwingerNMonotoneModel params k) := by
-  exact ⟨{
-    latticeN := latticeN
-    approx_monotone_pair := happrox_pair
-  }⟩
-
-/-- Construct `LatticeSchwingerNMonotoneFamilyModel` from explicit all-arity
-    lattice monotonicity approximation data. -/
-theorem latticeSchwingerNMonotoneFamilyModel_nonempty_of_data
-    (params : Phi4Params)
-    (latticeN : ∀ (k : ℕ) (Λ : Rectangle),
-      Phi4.RectLattice Λ → (Fin k → TestFun2D) → ℝ)
-    (happrox_pair : ∀ (k : ℕ) (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin k → TestFun2D) (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0)
-      (ε : ℝ), 0 < ε →
-      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
-        latticeN k Λ₁ L₁ f ≤ latticeN k Λ₂ L₂ f ∧
-        |schwingerN params Λ₁ k f - latticeN k Λ₁ L₁ f| < ε ∧
-        |schwingerN params Λ₂ k f - latticeN k Λ₂ L₂ f| < ε) :
-    Nonempty (LatticeSchwingerNMonotoneFamilyModel params) := by
   exact ⟨{
     latticeN := latticeN
     approx_monotone_pair := happrox_pair
@@ -838,106 +614,6 @@ class CorrelationInequalityCoreModel (params : Phi4Params)
       (_hf : ∀ i, ∀ x, 0 ≤ f i x)
       (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
       schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f
-
-/-- Construct `CorrelationInequalityCoreModel` from explicit continuum GKS-II,
-    FKG, Lebowitz, and 4-point monotonicity assumptions. -/
-theorem correlationInequalityCoreModel_nonempty_of_data
-    (params : Phi4Params)
-    (hgriffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
-    (hfkg : ∀ (Λ : Rectangle)
-      (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
-      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
-        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
-      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ))
-    (hlebowitz : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃)
-    (hfour_mono : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin 4 → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f) :
-    Nonempty (CorrelationInequalityCoreModel params) := by
-  rcases correlationGKSSecondModel_nonempty_of_data
-      params hgriffiths_second with ⟨hgks⟩
-  rcases correlationLebowitzModel_nonempty_of_data
-      params hlebowitz with ⟨hleb⟩
-  rcases correlationFKGModel_nonempty_of_data params hfkg with ⟨hfkgModel⟩
-  exact ⟨{
-    toCorrelationGKSSecondModel := hgks
-    toCorrelationLebowitzModel := hleb
-    toCorrelationFKGModel := hfkgModel
-    schwinger_four_monotone := hfour_mono
-  }⟩
-
-/-- Construct `CorrelationInequalityCoreModel` from atomic subinterfaces plus
-    explicit `k = 4` Schwinger-moment monotonicity. -/
-theorem correlationInequalityCoreModel_nonempty_of_models
-    (params : Phi4Params)
-    [CorrelationGKSSecondModel params]
-    [CorrelationLebowitzModel params]
-    [CorrelationFKGModel params]
-    [SchwingerNMonotoneModel params 4] :
-    Nonempty (CorrelationInequalityCoreModel params) := by
-  exact ⟨{
-    toCorrelationGKSSecondModel := inferInstance
-    toCorrelationLebowitzModel := inferInstance
-    toCorrelationFKGModel := inferInstance
-    schwinger_four_monotone := by
-      intro Λ₁ Λ₂ h f hf hfΛ
-      exact SchwingerNMonotoneModel.schwingerN_monotone
-        (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
-  }⟩
-
-/-- Construct `CorrelationInequalityCoreModel` from GKS-II/FKG/Lebowitz data
-    plus a pre-existing `k = 4` Schwinger-moment monotonicity interface. -/
-theorem correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone
-    (params : Phi4Params)
-    [SchwingerNMonotoneModel params 4]
-    (hgriffiths_second : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ ≤
-        schwingerN params Λ 4 ![f₁, f₂, f₃, f₄])
-    (hfkg : ∀ (Λ : Rectangle)
-      (F G : FieldConfig2D → ℝ)
-      (_hF_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → F ω₁ ≤ F ω₂)
-      (_hG_mono : ∀ ω₁ ω₂ : FieldConfig2D,
-        (∀ f, (∀ x, 0 ≤ f x) → ω₁ f ≤ ω₂ f) → G ω₁ ≤ G ω₂),
-      (∫ ω, F ω ∂(finiteVolumeMeasure params Λ)) *
-        (∫ ω, G ω ∂(finiteVolumeMeasure params Λ)) ≤
-      ∫ ω, F ω * G ω ∂(finiteVolumeMeasure params Λ))
-    (hlebowitz : ∀ (Λ : Rectangle)
-      (f₁ f₂ f₃ f₄ : TestFun2D)
-      (_hf₁ : ∀ x, 0 ≤ f₁ x) (_hf₂ : ∀ x, 0 ≤ f₂ x)
-      (_hf₃ : ∀ x, 0 ≤ f₃ x) (_hf₄ : ∀ x, 0 ≤ f₄ x),
-      schwingerN params Λ 4 ![f₁, f₂, f₃, f₄] ≤
-        schwingerTwo params Λ f₁ f₂ * schwingerTwo params Λ f₃ f₄ +
-        schwingerTwo params Λ f₁ f₃ * schwingerTwo params Λ f₂ f₄ +
-        schwingerTwo params Λ f₁ f₄ * schwingerTwo params Λ f₂ f₃) :
-    Nonempty (CorrelationInequalityCoreModel params) := by
-  refine correlationInequalityCoreModel_nonempty_of_data params
-    hgriffiths_second hfkg hlebowitz ?_
-  intro Λ₁ Λ₂ h f hf hfΛ
-  exact SchwingerNMonotoneModel.schwingerN_monotone
-    (params := params) (k := 4) Λ₁ Λ₂ h f hf hfΛ
 
 /-- Build the full `CorrelationInequalityModel` from:
     1. lattice bridge inputs for GKS-I and 2-point monotonicity, and

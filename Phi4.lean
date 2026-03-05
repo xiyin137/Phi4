@@ -47,12 +47,12 @@ import Phi4.CovarianceOperators
 import Phi4.WickProduct
 import Phi4.FeynmanGraphs
 import Phi4.FeynmanGraphs.LocalizedBounds
-import Phi4.Interaction
+import Phi4.Interaction.Part3
 import Phi4.FiniteVolumeMeasure
 import Phi4.CorrelationInequalities
 import Phi4.ReflectionPositivity
 import Phi4.MultipleReflections
-import Phi4.InfiniteVolumeLimit
+import Phi4.InfiniteVolumeLimit.Part3
 import Phi4.Regularity
 import Phi4.OSAxioms
-import Phi4.Reconstruction
+import Phi4.Reconstruction.Part3

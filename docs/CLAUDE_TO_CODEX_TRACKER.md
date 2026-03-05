@@ -5,6 +5,39 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, week-0 bloat execution and wrapper-module cleanup)
+
+- Added deterministic nonempty-route inventory tooling:
+  - `scripts/nonempty_route_inventory.sh`,
+  - `docs/route_inventory/nonempty_inventory.tsv`,
+  - `docs/route_inventory/README.md`.
+- Removed 18 no-caller constructor/wrapper routes:
+  - `Phi4/CorrelationInequalities.lean`: 13 removed,
+  - `Phi4/CovarianceOperators.lean`: 4 removed,
+  - `Phi4/Interaction/Part1Core.lean`: 1 removed,
+  - `Phi4/Regularity.lean`: 1 removed.
+- Route-surface reduction:
+  - `theorem .*_nonempty_of_` count `57 -> 38`,
+  - `CorrelationInequalities` theorem count `52 -> 39`.
+- Removed five one-import wrapper modules and rewired imports to concrete
+  frontier modules:
+  - deleted `Phi4/Interaction.lean`,
+    `Phi4/Interaction/Part1.lean`,
+    `Phi4/InfiniteVolumeLimit.lean`,
+    `Phi4/Reconstruction.lean`,
+    `Phi4/Reconstruction/Part1.lean`.
+- Updated build gates after wrapper-module removal:
+  - `scripts/quick_gate.sh`,
+  - `scripts/weekly_gate.sh`.
+- Tightened bloat guards:
+  - `_nonempty_of_` cap `57 -> 38`,
+  - `CorrelationInequalities` theorem cap `52 -> 39`,
+  - exact-zero checks added for removed constructors.
+- Verification:
+  - targeted `lake env lean` passes on edited modules,
+  - `bash scripts/route_bloat_guard.sh` passes,
+  - `bash scripts/quick_gate.sh` passes.
+
 ## Session Update (2026-03-04, critical-issues policy/doc pass)
 
 - `AGENTS.md` updated to enforce:

@@ -20,6 +20,8 @@ the local Glimm-Jaffe objective.
 - This does not imply construction closure: open obligations are intentionally
   explicit at the frontier boundary (`58` `...Model` interfaces, `10` canonical
   theorem-level `gap_*` frontiers).
+- Route-surface status (post-prune): `38` `theorem .*_nonempty_of_`
+  constructors.
 - Scratch modules (`Phi4/Scratch/**/*.lean`) have `0` theorem-level `sorry`.
 - `Phi4/**/*.lean` has `0` `axiom` declarations.
 - `Phi4/**/*.lean` has `0` `def/abbrev := by sorry`.
@@ -855,15 +857,15 @@ Distance-to-goal assessment:
 2. `WP1` localized graph bounds (GJ Theorem 8.5.5) are formalized in
    `Phi4/FeynmanGraphs/LocalizedBounds.lean`; remaining work is to connect
    this infrastructure to the uniform cutoff partition-function bound above.
-3. `gap_infiniteVolumeSchwingerModel_nonempty` in `Phi4/InfiniteVolumeLimit.lean`.
+3. `gap_infiniteVolumeSchwingerModel_nonempty` in `Phi4/InfiniteVolumeLimit/Part1.lean`.
 4. `gap_generating_functional_bound` in `Phi4/Regularity.lean`.
 5. `gap_generating_functional_bound_uniform` in `Phi4/Regularity.lean`.
 6. `gap_nonlocal_phi4_bound` in `Phi4/Regularity.lean`.
 7. `gap_osaCoreModel_nonempty` in `Phi4/OSAxioms.lean`.
 8. `gap_osDistributionE2_nonempty` in `Phi4/OSAxioms.lean`.
 9. `gap_osE4Cluster_nonempty` in `Phi4/OSAxioms.lean`.
-10. `gap_phi4_linear_growth` in `Phi4/Reconstruction.lean`.
-11. `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction.lean`.
+10. `gap_phi4_linear_growth` in `Phi4/Reconstruction/Part1Core.lean`.
+11. `gap_phi4_wightman_reconstruction_step` in `Phi4/Reconstruction/Part1Tail.lean`.
 
 ### Strict Theorem-Dependency Frontier (Current)
 

@@ -57,6 +57,8 @@ Local per-folder guides are available at:
     statements, not that the full construction is complete.
   - remaining frontier obligations are explicit: `58` `...Model` interfaces and
     `10` canonical theorem-level `gap_*` frontiers.
+  - route surface after current pruning: `38` `theorem .*_nonempty_of_`
+    constructors.
 - Dependency reproducibility:
   - `GaussianField` and `OSReconstruction` are pinned to commit hashes in
     `lakefile.lean` (no floating `@ "main"`).
@@ -509,7 +511,7 @@ dependency chain (explicit theorem-level gaps only, no hidden placeholders):
 flowchart TD
   WP1A["WP1 analytic blocker:<br/>interaction integrability `exp(-V_Λ) ∈ L^p`"]
   WP1B["WP1 analytic blocker:<br/>localized graph bounds (GJ Thm 8.5.5)"]
-  IV["`gap_infiniteVolumeSchwingerModel_nonempty`<br/>(Phi4/InfiniteVolumeLimit.lean)"]
+  IV["`gap_infiniteVolumeSchwingerModel_nonempty`<br/>(Phi4/InfiniteVolumeLimit/Part1.lean)"]
   CORE["`gap_osaCoreModel_nonempty`<br/>(Phi4/OSAxioms.lean)"]
   E2["`gap_osDistributionE2_nonempty`<br/>(Phi4/OSAxioms.lean)"]
   E4["`gap_osE4Cluster_nonempty`<br/>(Phi4/OSAxioms.lean)"]
@@ -527,8 +529,8 @@ Additional open frontiers on the reconstruction side (post-OS package path):
 - `gap_generating_functional_bound` (`Phi4/Regularity.lean`)
 - `gap_generating_functional_bound_uniform` (`Phi4/Regularity.lean`)
 - `gap_nonlocal_phi4_bound` (`Phi4/Regularity.lean`)
-- `gap_phi4_linear_growth` (`Phi4/Reconstruction.lean`)
-- `gap_phi4_wightman_reconstruction_step` (`Phi4/Reconstruction.lean`)
+- `gap_phi4_linear_growth` (`Phi4/Reconstruction/Part1Core.lean`)
+- `gap_phi4_wightman_reconstruction_step` (`Phi4/Reconstruction/Part1Tail.lean`)
 
 ## Assumption Interface Layer (Current)
 
@@ -583,15 +585,15 @@ Compatibility instances reconstruct:
 | `Phi4/CovarianceOperators.lean` | Covariance operators and comparison skeleton |
 | `Phi4/WickProduct.lean` | Wick monomials and rewick identities |
 | `Phi4/FeynmanGraphs.lean` | Graph-expansion interface layer |
-| `Phi4/Interaction.lean` | Interaction and integrability interface |
+| `Phi4/Interaction/Part3.lean` | Interaction and integrability interface |
 | `Phi4/FiniteVolumeMeasure.lean` | Finite-volume measure and Schwinger moments |
 | `Phi4/CorrelationInequalities.lean` | GKS/FKG/Lebowitz interfaces and derived bounds |
 | `Phi4/ReflectionPositivity.lean` | Time reflection and RP interfaces |
 | `Phi4/MultipleReflections.lean` | Chessboard and determinant-style bounds |
-| `Phi4/InfiniteVolumeLimit.lean` | Exhaustion, monotonicity, infinite-volume model interface |
+| `Phi4/InfiniteVolumeLimit/Part3.lean` | Exhaustion, monotonicity, infinite-volume model interface |
 | `Phi4/Regularity.lean` | Regularity / OS1 interface |
 | `Phi4/OSAxioms.lean` | OS axiom packaging for φ⁴₂ Schwinger functions |
-| `Phi4/Reconstruction.lean` | Wightman existence via explicit reconstruction input |
+| `Phi4/Reconstruction/Part3.lean` | Wightman existence via explicit reconstruction input |
 | `Phi4/ModelBundle.lean` | Bundled model assumptions for end-to-end use |
 
 ## Build

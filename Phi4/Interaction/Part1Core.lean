@@ -435,46 +435,6 @@ theorem interactionWeightModel_nonempty_of_data (params : Phi4Params)
     Nonempty (InteractionWeightModel params) := by
   exact ⟨{ exp_interaction_Lp := hexp }⟩
 
-/-- Construct `InteractionIntegrabilityModel` from explicit UV/L² and
-    Boltzmann-weight `Lᵖ` data. -/
-theorem interactionIntegrabilityModel_nonempty_of_data (params : Phi4Params)
-    (hcutoff_in_L2 :
-      ∀ (Λ : Rectangle) (κ : UVCutoff),
-        MemLp (interactionCutoff params Λ κ) 2
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hcutoff_conv :
-      ∀ (Λ : Rectangle),
-        Filter.Tendsto
-          (fun (κ : ℝ) => if h : 0 < κ then
-            ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
-              ∂(freeFieldMeasure params.mass params.mass_pos)
-            else 0)
-          Filter.atTop
-          (nhds 0))
-    (hcutoff_ae :
-      ∀ (Λ : Rectangle),
-        ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-          Filter.Tendsto
-            (fun (κ : ℝ) => if h : 0 < κ then interactionCutoff params Λ ⟨κ, h⟩ ω else 0)
-            Filter.atTop
-            (nhds (interaction params Λ ω)))
-    (hinteraction_L2 :
-      ∀ (Λ : Rectangle),
-        MemLp (interaction params Λ) 2
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hexp :
-      ∀ (Λ : Rectangle) {p : ℝ≥0∞}, p ≠ ⊤ →
-        MemLp (fun ω => Real.exp (-(interaction params Λ ω)))
-          p (freeFieldMeasure params.mass params.mass_pos)) :
-    Nonempty (InteractionIntegrabilityModel params) := by
-  exact ⟨{
-    interactionCutoff_in_L2 := hcutoff_in_L2
-    interactionCutoff_converges_L2 := hcutoff_conv
-    interactionCutoff_tendsto_ae := hcutoff_ae
-    interaction_in_L2 := hinteraction_L2
-    exp_interaction_Lp := hexp
-  }⟩
-
 /-- Any full interaction-integrability model provides the weight-integrability
     subinterface. -/
 instance (priority := 100) interactionWeightModel_of_integrability

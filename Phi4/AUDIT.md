@@ -2,6 +2,34 @@
 
 Date: 2026-03-03
 
+Update (2026-03-04, aggressive route-pruning + import-wrapper removal):
+- Removed 18 no-caller constructor/wrapper routes with no in-repo usage:
+  - `CorrelationInequalities.lean`: 13 removals,
+  - `CovarianceOperators.lean`: 4 removals,
+  - `Interaction/Part1Core.lean`: 1 removal,
+  - `Regularity.lean`: 1 removal.
+- Route surface reduction:
+  - `theorem .*_nonempty_of_`: `57 -> 38`,
+  - `CorrelationInequalities` theorem count: `52 -> 39`.
+- Added deterministic route inventory tooling:
+  - `scripts/nonempty_route_inventory.sh`,
+  - `docs/route_inventory/nonempty_inventory.tsv`,
+  - `docs/route_inventory/README.md`.
+- Removed five one-line import-only wrapper modules and rewired imports:
+  - deleted `Phi4/Interaction.lean`,
+    `Phi4/Interaction/Part1.lean`,
+    `Phi4/InfiniteVolumeLimit.lean`,
+    `Phi4/Reconstruction.lean`,
+    `Phi4/Reconstruction/Part1.lean`.
+- Updated gate scripts to build concrete frontier targets after wrapper-module
+  removal:
+  - `scripts/quick_gate.sh`,
+  - `scripts/weekly_gate.sh`.
+- Verification:
+  - `lake env lean` on edited modules passes,
+  - `bash scripts/quick_gate.sh` passes,
+  - `bash scripts/route_bloat_guard.sh` passes.
+
 Update (2026-03-04, frontier-transparency + scratch-hygiene tooling pass):
 - Added explicit, machine-readable frontier inventory tooling:
   - `scripts/frontier_report.sh`,

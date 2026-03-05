@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 # Baselines captured after bloat-reduction refactor (2026-03-04):
 # - class .*Model count: 58
-# - theorem .*_nonempty_of_ count: 57
+# - theorem .*_nonempty_of_ count: 38
 # - interactionWeightModel_nonempty_of_* count: 7
 # - interactionIntegrabilityModel_nonempty_of_* count: 2
 # - gap_phi4_linear_growth variant count in Reconstruction/Part1Core.lean: 2
@@ -37,7 +37,7 @@ cd "$ROOT_DIR"
 # - InfiniteVolumeLimit/Part1 infinite_volume_schwinger_exists_*_of_* theorem count: 4
 # - InfiniteVolumeLimit/Part2 top-level theorem count: 11
 # - InfiniteVolumeLimit/Part3 top-level theorem count: 16
-# - CorrelationInequalities top-level theorem count: 53
+# - CorrelationInequalities top-level theorem count: 39
 # - Interaction/Part3 abs-moment forwarding wrapper count: 0
 # - OSAxioms removed no-caller `_of_data` wrappers kept at exact zero:
 #   - osaCoreModel_nonempty_of_data
@@ -50,8 +50,16 @@ cd "$ROOT_DIR"
 #   - nonlocalPhi4BoundModel_nonempty_of_uniform_data
 # - CorrelationInequalities removed no-caller lattice nonempty wrapper kept at exact zero:
 #   - correlationInequalityModel_nonempty_of_lattice
+# - Additional removed no-caller data constructors kept at exact zero:
+#   - correlationFourPointInequalityModel_nonempty_of_data
+#   - correlationInequalityCoreModel_nonempty_of_data
+#   - interactionIntegrabilityModel_nonempty_of_data
+#   - boundaryKernelModel_nonempty_of_data
+#   - boundaryComparisonModel_nonempty_of_data
+#   - boundaryRegularityModel_nonempty_of_data
+#   - boundaryCovarianceModel_nonempty_of_data
 MAX_MODEL_CLASSES=58
-MAX_NONEMPTY_CONSTRUCTORS=57
+MAX_NONEMPTY_CONSTRUCTORS=38
 MAX_WEIGHT_ROUTES=7
 MAX_INTEGRABILITY_ROUTES=2
 MAX_LINEAR_GROWTH_ROUTES=2
@@ -81,7 +89,7 @@ MAX_IVL_PART1_SCHWINGERTWO_ROUTES=1
 MAX_IVL_PART1_EXISTS_ROUTES=4
 MAX_IVL_PART2_THEOREMS=11
 MAX_IVL_PART3_THEOREMS=16
-MAX_CORRELATION_THEOREMS=52
+MAX_CORRELATION_THEOREMS=39
 MAX_INTERACTION_PART2_EVENTUAL_LOWER_WRAPPER=0
 MAX_INTERACTION_PART2_GLOBAL_NONNEG_WRAPPER=0
 MAX_IVL_PART1_LATTICE_MONO_TWO_WRAPPER=0
@@ -93,6 +101,13 @@ MAX_RECON_PART1CORE_LINEAR_INTERFACE_WRAPPER=0
 MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER=0
 MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER=0
 MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER=0
+MAX_CORRELATION_FOURPOINT_INEQ_DATA_WRAPPER=0
+MAX_CORRELATION_CORE_DATA_WRAPPER=0
+MAX_INTERACTION_INTEGRABILITY_DATA_WRAPPER=0
+MAX_BOUNDARY_KERNEL_DATA_WRAPPER=0
+MAX_BOUNDARY_COMPARISON_DATA_WRAPPER=0
+MAX_BOUNDARY_REGULARITY_DATA_WRAPPER=0
+MAX_BOUNDARY_COVARIANCE_DATA_WRAPPER=0
 
 model_classes="$( (rg -n '^class .*Model' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
 nonempty_ctors="$( (rg -n '^theorem[[:space:]]+.*_nonempty_of_' Phi4 --glob '*.lean' || true) | wc -l | tr -d ' ' )"
@@ -135,6 +150,13 @@ recon_part1core_linear_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:spac
 recon_part1core_wightman_interface_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+phi4_wightman_reconstruction_step_of_interface\\b' Phi4/Reconstruction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
 regularity_nonlocal_uniform_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+nonlocalPhi4BoundModel_nonempty_of_uniform_data\\b' Phi4/Regularity.lean || true) | wc -l | tr -d ' ' )"
 correlation_lattice_nonempty_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+correlationInequalityModel_nonempty_of_lattice\\b' Phi4/CorrelationInequalities.lean || true) | wc -l | tr -d ' ' )"
+correlation_fourpoint_ineq_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+correlationFourPointInequalityModel_nonempty_of_data\\b' Phi4/CorrelationInequalities.lean || true) | wc -l | tr -d ' ' )"
+correlation_core_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+correlationInequalityCoreModel_nonempty_of_data\\b' Phi4/CorrelationInequalities.lean || true) | wc -l | tr -d ' ' )"
+interaction_integrability_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+interactionIntegrabilityModel_nonempty_of_data\\b' Phi4/Interaction/Part1Core.lean || true) | wc -l | tr -d ' ' )"
+boundary_kernel_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+boundaryKernelModel_nonempty_of_data\\b' Phi4/CovarianceOperators.lean || true) | wc -l | tr -d ' ' )"
+boundary_comparison_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+boundaryComparisonModel_nonempty_of_data\\b' Phi4/CovarianceOperators.lean || true) | wc -l | tr -d ' ' )"
+boundary_regularity_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+boundaryRegularityModel_nonempty_of_data\\b' Phi4/CovarianceOperators.lean || true) | wc -l | tr -d ' ' )"
+boundary_covariance_data_wrapper="$( (rg -n '^[[:space:]]*theorem[[:space:]]+boundaryCovarianceModel_nonempty_of_data\\b' Phi4/CovarianceOperators.lean || true) | wc -l | tr -d ' ' )"
 part3_theorem_names="$(
   awk '
   /^[[:space:]]*theorem([[:space:]]|$)/{
@@ -205,6 +227,13 @@ echo "[route_bloat_guard] Reconstruction.Part1Core linear-interface wrapper: $re
 echo "[route_bloat_guard] Reconstruction.Part1Core wightman-interface wrapper: $recon_part1core_wightman_interface_wrapper (max $MAX_RECON_PART1CORE_WIGHTMAN_INTERFACE_WRAPPER)"
 echo "[route_bloat_guard] Regularity nonlocal-uniform wrapper: $regularity_nonlocal_uniform_wrapper (max $MAX_REGULARITY_NONLOCAL_UNIFORM_WRAPPER)"
 echo "[route_bloat_guard] Correlation lattice nonempty wrapper: $correlation_lattice_nonempty_wrapper (max $MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER)"
+echo "[route_bloat_guard] Correlation four-point inequality data wrapper: $correlation_fourpoint_ineq_data_wrapper (max $MAX_CORRELATION_FOURPOINT_INEQ_DATA_WRAPPER)"
+echo "[route_bloat_guard] Correlation core data wrapper: $correlation_core_data_wrapper (max $MAX_CORRELATION_CORE_DATA_WRAPPER)"
+echo "[route_bloat_guard] Interaction integrability data wrapper: $interaction_integrability_data_wrapper (max $MAX_INTERACTION_INTEGRABILITY_DATA_WRAPPER)"
+echo "[route_bloat_guard] Boundary kernel data wrapper: $boundary_kernel_data_wrapper (max $MAX_BOUNDARY_KERNEL_DATA_WRAPPER)"
+echo "[route_bloat_guard] Boundary comparison data wrapper: $boundary_comparison_data_wrapper (max $MAX_BOUNDARY_COMPARISON_DATA_WRAPPER)"
+echo "[route_bloat_guard] Boundary regularity data wrapper: $boundary_regularity_data_wrapper (max $MAX_BOUNDARY_REGULARITY_DATA_WRAPPER)"
+echo "[route_bloat_guard] Boundary covariance data wrapper: $boundary_covariance_data_wrapper (max $MAX_BOUNDARY_COVARIANCE_DATA_WRAPPER)"
 
 fail=0
 if (( model_classes > MAX_MODEL_CLASSES )); then
@@ -377,6 +406,34 @@ if (( regularity_nonlocal_uniform_wrapper > MAX_REGULARITY_NONLOCAL_UNIFORM_WRAP
 fi
 if (( correlation_lattice_nonempty_wrapper > MAX_CORRELATION_LATTICE_NONEMPTY_WRAPPER )); then
   echo "[FAIL] Correlation lattice nonempty wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( correlation_fourpoint_ineq_data_wrapper > MAX_CORRELATION_FOURPOINT_INEQ_DATA_WRAPPER )); then
+  echo "[FAIL] Correlation four-point inequality data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( correlation_core_data_wrapper > MAX_CORRELATION_CORE_DATA_WRAPPER )); then
+  echo "[FAIL] Correlation core data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( interaction_integrability_data_wrapper > MAX_INTERACTION_INTEGRABILITY_DATA_WRAPPER )); then
+  echo "[FAIL] Interaction integrability data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( boundary_kernel_data_wrapper > MAX_BOUNDARY_KERNEL_DATA_WRAPPER )); then
+  echo "[FAIL] Boundary kernel data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( boundary_comparison_data_wrapper > MAX_BOUNDARY_COMPARISON_DATA_WRAPPER )); then
+  echo "[FAIL] Boundary comparison data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( boundary_regularity_data_wrapper > MAX_BOUNDARY_REGULARITY_DATA_WRAPPER )); then
+  echo "[FAIL] Boundary regularity data wrapper count exceeded baseline." >&2
+  fail=1
+fi
+if (( boundary_covariance_data_wrapper > MAX_BOUNDARY_COVARIANCE_DATA_WRAPPER )); then
+  echo "[FAIL] Boundary covariance data wrapper count exceeded baseline." >&2
   fail=1
 fi
 
