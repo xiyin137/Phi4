@@ -241,30 +241,6 @@ theorem connectedTwoPointBilinear_self_nonneg (params : Phi4Params)
   simpa [connectedTwoPointBilinear] using
     connectedTwoPoint_self_nonneg params f
 
-/-- Diagonal connected two-point nonnegativity in infinite volume, obtained
-    directly from finite-volume FKG positivity for nonnegative test functions. -/
-theorem connectedTwoPoint_self_nonneg_of_fkg
-    (params : Phi4Params)
-    [SchwingerLimitModel params]
-    [CorrelationFKGModel params]
-    (f : TestFun2D)
-    (hf : ∀ x, 0 ≤ f x) :
-    0 ≤ connectedTwoPoint params f f := by
-  have hlim := connectedSchwingerTwo_tendsto_infinite params f f
-  have hnonneg : ∀ n : ℕ,
-      0 ≤
-        (if h : 0 < n then
-          connectedSchwingerTwo params (exhaustingRectangles n h) f f
-        else 0) := by
-    intro n
-    by_cases h : 0 < n
-    · have hConn := connectedSchwingerTwo_nonneg params (exhaustingRectangles n h) f f hf hf
-      unfold connectedSchwingerTwo at hConn
-      simp [h]
-      linarith
-    · simp [h]
-  exact ge_of_tendsto' hlim hnonneg
-
 /-- Cauchy-Schwarz inequality for the infinite-volume connected two-point function,
     transferred from finite volume via convergence along the exhausting rectangles. -/
 theorem connectedTwoPoint_sq_le_mul_diag
