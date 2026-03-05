@@ -145,48 +145,6 @@ theorem finiteVolume_diagonal_moment_bound_of_generating_bound
   have hfac_nonneg : 0 ≤ (Nat.factorial n : ℝ) := by positivity
   exact hmoment.trans (mul_le_mul_of_nonneg_left hsum_le hfac_nonneg)
 
-/-- Finite-volume mixed `n`-point moments from a finite-volume generating-functional
-    exponential bound at fixed constant `c`. -/
-theorem finiteVolume_mixed_moment_bound_of_generating_bound
-    (params : Phi4Params) [InteractionWeightModel params]
-    (c : ℝ)
-    (hbound : ∀ (g : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ g| ≤ Real.exp (c * normFunctional g))
-    (Λ : Rectangle) (n : ℕ) (hn : 0 < n) (f : Fin n → TestFun2D) :
-    |schwingerN params Λ n f| ≤
-      ∑ i : Fin n, (Nat.factorial n : ℝ) *
-        (Real.exp (c * normFunctional (f i)) +
-          Real.exp (c * normFunctional (-(f i)))) := by
-  have hmixed :=
-    schwingerN_abs_le_sum_factorial_mul_generatingFunctional_pair
-      params Λ n hn f
-  have hfac_nonneg : 0 ≤ (Nat.factorial n : ℝ) := by positivity
-  have hsumBound :
-      (∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i)))) ≤
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-          (Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i)))) := by
-    refine Finset.sum_le_sum ?_
-    intro i hi
-    have hgf_nonneg : 0 ≤ generatingFunctional params Λ (f i) :=
-      generatingFunctional_nonneg params Λ (f i)
-    have hgneg_nonneg : 0 ≤ generatingFunctional params Λ (-(f i)) :=
-      generatingFunctional_nonneg params Λ (-(f i))
-    have hgf_le : generatingFunctional params Λ (f i) ≤ Real.exp (c * normFunctional (f i)) := by
-      simpa [abs_of_nonneg hgf_nonneg] using hbound (f i) Λ
-    have hgneg_le :
-        generatingFunctional params Λ (-(f i)) ≤
-          Real.exp (c * normFunctional (-(f i))) := by
-      simpa [abs_of_nonneg hgneg_nonneg] using hbound (-(f i)) Λ
-    have hpair_le :
-        generatingFunctional params Λ (f i) + generatingFunctional params Λ (-(f i)) ≤
-          Real.exp (c * normFunctional (f i)) +
-            Real.exp (c * normFunctional (-(f i))) :=
-      add_le_add hgf_le hgneg_le
-    exact mul_le_mul_of_nonneg_left hpair_le hfac_nonneg
-  exact hmixed.trans hsumBound
-
 /-- Uniform-in-volume finite-volume mixed `n`-point moments from a pointwise-in-`f`
     generating-functional exponential estimate. The resulting `c` depends on the
     finite family `f : Fin n → TestFun2D`, but is uniform in `Λ`. -/
@@ -290,68 +248,6 @@ theorem finiteVolume_mixed_moment_bound_of_uniform_generating_bound
       add_le_add hgf_le hnegf_le
     exact mul_le_mul_of_nonneg_left hpair_le hfac_nonneg
   exact hmixed.trans hsumBound
-
-/-- Finite-volume two-point bound from a finite-volume generating-functional
-    exponential bound, obtained by polarization from diagonal moment bounds. -/
-theorem finiteVolume_twoPoint_bound_of_generating_bound
-    (params : Phi4Params) [InteractionWeightModel params]
-    (c : ℝ)
-    (hbound : ∀ (h : TestFun2D) (Λ : Rectangle),
-      |generatingFunctional params Λ h| ≤ Real.exp (c * normFunctional h))
-    (Λ : Rectangle) (f g : TestFun2D) :
-    |schwingerTwo params Λ f g| ≤
-      ((Nat.factorial 2 : ℝ) *
-          (Real.exp (c * normFunctional (f + g)) +
-            Real.exp (c * normFunctional (-(f + g)))) +
-        (Nat.factorial 2 : ℝ) *
-          (Real.exp (c * normFunctional (f - g)) +
-            Real.exp (c * normFunctional (-(f - g))))) / 4 := by
-  let Mplus : ℝ :=
-    (Nat.factorial 2 : ℝ) *
-      (Real.exp (c * normFunctional (f + g)) +
-        Real.exp (c * normFunctional (-(f + g))))
-  let Mminus : ℝ :=
-    (Nat.factorial 2 : ℝ) *
-      (Real.exp (c * normFunctional (f - g)) +
-        Real.exp (c * normFunctional (-(f - g))))
-  have hplusDiag :
-      |schwingerTwo params Λ (f + g) (f + g)| ≤ Mplus := by
-    have hdiag :=
-      finiteVolume_diagonal_moment_bound_of_generating_bound
-        params c hbound Λ (f + g) 2
-    simpa [Mplus, schwingerN_two_eq_schwingerTwo] using hdiag
-  have hminusDiag :
-      |schwingerTwo params Λ (f - g) (f - g)| ≤ Mminus := by
-    have hdiag :=
-      finiteVolume_diagonal_moment_bound_of_generating_bound
-        params c hbound Λ (f - g) 2
-    simpa [Mminus, schwingerN_two_eq_schwingerTwo] using hdiag
-  have hpol := schwingerTwo_polarization params Λ f g
-  have htri :
-      |schwingerTwo params Λ (f + g) (f + g) -
-          schwingerTwo params Λ (f - g) (f - g)| ≤
-        |schwingerTwo params Λ (f + g) (f + g)| +
-          |schwingerTwo params Λ (f - g) (f - g)| := by
-    simpa [Real.norm_eq_abs, sub_eq_add_neg] using
-      (norm_add_le (schwingerTwo params Λ (f + g) (f + g))
-        (-(schwingerTwo params Λ (f - g) (f - g))))
-  calc
-    |schwingerTwo params Λ f g|
-        = |schwingerTwo params Λ (f + g) (f + g) -
-            schwingerTwo params Λ (f - g) (f - g)| / 4 := by
-            rw [hpol, abs_div, abs_of_pos (show (0 : ℝ) < 4 by norm_num)]
-    _ ≤ (|schwingerTwo params Λ (f + g) (f + g)| +
-          |schwingerTwo params Λ (f - g) (f - g)|) / 4 := by
-          exact div_le_div_of_nonneg_right htri (by positivity)
-    _ ≤ (Mplus + Mminus) / 4 := by
-          exact div_le_div_of_nonneg_right (add_le_add hplusDiag hminusDiag) (by positivity)
-    _ = ((Nat.factorial 2 : ℝ) *
-          (Real.exp (c * normFunctional (f + g)) +
-            Real.exp (c * normFunctional (-(f + g)))) +
-        (Nat.factorial 2 : ℝ) *
-          (Real.exp (c * normFunctional (f - g)) +
-            Real.exp (c * normFunctional (-(f - g))))) / 4 := by
-          simp [Mplus, Mminus]
 
 private theorem abs_limit_le_of_abs_bound {u : ℕ → ℝ} {x B : ℝ}
     (hu : Filter.Tendsto u Filter.atTop (nhds x))

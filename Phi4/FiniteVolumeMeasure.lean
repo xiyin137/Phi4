@@ -947,73 +947,6 @@ theorem connectedSchwingerTwoBilinear_self_nonneg (params : Phi4Params)
   simpa [connectedSchwingerTwoBilinear] using
     connectedSchwingerTwo_self_nonneg params Λ f
 
-/-- Positive-semidefinite quadratic form statement for finite families:
-    the connected two-point kernel is nonnegative on real finite linear combinations. -/
-theorem connectedSchwingerTwo_quadratic_nonneg
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    (Λ : Rectangle)
-    {ι : Type*} (s : Finset ι)
-    (f : ι → TestFun2D) (c : ι → ℝ) :
-    0 ≤ Finset.sum s (fun i =>
-      c i * Finset.sum s (fun j => c j * connectedSchwingerTwo params Λ (f j) (f i))) := by
-  let B := connectedSchwingerTwoBilinear params Λ
-  let v : TestFun2D := Finset.sum s (fun i => c i • f i)
-  have hvv :
-      B v v =
-        Finset.sum s (fun i => c i * Finset.sum s (fun j => c j * B (f j) (f i))) := by
-    simp [B, v, Finset.sum_apply]
-  have hnonneg : 0 ≤ B v v :=
-    connectedSchwingerTwoBilinear_self_nonneg params Λ v
-  rw [hvv] at hnonneg
-  simpa [B] using hnonneg
-
-/-- Two-point absolute-value bound from quadratic positivity:
-    `|Cᶜ(f,g)| ≤ (Cᶜ(f,f) + Cᶜ(g,g)) / 2`. -/
-theorem connectedSchwingerTwo_abs_le_half_diag_sum
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    (Λ : Rectangle)
-    (f g : TestFun2D) :
-    |connectedSchwingerTwo params Λ f g| ≤
-      (connectedSchwingerTwo params Λ f f + connectedSchwingerTwo params Λ g g) / 2 := by
-  let B := connectedSchwingerTwoBilinear params Λ
-  have hplus : 0 ≤ B (f + g) (f + g) :=
-    connectedSchwingerTwoBilinear_self_nonneg params Λ (f + g)
-  have hminus : 0 ≤ B (f - g) (f - g) :=
-    connectedSchwingerTwoBilinear_self_nonneg params Λ (f - g)
-  have hsym : B f g = B g f :=
-    connectedSchwingerTwoBilinear_symm params Λ f g
-  have hplus_expand : B (f + g) (f + g) = B f f + B f g + B g f + B g g := by
-    calc
-      B (f + g) (f + g) = (B f + B g) (f + g) := by
-        simpa using congrArg (fun L : TestFun2D →ₗ[ℝ] ℝ => L (f + g)) (B.map_add f g)
-      _ = B f (f + g) + B g (f + g) := by rfl
-      _ = (B f f + B f g) + (B g f + B g g) := by
-        rw [(B f).map_add f g, (B g).map_add f g]
-      _ = B f f + B f g + B g f + B g g := by ring
-  have hminus_expand : B (f - g) (f - g) = B f f - B f g - B g f + B g g := by
-    calc
-      B (f - g) (f - g) = (B f - B g) (f - g) := by
-        simpa using congrArg (fun L : TestFun2D →ₗ[ℝ] ℝ => L (f - g)) (B.map_sub f g)
-      _ = B f (f - g) - B g (f - g) := by rfl
-      _ = (B f f - B f g) - (B g f - B g g) := by
-        rw [(B f).map_sub f g, (B g).map_sub f g]
-      _ = B f f - B f g - B g f + B g g := by ring
-  have hplus' : 0 ≤ B f f + 2 * B f g + B g g := by
-    rw [hplus_expand] at hplus
-    rw [hsym] at hplus
-    linarith
-  have hminus' : 0 ≤ B f f - 2 * B f g + B g g := by
-    rw [hminus_expand] at hminus
-    rw [hsym] at hminus
-    linarith
-  have hupper : B f g ≤ (B f f + B g g) / 2 := by
-    linarith
-  have habs : |B f g| ≤ (B f f + B g g) / 2 := by
-    exact abs_le.mpr ⟨by linarith, hupper⟩
-  simpa [B] using habs
-
 /-! ### Cauchy-Schwarz-type consequences -/
 
 /-- Cauchy-Schwarz inequality for the connected finite-volume two-point form:
@@ -1077,35 +1010,6 @@ theorem connectedSchwingerTwo_sq_le_mul_diag
         linarith [hmul_nonneg, hcalc2]
       linarith [hmul_nonneg']
   simpa [B] using hcs
-
-/-- Geometric-mean bound from finite-volume connected two-point Cauchy-Schwarz:
-    `|Cᶜ_Λ(f,g)| ≤ √(Cᶜ_Λ(f,f) Cᶜ_Λ(g,g))`. -/
-theorem connectedSchwingerTwo_abs_le_sqrt_diag_mul
-    (params : Phi4Params)
-    [InteractionWeightModel params]
-    (Λ : Rectangle)
-    (f g : TestFun2D) :
-    |connectedSchwingerTwo params Λ f g| ≤
-      Real.sqrt (connectedSchwingerTwo params Λ f f * connectedSchwingerTwo params Λ g g) := by
-  let x : ℝ := connectedSchwingerTwo params Λ f g
-  let y : ℝ := connectedSchwingerTwo params Λ f f * connectedSchwingerTwo params Λ g g
-  have hx2 : x ^ 2 ≤ y := by
-    simpa [x, y] using connectedSchwingerTwo_sq_le_mul_diag params Λ f g
-  have hy_nonneg : 0 ≤ y := by
-    have hff : 0 ≤ connectedSchwingerTwo params Λ f f := connectedSchwingerTwo_self_nonneg params Λ f
-    have hgg : 0 ≤ connectedSchwingerTwo params Λ g g := connectedSchwingerTwo_self_nonneg params Λ g
-    exact mul_nonneg hff hgg
-  have hxy_sq : (|x|) ^ 2 ≤ (Real.sqrt y) ^ 2 := by
-    have h1 : |x| ^ 2 ≤ y := by
-      simpa [sq_abs] using hx2
-    have h2 : y = (Real.sqrt y) ^ 2 := by
-      symm
-      exact Real.sq_sqrt hy_nonneg
-    linarith
-  have hxy_abs : |(|x|)| ≤ |Real.sqrt y| := (sq_le_sq).1 hxy_sq
-  have hxy : |x| ≤ Real.sqrt y := by
-    simpa [abs_abs, abs_of_nonneg (Real.sqrt_nonneg y)] using hxy_abs
-  simpa [x, y] using hxy
 
 /-! ## Finite-volume comparison interface -/
 

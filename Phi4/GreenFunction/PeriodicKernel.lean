@@ -132,19 +132,6 @@ def periodicKernelTerm (mass L₁ L₂ : ℝ) (m n : ℤ)
     (x y : Spacetime2D) : ℝ :=
   freeCovKernel mass x (shiftPoint L₁ L₂ m n y)
 
-/-- Symmetry of one image term under argument swap and index sign reversal. -/
-theorem periodicKernelTerm_symm (mass L₁ L₂ : ℝ)
-    (m n : ℤ) (x y : Spacetime2D) :
-    periodicKernelTerm mass L₁ L₂ m n x y =
-      periodicKernelTerm mass L₁ L₂ (-m) (-n) y x := by
-  unfold periodicKernelTerm
-  calc
-    freeCovKernel mass x (shiftPoint L₁ L₂ m n y)
-        = freeCovKernel mass (shiftPoint L₁ L₂ (-m) (-n) x) y := by
-          exact freeCovKernel_shift_transfer mass L₁ L₂ m n x y
-    _ = freeCovKernel mass y (shiftPoint L₁ L₂ (-m) (-n) x) := by
-          exact freeCovKernel_symm mass _ _
-
 /-- Truncated periodic image kernel:
     sum over lattice shifts `(m,n) ∈ {-N,...,N}²`. -/
 def periodicKernelTrunc (mass L₁ L₂ : ℝ) (N : ℕ)
