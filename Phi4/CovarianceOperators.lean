@@ -276,22 +276,4 @@ theorem covarianceChange_pointwise_bounded (Λ : Rectangle) (mass : ℝ) (hmass 
 
 /-! ## Regularity of covariance kernels -/
 
-/-- The Dirichlet covariance kernel is smooth off the diagonal. -/
-theorem dirichletCov_smooth_off_diagonal (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass)
-    [BoundaryKernelModel mass hmass] [BoundaryRegularityModel mass hmass] :
-    ∀ x y : Spacetime2D, x ≠ y → x ∈ Λ.toSet → y ∈ Λ.toSet →
-      DifferentiableAt ℝ (fun p : Spacetime2D × Spacetime2D =>
-        dirichletCov Λ mass hmass p.1 p.2) (x, y) := by
-  simpa [dirichletCov] using
-    (BoundaryRegularityModel.dirichlet_smooth_off_diagonal
-      (mass := mass) (hmass := hmass) Λ)
-
-/-- The free covariance kernel decays exponentially:
-    |C(x,y)| ≤ const × e^{-m|x-y|} for |x-y| ≥ 1. -/
-theorem freeCov_exponential_decay (mass : ℝ) (hmass : 0 < mass) :
-    ∃ C₁ C₂ : ℝ, 0 < C₂ ∧
-      ∀ x y : Spacetime2D, 1 ≤ ‖x - y‖ →
-        |freeCovKernel mass x y| ≤ C₁ * Real.exp (-C₂ * ‖x - y‖) := by
-  exact freeCovKernel_exponential_decay mass hmass
-
 end

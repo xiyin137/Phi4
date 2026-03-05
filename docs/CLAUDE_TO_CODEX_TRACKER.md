@@ -989,3 +989,23 @@ primary local Glimm-Jaffe work queue.
   - `scripts/nonempty_route_inventory.sh --emit docs/route_inventory/nonempty_inventory.tsv` passes.
   - `bash scripts/route_bloat_guard.sh` passes.
   - `bash scripts/quick_gate.sh` passes.
+
+### Covariance/LocalizedBounds/Interaction alias prune (2026-03-05)
+
+- Removed additional no-caller forwarding aliases with no new mathematical content:
+  - `dirichletCov_smooth_off_diagonal`,
+    `freeCov_exponential_decay`
+    (`Phi4/CovarianceOperators.lean`).
+  - `graph_vertex_factorial_prod_le_cell_occupancy_real_image`,
+    `graph_vertex_factorial_weighted_prod_le_cell_occupancy_weighted_image`,
+    `graphIntegral_abs_le_cell_occupancy_weighted_of_vertex_weighted_bound_image`
+    (`Phi4/FeynmanGraphs/LocalizedBounds.lean`).
+  - `tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_converges_L2`
+    (`Phi4/Interaction/Part1Tail.lean`).
+- Regenerated `docs/frontier_obligations/frontier.tsv` (row-order normalization only; frontier counts unchanged).
+- Verification:
+  - `lake build Phi4.CovarianceOperators Phi4.FeynmanGraphs.LocalizedBounds Phi4.Interaction.Part1Tail Phi4.Interaction.Part3 Phi4.Regularity Phi4.OSAxioms Phi4.Reconstruction.Part3` passes.
+  - `bash scripts/route_bloat_guard.sh` passes.
+  - `bash scripts/scratch_guard.sh` passes.
+  - `scripts/frontier_report.sh --emit docs/frontier_obligations/frontier.tsv` passes.
+  - `bash scripts/quick_gate.sh` passes.

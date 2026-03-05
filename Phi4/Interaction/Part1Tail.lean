@@ -1821,40 +1821,6 @@ theorem tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_s
   · intro n
     exact hle n
 
-/-- If the real-parameterized L² cutoff convergence hypothesis holds and the
-    shifted cutoff-to-limit squared deviations are integrable, then for every
-    fixed threshold `a > 0` the shifted bad-event probabilities
-    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| }` converge to `0`. -/
-theorem tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_converges_L2
-    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
-    (hInt :
-      ∀ n : ℕ,
-        Integrable
-          (fun ω : FieldConfig2D =>
-            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hcutoff_conv :
-      Filter.Tendsto
-        (fun (κ : ℝ) => if h : 0 < κ then
-          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
-            ∂(freeFieldMeasure params.mass params.mass_pos)
-          else 0)
-        Filter.atTop
-        (nhds 0)) :
-    Filter.Tendsto
-      (fun n : ℕ =>
-        (freeFieldMeasure params.mass params.mass_pos)
-          {ω : FieldConfig2D |
-            a ≤
-              |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
-                interaction params Λ ω|})
-      Filter.atTop
-      (nhds 0) := by
-  exact tendsto_shifted_cutoff_interaction_deviation_bad_event_measure_zero_of_sq_moment
-    (params := params) (Λ := Λ) (a := a) ha hInt
-    (shifted_cutoff_interaction_sq_moment_tendsto_zero_of_converges_L2
-      (params := params) (Λ := Λ) hcutoff_conv)
-
 /-- Shifted-index cutoff bad-event bound from exponential moments (Chernoff):
     for `θ > 0`,
     `μ{interactionCutoff(κ_{n+1}) < -B} ≤ exp(-θ B) * E[exp(-θ interactionCutoff(κ_{n+1}))]`.

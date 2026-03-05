@@ -60,13 +60,13 @@ model_class	InfiniteVolumeMeasureModel	Phi4/InfiniteVolumeLimit/Part1.lean	507
 model_class	InfiniteVolumeMomentModel	Phi4/InfiniteVolumeLimit/Part1.lean	515
 model_class	InfiniteVolumeLimitModel	Phi4/InfiniteVolumeLimit/Part1.lean	525
 model_class	Phi4ModelBundle	Phi4/ModelBundle.lean	20
-model_class	PairingEnumerationModel	Phi4/FeynmanGraphs.lean	55
-model_class	GaussianWickExpansionModel	Phi4/FeynmanGraphs.lean	60
-model_class	FeynmanGraphEstimateModel	Phi4/FeynmanGraphs.lean	143
+model_class	MultipleReflectionModel	Phi4/MultipleReflections.lean	47
 model_class	FreeReflectionPositivityModel	Phi4/ReflectionPositivity.lean	90
 model_class	DirichletReflectionPositivityModel	Phi4/ReflectionPositivity.lean	99
 model_class	InteractingReflectionPositivityModel	Phi4/ReflectionPositivity.lean	109
-model_class	MultipleReflectionModel	Phi4/MultipleReflections.lean	47
+model_class	PairingEnumerationModel	Phi4/FeynmanGraphs.lean	55
+model_class	GaussianWickExpansionModel	Phi4/FeynmanGraphs.lean	60
+model_class	FeynmanGraphEstimateModel	Phi4/FeynmanGraphs.lean	143
 nonempty_constructor	interactionUVModel_nonempty_of_data	Phi4/Interaction/Part1Core.lean	293
 nonempty_constructor	interactionUVModel_nonempty_of_sq_integrable_data	Phi4/Interaction/Part1Core.lean	358
 nonempty_constructor	interactionWeightModel_nonempty_of_data	Phi4/Interaction/Part1Core.lean	405
