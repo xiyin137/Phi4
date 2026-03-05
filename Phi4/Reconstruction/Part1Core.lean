@@ -577,7 +577,7 @@ theorem phi4_productTensor_approx_family_of_dense_range
     This is the assumption-minimal frontier form: no interaction-weight
     interface is required once `S₀ = 1` and the mixed product-tensor
     Schwinger bound bridge are provided explicitly. -/
-theorem gap_phi4_linear_growth_of_zero_mode_normalization (params : Phi4Params)
+theorem gap_phi4_linear_growth (params : Phi4Params)
     [SchwingerLimitModel params]
     [OSAxiomCoreModel params]
     [OSDistributionE2Model params]
@@ -618,49 +618,3 @@ theorem gap_phi4_linear_growth_of_zero_mode_normalization (params : Phi4Params)
     params OS hS alpha beta gamma hbeta hmixed hreduce
     (phi4_productTensor_approx_family_of_dense_range hdense) hnormalized
 
-/-- **Linear growth condition E0'** for the φ⁴₂ Schwinger functions.
-    |S_n(f)| ≤ α · βⁿ · (n!)^γ · ‖f‖_s
-    with γ = 1/2 for the φ⁴ interaction.
-
-    This is stronger than simple temperedness (E0) and is essential for the
-    analytic continuation to work: without it, the Wightman distributions
-    reconstructed from the Schwinger functions may fail to be tempered.
-
-    For the φ⁴₂ theory, this follows from the generating functional bound
-    (Theorem 12.5.1) and the Wick-type combinatorics of the interaction. -/
-theorem gap_phi4_linear_growth (params : Phi4Params)
-    [SchwingerLimitModel params]
-    [OSAxiomCoreModel params]
-    [OSDistributionE2Model params]
-    [OSE4ClusterModel params]
-    (hsmall : params.coupling < os4WeakCouplingThreshold params)
-    (alpha beta gamma : ℝ)
-    (hbeta : 0 < beta)
-    (hmixed :
-      ∀ (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D), ∃ c : ℝ,
-        ‖phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f)‖ ≤
-          ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))))
-    (hcompat :
-      ∀ (n : ℕ) (f : Fin n → TestFun2D),
-        phi4SchwingerFunctions params n (schwartzProductTensorFromTestFamily f) =
-          (infiniteVolumeSchwinger params n f : ℂ))
-    (hzero : ∀ f : Fin 0 → TestFun2D, infiniteVolumeSchwinger params 0 f = 1)
-    (hreduce :
-      ∀ (c : ℝ) (n : ℕ) (_hn : 0 < n) (f : Fin n → TestFun2D),
-        ∑ i : Fin n, (Nat.factorial n : ℝ) *
-            (Real.exp (c * normFunctional (f i)) +
-              Real.exp (c * normFunctional (-(f i)))) ≤
-          alpha * beta ^ n * (n.factorial : ℝ) ^ gamma *
-            SchwartzMap.seminorm ℝ 0 0
-              (schwartzProductTensorFromTestFamily f))
-    (hdense :
-      ∀ (n : ℕ) (_hn : 0 < n),
-        DenseRange (fun f : Fin n → TestFun2D =>
-          schwartzProductTensorFromTestFamily f)) :
-    ∃ OS : OsterwalderSchraderAxioms 1,
-      OS.S = phi4SchwingerFunctions params ∧
-      Nonempty (OSLinearGrowthCondition 1 OS) := by
-  exact gap_phi4_linear_growth_of_zero_mode_normalization
-    params hsmall alpha beta gamma hbeta hmixed hcompat hzero hreduce hdense

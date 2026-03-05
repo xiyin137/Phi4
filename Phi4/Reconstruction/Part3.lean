@@ -13,7 +13,7 @@ open scoped ENNReal NNReal
 
 /-- Construct Wightman existence from explicit linear-growth and reconstruction
     rule data at fixed `params`. -/
-theorem phi4_wightman_exists_of_explicit_data (params : Phi4Params) :
+theorem phi4_wightman_exists (params : Phi4Params) :
     [SchwingerFunctionModel params] →
     (hlinear : ∃ OS : OsterwalderSchraderAxioms 1,
       OS.S = phi4SchwingerFunctions params ∧
@@ -161,31 +161,9 @@ theorem
     }⟩
   rcases hlin_nonempty with ⟨hlin⟩
   letI : ReconstructionLinearGrowthModel params := hlin
-  exact phi4_wightman_exists_of_explicit_data params
+  exact phi4_wightman_exists params
     (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
     (hreconstruct := WightmanReconstructionModel.wightman_reconstruction (params := params))
 
-/-- **Main Theorem**: The φ⁴₂ theory defines a Wightman quantum field theory.
-
-    By the OS reconstruction theorem (from OSreconstruction),
-    the Schwinger functions satisfying OS0-OS3 + E0' can be analytically
-    continued to Wightman distributions, which then reconstruct a
-    Wightman QFT via the GNS construction.
-
-    The resulting QFT satisfies:
-    - W1: Covariant fields under the Poincaré group ISO(1,1)
-    - W2: Spectral condition (energy ≥ 0, p² ≤ 0)
-    - W3: Locality (spacelike commutativity) -/
-theorem phi4_wightman_exists (params : Phi4Params)
-    [SchwingerFunctionModel params]
-    [ReconstructionLinearGrowthModel params]
-    [WightmanReconstructionModel params] :
-    ∃ (Wfn : WightmanFunctions 1),
-      ∃ (OS : OsterwalderSchraderAxioms 1),
-        OS.S = phi4SchwingerFunctions params ∧
-        IsWickRotationPair OS.S Wfn.W := by
-  exact phi4_wightman_exists_of_explicit_data params
-    (hlinear := ReconstructionLinearGrowthModel.phi4_linear_growth (params := params))
-    (hreconstruct := WightmanReconstructionModel.wightman_reconstruction (params := params))
 
 end

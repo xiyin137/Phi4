@@ -208,17 +208,6 @@ class FreeCovarianceKernelModel (mass : ℝ) (hmass : 0 < mass) where
       GaussianField.covariance (freeCovarianceCLM mass hmass) f g =
         ∫ x, ∫ y, f x * freeCovKernel mass x y * g y
 
-/-- Kernel-form two-point identity for the free field:
-    `E[ω(f)ω(g)] = ∬ f(x) C(x,y) g(y) dx dy`. -/
-theorem freeField_two_point_kernel (mass : ℝ) (hmass : 0 < mass)
-    [FreeCovarianceKernelModel mass hmass]
-    (f g : TestFun2D) :
-    ∫ ω, ω f * ω g ∂(freeFieldMeasure mass hmass) =
-      ∫ x, ∫ y, f x * freeCovKernel mass x y * g y := by
-  rw [freeField_two_point]
-  exact FreeCovarianceKernelModel.covariance_eq_kernel
-    (mass := mass) (hmass := hmass) f g
-
 /-- The covariance kernel is symmetric. -/
 theorem freeCovKernel_symm (mass : ℝ) (x y : Spacetime2D) :
     freeCovKernel mass x y = freeCovKernel mass y x := by
