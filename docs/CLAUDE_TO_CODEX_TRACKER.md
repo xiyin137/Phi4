@@ -1044,3 +1044,25 @@ primary local Glimm-Jaffe work queue.
   - `bash scripts/route_bloat_guard.sh` passes with tightened maxima.
   - `scripts/frontier_report.sh --emit docs/frontier_obligations/frontier.tsv` passes.
   - `bash scripts/quick_gate.sh` passes.
+
+### Interaction route collapse (2026-03-05, follow-up)
+
+- Removed one remaining single-caller route constructor in
+  `Phi4/Interaction/Part1Core.lean`:
+  - deleted
+    `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_lintegral_bound`.
+- Rewired
+  `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_geometric_exp_moment_bound`
+  to route directly through
+  `interactionWeightModel_nonempty_of_standardSeq_succ_tendsto_ae_and_uniform_integral_bound`
+  with explicit `p = 0` handling in the local bound witness.
+- Regenerated frontier report:
+  - `docs/frontier_obligations/frontier.tsv` now reports
+    `theorem .*_nonempty_of_ count = 11` (down from `12`).
+- Tightened guard baselines in `scripts/route_bloat_guard.sh`:
+  - `_nonempty_of_` max `12 -> 11`,
+  - `interactionWeightModel_nonempty_of_*` max `6 -> 5`.
+- Verification:
+  - `lake build Phi4.Interaction.Part1Core Phi4.Interaction.Part2 Phi4.Interaction.Part3 Phi4.FiniteVolumeMeasure Phi4.InfiniteVolumeLimit.Part1 Phi4.Regularity Phi4.OSAxioms Phi4.Reconstruction.Part1Core Phi4.Reconstruction.Part1Tail Phi4.Reconstruction.Part3` passes.
+  - `bash scripts/route_bloat_guard.sh` passes with tightened maxima.
+  - `scripts/frontier_report.sh --emit docs/frontier_obligations/frontier.tsv` passes.
