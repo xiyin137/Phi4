@@ -279,15 +279,6 @@ theorem cellAverage_mono
     (L.cellIntegral_mono f g i j hfg)
     (le_of_lt (L.cell_area_pos i j))
 
-/-- Monotonicity of cell-average discretization under pointwise comparison. -/
-theorem discretizeByCellAverage_mono
-    (L : RectLattice Λ)
-    (f g : TestFun2D)
-    (hfg : ∀ x, f x ≤ g x)
-    (i : Fin L.Nt) (j : Fin L.Nx) :
-    L.discretizeByCellAverage f i j ≤ L.discretizeByCellAverage g i j := by
-  exact L.cellAverage_mono f g i j hfg
-
 /-- Cell-anchor Riemann sum on the finite lattice. -/
 def riemannSumCellAnchor (L : RectLattice Λ) (f : TestFun2D) : ℝ :=
   ∑ i : Fin L.Nt, ∑ j : Fin L.Nx,
