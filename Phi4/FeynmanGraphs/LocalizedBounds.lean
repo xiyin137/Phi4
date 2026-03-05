@@ -174,12 +174,6 @@ theorem graph_vertex_factorial_prod_le_total_factorial {r : ℕ} (G : FeynmanGra
   simpa using
     factorial_prod_le_factorial_sum (s := (Finset.univ : Finset (Fin r))) G.legs
 
-/-- Real-cast graph-specialized factorial occupancy bound at vertices. -/
-theorem graph_vertex_factorial_prod_le_total_factorial_real {r : ℕ} (G : FeynmanGraph r) :
-    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
-      (Nat.factorial (∑ v : Fin r, G.legs v) : ℝ) := by
-  exact_mod_cast graph_vertex_factorial_prod_le_total_factorial G
-
 /-- Graph-specialized factorization of weighted vertex occupancy products. -/
 theorem graph_vertex_factorial_weighted_prod_eq
     {r : ℕ} (G : FeynmanGraph r) (A : ℝ) :
@@ -454,13 +448,6 @@ theorem vertex_factorial_prod_le_factorial_two_mul_lines_card
           graph_vertex_factorial_prod_le_total_factorial G
     _ = Nat.factorial (2 * G.lines.card) := by
           simp [total_legs_eq_two_mul_lines_card (G := G)]
-
-/-- Real-cast line-count form of the vertex factorial product bound. -/
-theorem vertex_factorial_prod_le_factorial_two_mul_lines_card_real
-    (G : FeynmanGraph r) :
-    (∏ v : Fin r, (Nat.factorial (G.legs v) : ℝ)) ≤
-      (Nat.factorial (2 * G.lines.card) : ℝ) := by
-  exact_mod_cast vertex_factorial_prod_le_factorial_two_mul_lines_card (G := G)
 
 /-- Weighted vertex occupancy bound rewritten entirely in line-count form. -/
 theorem vertex_factorial_weighted_prod_le_total_factorial_pow_lines
