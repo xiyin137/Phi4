@@ -5,6 +5,24 @@ Date: 2026-02-27
 This tracker converts `claude_to_codex.md` into an execution matrix.
 Each line item is actionable, testable, and tied to concrete files/modules.
 
+## Session Update (2026-03-04, no-caller route micro-prune)
+
+- Removed two additional no-caller route variants:
+  - `Phi4/InfiniteVolumeLimit/Part1.lean`:
+    `schwingerN_monotone_in_volume_two` (thin `k := 2` specialization wrapper).
+  - `Phi4/Interaction/Part3.lean`:
+    `interactionIntegrabilityModel_nonempty_of_sq_integrable_data_and_linear_threshold_geometric_exp_moment_and_sq_exp_moment_geometric`
+    (unused alternate assumption-shape route).
+- Verification passed:
+  - `lake build Phi4.Interaction.Part3 Phi4.InfiniteVolumeLimit.Part1`,
+  - `bash scripts/route_bloat_guard.sh`,
+  - `bash scripts/quick_gate.sh`,
+  - `scripts/frontier_report.sh --emit docs/frontier_obligations/frontier.tsv`,
+  - `scripts/nonempty_route_inventory.sh --emit docs/route_inventory/nonempty_inventory.tsv`.
+- Current inventory snapshot after this pass:
+  - `_nonempty_of_` routes: `17`,
+  - zero-caller routes in nonempty inventory: `0`.
+
 ## Session Update (2026-03-04, regularity data-wrapper prune follow-up)
 
 - Removed three additional zero-caller `PLUMBING` constructors from

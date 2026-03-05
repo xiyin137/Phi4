@@ -116,17 +116,6 @@ theorem schwingerN_monotone_in_volume_of_model (params : Phi4Params)
     (exhaustingRectangles_mono_toSet n₁ n₂ hn₁ hn₂ h)
     f hf hfsupp
 
-/-- Monotonicity of the `n = 2` Schwinger function in `schwingerN` form. -/
-theorem schwingerN_monotone_in_volume_two (params : Phi4Params)
-    [SchwingerNMonotoneModel params 2]
-    (n₁ n₂ : ℕ) (hn₁ : 0 < n₁) (hn₂ : 0 < n₂) (h : n₁ ≤ n₂)
-    (f : Fin 2 → TestFun2D) (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles n₁ hn₁).toSet, f i x = 0) :
-    schwingerN params (exhaustingRectangles n₁ hn₁) 2 f ≤
-      schwingerN params (exhaustingRectangles n₂ hn₂) 2 f := by
-  exact schwingerN_monotone_in_volume_of_model
-    (params := params) (k := 2) n₁ n₂ hn₁ hn₂ h f hf hfsupp
-
 private lemma support_zero_outside_of_subset
     (f : TestFun2D) {A B : Set Spacetime2D}
     (hAB : A ⊆ B)
