@@ -109,14 +109,6 @@ theorem wick_fourth_semibounded (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
     -C * (Real.log κ.κ) ^ 2 = -6 * c ^ 2 := hleft
     _ ≤ wickPower 4 mass κ ω x := hbase
 
-/-- More precisely: :φ_κ(x)⁴: = (φ_κ² - 3c_κ)² - 6c_κ² ≥ -6c_κ².
-    Proof: completing the square, φ⁴ - 6cφ² + 3c² = (φ² - 3c)² - 6c² ≥ -6c². -/
-theorem wick_fourth_lower_bound_explicit (mass : ℝ) (_hmass : 0 < mass) (κ : UVCutoff)
-    (ω : FieldConfig2D) (x : Spacetime2D) :
-    -6 * (regularizedPointCovariance mass κ) ^ 2 ≤ wickPower 4 mass κ ω x := by
-  simp only [wickPower, wickMonomial_four]
-  nlinarith [sq_nonneg (rawFieldEval mass κ ω x ^ 2 - 3 * regularizedPointCovariance mass κ)]
-
 /-- Bridge from pointwise Wick lower bounds to a lower bound on the cutoff
     interaction integral over a fixed volume. -/
 theorem interactionCutoff_lower_bound_of_wick_lower_bound
@@ -141,30 +133,6 @@ theorem interactionCutoff_lower_bound_of_wick_lower_bound
     mul_le_mul_of_nonneg_left hint_le params.coupling_pos.le
   simpa [interactionCutoff] using hmul
 
-/-- Semibounded Wick quartic implies a cutoff-interaction lower bound for each
-    UV cutoff scale `κ > 1`, provided integrability on the finite volume. -/
-theorem interactionCutoff_lower_bound_of_wick_semibounded
-    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
-    (hκ : 1 < κ.κ)
-    (hΛ_meas : MeasurableSet Λ.toSet)
-    (hΛ_finite : volume Λ.toSet ≠ ∞)
-    (hwick_int :
-      ∀ ω : FieldConfig2D,
-        IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume) :
-    ∃ C : ℝ, ∀ ω : FieldConfig2D,
-      params.coupling *
-          ∫ _ in Λ.toSet, (-(C * (Real.log κ.κ) ^ 2) : ℝ) ≤
-        interactionCutoff params Λ κ ω := by
-  rcases wick_fourth_semibounded params.mass params.mass_pos κ hκ with ⟨C, hC⟩
-  refine ⟨C, ?_⟩
-  intro ω
-  refine interactionCutoff_lower_bound_of_wick_lower_bound
-    (params := params) (Λ := Λ) (κ := κ) (ω := ω)
-    (B := C * (Real.log κ.κ) ^ 2)
-    hΛ_meas hΛ_finite (hwick_int ω) ?_
-  intro x hx
-  simpa [neg_mul] using hC ω x
-
 /-- Good-set variant of `interactionCutoff_lower_bound_of_wick_lower_bound`:
     if a pointwise Wick lower bound holds outside a bad set, then the induced
     cutoff-interaction lower bound also holds outside that bad set. -/
@@ -186,35 +154,6 @@ theorem interactionCutoff_lower_bound_of_wick_lower_bound_on_good_set
   exact interactionCutoff_lower_bound_of_wick_lower_bound
     (params := params) (Λ := Λ) (κ := κ) (ω := ω) (B := B)
     hΛ_meas hΛ_finite (hwick_int ω) (hgood ω hω)
-
-/-- Shifted canonical-sequence cutoff lower bounds from Wick lower bounds on
-    good sets: outside each bad set `bad n`, one gets a uniform-in-`n` lower
-    bound on `interactionCutoff` with explicit constant depending on `Λ` and `B`. -/
-theorem interactionCutoff_pointwise_lower_bounds_of_standardSeq_succ_wick_bad_sets
-    (params : Phi4Params) (Λ : Rectangle) (B : ℝ)
-    (bad : ℕ → Set FieldConfig2D)
-    (hΛ_meas : MeasurableSet Λ.toSet)
-    (hΛ_finite : volume Λ.toSet ≠ ∞)
-    (hwick_int :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D,
-        IntegrableOn
-          (fun x => wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x)
-          Λ.toSet volume)
-    (hgood :
-      ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
-        ∀ x ∈ Λ.toSet,
-          -B ≤ wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x) :
-    ∃ Bcut : ℝ, ∀ n : ℕ, ∀ ω : FieldConfig2D, ω ∉ bad n →
-      -Bcut ≤ interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
-  refine ⟨-(params.coupling * ∫ x in Λ.toSet, (-(B : ℝ))), ?_⟩
-  intro n ω hω
-  have hcut :
-      params.coupling * ∫ x in Λ.toSet, (-(B : ℝ)) ≤
-        interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω := by
-    exact interactionCutoff_lower_bound_of_wick_lower_bound_on_good_set
-      (params := params) (Λ := Λ) (κ := standardUVCutoffSeq (n + 1))
-      (bad := bad n) (B := B) hΛ_meas hΛ_finite (hwick_int n) (hgood n) ω hω
-  simpa using hcut
 
 /-! ## Abstract interaction-integrability interface -/
 
@@ -500,58 +439,6 @@ theorem interactionCutoff_standardSeq_succ_aestronglyMeasurable
       (fun ω : FieldConfig2D => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
       (freeFieldMeasure params.mass params.mass_pos) := by
   simpa using hcutoff_meas Λ (standardUVCutoffSeq (n + 1))
-
-/-- Shifted canonical-sequence (`κ_{n+1}`) specialization of L² cutoff
-    convergence:
-    if the real-parameterized L² convergence hypothesis holds, then the shifted
-    canonical sequence satisfies
-    `∫ (interactionCutoff(κ_{n+1}) - interaction)^2 → 0`. -/
-theorem shifted_cutoff_interaction_sq_moment_tendsto_zero_of_converges_L2
-    (params : Phi4Params) (Λ : Rectangle)
-    (hcutoff_conv :
-      Filter.Tendsto
-        (fun (κ : ℝ) => if h : 0 < κ then
-          ∫ ω, (interactionCutoff params Λ ⟨κ, h⟩ ω - interaction params Λ ω) ^ 2
-            ∂(freeFieldMeasure params.mass params.mass_pos)
-          else 0)
-        Filter.atTop
-        (nhds 0)) :
-    Filter.Tendsto
-      (fun n : ℕ =>
-        ∫ ω, (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
-          ∂(freeFieldMeasure params.mass params.mass_pos))
-      Filter.atTop
-      (nhds 0) := by
-  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
-  have hnat' :
-      Filter.Tendsto ((Nat.cast : ℕ → ℝ) ∘ fun a : ℕ => a + 2) Filter.atTop Filter.atTop :=
-    (tendsto_natCast_atTop_atTop (R := ℝ)).comp (Filter.tendsto_add_atTop_nat 2)
-  have hseq_raw :
-      Filter.Tendsto
-        (fun n : ℕ =>
-          if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) then
-            ∫ ω, (interactionCutoff params Λ
-              ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n), h⟩ ω - interaction params Λ ω) ^ 2 ∂μ
-          else 0)
-        Filter.atTop
-        (nhds 0) :=
-    hcutoff_conv.comp hnat'
-  have hseq_eq :
-      (fun n : ℕ =>
-        if h : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) then
-          ∫ ω, (interactionCutoff params Λ
-            ⟨(Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n), h⟩ ω - interaction params Λ ω) ^ 2 ∂μ
-        else 0) =ᶠ[Filter.atTop]
-      (fun n : ℕ =>
-        ∫ ω, (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2 ∂μ) := by
-    exact Filter.Eventually.of_forall (fun n => by
-      have hn : 0 < ((Nat.cast : ℕ → ℝ) ((fun a : ℕ => a + 2) n)) := by
-        exact_mod_cast Nat.succ_pos (n + 1)
-      have hn2 : 0 < (↑n + 2 : ℝ) := by simpa using hn
-      have hκ : (↑n + 2 : ℝ) = (↑n + 1 + 1 : ℝ) := by ring
-      have hn3 : 0 < (↑n + 1 + 1 : ℝ) := by nlinarith [hn2, hκ]
-      simp [standardUVCutoffSeq, μ, hκ, hn3])
-  exact hseq_raw.congr' hseq_eq
 
 /-- Fatou bridge for shifted canonical UV cutoffs:
     if `interactionCutoff(κ_{n+1})` converges almost everywhere to `interaction`

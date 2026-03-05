@@ -85,43 +85,6 @@ theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
       (a := a) ha hIntAbs
   simpa [X, μ, pow_two, sq_abs] using hmarkov
 
-/-- Shifted-index cutoff-to-limit deviation bad-event majorant from squared
-    moment majorants:
-    if `E[(interactionCutoff(κ_{n+1}) - interaction)^2] ≤ Mₙ`, then
-    `μ{ a ≤ |interactionCutoff(κ_{n+1}) - interaction| } ≤ Mₙ / a^2`. -/
-theorem shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment_bound
-    (params : Phi4Params) (Λ : Rectangle) (a : ℝ) (ha : 0 < a)
-    (M : ℕ → ℝ)
-    (hInt :
-      ∀ n : ℕ,
-        Integrable
-          (fun ω : FieldConfig2D =>
-            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2)
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hM :
-      ∀ n : ℕ,
-        ∫ ω : FieldConfig2D,
-          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
-          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ M n) :
-    ∀ n : ℕ,
-      (freeFieldMeasure params.mass params.mass_pos)
-        {ω : FieldConfig2D |
-          a ≤
-            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
-              interaction params Λ ω|}
-        ≤ ENNReal.ofReal ((M n) / (a ^ 2)) := by
-  intro n
-  have hbase :=
-    shifted_cutoff_interaction_deviation_bad_event_measure_le_of_sq_moment
-      (params := params) (Λ := Λ) (a := a) ha n (hInt n)
-  have hdiv :
-      (∫ ω : FieldConfig2D,
-          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) ^ 2
-          ∂(freeFieldMeasure params.mass params.mass_pos)) / (a ^ 2)
-        ≤ (M n) / (a ^ 2) := by
-    exact div_le_div_of_nonneg_right (hM n) (sq_nonneg a)
-  exact hbase.trans (ENNReal.ofReal_le_ofReal hdiv)
-
 /-- Polynomial-decay majorants produce finite ENNReal sums.
     This is a reusable p-series bridge for bad-event summability arguments. -/
 theorem tsum_ofReal_ne_top_of_polynomial_decay
@@ -443,62 +406,6 @@ theorem interactionCutoff_standardSeq_succ_tendsto_ae_of_sq_moment_polynomial_bo
       simp [sub_eq_add_neg, add_comm])
   exact hadd.congr' heq
 
-/-- Shifted canonical cutoff convergence to the limiting interaction from
-    polynomial-decay higher-moment bounds.
-
-    This is the direct `interactionCutoff(κ_{n+1}) → interaction` a.e. form
-    used by the Fatou `Lᵖ` bridge, when quantitative UV control is available in
-    a higher even moment. -/
-theorem interactionCutoff_standardSeq_succ_tendsto_ae_to_interaction_of_higher_moment_polynomial_bound
-    (params : Phi4Params) (Λ : Rectangle)
-    (j : ℕ) (hj : 0 < j)
-    (C β : ℝ) (hC : 0 ≤ C) (hβ : 1 < β)
-    (hInt :
-      ∀ n : ℕ,
-        Integrable
-          (fun ω : FieldConfig2D =>
-            |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j))
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hM :
-      ∀ n : ℕ,
-        ∫ ω : FieldConfig2D,
-          |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω| ^ (2 * j)
-          ∂(freeFieldMeasure params.mass params.mass_pos)
-        ≤ C * (↑(n + 1) : ℝ) ^ (-β)) :
-    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-      Filter.Tendsto
-        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)
-        Filter.atTop
-        (nhds (interaction params Λ ω)) := by
-  have htend0 :
-      ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
-        Filter.Tendsto
-          (fun n : ℕ =>
-            interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω)
-          Filter.atTop
-          (nhds 0) :=
-    interactionCutoff_standardSeq_succ_tendsto_ae_of_higher_moment_polynomial_bound
-      (params := params) (Λ := Λ) (j := j) (hj := hj)
-      (C := C) (β := β) hC hβ hInt hM
-  filter_upwards [htend0] with ω hω
-  have hadd :
-      Filter.Tendsto
-        (fun n : ℕ =>
-          (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) +
-            interaction params Λ ω)
-        Filter.atTop
-        (nhds (interaction params Λ ω)) := by
-    simpa [zero_add] using (hω.const_add (interaction params Λ ω))
-  have heq :
-      (fun n : ℕ =>
-        (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω - interaction params Λ ω) +
-          interaction params Λ ω)
-        =ᶠ[Filter.atTop]
-      (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω) :=
-    Filter.Eventually.of_forall (fun n => by
-      simp [sub_eq_add_neg, add_comm])
-  exact hadd.congr' heq
-
 /-- Per-volume positive-real shifted-cutoff partition bounds yield uniform
     shifted-cutoff integral bounds for every finite exponent `p` (`p ≠ ⊤`) by
     splitting the `p = 0` case from the `p > 0` case. -/
@@ -546,56 +453,6 @@ theorem standardSeq_succ_uniform_integral_bound_of_partition_bound
       simpa [μ] using hlin.le
   · have hq : 0 < p.toReal := ENNReal.toReal_pos hp0 hpTop
     simpa using hpartition p.toReal hq
-
-/-- Geometric shifted-cutoff real-exponential moment bounds at positive real
-    exponents imply uniform shifted-cutoff real-integral bounds at every finite
-    exponent `p` (`p ≠ ⊤`) by splitting `p = 0` and `p > 0`. -/
-theorem standardSeq_succ_uniform_integral_bound_of_geometric_exp_moment_bound
-    (params : Phi4Params) (Λ : Rectangle)
-    (hgeom :
-      ∀ q : ℝ, 0 < q →
-        ∃ D r : ℝ,
-          0 ≤ D ∧ 0 ≤ r ∧ r < 1 ∧
-          (∀ n : ℕ,
-            Integrable
-              (fun ω : FieldConfig2D =>
-                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
-              (freeFieldMeasure params.mass params.mass_pos)) ∧
-          (∀ n : ℕ,
-            ∫ ω : FieldConfig2D,
-              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n)) :
-    ∀ {p : ℝ≥0∞}, p ≠ ⊤ →
-      ∃ D : ℝ,
-        (∀ n : ℕ,
-          Integrable
-            (fun ω : FieldConfig2D =>
-              Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
-            (freeFieldMeasure params.mass params.mass_pos)) ∧
-        (∀ n : ℕ,
-          ∫ ω : FieldConfig2D,
-            Real.exp (-(p.toReal * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-            ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D) := by
-  have hpartition :
-      ∀ q : ℝ, 0 < q →
-        ∃ D : ℝ,
-          (∀ n : ℕ,
-            Integrable
-              (fun ω : FieldConfig2D =>
-                Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)))
-              (freeFieldMeasure params.mass params.mass_pos)) ∧
-          (∀ n : ℕ,
-            ∫ ω : FieldConfig2D,
-              Real.exp (-(q * interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω))
-              ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D) := by
-    intro q hq
-    rcases hgeom q hq with ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩
-    exact uniform_integral_bound_of_standardSeq_succ_geometric_integral_bound
-      (params := params) (Λ := Λ) (q := q)
-      (hgeom := ⟨D, r, hD, hr0, hr1, hIntExp, hMExp⟩)
-  intro p hpTop
-  exact standardSeq_succ_uniform_integral_bound_of_partition_bound
-    (params := params) (Λ := Λ) (hpartition := hpartition) (p := p) hpTop
 
 /-- Construct `InteractionWeightModel` from:
     1) per-volume polynomial-decay squared-moment bounds for shifted cutoff
@@ -1822,48 +1679,6 @@ theorem shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_bound
         ENNReal.ofReal (Real.exp (-θ * B) * D) * (ENNReal.ofReal r) ^ n := by
     exact hrepr.le
   exact hbase.trans hrewrite
-
-/-- Shifted-index geometric bad-event tails from geometric decay of absolute
-    exponential moments of the cutoff interaction sequence:
-    if `E[exp(θ |interactionCutoff(κ_{n+1})|)] ≤ D * r^n`, then
-    `μ{interactionCutoff(κ_{n+1}) < -B}` is bounded by a geometric tail. -/
-theorem shifted_cutoff_bad_event_geometric_bound_of_exponential_moment_abs_bound
-    (params : Phi4Params) (Λ : Rectangle) (B θ D r : ℝ)
-    (hθ : 0 < θ) (hD : 0 ≤ D) (hr0 : 0 ≤ r)
-    [InteractionUVModel params]
-    (hIntAbs :
-      ∀ n : ℕ,
-        Integrable
-          (fun ω : FieldConfig2D =>
-            Real.exp (θ * |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω|))
-          (freeFieldMeasure params.mass params.mass_pos))
-    (hM :
-      ∀ n : ℕ,
-        ∫ ω : FieldConfig2D,
-          Real.exp (θ * |interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω|)
-          ∂(freeFieldMeasure params.mass params.mass_pos) ≤ D * r ^ n) :
-    ∀ n : ℕ,
-      (freeFieldMeasure params.mass params.mass_pos)
-        {ω : FieldConfig2D |
-          interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω < -B}
-        ≤ ENNReal.ofReal (Real.exp (-θ * B) * D) * (ENNReal.ofReal r) ^ n := by
-  intro n
-  have hbase :=
-    shifted_cutoff_bad_event_measure_le_of_exponential_moment_abs_bound
-      (params := params) (Λ := Λ) (B := B) (θ := θ) hθ
-      (M := fun k => D * r ^ k) hIntAbs hM n
-  have hrepr :
-      ENNReal.ofReal (Real.exp (-θ * B) * (D * r ^ n)) =
-        ENNReal.ofReal (Real.exp (-θ * B) * D) * (ENNReal.ofReal r) ^ n := by
-    have hA : 0 ≤ Real.exp (-θ * B) * D := mul_nonneg (Real.exp_nonneg _) hD
-    calc
-      ENNReal.ofReal (Real.exp (-θ * B) * (D * r ^ n))
-          = ENNReal.ofReal ((Real.exp (-θ * B) * D) * r ^ n) := by ring_nf
-      _ = ENNReal.ofReal (Real.exp (-θ * B) * D) * ENNReal.ofReal (r ^ n) := by
-            rw [ENNReal.ofReal_mul hA]
-      _ = ENNReal.ofReal (Real.exp (-θ * B) * D) * (ENNReal.ofReal r) ^ n := by
-            rw [ENNReal.ofReal_pow hr0]
-  exact hbase.trans (by simpa [hrepr] using hrepr.le)
 
 /-- Shifted-index geometric bad-event tails for linearly moving thresholds:
     if `E[exp(-q interactionCutoff(κ_{n+1}))] ≤ D * r^n`, then
