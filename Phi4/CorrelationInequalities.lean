@@ -114,27 +114,6 @@ class SchwingerNNonnegModel (params : Phi4Params) (k : ℕ) where
       (_hf : ∀ i, ∀ x, 0 ≤ f i x),
       0 ≤ schwingerN params Λ k f
 
-/-- Family-level monotonicity interface: provides finite-volume Schwinger
-    monotonicity under domain inclusion for every arity `k`. -/
-class SchwingerNMonotoneFamilyModel (params : Phi4Params) where
-  schwingerN_monotone : ∀ (k : ℕ) (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin k → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ k f ≤ schwingerN params Λ₂ k f
-
-/-- Any family-level monotonicity interface induces fixed-arity monotonicity
-    interfaces by specialization. -/
-instance (priority := 90) schwingerNMonotoneModel_of_family
-    (params : Phi4Params) (k : ℕ)
-    [SchwingerNMonotoneFamilyModel params] :
-    SchwingerNMonotoneModel params k where
-  schwingerN_monotone := by
-    intro Λ₁ Λ₂ h f hf hfΛ
-    exact SchwingerNMonotoneFamilyModel.schwingerN_monotone
-      (params := params) k Λ₁ Λ₂ h f hf hfΛ
-
 /-- Two-point monotonicity implies `k = 2` Schwinger-moment monotonicity. -/
 instance (priority := 100) schwingerNMonotoneModel_two_of_correlationTwoPoint
     (params : Phi4Params) [CorrelationTwoPointModel params] :
@@ -326,33 +305,6 @@ class LatticeSchwingerNMonotoneModel (params : Phi4Params) (k : ℕ) where
         |schwingerN params Λ₁ k f - latticeN Λ₁ L₁ f| < ε ∧
         |schwingerN params Λ₂ k f - latticeN Λ₂ L₂ f| < ε
 
-/-- Family-level lattice bridge assumptions for finite-volume `k`-point
-    monotonicity under domain inclusion. -/
-class LatticeSchwingerNMonotoneFamilyModel (params : Phi4Params) where
-  latticeN :
-    ∀ (k : ℕ) (Λ : Rectangle), Phi4.RectLattice Λ → (Fin k → TestFun2D) → ℝ
-  approx_monotone_pair : ∀ (k : ℕ) (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin k → TestFun2D) (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0)
-      (ε : ℝ), 0 < ε →
-      ∃ L₁ : Phi4.RectLattice Λ₁, ∃ L₂ : Phi4.RectLattice Λ₂,
-        latticeN k Λ₁ L₁ f ≤ latticeN k Λ₂ L₂ f ∧
-        |schwingerN params Λ₁ k f - latticeN k Λ₁ L₁ f| < ε ∧
-        |schwingerN params Λ₂ k f - latticeN k Λ₂ L₂ f| < ε
-
-/-- Any family-level lattice monotonicity interface induces fixed-arity lattice
-    monotonicity interfaces by specialization. -/
-instance (priority := 90) latticeSchwingerNMonotoneModel_of_family
-    (params : Phi4Params) (k : ℕ)
-    [LatticeSchwingerNMonotoneFamilyModel params] :
-    LatticeSchwingerNMonotoneModel params k where
-  latticeN := LatticeSchwingerNMonotoneFamilyModel.latticeN (params := params) k
-  approx_monotone_pair := by
-    intro Λ₁ Λ₂ h f hf hfΛ ε hε
-    exact LatticeSchwingerNMonotoneFamilyModel.approx_monotone_pair
-      (params := params) k Λ₁ Λ₂ h f hf hfΛ ε hε
-
 /-- Continuum two-point monotonicity from lattice-ordered approximation pairs. -/
 theorem schwinger_two_monotone_from_lattice
     (params : Phi4Params)
@@ -397,17 +349,6 @@ instance (priority := 100) schwingerNMonotoneModel_of_lattice
     SchwingerNMonotoneModel params k where
   schwingerN_monotone := schwingerN_monotone_from_lattice (params := params) (k := k)
 
-/-- Family-level lattice monotonicity assumptions induce the continuum
-    family-level `SchwingerNMonotoneFamilyModel` interface. -/
-instance (priority := 85) schwingerNMonotoneFamilyModel_of_latticeFamily
-    (params : Phi4Params)
-    [LatticeSchwingerNMonotoneFamilyModel params] :
-    SchwingerNMonotoneFamilyModel params where
-  schwingerN_monotone := by
-    intro k Λ₁ Λ₂ h f hf hfΛ
-    exact schwingerN_monotone_from_lattice
-      (params := params) (k := k) Λ₁ Λ₂ h f hf hfΛ
-
 /-- Lattice two-point monotonicity yields a `k = 2` Schwinger-moment
     monotonicity instance directly (without a separate `_nonempty_of_` route). -/
 instance (priority := 100) schwingerNMonotoneModel_two_of_lattice
@@ -429,23 +370,6 @@ instance (priority := 100) schwingerNMonotoneModel_two_of_lattice
   }
   infer_instance
 
-/-- Core correlation-inequality inputs not yet derived from the current
-    lattice bridge layer. This isolates the remaining analytic assumptions
-    while allowing GKS-I and two-point monotonicity to be sourced from
-    lattice approximation results. -/
-class CorrelationInequalityCoreModel (params : Phi4Params)
-    extends CorrelationGKSSecondModel params,
-      CorrelationLebowitzModel params,
-      CorrelationFKGModel params where
-  /-- Monotonicity of finite-volume 4-point moments under domain inclusion for
-      nonnegative test-function inputs supported in the smaller volume. -/
-  schwinger_four_monotone : ∀ (Λ₁ Λ₂ : Rectangle)
-      (_h : Λ₁.toSet ⊆ Λ₂.toSet)
-      (f : Fin 4 → TestFun2D)
-      (_hf : ∀ i, ∀ x, 0 ≤ f i x)
-      (_hfΛ : ∀ i, ∀ x ∉ Λ₁.toSet, f i x = 0),
-      schwingerN params Λ₁ 4 f ≤ schwingerN params Λ₂ 4 f
-
 /-- Build the full `CorrelationInequalityModel` from:
     1. lattice bridge inputs for GKS-I and 2-point monotonicity, and
     2. remaining core assumptions (GKS-II, FKG, Lebowitz, 4-point monotonicity). -/
@@ -453,13 +377,16 @@ def correlationInequalityModelOfLattice
     (params : Phi4Params)
     [LatticeGriffithsFirstModel params]
     [LatticeSchwingerTwoMonotoneModel params]
-    [CorrelationInequalityCoreModel params] :
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
+    [CorrelationFKGModel params]
+    [SchwingerNMonotoneModel params 4] :
     CorrelationInequalityModel params where
   griffiths_first := griffiths_first_from_lattice (params := params)
   griffiths_second := CorrelationGKSSecondModel.griffiths_second (params := params)
   fkg_inequality := CorrelationFKGModel.fkg_inequality (params := params)
   lebowitz_inequality := CorrelationLebowitzModel.lebowitz_inequality (params := params)
-  schwinger_four_monotone := CorrelationInequalityCoreModel.schwinger_four_monotone (params := params)
+  schwinger_four_monotone := SchwingerNMonotoneModel.schwingerN_monotone (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
 
 /-- Low-priority instance: if lattice bridge data and the remaining core
@@ -468,7 +395,10 @@ instance (priority := 100) correlationInequalityModel_of_lattice
     (params : Phi4Params)
     [LatticeGriffithsFirstModel params]
     [LatticeSchwingerTwoMonotoneModel params]
-    [CorrelationInequalityCoreModel params] :
+    [CorrelationGKSSecondModel params]
+    [CorrelationLebowitzModel params]
+    [CorrelationFKGModel params]
+    [SchwingerNMonotoneModel params 4] :
     CorrelationInequalityModel params :=
   correlationInequalityModelOfLattice params
 
@@ -480,16 +410,6 @@ instance (priority := 100) correlationTwoPointModel_of_lattice
     CorrelationTwoPointModel params where
   griffiths_first := griffiths_first_from_lattice (params := params)
   schwinger_two_monotone := schwinger_two_monotone_from_lattice (params := params)
-
-/-- Core assumptions directly provide `k = 4` Schwinger-moment monotonicity. -/
-instance (priority := 100) schwingerNMonotoneModel_four_of_core
-    (params : Phi4Params)
-    [CorrelationInequalityCoreModel params] :
-    SchwingerNMonotoneModel params 4 where
-  schwingerN_monotone := by
-    intro Λ₁ Λ₂ h f hf hfΛ
-    exact CorrelationInequalityCoreModel.schwinger_four_monotone
-      (params := params) Λ₁ Λ₂ h f hf hfΛ
 
 /-! ## Griffiths' Second Inequality (GKS-II) -/
 

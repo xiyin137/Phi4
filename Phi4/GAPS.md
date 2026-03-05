@@ -118,17 +118,12 @@ assumption interfaces.
 - `CorrelationTwoPointModel`
 - `CorrelationGKSSecondModel`
 - `CorrelationLebowitzModel`
-- `CorrelationFourPointInequalityModel`
 - `SchwingerNMonotoneModel`
 - `SchwingerNNonnegModel`
-- `SchwingerNMonotoneFamilyModel`
-- `CorrelationFourPointModel`
 - `CorrelationFKGModel`
-- `CorrelationInequalityCoreModel`
 - `LatticeGriffithsFirstModel`
 - `LatticeSchwingerTwoMonotoneModel`
 - `LatticeSchwingerNMonotoneModel`
-- `LatticeSchwingerNMonotoneFamilyModel`
 - `FreeReflectionPositivityModel`
 - `DirichletReflectionPositivityModel`
 - `InteractingReflectionPositivityModel`
@@ -179,46 +174,16 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
 
 3. Correlation split/recombine
    - `correlationTwoPointModel_of_full`
-   - `correlationGKSSecondModel_nonempty_of_data`
-   - `correlationLebowitzModel_nonempty_of_data`
-   - `correlationFourPointInequalityModel_nonempty_of_models`
-   - `correlationFourPointInequalityModel_nonempty_of_data`
-   - `correlationFourPointModel_of_full`
    - `correlationFKGModel_of_full`
-   - `CorrelationInequalityCoreModel` now extends
-     `CorrelationGKSSecondModel` + `CorrelationLebowitzModel` +
-     `CorrelationFKGModel` with only explicit 4-point monotonicity as
-     additional core data
    - `correlationInequalityModel_of_submodels`
-   - `schwingerNMonotoneModel_four_of_correlationFourPoint`
    - `schwingerNNonnegModel_two_of_correlationTwoPoint`
-   - `schwingerNMonotoneModel_of_family`
-   - `schwingerNMonotoneFamilyModel_of_latticeFamily`
-   - constructors:
-     `latticeGriffithsFirstModel_nonempty_of_data`,
-     `latticeSchwingerTwoMonotoneModel_nonempty_of_data`,
-     `latticeSchwingerNMonotoneFamilyModel_nonempty_of_data`,
-     `latticeSchwingerNMonotoneFamilyModel_nonempty_of_models`,
-     `schwingerNMonotoneModel_nonempty_of_data`,
-     `schwingerNNonnegModel_nonempty_of_data`,
-     `schwingerNMonotoneFamilyModel_nonempty_of_data`,
-     `schwingerNMonotoneFamilyModel_nonempty_of_models`,
-     `correlationInequalityCoreModel_nonempty_of_data`,
-     `correlationInequalityCoreModel_nonempty_of_models`,
-     `correlationInequalityCoreModel_nonempty_of_data_and_schwingerFourMonotone`,
-     `correlationInequalityCoreModel_nonempty_of_data_and_lattice_monotone`,
-     `correlationInequalityModel_nonempty_of_data`,
-     `correlationInequalityModel_nonempty_of_twoPoint_and_core`,
-     `correlationInequalityModel_nonempty_of_submodels`,
-     `correlationInequalityModel_nonempty_of_submodels_and_schwingerFourMonotone`,
-     `correlationInequalityModel_nonempty_of_lattice_and_core_data`,
-     `correlationInequalityModel_nonempty_of_lattice_and_core_data_and_lattice_monotone`,
-     `correlationInequalityModel_nonempty_of_lattice_and_core_models`,
-     `correlationInequalityModel_nonempty_of_lattice_and_core_models_and_lattice_monotone`
+   - lattice-to-continuum bridge theorems:
+     `griffiths_first_from_lattice`,
+     `schwinger_two_monotone_from_lattice`,
+     `schwingerN_monotone_from_lattice`
    - bundle correlation assembly now uses atomic four-point inputs
      (`CorrelationGKSSecondModel` + `CorrelationLebowitzModel` +
-     `SchwingerNMonotoneModel params 4`) and reconstructs full
-     `CorrelationFourPointInequalityModel` / `CorrelationFourPointModel` /
+     `SchwingerNMonotoneModel params 4`) directly to reconstruct
      `CorrelationInequalityModel`
    - in `Phi4/CorrelationInequalities.lean`
 
@@ -252,8 +217,7 @@ These are not independent proof gaps; they can be reconstructed from smaller pie
      `CorrelationInequalities.lean`, `InfiniteVolumeLimit.lean`, and
      `Reconstruction.lean` now depend on
      atomic `CorrelationGKSSecondModel` + `CorrelationLebowitzModel`
-     where monotonicity data is unused (with compatibility reconstruction of
-     `CorrelationFourPointInequalityModel`)
+     where monotonicity data is unused
    - public finite-volume 4-point monotonicity theorem
      `schwinger_four_monotone` now depends only on
      `SchwingerNMonotoneModel params 4`
