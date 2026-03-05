@@ -410,14 +410,6 @@ theorem total_legs_eq_two_mul_lines_card (G : FeynmanGraph r) :
     (∑ v : Fin r, G.legs v) = 2 * G.lines.card := by
   simpa [Nat.mul_comm] using (two_mul_lines_card_eq_total_legs G).symm
 
-/-- Number of lines is half the total number of legs. -/
-theorem lines_card_eq_total_legs_half (G : FeynmanGraph r) :
-    G.lines.card = (∑ v : Fin r, G.legs v) / 2 := by
-  calc
-    G.lines.card = (2 * G.lines.card) / 2 := by simp
-    _ = (∑ v : Fin r, G.legs v) / 2 := by
-      simp [two_mul_lines_card_eq_total_legs G]
-
 end FeynmanGraph
 
 end GraphCounting
@@ -436,18 +428,6 @@ theorem total_legs_pow_eq_pow_lines (G : FeynmanGraph r) (A : ℝ) :
       simp [total_legs_eq_two_mul_lines_card (G := G)]
     _ = (A ^ 2) ^ G.lines.card := by
       simp [pow_mul]
-
-/-- Vertex factorial product bound rewritten with line count. -/
-theorem vertex_factorial_prod_le_factorial_two_mul_lines_card
-    (G : FeynmanGraph r) :
-    (∏ v : Fin r, Nat.factorial (G.legs v)) ≤
-      Nat.factorial (2 * G.lines.card) := by
-  calc
-    (∏ v : Fin r, Nat.factorial (G.legs v))
-        ≤ Nat.factorial (∑ v : Fin r, G.legs v) :=
-          graph_vertex_factorial_prod_le_total_factorial G
-    _ = Nat.factorial (2 * G.lines.card) := by
-          simp [total_legs_eq_two_mul_lines_card (G := G)]
 
 /-- Weighted vertex occupancy bound rewritten entirely in line-count form. -/
 theorem vertex_factorial_weighted_prod_le_total_factorial_pow_lines

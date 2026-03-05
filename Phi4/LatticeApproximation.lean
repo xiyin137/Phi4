@@ -371,28 +371,6 @@ theorem riemannSumCellAverage_eq_sum_cellIntegrals
   unfold riemannSumCellAverage discretizeByCellAverage
   simp [cellIntegral_eq_area_mul_cellAverage]
 
-/-- Nonnegativity of cell-anchor Riemann sums for nonnegative test functions. -/
-theorem riemannSumCellAnchor_nonneg
-    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
-    0 ≤ L.riemannSumCellAnchor f := by
-  unfold riemannSumCellAnchor
-  refine Finset.sum_nonneg ?_
-  intro i _
-  refine Finset.sum_nonneg ?_
-  intro j _
-  exact mul_nonneg (le_of_lt (L.cell_area_pos i j)) (L.discretizeByCellAnchor_nonneg f hf i j)
-
-/-- Nonnegativity of cell-average Riemann sums for nonnegative test functions. -/
-theorem riemannSumCellAverage_nonneg
-    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
-    0 ≤ L.riemannSumCellAverage f := by
-  rw [L.riemannSumCellAverage_eq_sum_cellIntegrals f]
-  refine Finset.sum_nonneg ?_
-  intro i _
-  refine Finset.sum_nonneg ?_
-  intro j _
-  exact L.cellIntegral_nonneg f i j hf
-
 /-- Additivity of cell-average Riemann sums. -/
 theorem riemannSumCellAverage_add
     (L : RectLattice Λ) (f g : TestFun2D) :
@@ -440,25 +418,6 @@ theorem totalCellIntegral_smul
     L.totalCellIntegral (c • f) = c * L.totalCellIntegral f := by
   unfold totalCellIntegral
   simp [cellIntegral_smul, Finset.mul_sum]
-
-/-- Total cell integral equals the cell-average Riemann sum. -/
-theorem totalCellIntegral_eq_riemannSumCellAverage
-    (L : RectLattice Λ) (f : TestFun2D) :
-    L.totalCellIntegral f = L.riemannSumCellAverage f := by
-  unfold totalCellIntegral
-  symm
-  exact L.riemannSumCellAverage_eq_sum_cellIntegrals f
-
-/-- Nonnegativity of total cell integrals for nonnegative test functions. -/
-theorem totalCellIntegral_nonneg
-    (L : RectLattice Λ) (f : TestFun2D) (hf : ∀ x, 0 ≤ f x) :
-    0 ≤ L.totalCellIntegral f := by
-  unfold totalCellIntegral
-  refine Finset.sum_nonneg ?_
-  intro i _
-  refine Finset.sum_nonneg ?_
-  intro j _
-  exact L.cellIntegral_nonneg f i j hf
 
 /-- Monotonicity of total cell integrals under pointwise comparison. -/
 theorem totalCellIntegral_mono

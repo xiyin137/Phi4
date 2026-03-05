@@ -43,10 +43,6 @@ open MeasureTheory
 /-- Canonical finite enumeration of pairings on `2n` labels. -/
 def allPairings (n : ℕ) : Finset (Pairing (2 * n)) := Finset.univ
 
-theorem allPairings_card (n : ℕ) :
-    (allPairings n).card = Fintype.card (Pairing (2 * n)) := by
-  simp [allPairings]
-
 /-! ## Abstract pairing/graph expansion interfaces -/
 
 /-- Enumeration model for perfect matchings on finite sets.

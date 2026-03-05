@@ -514,15 +514,4 @@ theorem card_erase_incidentPair_eq_half_sub_two
   have hdiv := congrArg (fun n : ℕ => n / 2) (π.two_mul_card_erase_incidentPair i)
   simpa [Nat.mul_div_right] using hdiv
 
-/-- There are no pairings on an odd number of labels. -/
-theorem isEmpty_odd (n : ℕ) : IsEmpty (Pairing (2 * n + 1)) := by
-  refine ⟨?_⟩
-  intro π
-  have hEven : Even (2 * n + 1) := even_card π
-  have hEven2 : Even (2 * n) := even_two.mul_right n
-  have hnot : ¬ Even ((2 * n) + 1) := by
-    intro h
-    exact ((Nat.even_add_one (n := 2 * n)).1 h) hEven2
-  exact hnot hEven
-
 end Pairing
