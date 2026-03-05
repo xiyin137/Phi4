@@ -530,23 +530,6 @@ theorem infinite_volume_schwinger_exists_k_of_models (params : Phi4Params)
   exact schwingerN_limit_exists_if_exhaustion_of_models
     (params := params) (k := k) f hf hfsupp
 
-/-- Constructive infinite-volume Schwinger existence in interface-sequence form
-    for fixed arity `k`, from lattice `k`-point monotonicity infrastructure and
-    multiple-reflection bounds. -/
-theorem infinite_volume_schwinger_exists_k_of_lattice_models (params : Phi4Params)
-    (k : ℕ)
-    [LatticeSchwingerNMonotoneModel params k]
-    [MultipleReflectionModel params]
-    (f : Fin k → TestFun2D)
-    (hf : ∀ i, ∀ x, 0 ≤ f i x)
-    (hfsupp : ∀ i, ∀ x ∉ (exhaustingRectangles 1 (Nat.succ_pos 0)).toSet, f i x = 0) :
-    ∃ S : ℝ, Filter.Tendsto
-      (fun n : ℕ =>
-        if h : 0 < n then schwingerN params (exhaustingRectangles n h) k f else 0)
-      Filter.atTop (nhds S) := by
-  exact infinite_volume_schwinger_exists_k_of_models
-    (params := params) (k := k) f hf hfsupp
-
 /-- Constructive `k = 4` infinite-volume Schwinger existence in the
     interface sequence form `if h : 0 < n then ... else 0`, from explicit
     four-point monotonicity and multiple-reflection bounds. -/
@@ -600,7 +583,7 @@ theorem infinite_volume_schwinger_exists_four_of_lattice_models
         if h : 0 < n then schwingerN params (exhaustingRectangles n h) 4
           (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D) else 0)
       Filter.atTop (nhds S) := by
-  exact infinite_volume_schwinger_exists_k_of_lattice_models
+  exact infinite_volume_schwinger_exists_k_of_models
     (params := params) (k := 4) (![f₁, f₂, f₃, f₄] : Fin 4 → TestFun2D)
     (by
       intro i x
