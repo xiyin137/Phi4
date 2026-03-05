@@ -157,41 +157,4 @@ def periodicKernelTrunc (mass L₁ L₂ : ℝ) (N : ℕ)
     periodicKernelTrunc mass L₁ L₂ 0 x y = freeCovKernel mass x y := by
   simp [periodicKernelTrunc, periodicKernelTerm]
 
-/-- Symmetry of the truncated periodic image kernel. -/
-theorem periodicKernelTrunc_symm (mass L₁ L₂ : ℝ) (N : ℕ)
-    (x y : Spacetime2D) :
-    periodicKernelTrunc mass L₁ L₂ N x y =
-      periodicKernelTrunc mass L₁ L₂ N y x := by
-  calc
-    periodicKernelTrunc mass L₁ L₂ N x y
-        = Finset.sum (periodicIndexFinset N) (fun m =>
-            Finset.sum (periodicIndexFinset N) (fun n =>
-              periodicKernelTerm mass L₁ L₂ m n x y)) := by
-              rfl
-    _ = Finset.sum (periodicIndexFinset N) (fun m =>
-            Finset.sum (periodicIndexFinset N) (fun n =>
-              periodicKernelTerm mass L₁ L₂ (-m) (-n) y x)) := by
-            refine Finset.sum_congr rfl ?_
-            intro m hm
-            refine Finset.sum_congr rfl ?_
-            intro n hn
-            simpa using (periodicKernelTerm_symm mass L₁ L₂ m n x y)
-    _ = Finset.sum (periodicIndexFinset N) (fun m =>
-            Finset.sum (periodicIndexFinset N) (fun n =>
-              periodicKernelTerm mass L₁ L₂ (-m) n y x)) := by
-            refine Finset.sum_congr rfl ?_
-            intro m hm
-            simpa using
-              (sum_periodicIndexFinset_comp_neg N
-                (fun n => periodicKernelTerm mass L₁ L₂ (-m) n y x))
-    _ = Finset.sum (periodicIndexFinset N) (fun m =>
-            Finset.sum (periodicIndexFinset N) (fun n =>
-              periodicKernelTerm mass L₁ L₂ m n y x)) := by
-            simpa using
-              (sum_periodicIndexFinset_comp_neg N
-                (fun m => Finset.sum (periodicIndexFinset N)
-                  (fun n => periodicKernelTerm mass L₁ L₂ m n y x)))
-    _ = periodicKernelTrunc mass L₁ L₂ N y x := by
-          rfl
-
 end Phi4

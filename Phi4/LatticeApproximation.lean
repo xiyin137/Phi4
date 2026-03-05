@@ -177,11 +177,6 @@ theorem cell_area_eq_meshArea (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx)
     (L.cell i j).area = L.timeStep * L.spaceStep := by
   simp [Rectangle.area, cell_width_eq_timeStep, cell_height_eq_spaceStep]
 
-/-- Every mesh cell has strictly positive area. -/
-theorem cell_area_pos (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) :
-    0 < (L.cell i j).area := by
-  simpa [cell_area_eq_meshArea] using mul_pos L.timeStep_pos L.spaceStep_pos
-
 /-- Anchor point of cell `(i,j)`, chosen as its lower-left corner node. -/
 def cellAnchor (L : RectLattice Λ) (i : Fin L.Nt) (j : Fin L.Nx) : Spacetime2D :=
   L.node ⟨i.1, Nat.lt_succ_of_lt i.2⟩ ⟨j.1, Nat.lt_succ_of_lt j.2⟩
@@ -242,23 +237,6 @@ theorem cellAverage_smul
   unfold cellAverage
   rw [L.cellIntegral_smul c f i j]
   ring
-
-/-- Monotonicity of cell integrals under pointwise comparison. -/
-theorem cellIntegral_mono
-    (L : RectLattice Λ)
-    (f g : TestFun2D)
-    (i : Fin L.Nt) (j : Fin L.Nx)
-    (hfg : ∀ x, f x ≤ g x) :
-    L.cellIntegral f i j ≤ L.cellIntegral g i j := by
-  unfold cellIntegral
-  exact MeasureTheory.integral_mono_ae
-    (MeasureTheory.Integrable.restrict
-      (s := (L.cell i j).toSet)
-      (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) f))
-    (MeasureTheory.Integrable.restrict
-      (s := (L.cell i j).toSet)
-      (SchwartzMap.integrable (μ := (volume : Measure Spacetime2D)) g))
-    (Filter.Eventually.of_forall hfg)
 
 /-- Cell-anchor Riemann sum on the finite lattice. -/
 def riemannSumCellAnchor (L : RectLattice Λ) (f : TestFun2D) : ℝ :=

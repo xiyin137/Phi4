@@ -375,28 +375,6 @@ theorem not_mem_erase_incidentPair_contains_partner
     pair_eq_incidentPair_of_mem_contains π (π.partner i) p hpMem hpContains
   exact hpNe (hpEqPartner.trans (π.incidentPair_partner_eq i))
 
-/-- Any vertex distinct from `i` and `partner i` is covered uniquely by
-    the erased pair-set `pairs.erase (incidentPair i)`. -/
-theorem covers_erase_incidentPair
-    (π : Pairing r) (i v : Fin r)
-    (hvi : v ≠ i) (hvp : v ≠ π.partner i) :
-    ∃! p ∈ π.pairs.erase (π.incidentPair i), p.1 = v ∨ p.2 = v := by
-  refine ⟨π.incidentPair v, ?_, ?_⟩
-  · refine ⟨?_, π.incidentPair_contains v⟩
-    refine Finset.mem_erase.mpr ⟨?_, π.incidentPair_mem v⟩
-    intro hEq
-    have hContainsIncident : (π.incidentPair i).1 = v ∨ (π.incidentPair i).2 = v := by
-      simpa [hEq] using π.incidentPair_contains v
-    have hvCases : v = i ∨ v = π.partner i :=
-      (π.incidentPair_contains_iff_eq_self_or_partner i v).1 hContainsIncident
-    rcases hvCases with hvEqI | hvEqPartner
-    · exact hvi hvEqI
-    · exact hvp hvEqPartner
-  · intro q hq
-    rcases hq with ⟨hqMemErase, hqContains⟩
-    have hqMem : q ∈ π.pairs := (Finset.mem_erase.mp hqMemErase).2
-    exact pair_eq_incidentPair_of_mem_contains π v q hqMem hqContains
-
 /-- Erasing the incident pair removes all edges containing `i`. -/
 theorem filter_erase_incidentPair_contains_eq_empty
     (π : Pairing r) (i : Fin r) :
