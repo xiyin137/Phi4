@@ -133,28 +133,6 @@ theorem interactionCutoff_lower_bound_of_wick_lower_bound
     mul_le_mul_of_nonneg_left hint_le params.coupling_pos.le
   simpa [interactionCutoff] using hmul
 
-/-- Good-set variant of `interactionCutoff_lower_bound_of_wick_lower_bound`:
-    if a pointwise Wick lower bound holds outside a bad set, then the induced
-    cutoff-interaction lower bound also holds outside that bad set. -/
-theorem interactionCutoff_lower_bound_of_wick_lower_bound_on_good_set
-    (params : Phi4Params) (Λ : Rectangle) (κ : UVCutoff)
-    (bad : Set FieldConfig2D) (B : ℝ)
-    (hΛ_meas : MeasurableSet Λ.toSet)
-    (hΛ_finite : volume Λ.toSet ≠ ∞)
-    (hwick_int :
-      ∀ ω : FieldConfig2D,
-        IntegrableOn (fun x => wickPower 4 params.mass κ ω x) Λ.toSet volume)
-    (hgood :
-      ∀ ω : FieldConfig2D, ω ∉ bad →
-        ∀ x ∈ Λ.toSet, -B ≤ wickPower 4 params.mass κ ω x) :
-    ∀ ω : FieldConfig2D, ω ∉ bad →
-      params.coupling * ∫ _ in Λ.toSet, (-(B : ℝ)) ≤
-        interactionCutoff params Λ κ ω := by
-  intro ω hω
-  exact interactionCutoff_lower_bound_of_wick_lower_bound
-    (params := params) (Λ := Λ) (κ := κ) (ω := ω) (B := B)
-    hΛ_meas hΛ_finite (hwick_int ω) (hgood ω hω)
-
 /-! ## Abstract interaction-integrability interface -/
 
 /-- Analytic interaction estimates used by finite-volume construction. This
