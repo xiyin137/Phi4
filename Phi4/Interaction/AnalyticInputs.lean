@@ -35,7 +35,7 @@ The L² bounds use Gaussian moment computations:
 
 noncomputable section
 
-open MeasureTheory GaussianField
+open MeasureTheory GaussianField Filter
 open scoped ENNReal NNReal
 
 /-! ## Frontier: UV mollifier continuity in spacetime
@@ -43,12 +43,119 @@ open scoped ENNReal NNReal
 The UV mollifier δ_{κ,x} varies continuously in x in the Schwartz topology.
 This is because translation is a continuous operation on S(ℝ²). -/
 
+/-- The ContDiffBump underlying the UV mollifier. -/
+private def uvBump (κ : UVCutoff) (x : Spacetime2D) : ContDiffBump x :=
+  ⟨(2 * κ.κ)⁻¹, κ.κ⁻¹, inv_pos.mpr (mul_pos two_pos κ.hκ),
+   by rw [inv_lt_inv₀ (mul_pos two_pos κ.hκ) κ.hκ]; linarith [κ.hκ]⟩
+
+/-- The iterated derivative of the base mollifier vanishes outside the support ball. -/
+private lemma iteratedFDeriv_uvMollifier_zero_outside (κ : UVCutoff) (n : ℕ)
+    (z : Spacetime2D) (hz : ‖z‖ > κ.κ⁻¹) :
+    iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) z = 0 := by
+  apply image_eq_zero_of_notMem_tsupport; intro hmem
+  have : z ∈ Metric.closedBall (0 : Spacetime2D) κ.κ⁻¹ :=
+    (tsupport_iteratedFDeriv_subset (𝕜 := ℝ) n).trans (by
+      rw [show (⇑(uvMollifier κ 0) : Spacetime2D → ℝ) = ⇑(uvBump κ 0) from rfl]
+      exact (uvBump κ 0).tsupport_eq.le) hmem
+  rw [Metric.mem_closedBall, dist_zero_right] at this; linarith
+
+/-- Translation identity for the iterated derivative of the UV mollifier. -/
+private lemma iteratedFDeriv_uvMollifier_translate (κ : UVCutoff) (n : ℕ) (a y : Spacetime2D) :
+    iteratedFDeriv ℝ n (⇑(uvMollifier κ a)) y =
+    iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - a) := by
+  show iteratedFDeriv ℝ n (uvMollifier κ a).toFun y =
+    iteratedFDeriv ℝ n (uvMollifier κ 0).toFun (y - a)
+  have : (uvMollifier κ a).toFun = fun z => (uvMollifier κ 0).toFun (z - a) := by
+    ext z; show (uvMollifier κ a) z = (uvMollifier κ 0) (z - a)
+    simp [uvMollifier, ContDiffBump.toFun, sub_eq_add_neg]
+  rw [this, iteratedFDeriv_comp_sub]
+
+/-- The iterated derivative of a difference of Schwartz maps equals the difference
+    of iterated derivatives. -/
+private lemma iteratedFDeriv_sub_schwartz (f g : SchwartzMap Spacetime2D ℝ)
+    (n : ℕ) (y : Spacetime2D) :
+    iteratedFDeriv ℝ n (⇑(f - g)) y =
+    iteratedFDeriv ℝ n (⇑f) y - iteratedFDeriv ℝ n (⇑g) y := by
+  show iteratedFDeriv ℝ n (f - g).toFun y =
+    iteratedFDeriv ℝ n f.toFun y - iteratedFDeriv ℝ n g.toFun y
+  have hfeq : (f - g).toFun = fun z => f.toFun z + (-g.toFun z) := by
+    ext z; show f z - g z = f z + (-(g z)); ring
+  rw [hfeq, iteratedFDeriv_add_apply'
+    (f.smooth'.of_le (by exact_mod_cast le_top)).contDiffAt
+    (g.smooth'.of_le (by exact_mod_cast le_top)).contDiffAt.neg]
+  have : (fun x => -g.toFun x) = -g.toFun := by ext; simp
+  rw [this, iteratedFDeriv_neg_apply]; abel
+
 /-- The UV mollifier is continuous as a function of the spacetime point in the
     Schwartz topology: x ↦ uvMollifier κ x is continuous as Spacetime2D → TestFun2D.
     This holds because translation is continuous in the Schwartz topology. -/
 theorem gap_uvMollifier_continuous (κ : UVCutoff) :
     Continuous (fun x : Spacetime2D => uvMollifier κ x) := by
-  sorry
+  rw [continuous_iff_continuousAt]; intro x₀
+  rw [ContinuousAt, (schwartz_withSeminorms ℝ Spacetime2D ℝ).tendsto_nhds]
+  intro ⟨k, n⟩ ε hε
+  simp only [SchwartzMap.schwartzSeminormFamily_apply]
+  set R := κ.κ⁻¹
+  have hR_pos : 0 < R := inv_pos.mpr κ.hκ
+  -- The base iterated derivative is uniformly continuous (compactly supported + smooth)
+  have hD_uc : UniformContinuous
+      (iteratedFDeriv ℝ n (⇑(uvMollifier κ 0) : Spacetime2D → ℝ)) := by
+    apply HasCompactSupport.uniformContinuous_of_continuous
+    · rw [show (⇑(uvMollifier κ 0) : Spacetime2D → ℝ) = ⇑(uvBump κ 0) from rfl]
+      exact (uvBump κ 0).hasCompactSupport.iteratedFDeriv n
+    · exact ((uvMollifier κ 0).smooth').continuous_iteratedFDeriv (by exact_mod_cast le_top)
+  -- Bound: on the support region, ‖y‖ ≤ ‖x₀‖ + R + 1
+  have hbase_nn : 0 ≤ ‖x₀‖ + R + 1 := by linarith [norm_nonneg x₀]
+  set B := (‖x₀‖ + R + 1) ^ k
+  have hB_nn : 0 ≤ B := pow_nonneg hbase_nn k
+  set ε' := ε / (B + 1)
+  have hε'_pos : 0 < ε' := div_pos hε (by linarith)
+  -- From uniform continuity, get δ₁ controlling the derivative difference
+  obtain ⟨δ₁, hδ₁_pos, hδ₁⟩ := (Metric.uniformContinuous_iff.mp hD_uc) ε' hε'_pos
+  rw [Metric.eventually_nhds_iff]
+  refine ⟨min δ₁ 1, lt_min hδ₁_pos one_pos, fun x hx => ?_⟩
+  have hx1 : dist x x₀ < 1 := lt_of_lt_of_le hx (min_le_right _ _)
+  have hxδ₁ : dist x x₀ < δ₁ := lt_of_lt_of_le hx (min_le_left _ _)
+  -- Bound the Schwartz seminorm by B * ε' using seminorm_le_bound, then show B * ε' < ε
+  apply lt_of_le_of_lt
+    (SchwartzMap.seminorm_le_bound ℝ k n _ (mul_nonneg hB_nn (le_of_lt hε'_pos)) _)
+  · calc B * ε' = ε * B / (B + 1) := by ring
+      _ < ε * (B + 1) / (B + 1) := div_lt_div_of_pos_right
+          (mul_lt_mul_of_pos_left (by linarith) hε) (by linarith)
+      _ = ε := by field_simp
+  · -- Pointwise bound: ‖y‖^k * ‖iteratedFDeriv ℝ n (uvMol x - uvMol x₀) y‖ ≤ B * ε'
+    intro y
+    rw [iteratedFDeriv_sub_schwartz,
+        iteratedFDeriv_uvMollifier_translate κ n x y,
+        iteratedFDeriv_uvMollifier_translate κ n x₀ y]
+    by_cases hy : dist y x₀ ≤ R + 1
+    · -- y in support region: ‖y‖ bounded, use uniform continuity
+      have hy_norm : ‖y‖ ≤ ‖x₀‖ + R + 1 := by
+        have h := norm_add_le (y - x₀) x₀; rw [sub_add_cancel] at h
+        linarith [show ‖y - x₀‖ ≤ R + 1 from by rwa [← dist_eq_norm]]
+      have hD_close : ‖iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x) -
+          iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x₀)‖ < ε' := by
+        rw [← dist_eq_norm]; apply hδ₁
+        rw [dist_eq_norm, show (y - x) - (y - x₀) = x₀ - x from by abel, norm_sub_rev]
+        exact dist_eq_norm x x₀ ▸ hxδ₁
+      calc ‖y‖ ^ k * ‖iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x) -
+              iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x₀)‖
+          ≤ B * ‖iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x) -
+              iteratedFDeriv ℝ n (⇑(uvMollifier κ 0)) (y - x₀)‖ :=
+            mul_le_mul_of_nonneg_right
+              (pow_le_pow_left₀ (norm_nonneg _) hy_norm k) (norm_nonneg _)
+        _ ≤ B * ε' := mul_le_mul_of_nonneg_left (le_of_lt hD_close) hB_nn
+    · -- y outside support region: both D values vanish
+      push_neg at hy
+      have hy_x : ‖y - x‖ > R := by
+        calc R < dist y x₀ - dist x x₀ := by linarith
+          _ ≤ dist y x := by linarith [dist_triangle y x x₀]
+          _ = ‖y - x‖ := dist_eq_norm y x
+      have hy_x₀ : ‖y - x₀‖ > R := by rw [← dist_eq_norm]; linarith
+      rw [iteratedFDeriv_uvMollifier_zero_outside κ n _ hy_x,
+          iteratedFDeriv_uvMollifier_zero_outside κ n _ hy_x₀,
+          sub_self, norm_zero, mul_zero]
+      exact mul_nonneg hB_nn (le_of_lt hε'_pos)
 
 /-! ## Measurability of field evaluations and Wick products -/
 
@@ -211,16 +318,125 @@ theorem sq_setIntegral_le_volume_mul_setIntegral_sq {f : Spacetime2D → ℝ}
   -- h2: (∫ f)² ≤ V * ∫ f²
   exact h2
 
+/-- Moment recursion: E[(ω f)^{n+2}] = (n+1) · Cov(f,f) · E[(ω f)^n].
+    Re-derived from `wick_recursive` (the public Gaussian field API). -/
+private theorem moment_recursion_ai (mass : ℝ) (hmass : 0 < mass) (f : TestFun2D) (n : ℕ) :
+    ∫ ω : FieldConfig2D, (ω f) ^ (n + 2) ∂(freeFieldMeasure mass hmass) =
+    (↑(n + 1) : ℝ) * GaussianField.covariance (freeCovarianceCLM mass hmass) f f *
+      ∫ ω : FieldConfig2D, (ω f) ^ n ∂(freeFieldMeasure mass hmass) := by
+  set T := freeCovarianceCLM mass hmass; set c := GaussianField.covariance T f f
+  simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ (n + 2) = ω f * ∏ i : Fin (n + 1),
+    ω ((fun _ : Fin (n + 1) => f) i) from fun ω => by
+      rw [show (∏ i : Fin (n + 1), ω ((fun _ : Fin (n + 1) => f) i)) = (ω f) ^ (n + 1) from
+        Fin.prod_const (n + 1) (ω f)]; ring]
+  change ∫ ω, ω f * ∏ i, ω ((fun _ => f) i) ∂(measure T) = _
+  rw [wick_recursive T n f (fun _ => f)]
+  simp_rw [show @inner ℝ ell2' _ (T f) (T f) = c from rfl, Fin.prod_const]
+  simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
+  change _ = (↑(n + 1) : ℝ) * c * ∫ ω : Configuration TestFun2D, (ω f) ^ n ∂(measure T)
+  push_cast; ring
+
+/-- Powers of Gaussian pairings are integrable (from `product_integrable`). -/
+private theorem power_integrable_ai (mass : ℝ) (hmass : 0 < mass) (f : TestFun2D) (n : ℕ) :
+    Integrable (fun ω : FieldConfig2D => (ω f) ^ n) (freeFieldMeasure mass hmass) := by
+  set T := freeCovarianceCLM mass hmass
+  simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ n = ∏ i : Fin n, ω ((fun _ => f) i) from
+    fun ω => (Fin.prod_const n (ω f)).symm]
+  change Integrable (fun ω => ∏ i : Fin n, ω ((fun _ => f) i)) (measure T)
+  exact product_integrable T n (fun _ => f)
+
 /-- The L² expectation E[(wickPower 4 mass κ · y)²] is uniformly bounded on compact sets.
-    This follows from the polynomial bound on wickMonomial, Gaussian moment bounds,
-    and continuity of the UV mollifier in the Schwartz topology (which makes the
-    Gaussian variance ‖T(δ_{κ,y})‖² continuous and hence bounded on compacts). -/
+    The proof computes the integral explicitly as a polynomial in σ²(y) = Cov(δ_{κ,y}, δ_{κ,y})
+    using the Gaussian moment recursion, then uses continuity of σ²(y) (from
+    gap_uvMollifier_continuous) to bound the polynomial on the compact set. -/
 theorem wickPower_sq_expectation_bounded_on_compact (mass : ℝ) (hmass : 0 < mass)
     (κ : UVCutoff) (K : Set Spacetime2D) (hK : IsCompact K) :
     ∃ M : ℝ, 0 ≤ M ∧ ∀ y ∈ K,
       ∫ ω, (wickPower 4 mass κ ω y) ^ 2
         ∂(freeFieldMeasure mass hmass) ≤ M := by
-  sorry
+  set T := freeCovarianceCLM mass hmass
+  set μ := freeFieldMeasure mass hmass
+  set c₀ := regularizedPointCovariance mass κ
+  set covFun : Spacetime2D → ℝ := fun y =>
+    GaussianField.covariance T (uvMollifier κ y) (uvMollifier κ y)
+  -- The polynomial Q(t) = 105t⁴ - 180c₀t³ + 126c₀²t² - 36c₀³t + 9c₀⁴
+  -- equals E[(He₄(X;c₀))²] when X ~ N(0,t)
+  set Q : ℝ → ℝ := fun t => 105 * t ^ 4 - 180 * c₀ * t ^ 3 + 126 * c₀ ^ 2 * t ^ 2 -
+    36 * c₀ ^ 3 * t + 9 * c₀ ^ 4
+  -- The integral equals Q(covFun(y)) by explicit Gaussian moment computation
+  have hintegral_eq : ∀ y, ∫ ω, (wickPower 4 mass κ ω y) ^ 2 ∂μ = Q (covFun y) := by
+    intro y
+    set f := uvMollifier κ y
+    show ∫ ω, (wickMonomial 4 c₀ (ω f)) ^ 2 ∂μ = Q (covFun y)
+    simp only [wickMonomial_four]
+    simp_rw [show ∀ ω : FieldConfig2D,
+      ((ω f) ^ 4 - 6 * c₀ * (ω f) ^ 2 + 3 * c₀ ^ 2) ^ 2 =
+      (ω f) ^ 8 + ((-12) * c₀ * (ω f) ^ 6 + (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      ((-36) * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4))) from fun ω => by ring]
+    have hi8 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 8) μ :=
+      power_integrable_ai mass hmass f 8
+    have hi6 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 6) μ :=
+      power_integrable_ai mass hmass f 6
+    have hi4 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 4) μ :=
+      power_integrable_ai mass hmass f 4
+    have hi2 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 2) μ :=
+      power_integrable_ai mass hmass f 2
+    -- Split integral into sum (use exact/have instead of rw to handle Pi.add matching)
+    have s1 : ∫ ω, ((ω f) ^ 8 + (-12 * c₀ * (ω f) ^ 6 + (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4)))) ∂μ =
+      ∫ ω, (ω f) ^ 8 ∂μ + ∫ ω, (-12 * c₀ * (ω f) ^ 6 + (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4))) ∂μ :=
+      integral_add hi8 ((hi6.const_mul _).add ((hi4.const_mul _).add
+        ((hi2.const_mul _).add (integrable_const _))))
+    have s2 : ∫ ω, (-12 * c₀ * (ω f) ^ 6 + (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4))) ∂μ =
+      ∫ ω, (-12 * c₀ * (ω f) ^ 6) ∂μ + ∫ ω, (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4)) ∂μ :=
+      integral_add (hi6.const_mul _) ((hi4.const_mul _).add
+        ((hi2.const_mul _).add (integrable_const _)))
+    have s3 : ∫ ω, (42 * c₀ ^ 2 * (ω f) ^ 4 +
+      (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4)) ∂μ =
+      ∫ ω, (42 * c₀ ^ 2 * (ω f) ^ 4) ∂μ +
+      ∫ ω, (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4) ∂μ :=
+      integral_add (hi4.const_mul _) ((hi2.const_mul _).add (integrable_const _))
+    have s4 : ∫ ω, (-36 * c₀ ^ 3 * (ω f) ^ 2 + 9 * c₀ ^ 4) ∂μ =
+      ∫ ω, (-36 * c₀ ^ 3 * (ω f) ^ 2) ∂μ + ∫ _, 9 * c₀ ^ 4 ∂μ :=
+      integral_add (hi2.const_mul _) (integrable_const _)
+    rw [s1, s2, s3, s4,
+        integral_const_mul, integral_const_mul, integral_const_mul, integral_const]
+    -- Gaussian even moments: E[X²]=σ², E[X⁴]=3σ⁴, E[X⁶]=15σ⁶, E[X⁸]=105σ⁸
+    have h2 : ∫ ω : FieldConfig2D, (ω f) ^ 2 ∂μ = covFun y := by
+      simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ 2 = ω f * ω f from fun ω => sq (ω f)]
+      exact cross_moment_eq_covariance T f f
+    have h4 : ∫ ω : FieldConfig2D, (ω f) ^ 4 ∂μ = 3 * (covFun y) ^ 2 := by
+      rw [show (4 : ℕ) = 2 + 2 from rfl, moment_recursion_ai mass hmass f 2, h2]
+      push_cast; ring
+    have h6 : ∫ ω : FieldConfig2D, (ω f) ^ 6 ∂μ = 15 * (covFun y) ^ 3 := by
+      rw [show (6 : ℕ) = 4 + 2 from rfl, moment_recursion_ai mass hmass f 4, h4]
+      push_cast; ring
+    have h8 : ∫ ω : FieldConfig2D, (ω f) ^ 8 ∂μ = 105 * (covFun y) ^ 4 := by
+      rw [show (8 : ℕ) = 6 + 2 from rfl, moment_recursion_ai mass hmass f 6, h6]
+      push_cast; ring
+    rw [h8, h6, h4, h2]; simp [Measure.real, measure_univ]; ring
+  -- The integral is nonneg (integral of a square)
+  have hintegral_nonneg : ∀ y, 0 ≤ ∫ ω, (wickPower 4 mass κ ω y) ^ 2 ∂μ :=
+    fun y => integral_nonneg (fun ω => sq_nonneg _)
+  -- covFun is continuous (gap_uvMollifier_continuous + T CLM + inner continuous)
+  have hcov_cont : Continuous covFun := by
+    have h1 := gap_uvMollifier_continuous κ
+    have h2 : Continuous (fun y => T (uvMollifier κ y)) := T.continuous.comp h1
+    exact continuous_inner.comp (h2.prodMk h2)
+  -- Q ∘ covFun is continuous
+  have hF_cont : Continuous (fun y => Q (covFun y)) :=
+    (by continuity : Continuous Q).comp hcov_cont
+  -- On compact K, Q(covFun(y)) is bounded above
+  by_cases hKne : K.Nonempty
+  · obtain ⟨y₀, hy₀, hmax⟩ := hK.exists_isMaxOn hKne hF_cont.continuousOn
+    refine ⟨Q (covFun y₀), ?_, fun y hy => ?_⟩
+    · rw [← hintegral_eq]; exact hintegral_nonneg y₀
+    · rw [hintegral_eq]; exact hmax hy
+  · exact ⟨0, le_rfl, fun y hy => absurd hy
+      (Set.not_nonempty_iff_eq_empty.mp hKne ▸ Set.notMem_empty y)⟩
 
 /-- The function (ω, x) ↦ (wickPower 4 mass κ ω x)² is integrable on the product
     of the free field measure with Lebesgue measure restricted to Λ.
@@ -388,7 +604,9 @@ theorem gap_interaction_aestronglyMeasurable (params : Phi4Params) (Λ : Rectang
   intro n
   exact (interactionCutoff_stronglyMeasurable params Λ (standardUVCutoffSeq n)).measurable
 
-/-- Square integrability of the limiting interaction. -/
+/-- Square integrability of the limiting interaction.
+    Strategy: from L² convergence (Vκ → V in L²), the limit V ∈ L² by completeness.
+    Concretely: V² ≤ 2(V - Vκ)² + 2Vκ² pointwise, so ∫V² ≤ 2∫(V-Vκ)² + 2∫Vκ² < ∞. -/
 theorem gap_interaction_sq_integrable (params : Phi4Params) (Λ : Rectangle) :
     Integrable (fun ω => (interaction params Λ ω) ^ 2)
       (freeFieldMeasure params.mass params.mass_pos) := by
