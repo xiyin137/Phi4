@@ -10,7 +10,7 @@ A Lean 4 formalization of constructive 2D φ⁴ Euclidean QFT aimed at the Glimm
 
 - Core theorem-level `sorry` in `Phi4/**/*.lean` excluding `Phi4/Scratch`: `20`
 - Legacy `class/structure .*Model` declarations: `13`
-- Canonical `gap_*` theorem frontiers: `29`
+- Canonical `gap_*` theorem frontiers: `27`
 - `axiom` declarations: `0`
 - `def`/`abbrev := by sorry`: `0`
 
@@ -32,14 +32,14 @@ The correct status framing is:
    - `gap_localized_graph_exponential_decay`
 2. `WP1`: prove `gap_hasExpInteractionLp`.
    This is the Chapter 8 finite-volume integrability/normalization core.
-   Supporting explicit analytic-input frontiers now also include:
-   - `gap_uvMollifier_continuous`
-   - `gap_interactionCutoff_sq_integrable`
+   The WP1 endpoint (`hasExpInteractionLp_of_analytic_inputs`) now uses a
+   Fatou route with only two critical-path inputs:
+   - `gap_interactionCutoff_standardSeq_ae_convergence` (sequence-level a.e. UV convergence)
+   - `gap_exp_neg_interaction_uniform_bound` (Nelson's uniform bound on E[exp(-pV_κ)])
+   Non-critical supporting frontiers:
    - `gap_interactionCutoff_L2_convergence`
-   - `gap_interactionCutoff_ae_convergence`
-   - `gap_interaction_aestronglyMeasurable`
+   - `gap_interactionCutoff_ae_convergence` (continuous-parameter, stronger than needed)
    - `gap_interaction_sq_integrable`
-   - `gap_exponential_moment_geometric_bound`
 3. `WP2`: close finite-volume monotonicity, comparison, chessboard, and reflection-positivity frontiers.
    Main explicit targets:
    - `gap_hasSchwingerNMonotone`

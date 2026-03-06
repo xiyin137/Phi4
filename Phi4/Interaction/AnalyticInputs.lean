@@ -571,6 +571,27 @@ theorem interactionCutoff_memLp_two (params : Phi4Params) (Λ : Rectangle)
 
 /-! ## UV convergence -/
 
+/-- Sequence-level a.e. convergence: V_{κ_n} → V a.e. along the canonical cutoff
+    sequence `standardUVCutoffSeq n = ⟨n+1, ...⟩`.
+
+    This is the natural first target: the Fatou bridge only needs discrete
+    convergence, and `interaction` is defined as `Filter.limsup` of the sequence,
+    so convergence holds whenever the limsup equals the limit.
+
+    Strategy: Since `interaction` = `Filter.limsup` of `interactionCutoff(κ_n)`,
+    convergence of the full sequence holds iff limsup = liminf a.e. The natural
+    route is to show the Wick-ordered cutoff interactions are eventually monotone
+    (after UV renormalization), so limsup = liminf = lim. Note: L² convergence
+    only gives a.e. convergence along a *subsequence*, not the full sequence. -/
+theorem gap_interactionCutoff_standardSeq_ae_convergence
+    (params : Phi4Params) (Λ : Rectangle) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
+        Filter.atTop
+        (nhds (interaction params Λ ω)) := by
+  sorry
+
 /-- L² convergence of the cutoff interaction to the limiting interaction. -/
 theorem gap_interactionCutoff_L2_convergence (params : Phi4Params) (Λ : Rectangle) :
     Filter.Tendsto
@@ -582,7 +603,9 @@ theorem gap_interactionCutoff_L2_convergence (params : Phi4Params) (Λ : Rectang
       (nhds 0) := by
   sorry
 
-/-- A.e. convergence of the cutoff interaction to the limiting interaction. -/
+/-- A.e. convergence of the cutoff interaction to the limiting interaction
+    (continuous-parameter version). Stronger than sequence-level, not needed
+    for the main WP1 endpoint. -/
 theorem gap_interactionCutoff_ae_convergence (params : Phi4Params) (Λ : Rectangle) :
     ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
       Filter.Tendsto
@@ -685,8 +708,7 @@ theorem hasExpInteractionLp_of_analytic_inputs (params : Phi4Params) :
       ∀ᵐ ω ∂μ, Filter.Tendsto
         (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq n) ω)
         Filter.atTop (nhds (interaction params Λ ω)) :=
-    interactionCutoff_standardSeq_tendsto_ae_of_tendsto_ae
-      (params := params) (Λ := Λ) (gap_interactionCutoff_ae_convergence params Λ)
+    gap_interactionCutoff_standardSeq_ae_convergence params Λ
   have hae_shifted :
       ∀ᵐ ω ∂μ, Filter.Tendsto
         (fun n : ℕ => interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω)

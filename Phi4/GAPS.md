@@ -8,7 +8,7 @@ This file records the current proof boundary on `main`.
 
 - theorem-level `sorry` in core modules: `20`
 - legacy `class/structure .*Model`: `13`
-- canonical `gap_*` theorem frontiers: `29`
+- canonical `gap_*` theorem frontiers: `27`
 - `axiom`: `0`
 - `def/abbrev := by sorry`: `0`
 
@@ -25,30 +25,28 @@ assumption-free completion. The open mathematics is currently split between:
 3. `gap_feynman_graph_expansion`
 4. `gap_localized_graph_exponential_decay`
 5. `gap_covariance_eq_kernel`
-6. `gap_uvMollifier_continuous`
-7. `gap_interactionCutoff_sq_integrable`
-8. `gap_interactionCutoff_L2_convergence`
-9. `gap_interactionCutoff_ae_convergence`
-10. `gap_interaction_aestronglyMeasurable`
-11. `gap_interaction_sq_integrable`
-12. `gap_exponential_moment_geometric_bound`
-13. `gap_hasExpInteractionLp`
-14. `gap_schwingerTwo_le_free`
-15. `gap_hasSchwingerNMonotone`
-16. `gap_hasChessboardEstimate`
-17. `gap_hasSchwingerUniformBound`
-18. `gap_free_covariance_reflection_positive`
-19. `gap_dirichlet_covariance_reflection_positive`
-20. `gap_interacting_measure_reflection_positive`
-21. `gap_infiniteVolumeLimit_exists`
-22. `gap_wick_powers_infinite_volume`
-23. `gap_wickCubicSmeared_tendsto_ae`
-24. `gap_euclidean_equation_of_motion`
-25. `gap_generating_functional_bound`
-26. `gap_generating_functional_bound_uniform`
-27. `gap_nonlocal_phi4_bound`
-28. `gap_measure_os3_reflection_positive`
-29. `gap_phi4_linear_growth`
+6. `gap_interactionCutoff_standardSeq_ae_convergence`
+7. `gap_interactionCutoff_L2_convergence`
+8. `gap_interactionCutoff_ae_convergence`
+9. `gap_interaction_sq_integrable`
+10. `gap_exp_neg_interaction_uniform_bound`
+11. `gap_hasExpInteractionLp`
+12. `gap_schwingerTwo_le_free`
+13. `gap_hasSchwingerNMonotone`
+14. `gap_hasChessboardEstimate`
+15. `gap_hasSchwingerUniformBound`
+16. `gap_free_covariance_reflection_positive`
+17. `gap_dirichlet_covariance_reflection_positive`
+18. `gap_interacting_measure_reflection_positive`
+19. `gap_infiniteVolumeLimit_exists`
+20. `gap_wick_powers_infinite_volume`
+21. `gap_wickCubicSmeared_tendsto_ae`
+22. `gap_euclidean_equation_of_motion`
+23. `gap_generating_functional_bound`
+24. `gap_generating_functional_bound_uniform`
+25. `gap_nonlocal_phi4_bound`
+26. `gap_measure_os3_reflection_positive`
+27. `gap_phi4_linear_growth`
 
 ## Explicit But Not Yet Named OS Obligations
 
