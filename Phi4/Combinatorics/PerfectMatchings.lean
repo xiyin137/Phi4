@@ -791,9 +791,7 @@ noncomputable def compressedPairing (n : ℕ) (π : Pairing (2 * n + 2)) :
 /-- Construct a pairing on `2*(n+1)` from a partner choice `j` for vertex 0
     and a pairing `σ` on the remaining `2n` vertices. -/
 noncomputable def expandedPairing (n : ℕ) (j : Fin (2 * n + 1)) (σ : Pairing (2 * n)) :
-    Pairing (2 * (n + 1)) := by
-  have h2n2 : 2 * (n + 1) = 2 * n + 2 := by omega
-  rw [h2n2]
+    Pairing (2 * n + 2) := by
   -- j' is the actual partner of 0 in Fin(2n+2): shift j by 1 since j ∈ Fin(2n+1)
   let j' : Fin (2 * n + 2) := ⟨j.val + 1, by omega⟩
   have hj' : (0 : ℕ) < j'.val := by show 0 < j.val + 1; omega
@@ -884,6 +882,24 @@ noncomputable def expandedPairing (n : ℕ) (j : Fin (2 * n + 1)) (σ : Pairing 
         all_goals exact Fin.mk_lt_mk.mpr (by omega)
   }
 
+@[ext]
+theorem Pairing.ext' {r : ℕ} {π₁ π₂ : Pairing r} (h : π₁.pairs = π₂.pairs) : π₁ = π₂ := by
+  cases π₁; cases π₂; congr
+
+/-- The pair `(0, j+1)` is in the expanded pairing. -/
+private lemma expandedPairing_zero_pair_mem (n : ℕ) (j : Fin (2 * n + 1))
+    (σ : Pairing (2 * n)) :
+    ((⟨0, by omega⟩ : Fin (2 * n + 2)), (⟨j.val + 1, by omega⟩ : Fin (2 * n + 2))) ∈
+      (expandedPairing n j σ).pairs := by
+  unfold expandedPairing
+  exact Finset.mem_union_left _ (Finset.mem_singleton_self _)
+
+/-- The partner of 0 in the expanded pairing is `⟨j.val+1, _⟩`. -/
+private lemma expandedPairing_partner_zero (n : ℕ) (j : Fin (2 * n + 1))
+    (σ : Pairing (2 * n)) :
+    (expandedPairing n j σ).partner ⟨0, by omega⟩ = ⟨j.val + 1, by omega⟩ :=
+  Pairing.partner_eq_of_mem_left _ _ _ (expandedPairing_zero_pair_mem n j σ)
+
 /-- The partner index: maps `partner(0)` from `Fin(2n+2)` to `Fin(2n+1)` by subtracting 1.
     Since `partner(0) ∈ {1,...,2n+1}`, this gives a valid `Fin(2n+1)` index. -/
 noncomputable def partnerIdx (n : ℕ) (π : Pairing (2 * n + 2)) : Fin (2 * n + 1) :=
@@ -899,24 +915,246 @@ noncomputable def decompPairing (n : ℕ) (π : Pairing (2 * n + 2)) :
     Fin (2 * n + 1) × Pairing (2 * n) :=
   (partnerIdx n π, compressedPairing n π)
 
+/-- The partnerIdx of the expanded pairing recovers `j`. -/
+private lemma expandedPairing_partnerIdx (n : ℕ) (j : Fin (2 * n + 1))
+    (σ : Pairing (2 * n)) :
+    partnerIdx n (expandedPairing n j σ) = j := by
+  unfold partnerIdx
+  have hp := expandedPairing_partner_zero n j σ
+  ext
+  simp only [hp]
+  omega
+
 /-- The forward map is injective: if two pairings decompose identically,
     they are equal. -/
+-- Helper: incidentPair(0) = (0, partner(0)) for pairings on 2n+2 elements
+private lemma incidentPair_zero_eq (n : ℕ) (π : Pairing (2 * n + 2)) :
+    π.incidentPair ⟨0, by omega⟩ = (⟨0, by omega⟩, π.partner ⟨0, by omega⟩) := by
+  have hmem : (⟨0, by omega⟩, π.partner ⟨0, by omega⟩) ∈ π.pairs := by
+    rcases π.pair_partner_mem_or_partner_pair_mem ⟨0, by omega⟩ with h | h
+    · exact h
+    · exfalso
+      have hord := π.ordered _ h
+      have hne := π.partner_ne_self ⟨0, by omega⟩
+      simp only [Fin.lt_def] at hord
+      omega
+  exact π.incidentPair_eq_of_mem_left _ _ hmem
+
+-- Helper: expandPair ∘ compressPair = id on valid remaining pairs
+private lemma expand_compress_remaining {n : ℕ} (π : Pairing (2 * n + 2)) (hn : n ≠ 0)
+    (q : Fin (2 * n + 2) × Fin (2 * n + 2))
+    (hq : q ∈ π.pairs.erase (π.incidentPair ⟨0, by omega⟩)) :
+    let j := π.partner ⟨0, by omega⟩
+    let hj : 0 < j.val := by
+      have h := π.partner_ne_self (⟨0, by omega⟩ : Fin (2 * n + 2))
+      have : j.val ≠ 0 := fun heq => h (Fin.ext heq)
+      omega
+    (expandFin (2*n) j hj (compressFinTotal (2*n) (by omega) j hj q.1),
+     expandFin (2*n) j hj (compressFinTotal (2*n) (by omega) j hj q.2)) = q := by
+  have hvalid := remaining_endpoints_valid n π q hq
+  have hj : 0 < (π.partner ⟨0, by omega⟩).val := by
+    have h := π.partner_ne_self (⟨0, by omega⟩ : Fin (2 * n + 2))
+    have : (π.partner ⟨0, by omega⟩).val ≠ 0 := fun heq => h (Fin.ext heq)
+    omega
+  ext
+  · rw [compressFinTotal_eq_compressFin (2*n) (by omega) _ hj q.1 hvalid.1 hvalid.2.1]
+    exact congrArg Fin.val (expandFin_compressFin (2*n) _ hj q.1 hvalid.1 hvalid.2.1)
+  · rw [compressFinTotal_eq_compressFin (2*n) (by omega) _ hj q.2 hvalid.2.2.1 hvalid.2.2.2]
+    exact congrArg Fin.val (expandFin_compressFin (2*n) _ hj q.2 hvalid.2.2.1 hvalid.2.2.2)
+
 private theorem decompPairing_injective (n : ℕ) :
     Function.Injective (decompPairing n) := by
   intro π₁ π₂ h
   have hj : partnerIdx n π₁ = partnerIdx n π₂ := congrArg Prod.fst h
   have hσ : compressedPairing n π₁ = compressedPairing n π₂ := congrArg Prod.snd h
-  -- Two pairings with the same partner(0) and the same compressed pairing are equal
-  -- This means they have the same pair set
-  -- π.pairs = {incidentPair(0)} ∪ remaining, and remaining determines compressedPairing
-  sorry
+  -- Step 1: same partner(0)
+  have hpartner : π₁.partner ⟨0, by omega⟩ = π₂.partner ⟨0, by omega⟩ := by
+    apply Fin.ext
+    have h1 := congrArg (fun x : Fin (2*n+1) => x.val) hj
+    simp only [partnerIdx] at h1
+    have hne1 : (π₁.partner ⟨0, by omega⟩).val ≠ 0 :=
+      fun heq => π₁.partner_ne_self ⟨0, by omega⟩ (Fin.ext heq)
+    have hne2 : (π₂.partner ⟨0, by omega⟩).val ≠ 0 :=
+      fun heq => π₂.partner_ne_self ⟨0, by omega⟩ (Fin.ext heq)
+    omega
+  -- Step 2: same incidentPair(0)
+  have hincident : π₁.incidentPair ⟨0, by omega⟩ = π₂.incidentPair ⟨0, by omega⟩ := by
+    rw [incidentPair_zero_eq n π₁, incidentPair_zero_eq n π₂, hpartner]
+  -- Step 3: show pairs are equal
+  apply Pairing.ext'
+  rw [← Finset.insert_erase (π₁.incidentPair_mem ⟨0, by omega⟩),
+      ← Finset.insert_erase (π₂.incidentPair_mem ⟨0, by omega⟩)]
+  rw [hincident]
+  congr 1
+  -- Need: remaining₁ = remaining₂
+  -- Goal: π₁.pairs.erase (π₂.incidentPair ...) = π₂.pairs.erase (π₂.incidentPair ...)
+  by_cases hn : n = 0
+  · -- n = 0: Pairing 2 has exactly one pair, erasing it gives ∅ on both sides
+    subst hn
+    -- For Pairing 2, pairs = {incidentPair 0} since every pair must have p.1 = 0
+    have hsing : ∀ (π : Pairing (2 * 0 + 2)),
+        π.pairs = {π.incidentPair ⟨0, by omega⟩} := by
+      intro π
+      apply Finset.eq_singleton_iff_unique_mem.mpr
+      exact ⟨π.incidentPair_mem ⟨0, by omega⟩, fun p hp =>
+        π.pair_eq_incidentPair_of_mem_contains ⟨0, by omega⟩ p hp
+          (Or.inl (Fin.ext (by
+            have hord := π.ordered p hp; simp only [Fin.lt_def] at hord
+            change p.1.val = 0; have := p.1.isLt; have := p.2.isLt; omega)))⟩
+    rw [hsing π₁, hsing π₂, hincident]
+  · -- n > 0: factor out one-direction subset proof and apply symmetrically
+    have hσ_pairs := congrArg Pairing.pairs hσ
+    -- Prove: for any two pairings with same partner/incidentPair/compressed,
+    -- the remaining pairs of the first are a subset of those of the second
+    suffices hsub : ∀ (πa πb : Pairing (2*n+2)),
+        πa.partner ⟨0, by omega⟩ = πb.partner ⟨0, by omega⟩ →
+        πa.incidentPair ⟨0, by omega⟩ = πb.incidentPair ⟨0, by omega⟩ →
+        (compressedPairing n πa).pairs = (compressedPairing n πb).pairs →
+        πa.pairs.erase (πb.incidentPair ⟨0, by omega⟩) ⊆
+          πb.pairs.erase (πb.incidentPair ⟨0, by omega⟩) by
+      exact Finset.Subset.antisymm
+        (hsub π₁ π₂ hpartner hincident hσ_pairs)
+        (by rw [← hincident]; exact hsub π₂ π₁ hpartner.symm hincident.symm hσ_pairs.symm)
+    intro πa πb hpab hinab hσab q hq
+    have hq_ne : q ≠ πb.incidentPair ⟨0, by omega⟩ := Finset.ne_of_mem_erase hq
+    -- q is also in πa's remaining (using hinab)
+    have hqa : q ∈ πa.pairs.erase (πa.incidentPair ⟨0, by omega⟩) := by rwa [hinab]
+    -- compress_a(q) ∈ (compressedPairing n πa).pairs
+    have hja : 0 < (πa.partner ⟨0, by omega⟩).val := by
+      have h := πa.partner_ne_self (⟨0, by omega⟩ : Fin (2*n+2))
+      exact Nat.pos_of_ne_zero (fun heq => h (Fin.ext heq))
+    have hcq_a : compressPairTotal (2*n) (by omega) (πa.partner ⟨0, by omega⟩) hja q ∈
+        (compressedPairing n πa).pairs := by
+      unfold compressedPairing; simp only [dif_neg hn]
+      exact Finset.mem_image_of_mem _ hqa
+    -- By hσab, it's in (compressedPairing n πb).pairs
+    rw [hσab] at hcq_a
+    -- Unfold to get q' ∈ remaining_b with compress_b(q') = compress_a(q)
+    have hjb : 0 < (πb.partner ⟨0, by omega⟩).val := by
+      have h := πb.partner_ne_self (⟨0, by omega⟩ : Fin (2*n+2))
+      exact Nat.pos_of_ne_zero (fun heq => h (Fin.ext heq))
+    unfold compressedPairing at hcq_a; simp only [dif_neg hn] at hcq_a
+    rw [Finset.mem_image] at hcq_a
+    obtain ⟨q', hq'_mem, hq'_eq⟩ := hcq_a
+    -- hq'_eq : compress_b(q') = compress_a(q)
+    -- Since πa.partner = πb.partner, rewrite compress_a to compress_b
+    simp_rw [hpab] at hq'_eq
+    -- Now hq'_eq : compress_b(q') = compress_b(q)
+    -- By injectivity of compressFinTotal on valid inputs: q' = q
+    have hvalid_a := remaining_endpoints_valid n πa q hqa
+    have hvalid_b := remaining_endpoints_valid n πb q' hq'_mem
+    -- Rewrite πa.partner to πb.partner in hvalid_a
+    rw [hpab] at hvalid_a
+    have hq_eq : q' = q := by
+      have h1 : (compressPairTotal (2*n) (by omega) (πb.partner ⟨0, by omega⟩) hjb q').1 =
+          (compressPairTotal (2*n) (by omega) (πb.partner ⟨0, by omega⟩) hjb q).1 :=
+        congrArg Prod.fst hq'_eq
+      have h2 : (compressPairTotal (2*n) (by omega) (πb.partner ⟨0, by omega⟩) hjb q').2 =
+          (compressPairTotal (2*n) (by omega) (πb.partner ⟨0, by omega⟩) hjb q).2 :=
+        congrArg Prod.snd hq'_eq
+      simp only [compressPairTotal] at h1 h2
+      exact Prod.ext
+        (compressFinTotal_injective_valid (2*n) (by omega) _ hjb q'.1 q.1
+          hvalid_b.1 hvalid_b.2.1 hvalid_a.1 hvalid_a.2.1 h1)
+        (compressFinTotal_injective_valid (2*n) (by omega) _ hjb q'.2 q.2
+          hvalid_b.2.2.1 hvalid_b.2.2.2 hvalid_a.2.2.1 hvalid_a.2.2.2 h2)
+    rw [← hq_eq]; exact hq'_mem
 
-/-- The forward map is surjective: every `(j, σ)` arises from some pairing. -/
+/-- The incidentPair at 0 in the expanded pairing is `(0, j+1)`. -/
+private lemma expandedPairing_incidentPair_zero (n : ℕ) (j : Fin (2 * n + 1))
+    (σ : Pairing (2 * n)) :
+    (expandedPairing n j σ).incidentPair ⟨0, by omega⟩ =
+      ((⟨0, by omega⟩ : Fin (2 * n + 2)), (⟨j.val + 1, by omega⟩ : Fin (2 * n + 2))) :=
+  Pairing.incidentPair_eq_of_mem_left _ _ _ (expandedPairing_zero_pair_mem n j σ)
+
+private lemma expandedPairing_compressedPairing (n : ℕ) (j : Fin (2 * n + 1))
+    (σ : Pairing (2 * n)) :
+    compressedPairing n (expandedPairing n j σ) = σ := by
+  by_cases hn : n = 0
+  · -- n = 0: both sides are the unique empty pairing
+    subst hn
+    apply Pairing.ext'
+    have hσ : σ.pairs = ∅ := Finset.eq_empty_iff_forall_notMem.mpr
+      (fun ⟨⟨a, ha⟩, _⟩ => (Nat.not_lt_zero a ha).elim)
+    simp only [compressedPairing, hσ, dif_pos trivial]
+  · -- n > 0: show the pairs match
+    apply Pairing.ext'
+    set π := expandedPairing n j σ with hπ_def
+    have hj'pos : (0 : ℕ) < (⟨j.val + 1, by omega⟩ : Fin (2*n+2)).val := by
+      show 0 < j.val + 1; omega
+    have hpartner : π.partner ⟨0, by omega⟩ = ⟨j.val + 1, by omega⟩ :=
+      expandedPairing_partner_zero n j σ
+    have hincident : π.incidentPair ⟨0, by omega⟩ =
+        ((⟨0, by omega⟩ : Fin (2*n+2)), (⟨j.val + 1, by omega⟩ : Fin (2*n+2))) :=
+      expandedPairing_incidentPair_zero n j σ
+    have hpairs : π.pairs =
+        {((⟨0, by omega⟩ : Fin (2*n+2)), (⟨j.val + 1, by omega⟩ : Fin (2*n+2)))} ∪
+        σ.pairs.image (fun q => (expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q.1,
+                                  expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q.2)) := by
+      simp only [hπ_def]; unfold expandedPairing; rfl
+    -- Unfold compressedPairing for n ≠ 0
+    unfold compressedPairing
+    simp only [dif_neg hn, hincident, hpairs]
+    -- Simplify the erase: {a} ∪ s).erase a = s when a ∉ s
+    rw [Finset.singleton_union, Finset.erase_insert_eq_erase]
+    have hnotmem : ((⟨0, by omega⟩ : Fin (2*n+2)), (⟨j.val+1, by omega⟩ : Fin (2*n+2))) ∉
+        σ.pairs.image (fun q => (expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q.1,
+                                  expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q.2)) := by
+      intro hmem
+      rw [Finset.mem_image] at hmem
+      obtain ⟨q, _, hq_eq⟩ := hmem
+      exact expandFin_ne_zero (2*n) ⟨j.val+1, by omega⟩ hj'pos q.1
+        (congrArg (fun p : Fin (2*n+2) × Fin (2*n+2) => p.1.val) hq_eq)
+    rw [Finset.erase_eq_of_notMem hnotmem]
+    -- Helper: compress ∘ expand = id, using nat-level reasoning to avoid dependent type issues
+    have hval : (π.partner ⟨0, by omega⟩).val = j.val + 1 := congrArg Fin.val hpartner
+    have compress_expand : ∀ (k : Fin (2*n)),
+        compressFinTotal (2*n) (by omega) (π.partner ⟨0, by omega⟩)
+          (by have h := π.partner_ne_self (⟨0, by omega⟩ : Fin (2*n+2))
+              have : (π.partner ⟨0, by omega⟩).val ≠ 0 := fun heq => h (Fin.ext heq)
+              omega)
+          (expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos k) = k := by
+      intro k
+      unfold compressFinTotal
+      rw [dif_neg (expandFin_ne_zero (2*n) ⟨j.val+1, by omega⟩ hj'pos k)]
+      rw [dif_neg (show expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos k ≠
+          π.partner ⟨0, by omega⟩ by rw [hpartner]; exact expandFin_ne_j _ _ _ _)]
+      unfold expandFin
+      split_ifs with h1
+      · show compressFin (2*n) (π.partner ⟨0, _⟩) _ ⟨k.val + 1, _⟩ _ _ = k
+        unfold compressFin; ext
+        change (if k.val + 1 < (π.partner ⟨0, _⟩).val then k.val + 1 - 1
+                else k.val + 1 - 2) = k.val
+        rw [hval]; split_ifs <;> omega
+      · show compressFin (2*n) (π.partner ⟨0, _⟩) _ ⟨k.val + 2, _⟩ _ _ = k
+        unfold compressFin; ext
+        change (if k.val + 2 < (π.partner ⟨0, _⟩).val then k.val + 2 - 1
+                else k.val + 2 - 2) = k.val
+        rw [hval]; split_ifs <;> omega
+    -- Now: image (compressPairTotal ...) (σ.pairs.image ep) = σ.pairs
+    ext p
+    simp only [Finset.mem_image]
+    constructor
+    · rintro ⟨q, ⟨q', hq'_mem, hq'_eq⟩, hq_compress⟩
+      subst hq'_eq
+      have hcomp : (compressPairTotal (2*n) (by omega) (π.partner ⟨0, by omega⟩)
+          (by rw [hval]; omega)
+          (expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q'.1,
+           expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos q'.2)) = q' := by
+        unfold compressPairTotal; ext1 <;> exact compress_expand _
+      rw [hcomp] at hq_compress; rw [← hq_compress]; exact hq'_mem
+    · intro hp_mem
+      refine ⟨(expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos p.1,
+               expandFin (2*n) ⟨j.val+1, by omega⟩ hj'pos p.2),
+              ⟨p, hp_mem, rfl⟩, ?_⟩
+      unfold compressPairTotal; ext1 <;> exact compress_expand _
+
 private theorem decompPairing_surjective (n : ℕ) :
     Function.Surjective (decompPairing n) := by
   intro ⟨j, σ⟩
   exact ⟨expandedPairing n j σ, by
-    sorry⟩
+    simp only [decompPairing, Prod.mk.injEq]
+    exact ⟨expandedPairing_partnerIdx n j σ, expandedPairing_compressedPairing n j σ⟩⟩
 
 /-- The cardinality recursion: `|Pairing(2(n+1))| = (2n+1) * |Pairing(2n)|`. -/
 theorem pairing_card_succ (n : ℕ) :
