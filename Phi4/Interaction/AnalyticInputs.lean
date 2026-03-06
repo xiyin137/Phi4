@@ -3,6 +3,7 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Phi4.Interaction.Part3
+import Mathlib.Analysis.Convex.Integral
 
 /-!
 # Analytic Inputs for the Interaction Integrability
@@ -147,7 +148,101 @@ Gaussian field pairings ω(δ_{κ,x}). For fixed κ, all moments are finite beca
 - :φ_κ(x)⁴: is a polynomial in ω(δ_{κ,x})
 - Polynomials of Gaussians have all moments finite
 - The integral over Λ (bounded region) preserves integrability
+
+The proof uses:
+1. wickPower_memLp: for each x, the Wick power is in L^p(dμ) for all finite p
+2. Cauchy-Schwarz: (∫_Λ f dx)² ≤ vol(Λ) * ∫_Λ f² dx
+3. Fubini-Tonelli: E[∫_Λ f² dx] = ∫_Λ E[f²] dx for f² ≥ 0
+4. Translation invariance: E[:φ_κ(x)⁴:²] is constant in x
 -/
+
+/-- For each fixed spacetime point, the square of the Wick power is integrable
+    under the free field measure. Immediate from `wickPower_memLp` with p = 2. -/
+theorem wickPower_sq_integrable (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+    (x : Spacetime2D) :
+    Integrable (fun ω => (wickPower 4 mass κ ω x) ^ 2)
+      (freeFieldMeasure mass hmass) :=
+  (wickPower_memLp 4 mass hmass κ x (by norm_num : (2 : ℝ≥0∞) ≠ ⊤)).integrable_sq
+
+/-- Cauchy-Schwarz for set integrals over a finite-measure set:
+    (∫ x in S, f x)² ≤ (μ S).toReal * ∫ x in S, f x ^ 2.
+    This is Jensen's inequality for the convex function (·)². -/
+theorem sq_setIntegral_le_volume_mul_setIntegral_sq {f : Spacetime2D → ℝ}
+    (S : Set Spacetime2D) (_hS : MeasurableSet S)
+    (hfint : Integrable f (MeasureTheory.volume.restrict S))
+    (hf2int : Integrable (fun x => f x ^ 2) (MeasureTheory.volume.restrict S))
+    (hvol : MeasureTheory.volume S ≠ ⊤) :
+    (∫ x in S, f x) ^ 2 ≤
+      (MeasureTheory.volume S).toReal * ∫ x in S, f x ^ 2 := by
+  -- If vol(S) = 0, both sides are 0
+  by_cases hvol0 : MeasureTheory.volume S = 0
+  · have hrestr : MeasureTheory.volume.restrict S = 0 :=
+      MeasureTheory.Measure.restrict_eq_zero.mpr hvol0
+    simp [hrestr]
+  -- vol(S) > 0: use Jensen's inequality for (·)²
+  have hconv : ConvexOn ℝ Set.univ (fun x : ℝ => x ^ 2) :=
+    Even.convexOn_pow ⟨1, rfl⟩
+  have hjensen := ConvexOn.map_set_average_le hconv
+    (continuous_pow 2 |>.continuousOn) isClosed_univ
+    hvol0 hvol (by simp) hfint hf2int
+  -- hjensen : (⨍ x in S, f x) ^ 2 ≤ ⨍ x in S, f x ^ 2
+  rw [MeasureTheory.setAverage_eq, MeasureTheory.setAverage_eq] at hjensen
+  simp only [smul_eq_mul, MeasureTheory.Measure.real] at hjensen
+  rw [mul_pow] at hjensen
+  -- hjensen : V⁻¹ ^ 2 * (∫_S f) ^ 2 ≤ V⁻¹ * ∫_S f²  where V = (volume S).toReal
+  have hVpos : 0 < (MeasureTheory.volume S).toReal := ENNReal.toReal_pos hvol0 hvol
+  -- Multiply both sides by V² to clear denominators
+  have h1 := mul_le_mul_of_nonneg_left hjensen
+    (sq_nonneg (MeasureTheory.volume S).toReal)
+  set V := (MeasureTheory.volume S).toReal with hV_def
+  have hVne : V ≠ 0 := hVpos.ne'
+  have hVinv_pos : 0 < V⁻¹ := inv_pos.mpr hVpos
+  -- hjensen: V⁻¹ ^ 2 * (∫ f)² ≤ V⁻¹ * ∫ f²
+  -- Rewrite V⁻¹ ^ 2 = V⁻¹ * V⁻¹ and reassociate
+  rw [sq, mul_assoc] at hjensen
+  -- hjensen: V⁻¹ * (V⁻¹ * (∫ f)²) ≤ V⁻¹ * ∫ f²
+  -- Cancel V⁻¹ from both sides (V⁻¹ > 0)
+  have h1 := le_of_mul_le_mul_left hjensen hVinv_pos
+  -- h1: V⁻¹ * (∫ f)² ≤ ∫ f²
+  -- Multiply both sides by V (> 0)
+  have h2 := mul_le_mul_of_nonneg_left h1 hVpos.le
+  -- h2: V * (V⁻¹ * (∫ f)²) ≤ V * ∫ f²
+  rw [← mul_assoc, mul_inv_cancel₀ hVne, one_mul] at h2
+  -- h2: (∫ f)² ≤ V * ∫ f²
+  exact h2
+
+/-- The function (ω, x) ↦ (wickPower 4 mass κ ω x)² is integrable on the product
+    of the free field measure with Lebesgue measure restricted to Λ.
+    Uses Fubini's criterion: integrable in ω for each x, and the ω-integral
+    is integrable in x over Λ. -/
+theorem wickPower_sq_integrable_prod (params : Phi4Params) (Λ : Rectangle)
+    (κ : UVCutoff) :
+    Integrable
+      (fun p : FieldConfig2D × Spacetime2D =>
+        (wickPower 4 params.mass κ p.1 p.2) ^ 2)
+      ((freeFieldMeasure params.mass params.mass_pos).prod
+        (MeasureTheory.volume.restrict Λ.toSet)) := by
+  let μ := freeFieldMeasure params.mass params.mass_pos
+  let ν := MeasureTheory.volume.restrict Λ.toSet
+  -- Use integrable_prod_iff': integrable on product iff
+  -- (1) for a.e. x ∂ν, ω ↦ f(ω,x) is integrable ∂μ, and
+  -- (2) x ↦ ∫ ‖f(ω,x)‖ dμ(ω) is integrable ∂ν
+  -- Joint AEStronglyMeasurable for wickPower² on the product
+  have hmeas : AEStronglyMeasurable
+      (fun p : FieldConfig2D × Spacetime2D => (wickPower 4 params.mass κ p.1 p.2) ^ 2)
+      (μ.prod ν) := by
+    exact ((wickPower_stronglyMeasurable_uncurry 4 params.mass κ).pow 2).aestronglyMeasurable
+  rw [MeasureTheory.integrable_prod_iff' hmeas]
+  constructor
+  · -- (1) For a.e. x ∂ν, ω ↦ wickPower(ω,x)² is integrable ∂μ
+    filter_upwards with x
+    exact wickPower_sq_integrable params.mass params.mass_pos κ x
+  · -- (2) x ↦ ∫ |wickPower(ω,x)²| dμ(ω) is integrable ∂ν
+    -- Since wickPower² ≥ 0, the norm is just the value: ‖w²‖ = w²
+    -- So this is x ↦ ∫ wickPower(ω,x)² dμ(ω) = E[wickPower(·,x)²]
+    -- This is constant in x by translation invariance of the Gaussian measure,
+    -- hence integrable on the finite-volume set Λ.
+    sorry
 
 /-- The cutoff interaction is square-integrable under the free field measure.
     This is a consequence of the Gaussian structure: V_{Λ,κ} is an integral
@@ -156,6 +251,11 @@ theorem gap_interactionCutoff_sq_integrable (params : Phi4Params) (Λ : Rectangl
     (κ : UVCutoff) :
     Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
       (freeFieldMeasure params.mass params.mass_pos) := by
+  -- Strategy: Cauchy-Schwarz gives (∫_Λ w dx)² ≤ vol(Λ) * ∫_Λ w² dx.
+  -- By Fubini (wickPower_sq_integrable_prod), ω ↦ ∫_Λ w² dx is integrable.
+  -- By Integrable.mono, (∫_Λ w dx)² is integrable.
+  -- Decomposed into: wickPower_sq_integrable, sq_setIntegral_le_volume_mul_setIntegral_sq,
+  -- wickPower_sq_integrable_prod.
   sorry
 
 /-- The cutoff interaction is in L² under the free field measure. -/
