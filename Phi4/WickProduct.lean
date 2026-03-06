@@ -152,6 +152,26 @@ theorem wickMonomial_neg : ∀ (n : ℕ) (c x : ℝ),
     simp only [wickMonomial_succ_succ]
     rw [wickMonomial_neg (n + 1) c x, wickMonomial_neg n c x]; ring
 
+/-- Negation of the raw field evaluation is definitional. -/
+@[simp]
+theorem rawFieldEval_neg (mass : ℝ) (κ : UVCutoff) (ω : FieldConfig2D)
+    (x : Spacetime2D) :
+    rawFieldEval mass κ (-ω) x = -(rawFieldEval mass κ ω x) := rfl
+
+/-- Wick power at even degree is invariant under φ → -φ. -/
+theorem wickPower_even_neg (n : ℕ) (mass : ℝ) (κ : UVCutoff)
+    (ω : FieldConfig2D) (x : Spacetime2D) :
+    wickPower (2 * n) mass κ (-ω) x = wickPower (2 * n) mass κ ω x := by
+  unfold wickPower
+  rw [rawFieldEval_neg, wickMonomial_neg]; simp
+
+/-- The quartic Wick power is invariant under φ → -φ. -/
+@[simp]
+theorem wickPower_four_neg (mass : ℝ) (κ : UVCutoff)
+    (ω : FieldConfig2D) (x : Spacetime2D) :
+    wickPower 4 mass κ (-ω) x = wickPower 4 mass κ ω x :=
+  wickPower_even_neg 2 mass κ ω x
+
 /-- E[(ω f)^2] = covariance(f, f). -/
 private theorem integral_sq_eq_cov (mass : ℝ) (hmass : 0 < mass) (f : TestFun2D) :
     ∫ ω : FieldConfig2D, (ω f) ^ 2 ∂(freeFieldMeasure mass hmass) =

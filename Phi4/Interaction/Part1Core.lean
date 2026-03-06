@@ -89,6 +89,37 @@ theorem interaction_eq_lim_of_convergent
     interaction params Λ ω = V := by
   exact interaction_eq_of_tendsto params Λ ω V hconv
 
+/-! ## φ → -φ symmetry of the interaction
+
+The Wick-ordered quartic :φ⁴: is an even function of the field (degree 4 polynomial).
+Therefore the interaction V_Λ = λ ∫_Λ :φ⁴: is invariant under the global sign flip φ → -φ.
+This symmetry implies that all odd Schwinger functions vanish. -/
+
+/-- The rectangle `toSet` is measurable. -/
+theorem Rectangle.toSet_measurableSet (Λ : Rectangle) : MeasurableSet Λ.toSet := by
+  unfold Rectangle.toSet; measurability
+
+/-- The UV-cutoff interaction is invariant under the global field sign flip ω → -ω. -/
+@[simp]
+theorem interactionCutoff_neg (params : Phi4Params) (Λ : Rectangle)
+    (κ : UVCutoff) (ω : FieldConfig2D) :
+    interactionCutoff params Λ κ (-ω) = interactionCutoff params Λ κ ω := by
+  unfold interactionCutoff
+  congr 1
+  apply MeasureTheory.setIntegral_congr_fun Λ.toSet_measurableSet
+  intro x _
+  exact wickPower_four_neg params.mass κ ω x
+
+/-- The limiting interaction (limsup of cutoff interactions) is invariant
+    under the global field sign flip ω → -ω. -/
+@[simp]
+theorem interaction_neg (params : Phi4Params) (Λ : Rectangle)
+    (ω : FieldConfig2D) :
+    interaction params Λ (-ω) = interaction params Λ ω := by
+  unfold interaction
+  congr 1; ext n
+  exact interactionCutoff_neg params Λ (standardUVCutoffSeq n) ω
+
 /-! ## Semiboundedness of the Wick-ordered quartic
 
 Although :φ⁴: = φ⁴ - 6cφ² + 3c² is not pointwise bounded below (the Wick subtractions
