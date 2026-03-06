@@ -51,6 +51,93 @@ theorem gap_pairing_card :
     ∀ n : ℕ, Fintype.card (Pairing (2 * n)) = Nat.doubleFactorial (2 * n - 1) :=
   pairing_card_eq_doubleFactorial
 
+/-- Sum over Pairing(2(n+1)) decomposes via decompPairingEquiv into a double sum. -/
+private lemma pairing_sum_decomp {α : Type*} [AddCommMonoid α] (n : ℕ)
+    (F : Pairing (2 * (n + 1)) → α) :
+    ∑ π, F π = ∑ j : Fin (2 * n + 1), ∑ σ : Pairing (2 * n),
+      F (expandedPairing n j σ) := by
+  rw [← Fintype.sum_prod_type']
+  exact Fintype.sum_equiv (decompPairingEquiv n) _ _
+    (fun π => by
+      show F π = F (expandedPairing n ((decompPairingEquiv n) π).1
+        ((decompPairingEquiv n) π).2)
+      congr 1
+      have h := (decompPairingEquiv n).symm_apply_apply π
+      rw [decompPairingEquiv_symm] at h
+      exact h.symm)
+
+/-- Wick's theorem: even moments of the free field equal the sum over all pairings. -/
+private theorem wicks_eq (mass : ℝ) (hmass : 0 < mass) :
+    ∀ (n : ℕ) (f : Fin (2 * n) → TestFun2D),
+    ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
+      ∑ π : Pairing (2 * n), ∏ p ∈ π.pairs,
+        GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2) := by
+  intro n
+  induction n with
+  | zero =>
+    intro f
+    simp only [Nat.mul_zero]
+    -- LHS: ∫ (∏ i : Fin 0, _) dμ = ∫ 1 dμ = 1
+    have hprod : (fun ω : FieldConfig2D => ∏ i : Fin 0, ω (f i)) = fun _ => 1 :=
+      funext fun _ => Fin.prod_univ_zero _
+    rw [hprod, integral_const, probReal_univ, one_smul]
+    -- RHS: unique pairing with empty pairs gives empty product = 1
+    symm
+    have hpairs : ∀ π : Pairing 0, ∏ p ∈ π.pairs,
+        GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2) = 1 := by
+      intro π
+      have : π.pairs = ∅ := by
+        rw [Finset.eq_empty_iff_forall_notMem]
+        intro ⟨a, _⟩; exact absurd a.isLt (Nat.not_lt_zero _)
+      rw [this]; exact Finset.prod_empty
+    simp_rw [hpairs, Finset.sum_const, Finset.card_univ, pairing_zero_card]
+    simp
+  | succ n ih =>
+    intro f
+    -- Step 1: Split product ∏ i : Fin(2(n+1)) = f(0) * ∏ i : Fin(2n+1), f(succ i)
+    have hsplit : (fun ω : FieldConfig2D => ∏ i : Fin (2 * (n + 1)), ω (f i)) =
+        fun ω => ω (f 0) * ∏ i : Fin (2 * n + 1), ω (f (Fin.succ i)) := by
+      ext ω
+      show ∏ i : Fin (2 * n + 1 + 1), ω (f i) = _
+      exact Fin.prod_univ_succ _
+    rw [hsplit]
+    -- Step 2: Apply wick_recursive
+    have hwick := GaussianField.wick_recursive (freeCovarianceCLM mass hmass) (2 * n)
+      (f 0) (f ∘ Fin.succ)
+    simp only [Function.comp] at hwick
+    rw [show freeFieldMeasure mass hmass =
+      GaussianField.measure (freeCovarianceCLM mass hmass) from rfl]
+    rw [hwick]
+    -- Step 3: Apply IH to each inner integral
+    simp_rw [show GaussianField.measure (freeCovarianceCLM mass hmass) =
+      freeFieldMeasure mass hmass from rfl,
+      ih (fun i => f (Fin.succ (Fin.succAbove _ i)))]
+    -- Now: ∑ x, ⟨T(f 0), T(f x.succ)⟩ * ∑ π, ∏ p, C(f(x.succAbove p.k).succ, ...)
+    --    = ∑ π, ∏ p, C(f p.1, f p.2)
+    symm
+    -- Step 4: Decompose sum over Pairing(2*(n+1)) via decompPairingEquiv
+    rw [pairing_sum_decomp n]
+    -- Step 5: Apply product decomposition + bridge lemmas per summand
+    congr 1; ext j
+    -- Goal: ∑ σ, ∏ p ∈ (expandedPairing n j σ).pairs, C(f p.1, f p.2)
+    --     = inner(...) * ∑ σ, ∏ p ∈ σ.pairs, C(...)
+    have hprod : ∀ σ, ∏ p ∈ (expandedPairing n j σ).pairs,
+        GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2) =
+      GaussianField.covariance (freeCovarianceCLM mass hmass) (f ⟨0, by omega⟩)
+        (f (expandedPartner n j)) *
+      ∏ q ∈ σ.pairs, GaussianField.covariance (freeCovarianceCLM mass hmass)
+        (f (expandFin (2 * n) (expandedPartner n j) (expandedPartner_pos n j) q.1))
+        (f (expandFin (2 * n) (expandedPartner n j) (expandedPartner_pos n j) q.2)) :=
+      fun σ => expandedPairing_prod_decomp n j σ _
+    refine (Finset.sum_congr rfl (fun σ _ => hprod σ)).trans ?_
+    rw [← Finset.mul_sum]
+    -- congr 1 closes the covariance/inner factor automatically
+    congr 1
+    -- Remaining: ∑ σ, ∏ q ∈ σ.pairs, C(f(expandFin q.1), f(expandFin q.2))
+    -- = ∑ σ, ∏ q ∈ σ.pairs, C(f(j.succAbove q.1).succ, f(j.succAbove q.2).succ)
+    congr 1; ext σ; congr 1; ext ⟨q1, q2⟩
+    simp_rw [expandFin_eq_succ_succAbove]
+
 /-- Honest theorem-level frontier: Wick's theorem for even moments under
     the free Gaussian measure. -/
 theorem gap_wicks_theorem_even (mass : ℝ) (hmass : 0 < mass) :
@@ -59,7 +146,8 @@ theorem gap_wicks_theorem_even (mass : ℝ) (hmass : 0 < mass) :
         ∫ ω, (∏ i, ω (f i)) ∂(freeFieldMeasure mass hmass) =
           ∑ π ∈ pairings, ∏ p ∈ π.pairs,
             GaussianField.covariance (freeCovarianceCLM mass hmass) (f p.1) (f p.2) := by
-  sorry
+  intro n f
+  exact ⟨Finset.univ, wicks_eq mass hmass n f⟩
 
 theorem wicks_theorem_odd (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : Fin (2 * n + 1) → TestFun2D) :

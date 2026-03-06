@@ -1204,10 +1204,10 @@ noncomputable def decompPairingEquiv (n : ℕ) :
   Equiv.ofBijective (decompPairing n) ⟨decompPairing_injective n, decompPairing_surjective n⟩
 
 /-- The partner of 0 in `expandedPairing n j σ` as a Fin value. -/
-private def expandedPartner (n : ℕ) (j : Fin (2 * n + 1)) : Fin (2 * n + 2) :=
+def expandedPartner (n : ℕ) (j : Fin (2 * n + 1)) : Fin (2 * n + 2) :=
   ⟨j.val + 1, by have := j.isLt; omega⟩
 
-private lemma expandedPartner_pos (n : ℕ) (j : Fin (2 * n + 1)) :
+lemma expandedPartner_pos (n : ℕ) (j : Fin (2 * n + 1)) :
     (0 : ℕ) < (expandedPartner n j).val := by
   simp [expandedPartner]
 
@@ -1266,3 +1266,25 @@ theorem expandedPairing_prod_decomp {α : Type*} [CommMonoid α]
     have h1 := congrArg (fun p : Fin _ × Fin _ => p.1.val) hq
     simp only at h1
     exact expandFin_ne_zero (2*n) _ _ q.1 h1
+
+/-- Round-trip: decomposing an expanded pairing recovers the original data. -/
+theorem decompPairing_expandedPairing (n : ℕ) (j : Fin (2 * n + 1)) (σ : Pairing (2 * n)) :
+    decompPairing n (expandedPairing n j σ) = (j, σ) := by
+  simp only [decompPairing, Prod.mk.injEq]
+  exact ⟨expandedPairing_partnerIdx n j σ, expandedPairing_compressedPairing n j σ⟩
+
+/-- The inverse of decompPairingEquiv sends (j, σ) to expandedPairing n j σ. -/
+theorem decompPairingEquiv_symm (n : ℕ) (j : Fin (2 * n + 1)) (σ : Pairing (2 * n)) :
+    (decompPairingEquiv n).symm (j, σ) = expandedPairing n j σ := by
+  apply (decompPairingEquiv n).injective
+  simp only [Equiv.apply_symm_apply]
+  exact (decompPairing_expandedPairing n j σ).symm
+
+/-- Fin.succ j equals expandedPartner n j (they have the same val). -/
+theorem fin_succ_eq_expandedPartner (n : ℕ) (j : Fin (2 * n + 1)) :
+    Fin.succ j = expandedPartner n j := Fin.ext (by simp [expandedPartner])
+
+/-- Any Pairing 0 has empty pairs. -/
+theorem pairing_zero_pairs_empty (π : Pairing 0) : π.pairs = ∅ := by
+  rw [Finset.eq_empty_iff_forall_notMem]
+  intro ⟨a, _⟩; exact absurd a.isLt (Nat.not_lt_zero _)
