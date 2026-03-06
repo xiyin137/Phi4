@@ -99,6 +99,76 @@ This symmetry implies that all odd Schwinger functions vanish. -/
 theorem Rectangle.toSet_measurableSet (Λ : Rectangle) : MeasurableSet Λ.toSet := by
   unfold Rectangle.toSet; measurability
 
+/-- The rectangle `toSet` is closed. -/
+theorem Rectangle.toSet_isClosed (Λ : Rectangle) : IsClosed Λ.toSet := by
+  unfold Rectangle.toSet
+  have hc0 : Continuous (EuclideanSpace.proj (𝕜 := ℝ) (0 : Fin 2)) :=
+    (EuclideanSpace.proj 0).continuous
+  have hc1 : Continuous (EuclideanSpace.proj (𝕜 := ℝ) (1 : Fin 2)) :=
+    (EuclideanSpace.proj 1).continuous
+  refine IsClosed.inter ?_ (IsClosed.inter ?_ (IsClosed.inter ?_ ?_))
+  · exact isClosed_le continuous_const hc0
+  · exact isClosed_le hc0 continuous_const
+  · exact isClosed_le continuous_const hc1
+  · exact isClosed_le hc1 continuous_const
+
+/-- The rectangle `toSet` is bounded. -/
+theorem Rectangle.toSet_isBounded (Λ : Rectangle) : Bornology.IsBounded Λ.toSet := by
+  rw [Metric.isBounded_iff_subset_closedBall 0]
+  set R := |Λ.x_min| + |Λ.x_max| + |Λ.y_min| + |Λ.y_max|
+  refine ⟨R, fun x hx => ?_⟩
+  simp only [Rectangle.toSet, Set.mem_setOf_eq] at hx
+  simp only [Metric.mem_closedBall, dist_zero_right]
+  obtain ⟨h1, h2, h3, h4⟩ := hx
+  -- Each coordinate: |x_i| ≤ |min_i| + |max_i|
+  have hb0 : |x.ofLp 0| ≤ |Λ.x_min| + |Λ.x_max| := by
+    by_cases hp : 0 ≤ x.ofLp 0
+    · calc |x.ofLp 0| = x.ofLp 0 := abs_of_nonneg hp
+        _ ≤ Λ.x_max := h2
+        _ ≤ |Λ.x_max| := le_abs_self _
+        _ ≤ _ := le_add_of_nonneg_left (abs_nonneg _)
+    · push_neg at hp
+      calc |x.ofLp 0| = -x.ofLp 0 := abs_of_neg hp
+        _ ≤ -Λ.x_min := by linarith
+        _ ≤ |Λ.x_min| := neg_le_abs _
+        _ ≤ _ := le_add_of_nonneg_right (abs_nonneg _)
+  have hb1 : |x.ofLp 1| ≤ |Λ.y_min| + |Λ.y_max| := by
+    by_cases hp : 0 ≤ x.ofLp 1
+    · calc |x.ofLp 1| = x.ofLp 1 := abs_of_nonneg hp
+        _ ≤ Λ.y_max := h4
+        _ ≤ |Λ.y_max| := le_abs_self _
+        _ ≤ _ := le_add_of_nonneg_left (abs_nonneg _)
+    · push_neg at hp
+      calc |x.ofLp 1| = -x.ofLp 1 := abs_of_neg hp
+        _ ≤ -Λ.y_min := by linarith
+        _ ≤ |Λ.y_min| := neg_le_abs _
+        _ ≤ _ := le_add_of_nonneg_right (abs_nonneg _)
+  -- ‖x‖ = √(|x₀|² + |x₁|²) ≤ √(R²) = R
+  have hR : 0 ≤ R := by positivity
+  rw [EuclideanSpace.norm_eq, Fin.sum_univ_two]
+  -- Squared coordinate bounds
+  have hA : 0 ≤ |Λ.x_min| + |Λ.x_max| := by positivity
+  have hB : 0 ≤ |Λ.y_min| + |Λ.y_max| := by positivity
+  have hsq0 : |x.ofLp 0| ^ 2 ≤ (|Λ.x_min| + |Λ.x_max|) ^ 2 :=
+    pow_le_pow_left₀ (abs_nonneg _) hb0 2
+  have hsq1 : |x.ofLp 1| ^ 2 ≤ (|Λ.y_min| + |Λ.y_max|) ^ 2 :=
+    pow_le_pow_left₀ (abs_nonneg _) hb1 2
+  calc √(‖x.ofLp 0‖ ^ 2 + ‖x.ofLp 1‖ ^ 2)
+      ≤ √(R ^ 2) := by
+        apply Real.sqrt_le_sqrt
+        simp only [Real.norm_eq_abs]
+        nlinarith [mul_nonneg hA hB]
+    _ = R := Real.sqrt_sq hR
+
+/-- The rectangle `toSet` is compact. -/
+theorem Rectangle.toSet_isCompact (Λ : Rectangle) : IsCompact Λ.toSet :=
+  Metric.isCompact_of_isClosed_isBounded Λ.toSet_isClosed Λ.toSet_isBounded
+
+/-- The rectangle `toSet` has finite volume. -/
+theorem Rectangle.toSet_volume_ne_top (Λ : Rectangle) :
+    MeasureTheory.volume Λ.toSet ≠ ⊤ :=
+  Λ.toSet_isCompact.measure_lt_top.ne
+
 /-- The UV-cutoff interaction is invariant under the global field sign flip ω → -ω. -/
 @[simp]
 theorem interactionCutoff_neg (params : Phi4Params) (Λ : Rectangle)
@@ -218,6 +288,8 @@ def HasExpInteractionLp (params : Phi4Params) : Prop :=
     use elsewhere in the repository. -/
 theorem gap_hasExpInteractionLp (params : Phi4Params) :
     HasExpInteractionLp params := by
+  -- Proved by hasExpInteractionLp_of_analytic_inputs in AnalyticInputs.lean
+  -- (cannot import here due to circular dependency; see Interaction.lean for wiring)
   sorry
 
 /-- Almost-everywhere convergence of the canonical cutoff sequence

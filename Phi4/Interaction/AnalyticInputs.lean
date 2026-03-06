@@ -251,12 +251,66 @@ theorem gap_interactionCutoff_sq_integrable (params : Phi4Params) (Λ : Rectangl
     (κ : UVCutoff) :
     Integrable (fun ω => (interactionCutoff params Λ κ ω) ^ 2)
       (freeFieldMeasure params.mass params.mass_pos) := by
-  -- Strategy: Cauchy-Schwarz gives (∫_Λ w dx)² ≤ vol(Λ) * ∫_Λ w² dx.
-  -- By Fubini (wickPower_sq_integrable_prod), ω ↦ ∫_Λ w² dx is integrable.
-  -- By Integrable.mono, (∫_Λ w dx)² is integrable.
-  -- Decomposed into: wickPower_sq_integrable, sq_setIntegral_le_volume_mul_setIntegral_sq,
-  -- wickPower_sq_integrable_prod.
-  sorry
+  -- interactionCutoff ω = coupling * ∫_Λ wickPower 4 mass κ ω x dx
+  -- (interactionCutoff ω)² = coupling² * (∫_Λ w dx)²
+  -- By Cauchy-Schwarz: (∫_Λ w dx)² ≤ vol(Λ) * ∫_Λ w² dx
+  -- So it suffices to show ω ↦ ∫_Λ w² dx is integrable (Fubini)
+  let μ := freeFieldMeasure params.mass params.mass_pos
+  let ν := MeasureTheory.volume.restrict Λ.toSet
+  unfold interactionCutoff
+  -- (coupling * ∫_Λ w dx)² = coupling² * (∫_Λ w dx)²
+  have h_eq : (fun ω => (params.coupling * ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x) ^ 2) =
+      (fun ω => params.coupling ^ 2 * (∫ x in Λ.toSet, wickPower 4 params.mass κ ω x) ^ 2) := by
+    ext ω; ring
+  rw [h_eq]
+  apply Integrable.const_mul
+  -- Need: ω ↦ (∫_Λ w dx)² is integrable ∂μ
+  -- By Fubini (wickPower_sq_integrable_prod): (ω,x) ↦ w² is integrable on μ × ν
+  -- By integral_prod_left: ω ↦ ∫ w² dν is integrable ∂μ
+  -- By Cauchy-Schwarz: (∫_Λ w dx)² ≤ vol(Λ) * ∫_Λ w² dx, so ‖(∫_Λ w)²‖ ≤ ‖vol * ∫ w²‖
+  have hprod := wickPower_sq_integrable_prod params Λ κ
+  have hfub : Integrable (fun ω => ∫ x, (wickPower 4 params.mass κ ω x) ^ 2 ∂ν) μ :=
+    hprod.integral_prod_left
+  -- The dominating function is vol(Λ) * ∫ w² dν, which is integrable
+  have hdom : Integrable (fun ω => (MeasureTheory.volume Λ.toSet).toReal *
+      ∫ x, (wickPower 4 params.mass κ ω x) ^ 2 ∂ν) μ := hfub.const_mul _
+  apply hdom.mono
+  · -- AEStronglyMeasurable for (∫_Λ w)²
+    -- The spatial integral is strongly measurable (same as interactionCutoff proof)
+    have hmeas_int : @StronglyMeasurable FieldConfig2D ℝ _ instMeasurableSpaceConfiguration
+        (fun ω => ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x) := by
+      show StronglyMeasurable fun ω => ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x
+      have h_eq : (fun ω => ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x) =
+          (fun ω => ∫ x, Λ.toSet.indicator (fun x => wickPower 4 params.mass κ ω x) x) := by
+        ext ω; rw [integral_indicator Λ.toSet_measurableSet]
+      rw [h_eq]
+      apply StronglyMeasurable.integral_prod_right
+      apply StronglyMeasurable.indicator
+      · exact wickPower_stronglyMeasurable_uncurry 4 params.mass κ
+      · exact Λ.toSet_measurableSet.preimage measurable_snd
+    exact (StronglyMeasurable.pow hmeas_int 2).aestronglyMeasurable
+  · -- Pointwise bound: ‖(∫_Λ w)²‖ ≤ ‖vol * ∫ w²‖ a.e.
+    filter_upwards with ω
+    -- LHS: ‖(∫_Λ w)²‖ = (∫_Λ w)² (since squares are nonneg)
+    rw [Real.norm_of_nonneg (sq_nonneg _)]
+    -- RHS: ‖vol * ∫ w²‖ = vol * ∫ w² (both nonneg)
+    rw [Real.norm_of_nonneg (mul_nonneg ENNReal.toReal_nonneg
+      (integral_nonneg (fun x => sq_nonneg _)))]
+    -- Now: (∫_Λ w)² ≤ vol * ∫_Λ w² by Cauchy-Schwarz
+    -- Convert ∫ ... ∂ν to ∫ ... in Λ.toSet
+    change (∫ x in Λ.toSet, wickPower 4 params.mass κ ω x) ^ 2 ≤
+      (MeasureTheory.volume Λ.toSet).toReal *
+      ∫ x in Λ.toSet, wickPower 4 params.mass κ ω x ^ 2
+    -- Apply Cauchy-Schwarz (Jensen)
+    apply sq_setIntegral_le_volume_mul_setIntegral_sq
+    · exact Λ.toSet_measurableSet
+    · -- wickPower is integrable on Λ (continuous on compact, hence integrable)
+      exact (wickPower_continuous_in_x 4 params.mass κ ω).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    · -- wickPower² is integrable on Λ
+      exact ((wickPower_continuous_in_x 4 params.mass κ ω).pow 2).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    · exact Λ.toSet_volume_ne_top
 
 /-- The cutoff interaction is in L² under the free field measure. -/
 theorem interactionCutoff_memLp_two (params : Phi4Params) (Λ : Rectangle)
@@ -293,7 +347,14 @@ theorem gap_interactionCutoff_ae_convergence (params : Phi4Params) (Λ : Rectang
 theorem gap_interaction_aestronglyMeasurable (params : Phi4Params) (Λ : Rectangle) :
     AEStronglyMeasurable (interaction params Λ)
       (freeFieldMeasure params.mass params.mass_pos) := by
-  sorry
+  -- interaction = Filter.limsup of interactionCutoff (standardUVCutoffSeq n)
+  -- Each cutoff is StronglyMeasurable → Measurable
+  -- Measurable.limsup → interaction is Measurable → AEStronglyMeasurable
+  unfold interaction
+  apply Measurable.aestronglyMeasurable
+  apply Measurable.limsup
+  intro n
+  exact (interactionCutoff_stronglyMeasurable params Λ (standardUVCutoffSeq n)).measurable
 
 /-- Square integrability of the limiting interaction. -/
 theorem gap_interaction_sq_integrable (params : Phi4Params) (Λ : Rectangle) :
