@@ -595,23 +595,1033 @@ private theorem integral_abs_le_sqrt_integral_sq {Ω : Type*} [MeasurableSpace �
     congr 1; ext ω; exact sq_abs (f ω)] at h_jensen
   exact Real.le_sqrt_of_sq_le h_jensen
 
+/-- Hölder bridge for the shell `A`-term: `L⁴ × L⁴ → L²` on products.
+This is the right reusable norm-level statement after
+`wickPower_four_step_decomposition`; the shell estimate for the nonlinear part
+reduces to separate `L⁴` bounds on the raw increment and the cubic polynomial
+factor. -/
+private theorem lpNorm_mul_le_lpNorm_four_mul_four
+    {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    {f g : α → ℝ}
+    (hf : MemLp f 4 μ) (hg : MemLp g 4 μ) :
+    lpNorm (fun x => f x * g x) 2 μ ≤ lpNorm f 4 μ * lpNorm g 4 μ := by
+  haveI : ENNReal.HolderTriple (4 : ℝ≥0∞) 4 2 := by
+    simpa [show (4 : ℝ≥0∞) = 2 * (2 : ℝ≥0∞) by norm_num] using
+      (holderTriple_double (2 : ℝ≥0∞))
+  have h_e : eLpNorm (fun x => f x * g x) 2 μ ≤ eLpNorm f 4 μ * eLpNorm g 4 μ := by
+    have hmul : ∀ x, ‖(fun x1 x2 => x1 * x2) (f x) (g x)‖ ≤ (1 : ℝ) * ‖f x‖ * ‖g x‖ := by
+      intro x
+      calc
+        ‖(fun x1 x2 => x1 * x2) (f x) (g x)‖ ≤ ‖f x‖ * ‖g x‖ := norm_mul_le (f x) (g x)
+        _ = (1 : ℝ) * ‖f x‖ * ‖g x‖ := by ring
+    simpa using
+      (eLpNorm_le_eLpNorm_mul_eLpNorm'_of_norm (μ := μ)
+        (p := (4 : ℝ≥0∞)) (q := (4 : ℝ≥0∞)) (r := (2 : ℝ≥0∞))
+        hf.1 hg.1 (· * ·) 1 (.of_forall hmul))
+  have hfg : MemLp (fun x => f x * g x) (2 : ℝ≥0∞) μ := by
+    simpa using (hg.mul' hf)
+  rw [← MeasureTheory.toReal_eLpNorm hfg.aestronglyMeasurable]
+  rw [← MeasureTheory.toReal_eLpNorm hf.aestronglyMeasurable]
+  rw [← MeasureTheory.toReal_eLpNorm hg.aestronglyMeasurable]
+  have h_toReal :=
+    ENNReal.toReal_mono (ENNReal.mul_ne_top hf.eLpNorm_lt_top.ne hg.eLpNorm_lt_top.ne) h_e
+  simpa [ENNReal.toReal_mul] using h_toReal
+
+/-- Exact `L⁴` norm of the raw shell increment. This converts the fourth-moment
+identity from `WickProduct` into the norm-level statement needed by the shell
+`A`-term estimate. -/
+private theorem rawFieldEval_sub_lpNorm_four_eq
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    lpNorm (fun ω : FieldConfig2D => rawFieldEval mass κ₂ ω x - rawFieldEval mass κ₁ ω x)
+      4 (freeFieldMeasure mass hmass)
+    = (3 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₂ x - uvMollifier κ₁ x)
+        (uvMollifier κ₂ x - uvMollifier κ₁ x)) ^ 2) ^ ((1 : ℝ) / 4) := by
+  let μ := freeFieldMeasure mass hmass
+  let Δ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x - rawFieldEval mass κ₁ ω x
+  have hmem : MemLp Δ 4 μ := by
+    simpa [Δ, rawFieldEval_sub] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₂ x - uvMollifier κ₁ x) (4 : ℝ≥0))
+  rw [lpNorm_eq_integral_norm_rpow_toReal (by norm_num) ENNReal.ofNat_ne_top
+    hmem.aestronglyMeasurable]
+  norm_num
+  have habs4 : ∀ z : ℝ, |z| ^ 4 = z ^ 4 := by
+    intro z
+    calc
+      |z| ^ 4 = (|z| ^ 2) ^ 2 := by ring
+      _ = (z ^ 2) ^ 2 := by rw [sq_abs]
+      _ = z ^ 4 := by ring
+  have habs : ∫ ω : FieldConfig2D, |Δ ω| ^ 4 ∂μ = ∫ ω : FieldConfig2D, (Δ ω) ^ 4 ∂μ := by
+    refine integral_congr_ae ?_
+    filter_upwards with ω
+    exact habs4 (Δ ω)
+  rw [habs]
+  have hfour := rawFieldEval_sub_fourth_expectation mass hmass κ₁ κ₂ x
+  exact congrArg (fun t : ℝ => t ^ ((1 : ℝ) / 4)) hfour
+
+/-- Exact `L⁴` norm of a single regularized raw field in terms of its covariance.
+This is the basic Gaussian moment formula needed to make the cubic-factor bound
+quantitative. -/
+private theorem rawFieldEval_lpNorm_four_eq
+    (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) (x : Spacetime2D) :
+    lpNorm (fun ω : FieldConfig2D => rawFieldEval mass κ ω x)
+      4 (freeFieldMeasure mass hmass)
+    = (3 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+        (uvMollifier κ x) (uvMollifier κ x)) ^ 2) ^ ((1 : ℝ) / 4) := by
+  let μ := freeFieldMeasure mass hmass
+  let X : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ ω x
+  let f : TestFun2D := uvMollifier κ x
+  let σ : ℝ := GaussianField.covariance (freeCovarianceCLM mass hmass) f f
+  have hX_4 : MemLp X 4 μ := by
+    simpa [X, f] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) f (4 : ℝ≥0))
+  rw [lpNorm_eq_integral_norm_rpow_toReal (by norm_num) ENNReal.ofNat_ne_top
+    hX_4.aestronglyMeasurable]
+  norm_num
+  have habs4 : ∀ z : ℝ, |z| ^ 4 = z ^ 4 := by
+    intro z
+    calc
+      |z| ^ 4 = (|z| ^ 2) ^ 2 := by ring
+      _ = (z ^ 2) ^ 2 := by rw [sq_abs]
+      _ = z ^ 4 := by ring
+  have habs : ∫ ω : FieldConfig2D, |X ω| ^ 4 ∂μ = ∫ ω : FieldConfig2D, (X ω) ^ 4 ∂μ := by
+    refine integral_congr_ae ?_
+    filter_upwards with ω
+    exact habs4 (X ω)
+  rw [habs]
+  have h2 : ∫ ω : FieldConfig2D, (ω f) ^ 2 ∂μ = σ := by
+    simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ 2 = ω f * ω f from fun ω => sq (ω f)]
+    simpa [GaussianField.covariance, σ] using
+      cross_moment_eq_covariance (freeCovarianceCLM mass hmass) f f
+  have h4 : ∫ ω : FieldConfig2D, (ω f) ^ 4 ∂μ = 3 * σ ^ 2 := by
+    rw [show (4 : ℕ) = 2 + 2 from rfl, moment_recursion_ai mass hmass f 2, h2]
+    simp [σ]
+    ring
+  simpa [X, f, σ] using congrArg (fun t : ℝ => t ^ ((1 : ℝ) / 4)) h4
+
+/-- Exact `L⁴` norm of the cubic absolute-value factor `|X|^3` for a Gaussian
+raw field `X = rawFieldEval mass κ · x`. This packages the twelfth Gaussian
+moment into the norm form needed by `cubic_factor_lpNorm_four_le`. -/
+private theorem rawFieldEval_abs_cube_lpNorm_four_eq
+    (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) (x : Spacetime2D) :
+    lpNorm (fun ω : FieldConfig2D => |rawFieldEval mass κ ω x| ^ (3 : ℝ))
+      4 (freeFieldMeasure mass hmass)
+    = (10395 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+        (uvMollifier κ x) (uvMollifier κ x)) ^ 6) ^ ((1 : ℝ) / 4) := by
+  let μ := freeFieldMeasure mass hmass
+  let X : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ ω x
+  let f : TestFun2D := uvMollifier κ x
+  let σ : ℝ := GaussianField.covariance (freeCovarianceCLM mass hmass) f f
+  have hX_12 : MemLp X 12 μ := by
+    simpa [X, f] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) f (12 : ℝ≥0))
+  have hcube' : MemLp (fun ω => |X ω| ^ (3 : ℝ)) ((12 : ℝ≥0∞) / 3) μ := by
+    simpa [Real.norm_eq_abs] using hX_12.norm_rpow_div (3 : ℝ≥0∞)
+  have hdiv12 : ((12 : ℝ≥0∞) / 3) = 4 := by
+    change (((12 : NNReal) : ENNReal) / ((3 : NNReal) : ENNReal)) = ((4 : NNReal) : ENNReal)
+    rw [← ENNReal.coe_div (p := (12 : NNReal)) (r := (3 : NNReal)) (by norm_num)]
+    norm_num
+  have hcube : MemLp (fun ω => |X ω| ^ (3 : ℝ)) 4 μ := by
+    simpa [hdiv12] using hcube'
+  rw [lpNorm_eq_integral_norm_rpow_toReal (by norm_num) ENNReal.ofNat_ne_top
+    hcube.aestronglyMeasurable]
+  norm_num
+  have hpow12 : ∀ z : ℝ, (|z| ^ (3 : ℕ)) ^ (4 : ℕ) = z ^ 12 := by
+    intro z
+    have hsq : |z| ^ 2 = z ^ 2 := by simp
+    calc
+      (|z| ^ (3 : ℕ)) ^ (4 : ℕ) = |z| ^ (12 : ℕ) := by
+        rw [← pow_mul]
+      _ = (|z| ^ 2) ^ 6 := by
+        rw [show (12 : ℕ) = 2 * 6 by norm_num, pow_mul]
+      _ = (z ^ 2) ^ 6 := by rw [hsq]
+      _ = z ^ 12 := by
+        rw [show (12 : ℕ) = 2 * 6 by norm_num, pow_mul]
+  have habs : ∫ ω : FieldConfig2D, (|X ω| ^ (3 : ℕ)) ^ (4 : ℕ) ∂μ =
+      ∫ ω : FieldConfig2D, (X ω) ^ 12 ∂μ := by
+    refine integral_congr_ae ?_
+    filter_upwards with ω
+    exact hpow12 (X ω)
+  have habs_pow :
+      (∫ ω : FieldConfig2D, (|X ω| ^ (3 : ℕ)) ^ (4 : ℕ) ∂μ) ^ ((1 : ℝ) / 4) =
+      (∫ ω : FieldConfig2D, (X ω) ^ 12 ∂μ) ^ ((1 : ℝ) / 4) := by
+    exact congrArg (fun t : ℝ => t ^ ((1 : ℝ) / 4)) habs
+  have h2 : ∫ ω : FieldConfig2D, (ω f) ^ 2 ∂μ = σ := by
+    simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ 2 = ω f * ω f from fun ω => sq (ω f)]
+    simpa [GaussianField.covariance, σ] using
+      cross_moment_eq_covariance (freeCovarianceCLM mass hmass) f f
+  have h4 : ∫ ω : FieldConfig2D, (ω f) ^ 4 ∂μ = 3 * σ ^ 2 := by
+    rw [show (4 : ℕ) = 2 + 2 from rfl, moment_recursion_ai mass hmass f 2, h2]
+    simp [σ]
+    ring
+  have h6 : ∫ ω : FieldConfig2D, (ω f) ^ 6 ∂μ = 15 * σ ^ 3 := by
+    rw [show (6 : ℕ) = 4 + 2 from rfl, moment_recursion_ai mass hmass f 4, h4]
+    simp [σ]
+    ring
+  have h8 : ∫ ω : FieldConfig2D, (ω f) ^ 8 ∂μ = 105 * σ ^ 4 := by
+    rw [show (8 : ℕ) = 6 + 2 from rfl, moment_recursion_ai mass hmass f 6, h6]
+    simp [σ]
+    ring
+  have h10 : ∫ ω : FieldConfig2D, (ω f) ^ 10 ∂μ = 945 * σ ^ 5 := by
+    rw [show (10 : ℕ) = 8 + 2 from rfl, moment_recursion_ai mass hmass f 8, h8]
+    simp [σ]
+    ring
+  have h12 : ∫ ω : FieldConfig2D, (ω f) ^ 12 ∂μ = 10395 * σ ^ 6 := by
+    rw [show (12 : ℕ) = 10 + 2 from rfl, moment_recursion_ai mass hmass f 10, h10]
+    simp [σ]
+    ring
+  have hX12 : ∫ ω : FieldConfig2D, (X ω) ^ 12 ∂μ = 10395 * σ ^ 6 := by
+    simpa [X, f] using h12
+  calc
+    (∫ x : FieldConfig2D, (|X x| ^ (3 : ℕ)) ^ (4 : ℕ) ∂μ) ^ ((1 : ℝ) / 4) =
+        (∫ ω : FieldConfig2D, (X ω) ^ 12 ∂μ) ^ ((1 : ℝ) / 4) := habs_pow
+    _ = (10395 * σ ^ 6) ^ ((1 : ℝ) / 4) := by rw [hX12]
+    _ = (10395 * (GaussianField.covariance (freeCovarianceCLM mass hmass) f f) ^ 6) ^
+          ((1 : ℝ) / 4) := by simp [σ]
+    _ = (10395 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+          (uvMollifier κ x) (uvMollifier κ x)) ^ 6) ^ ((1 : ℝ) / 4) := by
+          simp [f]
+
+/-- Nonnegative mixed cubic terms are controlled by pure cubes.
+This is the algebraic inequality behind the `L⁴` bound for the cubic factor in
+`wickPower_four_step_decomposition`. -/
+private theorem mixed_cubic_le_four_cubes (a b : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    a ^ 3 + a ^ 2 * b + a * b ^ 2 + b ^ 3 ≤ 4 * (a ^ 3 + b ^ 3) := by
+  nlinarith [ha, hb, sq_nonneg (a - b)]
+
+/-- Pointwise domination of the cubic factor from
+`wickPower_four_step_decomposition` by pure cubic and linear terms in the raw
+fields. This avoids estimating the mixed monomials separately. -/
+private theorem cubic_factor_pointwise_bound
+    (x y c : ℝ) :
+    |x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3 - 6 * c * (x + y)|
+      ≤ 4 * (|x| ^ 3 + |y| ^ 3) + 6 * |c| * (|x| + |y|) := by
+  have htri :
+      |x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3 - 6 * c * (x + y)|
+        ≤ |x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3| + |6 * c * (x + y)| := by
+    simpa [sub_eq_add_neg] using
+      (abs_add_le (x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3) (- (6 * c * (x + y))))
+  have hpoly1 :
+      |x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3|
+        ≤ |x| ^ 3 + |x ^ 2 * y| + |x * y ^ 2| + |y| ^ 3 := by
+    calc
+      |x ^ 3 + x ^ 2 * y + x * y ^ 2 + y ^ 3|
+          = |(x ^ 3 + x ^ 2 * y) + (x * y ^ 2 + y ^ 3)| := by ring_nf
+      _ ≤ |x ^ 3 + x ^ 2 * y| + |x * y ^ 2 + y ^ 3| := abs_add_le _ _
+      _ ≤ (|x ^ 3| + |x ^ 2 * y|) + (|x * y ^ 2| + |y ^ 3|) := by
+            gcongr <;> exact abs_add_le _ _
+      _ = |x| ^ 3 + |x ^ 2 * y| + |x * y ^ 2| + |y| ^ 3 := by
+            simp [abs_mul, abs_pow, add_assoc, add_left_comm, add_comm]
+  have hpoly2 :
+      |x| ^ 3 + |x ^ 2 * y| + |x * y ^ 2| + |y| ^ 3
+        ≤ 4 * (|x| ^ 3 + |y| ^ 3) := by
+    have hxy1 : |x ^ 2 * y| = |x| ^ 2 * |y| := by simp [abs_mul, abs_pow]
+    have hxy2 : |x * y ^ 2| = |x| * |y| ^ 2 := by simp [abs_mul, abs_pow]
+    rw [hxy1, hxy2]
+    exact mixed_cubic_le_four_cubes |x| |y| (abs_nonneg _) (abs_nonneg _)
+  have hlin : |6 * c * (x + y)| ≤ 6 * |c| * (|x| + |y|) := by
+    calc
+      |6 * c * (x + y)| = 6 * |c| * |x + y| := by
+        simp [abs_mul, mul_left_comm, mul_comm]
+      _ ≤ 6 * |c| * (|x| + |y|) := by
+        gcongr
+        exact abs_add_le _ _
+  exact le_trans htri (by linarith [hpoly1.trans hpoly2, hlin])
+
+/-- `L⁴` bound for the cubic factor in `wickPower_four_step_decomposition`.
+This reduces the nonlinear shell term to raw-field `L¹²` and `L⁴` control,
+which is available from Gaussian moments. -/
+private theorem cubic_factor_lpNorm_four_le
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+    let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+    let c := regularizedPointCovariance mass κ₁
+    let P : FieldConfig2D → ℝ := fun ω =>
+      (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+        - 6 * c * (X₂ ω + X₁ ω)
+    lpNorm P 4 μ ≤
+      4 * (lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ + lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ) +
+      6 * |c| * (lpNorm (fun ω => |X₂ ω|) 4 μ + lpNorm (fun ω => |X₁ ω|) 4 μ) := by
+  dsimp
+  let μ := freeFieldMeasure mass hmass
+  let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+  let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+  let c := regularizedPointCovariance mass κ₁
+  let P : FieldConfig2D → ℝ := fun ω =>
+    (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+      - 6 * c * (X₂ ω + X₁ ω)
+  let Q1 : FieldConfig2D → ℝ := fun ω =>
+    4 * (|X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ))
+  let Q2 : FieldConfig2D → ℝ := fun ω =>
+    6 * |c| * (|X₂ ω| + |X₁ ω|)
+  have hX1_12 : MemLp X₁ 12 μ := by
+    simpa [X₁] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₁ x) (12 : ℝ≥0))
+  have hX2_12 : MemLp X₂ 12 μ := by
+    simpa [X₂] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₂ x) (12 : ℝ≥0))
+  have hX1_4 : MemLp X₁ 4 μ := by
+    simpa [X₁] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₁ x) (4 : ℝ≥0))
+  have hX2_4 : MemLp X₂ 4 μ := by
+    simpa [X₂] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₂ x) (4 : ℝ≥0))
+  have hX1_cube' : MemLp (fun ω => |X₁ ω| ^ (3 : ℝ)) ((12 : ℝ≥0∞) / 3) μ := by
+    simpa [Real.norm_eq_abs] using hX1_12.norm_rpow_div (3 : ℝ≥0∞)
+  have hX2_cube' : MemLp (fun ω => |X₂ ω| ^ (3 : ℝ)) ((12 : ℝ≥0∞) / 3) μ := by
+    simpa [Real.norm_eq_abs] using hX2_12.norm_rpow_div (3 : ℝ≥0∞)
+  have hdiv12 : ((12 : ℝ≥0∞) / 3) = 4 := by
+    change (((12 : NNReal) : ENNReal) / ((3 : NNReal) : ENNReal)) = ((4 : NNReal) : ENNReal)
+    rw [← ENNReal.coe_div (p := (12 : NNReal)) (r := (3 : NNReal)) (by norm_num)]
+    norm_num
+  have hX1_cube : MemLp (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ := by
+    simpa [hdiv12] using hX1_cube'
+  have hX2_cube : MemLp (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ := by
+    simpa [hdiv12] using hX2_cube'
+  have hX1_abs' : MemLp (fun ω => |X₁ ω|) ((4 : ℝ≥0∞) / 1) μ := by
+    simpa [Real.norm_eq_abs] using hX1_4.norm_rpow_div (1 : ℝ≥0∞)
+  have hX2_abs' : MemLp (fun ω => |X₂ ω|) ((4 : ℝ≥0∞) / 1) μ := by
+    simpa [Real.norm_eq_abs] using hX2_4.norm_rpow_div (1 : ℝ≥0∞)
+  have hX1_abs : MemLp (fun ω => |X₁ ω|) 4 μ := by
+    simpa using hX1_abs'
+  have hX2_abs : MemLp (fun ω => |X₂ ω|) 4 μ := by
+    simpa using hX2_abs'
+  have hQ1_mem : MemLp Q1 4 μ := by
+    simpa [Q1] using (hX2_cube.add hX1_cube).const_mul 4
+  have hQ2_mem : MemLp Q2 4 μ := by
+    simpa [Q2] using (hX2_abs.add hX1_abs).const_mul (6 * |c|)
+  have hmono : lpNorm P 4 μ ≤ lpNorm (fun ω => Q1 ω + Q2 ω) 4 μ := by
+    apply lpNorm_mono_real (g := fun ω => Q1 ω + Q2 ω)
+    · exact hQ1_mem.add hQ2_mem
+    · intro ω
+      have hω := cubic_factor_pointwise_bound (X₂ ω) (X₁ ω) c
+      simpa [P, Q1, Q2] using hω
+  have hsum : lpNorm (fun ω => Q1 ω + Q2 ω) 4 μ ≤ lpNorm Q1 4 μ + lpNorm Q2 4 μ :=
+    lpNorm_add_le hQ1_mem (g := Q2) (by norm_num : (1 : ℝ≥0∞) ≤ 4)
+  have hQ1 : lpNorm Q1 4 μ =
+      4 * lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ)) 4 μ := by
+    simpa [Q1, Pi.smul_apply] using
+      lpNorm_const_smul (4 : ℝ)
+        (fun ω => |X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ)) μ (p := (4 : ℝ≥0∞))
+  have hQ2 : lpNorm Q2 4 μ =
+      (6 * |c|) * lpNorm (fun ω => |X₂ ω| + |X₁ ω|) 4 μ := by
+    simpa [Q2, Pi.smul_apply] using
+      lpNorm_const_smul (6 * |c| : ℝ) (fun ω => |X₂ ω| + |X₁ ω|) μ (p := (4 : ℝ≥0∞))
+  have hcube_sum :
+      lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ)) 4 μ ≤
+        lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ + lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ :=
+    lpNorm_add_le hX2_cube (g := fun ω => |X₁ ω| ^ (3 : ℝ)) (by norm_num : (1 : ℝ≥0∞) ≤ 4)
+  have habs_sum :
+      lpNorm (fun ω => |X₂ ω| + |X₁ ω|) 4 μ ≤
+        lpNorm (fun ω => |X₂ ω|) 4 μ + lpNorm (fun ω => |X₁ ω|) 4 μ :=
+    lpNorm_add_le hX2_abs (g := fun ω => |X₁ ω|) (by norm_num : (1 : ℝ≥0∞) ≤ 4)
+  calc
+    lpNorm P 4 μ ≤ lpNorm (fun ω => Q1 ω + Q2 ω) 4 μ := hmono
+    _ ≤ lpNorm Q1 4 μ + lpNorm Q2 4 μ := hsum
+    _ = 4 * lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ)) 4 μ +
+          (6 * |c|) * lpNorm (fun ω => |X₂ ω| + |X₁ ω|) 4 μ := by
+          rw [hQ1, hQ2]
+    _ ≤ 4 * (lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ +
+          lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ) +
+          6 * |c| * (lpNorm (fun ω => |X₂ ω|) 4 μ +
+            lpNorm (fun ω => |X₁ ω|) 4 μ) := by
+          have h1 := mul_le_mul_of_nonneg_left hcube_sum (by positivity : 0 ≤ (4 : ℝ))
+          have h2 := mul_le_mul_of_nonneg_left habs_sum (by positivity : 0 ≤ 6 * |c|)
+          linarith
+
+/-- Explicit covariance-form version of `cubic_factor_lpNorm_four_le`.
+This packages the raw-field `L⁴` / `L¹²` norms into Gaussian moment formulas, so
+the remaining work in the shell estimate is genuinely on the covariance side. -/
+private theorem cubic_factor_lpNorm_four_le_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+    let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+    let c := regularizedPointCovariance mass κ₁
+    let P : FieldConfig2D → ℝ := fun ω =>
+      (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+        - 6 * c * (X₂ ω + X₁ ω)
+    let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+    let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+    lpNorm P 4 μ ≤
+      4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+      6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)) := by
+  let μ := freeFieldMeasure mass hmass
+  let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+  let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+  let c := regularizedPointCovariance mass κ₁
+  let P : FieldConfig2D → ℝ := fun ω =>
+    (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+      - 6 * c * (X₂ ω + X₁ ω)
+  let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+  let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+  have hbase :
+      lpNorm P 4 μ ≤
+        4 * (lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ +
+          lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ) +
+          6 * |c| * (lpNorm (fun ω => |X₂ ω|) 4 μ +
+            lpNorm (fun ω => |X₁ ω|) 4 μ) := by
+    simpa [μ, X₁, X₂, c, P] using cubic_factor_lpNorm_four_le mass hmass κ₁ κ₂ x
+  have hcube₂ :
+      lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ = (10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) := by
+    simpa [X₂, σ₂] using rawFieldEval_abs_cube_lpNorm_four_eq mass hmass κ₂ x
+  have hcube₁ :
+      lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ = (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4) := by
+    simpa [X₁, σ₁] using rawFieldEval_abs_cube_lpNorm_four_eq mass hmass κ₁ x
+  have habs₂ :
+      lpNorm (fun ω => |X₂ ω|) 4 μ = (3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) := by
+    rw [lpNorm_fun_abs
+      ((rawFieldEval_stronglyMeasurable mass κ₂ x).aestronglyMeasurable) (p := (4 : ℝ≥0∞))]
+    simpa [X₂, σ₂] using rawFieldEval_lpNorm_four_eq mass hmass κ₂ x
+  have habs₁ :
+      lpNorm (fun ω => |X₁ ω|) 4 μ = (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4) := by
+    rw [lpNorm_fun_abs
+      ((rawFieldEval_stronglyMeasurable mass κ₁ x).aestronglyMeasurable) (p := (4 : ℝ≥0∞))]
+    simpa [X₁, σ₁] using rawFieldEval_lpNorm_four_eq mass hmass κ₁ x
+  calc
+    lpNorm P 4 μ ≤
+        4 * (lpNorm (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ +
+          lpNorm (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ) +
+          6 * |c| * (lpNorm (fun ω => |X₂ ω|) 4 μ +
+            lpNorm (fun ω => |X₁ ω|) 4 μ) := hbase
+    _ = 4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)) := by
+          rw [hcube₂, hcube₁, habs₂, habs₁]
+
+/-- Norm-level bound for the nonlinear `A`-term in the quartic step
+decomposition. After this theorem, the shell estimate for the nonlinear part is
+reduced entirely to covariance quantities. -/
+private theorem wickPower_four_step_A_term_lpNorm_two_le_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+    let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+    let Δ : FieldConfig2D → ℝ := fun ω => X₂ ω - X₁ ω
+    let c := regularizedPointCovariance mass κ₁
+    let P : FieldConfig2D → ℝ := fun ω =>
+      (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+        - 6 * c * (X₂ ω + X₁ ω)
+    let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+    let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+    let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    lpNorm (fun ω => Δ ω * P ω) 2 μ ≤
+      (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+        (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4))) := by
+  let μ := freeFieldMeasure mass hmass
+  let X₁ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₁ ω x
+  let X₂ : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x
+  let Δ : FieldConfig2D → ℝ := fun ω => X₂ ω - X₁ ω
+  let c := regularizedPointCovariance mass κ₁
+  let P : FieldConfig2D → ℝ := fun ω =>
+    (X₂ ω) ^ 3 + (X₂ ω) ^ 2 * X₁ ω + X₂ ω * (X₁ ω) ^ 2 + (X₁ ω) ^ 3
+      - 6 * c * (X₂ ω + X₁ ω)
+  let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+  let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+  let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+  let Q1 : FieldConfig2D → ℝ := fun ω =>
+    4 * (|X₂ ω| ^ (3 : ℝ) + |X₁ ω| ^ (3 : ℝ))
+  let Q2 : FieldConfig2D → ℝ := fun ω =>
+    6 * |c| * (|X₂ ω| + |X₁ ω|)
+  let Q : FieldConfig2D → ℝ := fun ω => Q1 ω + Q2 ω
+  have hΔ4 : MemLp Δ 4 μ := by
+    simpa [Δ, X₁, X₂, rawFieldEval_sub] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass)
+        (uvMollifier κ₂ x - uvMollifier κ₁ x) (4 : ℝ≥0))
+  have hX1_cube : MemLp (fun ω => |X₁ ω| ^ (3 : ℝ)) 4 μ := by
+    let f : TestFun2D := uvMollifier κ₁ x
+    have hX1_12 : MemLp X₁ 12 μ := by
+      simpa [X₁, f] using
+        (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) f (12 : ℝ≥0))
+    have hcube' : MemLp (fun ω => |X₁ ω| ^ (3 : ℝ)) ((12 : ℝ≥0∞) / 3) μ := by
+      simpa [Real.norm_eq_abs] using hX1_12.norm_rpow_div (3 : ℝ≥0∞)
+    have hdiv12 : ((12 : ℝ≥0∞) / 3) = 4 := by
+      change (((12 : NNReal) : ENNReal) / ((3 : NNReal) : ENNReal)) = ((4 : NNReal) : ENNReal)
+      rw [← ENNReal.coe_div (p := (12 : NNReal)) (r := (3 : NNReal)) (by norm_num)]
+      norm_num
+    simpa [hdiv12] using hcube'
+  have hX2_cube : MemLp (fun ω => |X₂ ω| ^ (3 : ℝ)) 4 μ := by
+    let f : TestFun2D := uvMollifier κ₂ x
+    have hX2_12 : MemLp X₂ 12 μ := by
+      simpa [X₂, f] using
+        (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) f (12 : ℝ≥0))
+    have hcube' : MemLp (fun ω => |X₂ ω| ^ (3 : ℝ)) ((12 : ℝ≥0∞) / 3) μ := by
+      simpa [Real.norm_eq_abs] using hX2_12.norm_rpow_div (3 : ℝ≥0∞)
+    have hdiv12 : ((12 : ℝ≥0∞) / 3) = 4 := by
+      change (((12 : NNReal) : ENNReal) / ((3 : NNReal) : ENNReal)) = ((4 : NNReal) : ENNReal)
+      rw [← ENNReal.coe_div (p := (12 : NNReal)) (r := (3 : NNReal)) (by norm_num)]
+      norm_num
+    simpa [hdiv12] using hcube'
+  have hX1_abs : MemLp (fun ω => |X₁ ω|) 4 μ := by
+    simpa [X₁, Real.norm_eq_abs] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) (uvMollifier κ₁ x) (4 : ℝ≥0)).abs
+  have hX2_abs : MemLp (fun ω => |X₂ ω|) 4 μ := by
+    simpa [X₂, Real.norm_eq_abs] using
+      (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) (uvMollifier κ₂ x) (4 : ℝ≥0)).abs
+  have hQ1_mem : MemLp Q1 4 μ := by
+    simpa [Q1] using (hX2_cube.add hX1_cube).const_mul 4
+  have hQ2_mem : MemLp Q2 4 μ := by
+    simpa [Q2] using (hX2_abs.add hX1_abs).const_mul (6 * |c|)
+  have hQ_mem : MemLp Q 4 μ := by
+    exact hQ1_mem.add hQ2_mem
+  have hP_meas : AEStronglyMeasurable P μ := by
+    let h1 := rawFieldEval_stronglyMeasurable mass κ₁ x
+    let h2 := rawFieldEval_stronglyMeasurable mass κ₂ x
+    have hP_eq :
+        P =
+          (fun ω =>
+            X₂ ω * (X₁ ω) ^ 2 + (X₁ ω * (X₂ ω) ^ 2 + ((X₁ ω) ^ 3 + (X₂ ω) ^ 3)) -
+              6 * c * (X₂ ω + X₁ ω)) := by
+      funext ω
+      simp [P, add_left_comm, add_comm, mul_left_comm, mul_comm]
+    have hpoly :
+        StronglyMeasurable
+          (fun ω =>
+            X₂ ω * (X₁ ω) ^ 2 + (X₁ ω * (X₂ ω) ^ 2 + ((X₁ ω) ^ 3 + (X₂ ω) ^ 3))) := by
+      exact (h2.mul (h1.pow 2)).add ((h1.mul (h2.pow 2)).add ((h1.pow 3).add (h2.pow 3)))
+    rw [hP_eq]
+    exact (hpoly.sub ((h2.add h1).const_mul (6 * c))).aestronglyMeasurable
+  have hP_mem : MemLp P 4 μ := by
+    refine MemLp.of_le_mul (c := 1) hQ_mem hP_meas ?_
+    refine Filter.Eventually.of_forall ?_
+    intro ω
+    have hω := cubic_factor_pointwise_bound (X₂ ω) (X₁ ω) c
+    have hQ_nonneg : 0 ≤ Q ω := by
+      unfold Q Q1 Q2
+      positivity
+    have hω' : ‖P ω‖ ≤ 1 * ‖Q ω‖ := by
+      have hQ_norm : ‖Q ω‖ = Q ω := by
+        simp [Real.norm_eq_abs, abs_of_nonneg hQ_nonneg]
+      calc
+        ‖P ω‖ = |P ω| := by simp [Real.norm_eq_abs]
+        _ ≤ Q ω := by simpa [P, Q, Q1, Q2] using hω
+        _ = ‖Q ω‖ := by rw [hQ_norm]
+        _ = 1 * ‖Q ω‖ := by ring
+    exact hω'
+  have hprod : lpNorm (fun ω => Δ ω * P ω) 2 μ ≤ lpNorm Δ 4 μ * lpNorm P 4 μ :=
+    lpNorm_mul_le_lpNorm_four_mul_four hΔ4 hP_mem
+  have hP_bound :
+      lpNorm P 4 μ ≤
+        4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)) := by
+    simpa [μ, X₁, X₂, c, P, σ₁, σ₂] using
+      cubic_factor_lpNorm_four_le_covariance mass hmass κ₁ κ₂ x
+  have hΔ_eq :
+      lpNorm Δ 4 μ = (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) := by
+    simpa [μ, Δ, X₁, X₂, δσ] using rawFieldEval_sub_lpNorm_four_eq mass hmass κ₁ κ₂ x
+  calc
+    lpNorm (fun ω => Δ ω * P ω) 2 μ ≤ lpNorm Δ 4 μ * lpNorm P 4 μ := hprod
+    _ ≤ lpNorm Δ 4 μ *
+        (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4))) := by
+          exact mul_le_mul_of_nonneg_left hP_bound MeasureTheory.lpNorm_nonneg
+    _ = (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+        (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4))) := by
+          rw [hΔ_eq]
+
+/-- Exact `L²` norm of the quadratic re-Wick factor against a Gaussian raw field.
+This isolates the linear renormalization term in the quartic shell increment. -/
+private theorem rawFieldEval_rewick_two_lpNorm_two_eq
+    (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) (x : Spacetime2D) (c : ℝ) :
+    lpNorm (fun ω : FieldConfig2D => wickMonomial 2 c (rawFieldEval mass κ ω x))
+      2 (freeFieldMeasure mass hmass)
+    = (3 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+        (uvMollifier κ x) (uvMollifier κ x)) ^ 2
+        - 2 * c * GaussianField.covariance (freeCovarianceCLM mass hmass)
+            (uvMollifier κ x) (uvMollifier κ x)
+        + c ^ 2) ^ ((1 : ℝ) / 2) := by
+  let μ := freeFieldMeasure mass hmass
+  let X : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ ω x
+  let f : TestFun2D := uvMollifier κ x
+  let σ : ℝ := GaussianField.covariance (freeCovarianceCLM mass hmass) f f
+  have hmeas :
+      AEStronglyMeasurable (fun ω : FieldConfig2D => wickMonomial 2 c (X ω)) μ := by
+    exact ((wickMonomial_continuous 2 c).stronglyMeasurable.comp_measurable
+      (rawFieldEval_stronglyMeasurable mass κ x).measurable).aestronglyMeasurable
+  rw [lpNorm_eq_integral_norm_rpow_toReal (by norm_num) ENNReal.ofNat_ne_top hmeas]
+  norm_num
+  have h2 : ∫ ω : FieldConfig2D, (ω f) ^ 2 ∂μ = σ := by
+    simp_rw [show ∀ ω : FieldConfig2D, (ω f) ^ 2 = ω f * ω f from fun ω => sq (ω f)]
+    simpa [GaussianField.covariance, σ] using
+      cross_moment_eq_covariance (freeCovarianceCLM mass hmass) f f
+  have h4 : ∫ ω : FieldConfig2D, (ω f) ^ 4 ∂μ = 3 * σ ^ 2 := by
+    rw [show (4 : ℕ) = 2 + 2 from rfl, moment_recursion_ai mass hmass f 2, h2]
+    simp [σ]
+    ring
+  have hi4 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 4) μ :=
+    power_integrable_ai mass hmass f 4
+  have hi2 : Integrable (fun ω : FieldConfig2D => (ω f) ^ 2) μ :=
+    power_integrable_ai mass hmass f 2
+  have hpoly :
+      ∀ ω : FieldConfig2D,
+        (X ω ^ 2 - c) ^ 2 = (ω f) ^ 4 - 2 * c * (ω f) ^ 2 + c ^ 2 := by
+    intro ω
+    change ((ω f) ^ 2 - c) ^ 2 = (ω f) ^ 4 - 2 * c * (ω f) ^ 2 + c ^ 2
+    ring
+  simp_rw [hpoly]
+  have s1 :
+      ∫ ω : FieldConfig2D, ((ω f) ^ 4 - 2 * c * (ω f) ^ 2 + c ^ 2) ∂μ =
+        ∫ ω : FieldConfig2D, ((ω f) ^ 4 - 2 * c * (ω f) ^ 2) ∂μ +
+        ∫ _ : FieldConfig2D, c ^ 2 ∂μ :=
+    integral_add (hi4.sub (hi2.const_mul _)) (integrable_const _)
+  have s2 :
+      ∫ ω : FieldConfig2D, ((ω f) ^ 4 - 2 * c * (ω f) ^ 2) ∂μ =
+        ∫ ω : FieldConfig2D, (ω f) ^ 4 ∂μ -
+        ∫ ω : FieldConfig2D, (2 * c * (ω f) ^ 2) ∂μ :=
+    integral_sub hi4 (hi2.const_mul _)
+  rw [s1, s2, integral_const_mul, integral_const, h4, h2]
+  have hμ : μ.real Set.univ = 1 := by
+    simp [μ, Measure.real, measure_univ]
+  simp [hμ, σ, f]
+
+/-- Covariance-form `L²` norm of the linear re-Wick correction term in the
+quartic shell increment. -/
+private theorem wickPower_four_step_B_term_lpNorm_two_eq_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let c := regularizedPointCovariance mass κ₁
+    let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+    let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+    lpNorm (fun ω : FieldConfig2D =>
+      6 * δc * wickMonomial 2 c (rawFieldEval mass κ₂ ω x)) 2 μ
+    = |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2) := by
+  let μ := freeFieldMeasure mass hmass
+  let c := regularizedPointCovariance mass κ₁
+  let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+  let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+  dsimp [μ, c, σ₂, δc]
+  let h : FieldConfig2D → ℝ := fun ω =>
+    rawFieldEval mass κ₂ ω x ^ 2 - regularizedPointCovariance mass κ₁
+  have hscale :
+      lpNorm
+          ((6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁)) • h)
+          2 (freeFieldMeasure mass hmass)
+        =
+          ‖(6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁) : ℝ)‖₊ *
+            lpNorm h 2 (freeFieldMeasure mass hmass) :=
+    MeasureTheory.lpNorm_const_smul _ _ _
+  have hrewick :
+      lpNorm h 2 (freeFieldMeasure mass hmass)
+        =
+          (3 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+              (uvMollifier κ₂ x) (uvMollifier κ₂ x)) ^ 2
+            - 2 * regularizedPointCovariance mass κ₁ *
+                GaussianField.covariance (freeCovarianceCLM mass hmass)
+                  (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+            + regularizedPointCovariance mass κ₁ ^ 2) ^ ((1 : ℝ) / 2) := by
+    simpa [h, wickMonomial_two] using
+      rawFieldEval_rewick_two_lpNorm_two_eq mass hmass κ₂ x (regularizedPointCovariance mass κ₁)
+  calc
+    lpNorm
+        (fun ω : FieldConfig2D =>
+          6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁) *
+            wickMonomial 2 (regularizedPointCovariance mass κ₁) (rawFieldEval mass κ₂ ω x))
+        2 (freeFieldMeasure mass hmass)
+      =
+        lpNorm
+          ((6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁)) • h)
+          2 (freeFieldMeasure mass hmass) := by
+            congr 1
+            ext ω
+            simp [h, smul_eq_mul, wickMonomial_two]
+    _ =
+        ‖(6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁) : ℝ)‖₊ *
+          lpNorm h 2 (freeFieldMeasure mass hmass) := hscale
+    _ =
+        |6 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁)| *
+          (3 * (GaussianField.covariance (freeCovarianceCLM mass hmass)
+              (uvMollifier κ₂ x) (uvMollifier κ₂ x)) ^ 2
+            - 2 * regularizedPointCovariance mass κ₁ *
+                GaussianField.covariance (freeCovarianceCLM mass hmass)
+                  (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+            + regularizedPointCovariance mass κ₁ ^ 2) ^ ((1 : ℝ) / 2) := by
+              rw [hrewick]
+              simp [Real.norm_eq_abs]
+
+/-- Covariance-form `L²` norm of the constant re-Wick correction term in the
+  quartic shell increment. -/
+private theorem wickPower_four_step_C_term_lpNorm_two_eq_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) :
+    let μ := freeFieldMeasure mass hmass
+    let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+    lpNorm (fun _ : FieldConfig2D => 3 * δc ^ 2) 2 μ = |3 * δc ^ 2| := by
+  let μ := freeFieldMeasure mass hmass
+  let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+  dsimp [μ, δc]
+  rw [MeasureTheory.lpNorm_const' (μ := freeFieldMeasure mass hmass) (p := 2)
+    (hp₀ := by positivity) (hp := by simp)
+    (c := (3 * (regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁) ^ 2 : ℝ))]
+  simp [Real.norm_eq_abs]
+
+/-- Pointwise-in-`x` `L²` bound for one quartic Wick-power step. After this
+the only remaining obstruction in the shell increment proof is to bound the
+covariance expressions uniformly/integrably in `x`. -/
+private theorem wickPower_four_step_lpNorm_two_le_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let c := regularizedPointCovariance mass κ₁
+    let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+    let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+    let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+    lpNorm (fun ω : FieldConfig2D => wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x) 2 μ
+      ≤
+        (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+          (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+            6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))
+        + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2)
+        + |3 * δc ^ 2| := by
+  let μ := freeFieldMeasure mass hmass
+  let c := regularizedPointCovariance mass κ₁
+  let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+  let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+  let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+  let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+  let A : FieldConfig2D → ℝ := fun ω =>
+    (rawFieldEval mass κ₂ ω x - rawFieldEval mass κ₁ ω x) *
+      ((rawFieldEval mass κ₂ ω x) ^ 3 +
+       (rawFieldEval mass κ₂ ω x) ^ 2 * rawFieldEval mass κ₁ ω x +
+       rawFieldEval mass κ₂ ω x * (rawFieldEval mass κ₁ ω x) ^ 2 +
+       (rawFieldEval mass κ₁ ω x) ^ 3 -
+       6 * c * (rawFieldEval mass κ₂ ω x + rawFieldEval mass κ₁ ω x))
+  let B : FieldConfig2D → ℝ := fun ω =>
+    6 * δc * wickMonomial 2 c (rawFieldEval mass κ₂ ω x)
+  let C : FieldConfig2D → ℝ := fun _ => 3 * δc ^ 2
+  let h : FieldConfig2D → ℝ := fun ω => rawFieldEval mass κ₂ ω x ^ 2 - c
+  have hconst_mem : MemLp C 2 μ := by
+    simpa [C] using
+      (memLp_const_iff (μ := μ) (p := (2 : ℝ≥0∞)) (c := (3 * δc ^ 2 : ℝ))
+        (by norm_num) (by norm_num)).2
+        (by simp)
+  have hh_mem : MemLp h 2 μ := by
+    have hX4 : MemLp (fun ω : FieldConfig2D => rawFieldEval mass κ₂ ω x) 4 μ := by
+      simpa using
+        (GaussianField.pairing_memLp (freeCovarianceCLM mass hmass) (uvMollifier κ₂ x) (4 : ℝ≥0))
+    have hXsq_abs : MemLp (fun ω : FieldConfig2D => |rawFieldEval mass κ₂ ω x| ^ (2 : ℝ)) 2 μ := by
+      have htmp : MemLp (fun ω : FieldConfig2D => ‖rawFieldEval mass κ₂ ω x‖ ^ (2 : ℝ))
+          ((4 : ℝ≥0∞) / 2) μ := by
+        simpa [Real.norm_eq_abs] using hX4.norm_rpow_div (2 : ℝ≥0∞)
+      have hdiv : ((4 : ℝ≥0∞) / 2) = 2 := by
+        change (((4 : NNReal) : ENNReal) / ((2 : NNReal) : ENNReal)) = ((2 : NNReal) : ENNReal)
+        rw [← ENNReal.coe_div (p := (4 : NNReal)) (r := (2 : NNReal)) (by norm_num)]
+        norm_num
+      simpa [hdiv] using htmp
+    have hXsq : MemLp (fun ω : FieldConfig2D => rawFieldEval mass κ₂ ω x ^ 2) 2 μ := by
+      refine hXsq_abs.congr_norm
+        ((rawFieldEval_stronglyMeasurable mass κ₂ x).pow 2).aestronglyMeasurable ?_
+      filter_upwards with ω
+      rw [show |rawFieldEval mass κ₂ ω x| ^ (2 : ℝ) = rawFieldEval mass κ₂ ω x ^ 2 by
+        rw [show (2 : ℝ) = (2 : ℕ) by norm_num, Real.rpow_natCast, sq_abs]]
+    have hc_mem : MemLp (fun _ : FieldConfig2D => c) 2 μ := by
+      simpa using
+        (memLp_const_iff (μ := μ) (p := (2 : ℝ≥0∞)) (c := c) (by norm_num) (by norm_num)).2
+          (by simp)
+    simpa [h] using hXsq.sub hc_mem
+  have hB_mem : MemLp B 2 μ := by
+    simpa [B, h, wickMonomial_two, smul_eq_mul] using hh_mem.const_mul (6 * δc)
+  have hCB_mem : MemLp (fun ω => C ω - B ω) 2 μ := hconst_mem.sub hB_mem
+  have hdecomp :
+      (fun ω : FieldConfig2D => wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x) =
+        (fun ω => (C ω - B ω) + A ω) := by
+    funext ω
+    rw [wickPower_four_step_decomposition mass κ₁ κ₂ ω x]
+    simp [A, B, C, c, δc]
+    ring
+  calc
+    lpNorm (fun ω : FieldConfig2D => wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x) 2 μ
+      = lpNorm (fun ω => (C ω - B ω) + A ω) 2 μ := by rw [hdecomp]
+    _ ≤ lpNorm (fun ω => C ω - B ω) 2 μ + lpNorm A 2 μ := by
+          exact lpNorm_add_le hCB_mem (g := A) (by norm_num : (1 : ℝ≥0∞) ≤ 2)
+    _ ≤ (lpNorm C 2 μ + lpNorm B 2 μ) + lpNorm A 2 μ := by
+          gcongr
+          exact lpNorm_sub_le hconst_mem (g := B) (by norm_num : (1 : ℝ≥0∞) ≤ 2)
+    _ ≤ (lpNorm C 2 μ
+          + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2))
+          + lpNorm A 2 μ := by
+            gcongr
+            exact le_of_eq <| by simpa [μ, c, σ₂, δc, B] using
+              wickPower_four_step_B_term_lpNorm_two_eq_covariance mass hmass κ₁ κ₂ x
+    _ ≤ (lpNorm C 2 μ
+          + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2))
+          + ((3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+            (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+              6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))) := by
+            gcongr
+            simpa [μ, c, σ₁, σ₂, δσ, A] using
+              wickPower_four_step_A_term_lpNorm_two_le_covariance mass hmass κ₁ κ₂ x
+    _ = |3 * δc ^ 2|
+          + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2)
+          + ((3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+            (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+              6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))) := by
+            rw [wickPower_four_step_C_term_lpNorm_two_eq_covariance mass hmass κ₁ κ₂]
+    _ = (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+          (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+            6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))
+        + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2)
+        + |3 * δc ^ 2| := by ring
+
+/-- The square of the Wick-step difference is integrable on the product of the
+free field measure with Lebesgue measure restricted to `Λ`. This is a purely
+functional-analytic bridge: the pointwise inequality `(a - b)^2 ≤ 2(a^2 + b^2)`
+reduces integrability to the already-proved product-square integrability of the
+individual cutoff Wick powers. -/
+private theorem wickPower_step_sq_integrable_prod (params : Phi4Params) (Λ : Rectangle)
+    (κ₁ κ₂ : UVCutoff) :
+    Integrable
+      (fun p : FieldConfig2D × Spacetime2D =>
+        (wickPower 4 params.mass κ₂ p.1 p.2 - wickPower 4 params.mass κ₁ p.1 p.2) ^ 2)
+      ((freeFieldMeasure params.mass params.mass_pos).prod
+        (MeasureTheory.volume.restrict Λ.toSet)) := by
+  let μ := freeFieldMeasure params.mass params.mass_pos
+  let ν := MeasureTheory.volume.restrict Λ.toSet
+  have hmeas : AEStronglyMeasurable
+      (fun p : FieldConfig2D × Spacetime2D =>
+        (wickPower 4 params.mass κ₂ p.1 p.2 - wickPower 4 params.mass κ₁ p.1 p.2) ^ 2)
+      (μ.prod ν) := by
+    exact (((wickPower_stronglyMeasurable_uncurry 4 params.mass κ₂).sub
+      (wickPower_stronglyMeasurable_uncurry 4 params.mass κ₁)).pow 2).aestronglyMeasurable
+  have hκ₂ := wickPower_sq_integrable_prod params Λ κ₂
+  have hκ₁ := wickPower_sq_integrable_prod params Λ κ₁
+  have hsum : Integrable
+      (fun p : FieldConfig2D × Spacetime2D =>
+        (wickPower 4 params.mass κ₂ p.1 p.2) ^ 2 +
+          (wickPower 4 params.mass κ₁ p.1 p.2) ^ 2)
+      (μ.prod ν) := hκ₂.add hκ₁
+  have hdom : Integrable
+      (fun p : FieldConfig2D × Spacetime2D =>
+        2 * ((wickPower 4 params.mass κ₂ p.1 p.2) ^ 2 +
+          (wickPower 4 params.mass κ₁ p.1 p.2) ^ 2))
+      (μ.prod ν) := hsum.const_mul 2
+  apply hdom.mono hmeas
+  filter_upwards with p
+  rw [Real.norm_of_nonneg (sq_nonneg _)]
+  rw [Real.norm_of_nonneg (by positivity)]
+  nlinarith [sq_nonneg
+    (wickPower 4 params.mass κ₂ p.1 p.2 + wickPower 4 params.mass κ₁ p.1 p.2)]
+
+/-- Spatial bridge from the pointwise Wick-step square to the cutoff interaction
+increment. This isolates the remaining shell-rate theorem to a covariance bound
+under the spatial integral: all Fubini and Cauchy-Schwarz bookkeeping is done
+here. -/
+private theorem interactionCutoff_sub_sq_le_spatialIntegral
+    (params : Phi4Params) (Λ : Rectangle) (κ₁ κ₂ : UVCutoff) :
+    ∫ ω : FieldConfig2D,
+      (interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω) ^ 2
+        ∂(freeFieldMeasure params.mass params.mass_pos)
+      ≤ params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal *
+          ∫ x in Λ.toSet,
+            ∫ ω : FieldConfig2D,
+              (wickPower 4 params.mass κ₂ ω x - wickPower 4 params.mass κ₁ ω x) ^ 2
+                ∂(freeFieldMeasure params.mass params.mass_pos) := by
+  let μ := freeFieldMeasure params.mass params.mass_pos
+  let ν := MeasureTheory.volume.restrict Λ.toSet
+  let d : FieldConfig2D → Spacetime2D → ℝ := fun ω x =>
+    wickPower 4 params.mass κ₂ ω x - wickPower 4 params.mass κ₁ ω x
+  have hprod : Integrable (fun p : FieldConfig2D × Spacetime2D => (d p.1 p.2) ^ 2) (μ.prod ν) := by
+    simpa [μ, ν, d] using wickPower_step_sq_integrable_prod params Λ κ₁ κ₂
+  have hdint : Integrable (fun ω => ∫ x, (d ω x) ^ 2 ∂ν) μ :=
+    hprod.integral_prod_left
+  have hdom :
+      Integrable (fun ω => (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+        ∫ x, (d ω x) ^ 2 ∂ν) μ := hdint.const_mul _
+  have hnonneg :
+      0 ≤ᵐ[μ] fun ω : FieldConfig2D =>
+        (interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω) ^ 2 :=
+    Filter.Eventually.of_forall fun _ => sq_nonneg _
+  have hpoint :
+      ∀ᵐ ω ∂μ,
+        (interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω) ^ 2 ≤
+          (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+            ∫ x, (d ω x) ^ 2 ∂ν := by
+    refine Filter.Eventually.of_forall ?_
+    intro ω
+    have hκ₂_int : Integrable (fun x => wickPower 4 params.mass κ₂ ω x) ν :=
+      (wickPower_continuous_in_x 4 params.mass κ₂ ω).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    have hκ₁_int : Integrable (fun x => wickPower 4 params.mass κ₁ ω x) ν :=
+      (wickPower_continuous_in_x 4 params.mass κ₁ ω).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    have hd_int : Integrable (fun x => d ω x) ν := hκ₂_int.sub hκ₁_int
+    have hd_sq_int : Integrable (fun x => (d ω x) ^ 2) ν := by
+      exact (((wickPower_continuous_in_x 4 params.mass κ₂ ω).sub
+        (wickPower_continuous_in_x 4 params.mass κ₁ ω)).pow 2).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    have hsub :
+        interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω =
+          params.coupling * ∫ x in Λ.toSet, d ω x := by
+      unfold interactionCutoff
+      rw [← mul_sub_left_distrib]
+      congr 1
+      rw [integral_sub hκ₂_int hκ₁_int]
+    calc
+      (interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω) ^ 2
+        = params.coupling ^ 2 * (∫ x in Λ.toSet, d ω x) ^ 2 := by
+            rw [hsub, mul_pow]
+      _ ≤ params.coupling ^ 2 *
+            ((MeasureTheory.volume Λ.toSet).toReal * ∫ x in Λ.toSet, (d ω x) ^ 2) := by
+            gcongr
+            exact sq_setIntegral_le_volume_mul_setIntegral_sq
+              Λ.toSet Λ.toSet_measurableSet hd_int hd_sq_int Λ.toSet_volume_ne_top
+      _ = (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+            ∫ x, (d ω x) ^ 2 ∂ν := by
+            rw [mul_assoc]
+  have hle := integral_mono_of_nonneg hnonneg hdom hpoint
+  calc
+    ∫ ω : FieldConfig2D,
+        (interactionCutoff params Λ κ₂ ω - interactionCutoff params Λ κ₁ ω) ^ 2 ∂μ
+      ≤ ∫ ω : FieldConfig2D,
+          (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+            ∫ x, (d ω x) ^ 2 ∂ν ∂μ := hle
+    _ = (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+          ∫ ω : FieldConfig2D, ∫ x, (d ω x) ^ 2 ∂ν ∂μ := by
+          rw [integral_const_mul]
+    _ = (params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal) *
+          ∫ x, ∫ ω : FieldConfig2D, (d ω x) ^ 2 ∂μ ∂ν := by
+          congr 1
+          exact MeasureTheory.integral_integral_swap hprod
+    _ = params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal *
+          ∫ x in Λ.toSet,
+            ∫ ω : FieldConfig2D,
+              (wickPower 4 params.mass κ₂ ω x - wickPower 4 params.mass κ₁ ω x) ^ 2 ∂μ := by
+          rfl
+
+/-- Pointwise square-expectation bound for a quartic Wick-power step. This is
+the square-integral version of `wickPower_four_step_lpNorm_two_le_covariance`,
+stated in the exact form needed under the spatial integral for the shell-rate
+theorem. -/
+private theorem wickPower_four_step_sq_expectation_le_covariance
+    (mass : ℝ) (hmass : 0 < mass) (κ₁ κ₂ : UVCutoff) (x : Spacetime2D) :
+    let μ := freeFieldMeasure mass hmass
+    let c := regularizedPointCovariance mass κ₁
+    let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+    let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+    let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+      (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+    let B :=
+      (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+        (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+          6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))
+      + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2)
+      + |3 * δc ^ 2|
+    ∫ ω : FieldConfig2D,
+      (wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x) ^ 2 ∂μ ≤ B ^ 2 := by
+  let μ := freeFieldMeasure mass hmass
+  let c := regularizedPointCovariance mass κ₁
+  let σ₁ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₁ x) (uvMollifier κ₁ x)
+  let σ₂ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x) (uvMollifier κ₂ x)
+  let δσ := GaussianField.covariance (freeCovarianceCLM mass hmass)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+    (uvMollifier κ₂ x - uvMollifier κ₁ x)
+  let δc := regularizedPointCovariance mass κ₂ - regularizedPointCovariance mass κ₁
+  let h : FieldConfig2D → ℝ := fun ω =>
+    wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x
+  let B :=
+    (3 * δσ ^ 2) ^ ((1 : ℝ) / 4) *
+      (4 * ((10395 * σ₂ ^ 6) ^ ((1 : ℝ) / 4) + (10395 * σ₁ ^ 6) ^ ((1 : ℝ) / 4)) +
+        6 * |c| * ((3 * σ₂ ^ 2) ^ ((1 : ℝ) / 4) + (3 * σ₁ ^ 2) ^ ((1 : ℝ) / 4)))
+    + |6 * δc| * (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2)
+    + |3 * δc ^ 2|
+  have hκ₂_mem : MemLp (fun ω : FieldConfig2D => wickPower 4 mass κ₂ ω x) 2 μ := by
+    simpa [μ] using
+      (wickPower_memLp 4 mass hmass κ₂ x (by norm_num : (2 : ℝ≥0∞) ≠ ⊤))
+  have hκ₁_mem : MemLp (fun ω : FieldConfig2D => wickPower 4 mass κ₁ ω x) 2 μ := by
+    simpa [μ] using
+      (wickPower_memLp 4 mass hmass κ₁ x (by norm_num : (2 : ℝ≥0∞) ≠ ⊤))
+  have hh_mem : MemLp h 2 μ := by
+    simpa [h] using hκ₂_mem.sub hκ₁_mem
+  have h_lp_sq :
+      lpNorm h 2 μ ^ 2 = ∫ ω : FieldConfig2D, (h ω) ^ 2 ∂μ := by
+    rw [lpNorm_eq_integral_norm_rpow_toReal (by norm_num) ENNReal.ofNat_ne_top
+      hh_mem.aestronglyMeasurable]
+    norm_num
+    have h_nonneg_int : 0 ≤ ∫ ω : FieldConfig2D, (h ω) ^ 2 ∂μ :=
+      integral_nonneg fun _ => sq_nonneg _
+    rw [show ((∫ ω : FieldConfig2D, (h ω) ^ 2 ∂μ) ^ ((1 : ℝ) / 2)) = 
+      Real.sqrt (∫ ω : FieldConfig2D, (h ω) ^ 2 ∂μ) by
+        rw [Real.sqrt_eq_rpow]]
+    rw [Real.sq_sqrt h_nonneg_int]
+  have hB_nonneg : 0 ≤ B := by
+    have hrewick_nonneg : 0 ≤ (3 * σ₂ ^ 2 - 2 * c * σ₂ + c ^ 2) ^ ((1 : ℝ) / 2) := by
+      rw [← rawFieldEval_rewick_two_lpNorm_two_eq mass hmass κ₂ x c]
+      exact MeasureTheory.lpNorm_nonneg
+    positivity
+  have h_lp : lpNorm h 2 μ ≤ B := by
+    simpa [μ, c, σ₁, σ₂, δσ, δc, h, B] using
+      wickPower_four_step_lpNorm_two_le_covariance mass hmass κ₁ κ₂ x
+  have h_lp_nonneg : 0 ≤ lpNorm h 2 μ := MeasureTheory.lpNorm_nonneg
+  have hsq : lpNorm h 2 μ ^ 2 ≤ B ^ 2 := by
+    nlinarith [h_lp, h_lp_nonneg, hB_nonneg]
+  calc
+    ∫ ω : FieldConfig2D, (wickPower 4 mass κ₂ ω x - wickPower 4 mass κ₁ ω x) ^ 2 ∂μ
+      = lpNorm h 2 μ ^ 2 := h_lp_sq.symm
+    _ ≤ B ^ 2 := hsq
+
+/-- Honest frontier for the discrete shell branch: after the algebraic and
+Gaussian-moment reductions above, the remaining mathematics is to show that the
+spatially integrated quartic shell step decays at the target rate.
+
+For the current CLM-based Gaussian measure, this requires either a direct
+covariance estimate for the CLM covariance or a successful bridge to the
+flat-space kernel in `gap_covariance_eq_kernel`. -/
+theorem gap_wickPower_standardSeq_spatial_sq_rate
+    (params : Phi4Params) (Λ : Rectangle) :
+    ∃ D : ℝ, 0 < D ∧ ∀ n : ℕ,
+      params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal *
+          ∫ x in Λ.toSet,
+            ∫ ω : FieldConfig2D,
+              (wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x -
+                wickPower 4 params.mass (standardUVCutoffSeq n) ω x) ^ 2
+              ∂(freeFieldMeasure params.mass params.mass_pos)
+        ≤ D ^ 2 * (Real.log (n + 2)) ^ 2 / (n + 1) ^ 3 := by
+  sorry
+
 /-- The L² increment rate for the cutoff interaction along the canonical UV
-    cutoff sequence. The Fourier support of C_{κ_{n+1}} - C_{κ_n} lies in the
-    momentum shell {n+1 ≤ |p| ≤ n+2}, giving:
+    cutoff sequence.
 
-      ‖V_{κ_{n+1}} - V_{κ_n}‖₂ ≤ D / (n + 1)
+    This theorem is now reduced to the explicit discrete shell estimate
+    `gap_wickPower_standardSeq_spatial_sq_rate`. For the current CLM-based
+    Gaussian measure, the remaining missing mathematics is a covariance-shell
+    decay bound for the spatially integrated quartic Wick-power step.
 
-    for some constant D depending on λ, Λ, m. Since Σ 1/(n+1) diverges but
-    the actual decay is faster (the Wick fourth power involves C⁴ integrals
-    which gain an extra log factor), the summable bound is:
-
-      ‖V_{κ_{n+1}} - V_{κ_n}‖₂ ≤ D * log(n+2) / (n + 1)^{3/2}
-
-    This is summable, hence so are the L¹ increments (by Cauchy-Schwarz).
-
-    Reference: the rate follows from Fourier analysis of the covariance
-    increments C_{κ_{n+1}} - C_{κ_n} which are supported on the momentum
-    shell n+1 ≤ |p| ≤ n+2. -/
+    If the foundational bridge `gap_covariance_eq_kernel` is resolved, the
+    expected flat-space heuristic is that the covariance increment on the shell
+    `κ_n -> κ_{n+1}` gains the rate `log(n+2) / (n+1)^(3/2)`. -/
 theorem gap_interactionCutoff_standardSeq_L2_increment_rate
     (params : Phi4Params) (Λ : Rectangle) :
     ∃ D : ℝ, 0 < D ∧ ∀ n : ℕ,
@@ -620,7 +1630,34 @@ theorem gap_interactionCutoff_standardSeq_L2_increment_rate
          interactionCutoff params Λ (standardUVCutoffSeq n) ω) ^ 2
         ∂(freeFieldMeasure params.mass params.mass_pos)
       ≤ D ^ 2 * (Real.log (n + 2)) ^ 2 / (n + 1) ^ 3 := by
-  sorry
+  let μ := freeFieldMeasure params.mass params.mass_pos
+  have h_reduction :
+      ∀ n : ℕ,
+        ∫ ω : FieldConfig2D,
+            (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+              interactionCutoff params Λ (standardUVCutoffSeq n) ω) ^ 2 ∂μ
+          ≤ params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal *
+              ∫ x in Λ.toSet,
+                ∫ ω : FieldConfig2D,
+                  (wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x -
+                    wickPower 4 params.mass (standardUVCutoffSeq n) ω x) ^ 2 ∂μ := by
+    intro n
+    simpa [μ] using
+      interactionCutoff_sub_sq_le_spatialIntegral params Λ
+        (standardUVCutoffSeq n) (standardUVCutoffSeq (n + 1))
+  obtain ⟨D, hD, h_shell⟩ := gap_wickPower_standardSeq_spatial_sq_rate params Λ
+  refine ⟨D, hD, ?_⟩
+  intro n
+  calc
+    ∫ ω : FieldConfig2D,
+        (interactionCutoff params Λ (standardUVCutoffSeq (n + 1)) ω -
+          interactionCutoff params Λ (standardUVCutoffSeq n) ω) ^ 2 ∂μ
+      ≤ params.coupling ^ 2 * (MeasureTheory.volume Λ.toSet).toReal *
+          ∫ x in Λ.toSet,
+            ∫ ω : FieldConfig2D,
+              (wickPower 4 params.mass (standardUVCutoffSeq (n + 1)) ω x -
+                wickPower 4 params.mass (standardUVCutoffSeq n) ω x) ^ 2 ∂μ := h_reduction n
+    _ ≤ D ^ 2 * (Real.log (n + 2)) ^ 2 / (n + 1) ^ 3 := h_shell n
 
 /-- The model upper bound `sqrt(D² log²(n+2) / (n+1)^3)` is summable. -/
 private theorem summable_sqrt_log_sq_div_cube (D : ℝ) (hD : 0 < D) :
@@ -1008,6 +2045,149 @@ splitting) shows the bound is uniform in κ.
 
 Reference: Simon, "The P(φ)₂ Euclidean Field Theory", Theorem V.14;
 Glimm-Jaffe, "Quantum Physics", Chapter 8.6. -/
+
+/-- Markov's inequality at even moment order: for a measurable real-valued
+function `Y` and `j ≥ 1`, `P(|Y| > 1)` is bounded by the `2j`-th moment. -/
+theorem markov_even_moment
+    {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {Y : Ω → ℝ} (j : ℕ)
+    (hint : Integrable (fun ω => |Y ω| ^ (2 * j)) μ) :
+    μ {ω | 1 < |Y ω|} ≤ ENNReal.ofReal (∫ ω, |Y ω| ^ (2 * j) ∂μ) := by
+  have hsub : {ω | 1 < |Y ω|} ⊆ {ω | (1 : ℝ) ≤ |Y ω| ^ (2 * j)} := by
+    intro ω hω
+    simp only [Set.mem_setOf_eq] at hω ⊢
+    exact one_le_pow₀ (le_of_lt hω)
+  calc
+    μ {ω | 1 < |Y ω|}
+      ≤ μ {ω | (1 : ℝ) ≤ |Y ω| ^ (2 * j)} := measure_mono hsub
+    _ ≤ ENNReal.ofReal (∫ ω, |Y ω| ^ (2 * j) ∂μ) :=
+        hint.measure_le_integral
+          (ae_of_all _ (fun ω => pow_nonneg (abs_nonneg _) _))
+          (fun ω hω => hω)
+
+/-- `4 - log 16` is positive, since `16 < exp 4`. This is the decay exponent
+appearing in the Markov optimization step. -/
+private theorem four_sub_log_sixteen_pos : 0 < 4 - Real.log 16 := by
+  have : Real.log 16 < 4 := by
+    rw [show (4 : ℝ) = Real.log (Real.exp 4) from (Real.log_exp 4).symm]
+    exact Real.log_lt_log (by positivity) (by
+      calc (16 : ℝ) = 2 ^ 4 := by norm_num
+        _ < Real.exp 1 ^ 4 :=
+          pow_lt_pow_left₀ Real.exp_one_gt_two (by norm_num) (by norm_num)
+        _ = Real.exp 4 := by rw [← Real.exp_nat_mul]; norm_num)
+  linarith
+
+/-- Markov optimization: when the even moments satisfy the hypercontractive-type
+growth `((C j)^4 * ε^2)^j`, one can choose an optimal integer moment order
+producing a double-exponential decay scale `exp(-c / sqrt ε)`. -/
+theorem markov_optimization_exists_j
+    (C : ℝ) (hC : 0 < C) (ε : ℝ) (hε : 0 < ε)
+    (hε_small : ε ≤ 1 / (Real.exp 1 * C) ^ 2) :
+    ∃ (c : ℝ) (j : ℕ), 0 < c ∧ 0 < j ∧
+      (C * ↑j) ^ (4 * j) * ε ^ (2 * j) ≤ Real.exp (-(c / Real.sqrt ε)) := by
+  set e₁ := Real.exp 1
+  set β := 4 - Real.log 16
+  set j_real := 1 / (e₁ * C * Real.sqrt ε)
+  set j := Nat.ceil j_real
+  set c := β / (e₁ * C)
+  refine ⟨c, j, ?_, ?_, ?_⟩
+  · exact div_pos four_sub_log_sixteen_pos (mul_pos (Real.exp_pos 1) hC)
+  ·
+    have hj_real_pos : 0 < j_real :=
+      div_pos one_pos (mul_pos (mul_pos (Real.exp_pos 1) hC) (Real.sqrt_pos.mpr hε))
+    exact Nat.ceil_pos.mpr hj_real_pos
+  ·
+    have he₁_pos : 0 < e₁ := Real.exp_pos 1
+    have hsqrt_pos : 0 < Real.sqrt ε := Real.sqrt_pos.mpr hε
+    have heC_pos : 0 < e₁ * C := mul_pos he₁_pos hC
+    have hj_real_pos : 0 < j_real :=
+      div_pos one_pos (mul_pos heC_pos hsqrt_pos)
+    have hj_real_ge_one : 1 ≤ j_real := by
+      rw [one_le_div (mul_pos heC_pos hsqrt_pos)]
+      have hsq_le : Real.sqrt ε ≤ 1 / (e₁ * C) := by
+        rw [Real.sqrt_le_left]
+        · rwa [div_pow, one_pow]
+        · exact div_nonneg (by norm_num) (le_of_lt heC_pos)
+      calc e₁ * C * Real.sqrt ε
+          ≤ e₁ * C * (1 / (e₁ * C)) :=
+            mul_le_mul_of_nonneg_left hsq_le (le_of_lt heC_pos)
+        _ = 1 := by field_simp
+    have hj_le : (j : ℝ) ≤ 2 * j_real := by
+      have : (j : ℝ) ≤ j_real + 1 :=
+        le_of_lt (Nat.ceil_lt_add_one (le_of_lt hj_real_pos))
+      linarith
+    have hj_ge : j_real ≤ (j : ℝ) := Nat.le_ceil j_real
+    have hCj_le : C * (j : ℝ) ≤ 2 / (e₁ * Real.sqrt ε) := by
+      calc C * (j : ℝ) ≤ C * (2 * j_real) :=
+              mul_le_mul_of_nonneg_left hj_le (le_of_lt hC)
+        _ = 2 * (C / (e₁ * C * Real.sqrt ε)) := by ring
+        _ = 2 / (e₁ * Real.sqrt ε) := by
+            congr 1
+            field_simp
+    have hbase_le : (C * (j : ℝ)) ^ 4 * ε ^ 2 ≤ 16 / e₁ ^ 4 := by
+      have h1 : (C * (j : ℝ)) ^ 4 ≤ (2 / (e₁ * Real.sqrt ε)) ^ 4 :=
+        pow_le_pow_left₀ (by positivity) hCj_le 4
+      have hsq : Real.sqrt ε ^ 2 = ε := Real.sq_sqrt (le_of_lt hε)
+      have h2 : (2 / (e₁ * Real.sqrt ε)) ^ 4 * ε ^ 2 = 16 / e₁ ^ 4 := by
+        have he₁_ne : e₁ ≠ 0 := ne_of_gt he₁_pos
+        have hsqrt_ne : Real.sqrt ε ≠ 0 := ne_of_gt hsqrt_pos
+        field_simp
+        rw [show (Real.sqrt ε) ^ 4 = ((Real.sqrt ε) ^ 2) ^ 2 from by ring, hsq]
+        ring
+      linarith [mul_le_mul_of_nonneg_right h1 (sq_nonneg ε)]
+    have hrewrite : (C * (j : ℝ)) ^ (4 * j) * ε ^ (2 * j) =
+        ((C * (j : ℝ)) ^ 4 * ε ^ 2) ^ (j : ℕ) := by
+      rw [mul_pow, pow_mul, pow_mul, pow_mul]
+      ring
+    rw [hrewrite]
+    have hbase_nonneg : 0 ≤ (C * (j : ℝ)) ^ 4 * ε ^ 2 := by positivity
+    have hpow_le : ((C * (j : ℝ)) ^ 4 * ε ^ 2) ^ j ≤ (16 / e₁ ^ 4) ^ j :=
+      pow_le_pow_left₀ hbase_nonneg hbase_le j
+    have hlog_ratio : Real.log (16 / e₁ ^ 4) = Real.log 16 - 4 := by
+      rw [Real.log_div (by positivity : (16 : ℝ) ≠ 0) (by positivity : e₁ ^ 4 ≠ 0)]
+      congr 1
+      rw [Real.log_pow, Real.log_exp]
+      norm_num
+    have hratio_pos : 0 < 16 / e₁ ^ 4 := by positivity
+    have hratio_eq : 16 / e₁ ^ 4 = Real.exp (-β) := by
+      rw [← Real.exp_log hratio_pos, hlog_ratio]
+      congr 1
+      ring
+    have hpow_eq : (16 / e₁ ^ 4) ^ j = Real.exp (-(β * (j : ℝ))) := by
+      rw [hratio_eq, ← Real.exp_nat_mul, mul_comm]
+      congr 1
+      ring
+    have hβj_ge : β * j_real ≤ β * (j : ℝ) :=
+      mul_le_mul_of_nonneg_left hj_ge (le_of_lt four_sub_log_sixteen_pos)
+    have hβj_real_eq : β * j_real = c / Real.sqrt ε := by
+      simp only [c, j_real]
+      field_simp
+    have hexp_le : Real.exp (-(β * (j : ℝ))) ≤ Real.exp (-(c / Real.sqrt ε)) := by
+      apply Real.exp_le_exp_of_le
+      linarith
+    linarith [hpow_le, hpow_eq, hexp_le]
+
+/-- Markov's inequality with optimized moment order turns hypercontractive even
+moment growth into a double-exponential tail bound. -/
+theorem markov_hypercontractive_tail
+    {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+    {Y : Ω → ℝ} {C σ : ℝ} (hC : 0 < C) (hσ : 0 < σ)
+    (hmoment : ∀ j : ℕ, 0 < j →
+      Integrable (fun ω => |Y ω| ^ (2 * j)) μ ∧
+      ∫ ω, |Y ω| ^ (2 * j) ∂μ ≤ (C * ↑j) ^ (4 * j) * σ ^ (2 * j))
+    (hσ_small : σ ≤ 1 / (Real.exp 1 * C) ^ 2) :
+    ∃ c : ℝ, 0 < c ∧
+      μ {ω | 1 < |Y ω|} ≤ ENNReal.ofReal (Real.exp (-(c / Real.sqrt σ))) := by
+  obtain ⟨c, j, hc, hj, hopt⟩ := markov_optimization_exists_j C hC σ hσ hσ_small
+  obtain ⟨hint, hmom⟩ := hmoment j hj
+  refine ⟨c, hc, ?_⟩
+  calc
+    μ {ω | 1 < |Y ω|}
+      ≤ ENNReal.ofReal (∫ ω, |Y ω| ^ (2 * j) ∂μ) := markov_even_moment j hint
+    _ ≤ ENNReal.ofReal ((C * ↑j) ^ (4 * j) * σ ^ (2 * j)) :=
+        ENNReal.ofReal_le_ofReal hmom
+    _ ≤ ENNReal.ofReal (Real.exp (-(c / Real.sqrt σ))) :=
+        ENNReal.ofReal_le_ofReal hopt
 
 /-- **Sub-gap A: Double-exponential tail bound for the cutoff interaction.**
 
