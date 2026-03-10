@@ -1188,6 +1188,153 @@ def interactionCutoffSubUniformApprox
     ℕ → FieldConfig2D → ℝ :=
   fun n => interactionCutoffSubCellAnchorApprox params Λ (Phi4.uniformRectLattice Λ n) κ κ₀
 
+/-- The cell-anchor approximant is exactly the anchor Riemann sum of the pointwise
+quartic Wick-power difference. -/
+theorem interactionCutoffSubCellAnchorApprox_eq_riemannSumCellAnchorFun
+    (params : Phi4Params) (Λ : Rectangle) (L : Phi4.RectLattice Λ)
+    (κ κ₀ : UVCutoff) (ω : FieldConfig2D) :
+    interactionCutoffSubCellAnchorApprox params Λ L κ κ₀ ω =
+      params.coupling *
+        Phi4.RectLattice.riemannSumCellAnchorFun L
+          (fun x => wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x) := by
+  classical
+  unfold interactionCutoffSubCellAnchorApprox Phi4.RectLattice.riemannSumCellAnchorFun
+    finiteWickCylinder
+  rw [Fintype.sum_sum_type, Fintype.sum_sum_type]
+  simp only [zero_mul, add_zero]
+  let g : Fin L.Nt → Fin L.Nx → ℝ := fun i j =>
+    (L.cell i j).area *
+      ((fun x => wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x)
+        (L.cellAnchor i j))
+  let A : Fin L.Nt × Fin L.Nx → ℝ := fun x =>
+    params.coupling * (L.cell x.1 x.2).area *
+      wickMonomial 4 (regularizedPointCovariance params.mass κ)
+        (ω (uvMollifier κ (L.cellAnchor x.1 x.2)))
+  let B : Fin L.Nt × Fin L.Nx → ℝ := fun x =>
+    params.coupling * (L.cell x.1 x.2).area *
+      wickMonomial 4 (regularizedPointCovariance params.mass κ₀)
+        (ω (uvMollifier κ₀ (L.cellAnchor x.1 x.2)))
+  have hprod : (∑ i : Fin L.Nt, ∑ j : Fin L.Nx, g i j) =
+      ∑ p : Fin L.Nt × Fin L.Nx, g p.1 p.2 := by
+    simpa [g] using (Fintype.sum_prod_type' g).symm
+  have hterm : ∀ x : Fin L.Nt × Fin L.Nx, A x - B x = params.coupling * g x.1 x.2 := by
+    intro x
+    rcases x with ⟨i, j⟩
+    simp [A, B, g, wickPower, rawFieldEval, wickMonomial_four, sub_eq_add_neg]
+    ring
+  have hstart :
+      (∑ x : Fin L.Nt × Fin L.Nx,
+          params.coupling * (L.cell x.1 x.2).area *
+            wickMonomial 4 (regularizedPointCovariance params.mass κ)
+              (ω (uvMollifier κ (L.cellAnchor x.1 x.2))) +
+        ∑ x : Fin L.Nt × Fin L.Nx,
+          -params.coupling * (L.cell x.1 x.2).area *
+            wickMonomial 4 (regularizedPointCovariance params.mass κ₀)
+              (ω (uvMollifier κ₀ (L.cellAnchor x.1 x.2))) +
+      (∑ x : Fin L.Nt × Fin L.Nx, 0 + ∑ x : Fin L.Nt × Fin L.Nx, 0))
+        = ∑ x : Fin L.Nt × Fin L.Nx, A x - ∑ x : Fin L.Nt × Fin L.Nx, B x := by
+    simp [A, B, sub_eq_add_neg]
+  calc
+    (∑ x : Fin L.Nt × Fin L.Nx,
+        params.coupling * (L.cell x.1 x.2).area *
+          wickMonomial 4 (regularizedPointCovariance params.mass κ)
+            (ω (uvMollifier κ (L.cellAnchor x.1 x.2))) +
+      ∑ x : Fin L.Nt × Fin L.Nx,
+        -params.coupling * (L.cell x.1 x.2).area *
+          wickMonomial 4 (regularizedPointCovariance params.mass κ₀)
+            (ω (uvMollifier κ₀ (L.cellAnchor x.1 x.2))) +
+      (∑ x : Fin L.Nt × Fin L.Nx, 0 + ∑ x : Fin L.Nt × Fin L.Nx, 0))
+        = ∑ x : Fin L.Nt × Fin L.Nx, A x - ∑ x : Fin L.Nt × Fin L.Nx, B x := hstart
+    _ = ∑ x : Fin L.Nt × Fin L.Nx, (A x - B x) := by
+      rw [← Finset.sum_sub_distrib]
+    _ = ∑ x : Fin L.Nt × Fin L.Nx, params.coupling * g x.1 x.2 := by
+      refine Finset.sum_congr rfl ?_
+      intro x hx
+      exact hterm x
+    _ = params.coupling * ∑ x : Fin L.Nt × Fin L.Nx, g x.1 x.2 := by
+      rw [Finset.mul_sum]
+    _ = params.coupling * (∑ i : Fin L.Nt, ∑ j : Fin L.Nx, g i j) := by
+      rw [← hprod]
+
+/-- The canonical uniform-refinement approximant is the corresponding anchor
+Riemann sum of the quartic Wick-power difference. -/
+theorem interactionCutoffSubUniformApprox_eq_riemannSumCellAnchorFun
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) (n : ℕ) (ω : FieldConfig2D) :
+    interactionCutoffSubUniformApprox params Λ κ κ₀ n ω =
+      params.coupling *
+        Phi4.RectLattice.riemannSumCellAnchorFun (Phi4.uniformRectLattice Λ n)
+          (fun x => wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x) := by
+  simpa [interactionCutoffSubUniformApprox] using
+    interactionCutoffSubCellAnchorApprox_eq_riemannSumCellAnchorFun
+      params Λ (Phi4.uniformRectLattice Λ n) κ κ₀ ω
+
+/-- The canonical uniform approximant is the integral of the corresponding
+piecewise cell-anchor approximation of the pointwise quartic Wick-power
+difference. -/
+theorem interactionCutoffSubUniformApprox_eq_setIntegral_cellAnchorApproxFun
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) (n : ℕ) (ω : FieldConfig2D) :
+    interactionCutoffSubUniformApprox params Λ κ κ₀ n ω =
+      params.coupling *
+        ∫ x in Λ.toSet,
+          (Phi4.uniformRectLattice Λ n).cellAnchorApproxFun
+            (fun z => wickPower 4 params.mass κ ω z - wickPower 4 params.mass κ₀ ω z) x := by
+  rw [interactionCutoffSubUniformApprox_eq_riemannSumCellAnchorFun]
+  congr 1
+  exact
+    ((Phi4.uniformRectLattice Λ n).setIntegral_cellAnchorApproxFun_eq_riemannSumCellAnchorFun
+      (fun z => wickPower 4 params.mass κ ω z - wickPower 4 params.mass κ₀ ω z)).symm
+
+/-- The uniform approximant error is the integral of the mesh anchor
+approximation error for the pointwise quartic Wick-power difference. -/
+theorem interactionCutoffSubUniformApprox_sub_eq_setIntegral_error
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) (n : ℕ) (ω : FieldConfig2D) :
+    interactionCutoffSubUniformApprox params Λ κ κ₀ n ω -
+        (interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω) =
+      params.coupling *
+        ∫ x in Λ.toSet,
+          (Phi4.uniformRectLattice Λ n).cellAnchorApproxFun
+              (fun z => wickPower 4 params.mass κ ω z - wickPower 4 params.mass κ₀ ω z) x
+            -
+            (wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x) := by
+  let d : Spacetime2D → ℝ :=
+    fun x => wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x
+  have happ :
+      interactionCutoffSubUniformApprox params Λ κ κ₀ n ω =
+        params.coupling *
+          ∫ x in Λ.toSet, (Phi4.uniformRectLattice Λ n).cellAnchorApproxFun d x := by
+    simpa [d] using
+      interactionCutoffSubUniformApprox_eq_setIntegral_cellAnchorApproxFun params Λ κ κ₀ n ω
+  have hd_int : Integrable (fun x => d x) (volume.restrict Λ.toSet) := by
+    exact
+      ((wickPower_continuous_in_x 4 params.mass κ ω).sub
+        (wickPower_continuous_in_x 4 params.mass κ₀ ω)).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+  have happ_int :
+      Integrable
+        (fun x => (Phi4.uniformRectLattice Λ n).cellAnchorApproxFun d x)
+        (volume.restrict Λ.toSet) := by
+    exact (Phi4.uniformRectLattice Λ n).integrable_cellAnchorApproxFun d
+  have htarget :
+      interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω =
+        params.coupling * ∫ x in Λ.toSet, d x := by
+    have hκ_int :
+        Integrable (fun x => wickPower 4 params.mass κ ω x)
+          (MeasureTheory.volume.restrict Λ.toSet) := by
+      exact (wickPower_continuous_in_x 4 params.mass κ ω).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    have hκ₀_int :
+        Integrable (fun x => wickPower 4 params.mass κ₀ ω x)
+          (MeasureTheory.volume.restrict Λ.toSet) := by
+      exact (wickPower_continuous_in_x 4 params.mass κ₀ ω).continuousOn.integrableOn_compact
+        Λ.toSet_isCompact
+    unfold d interactionCutoff
+    rw [← mul_sub]
+    congr 1
+    exact (integral_sub hκ_int hκ₀_int).symm
+  rw [happ, htarget, ← mul_sub]
+  congr 1
+  exact (integral_sub happ_int hd_int).symm
+
 /-- Each term in the canonical uniform-refinement approximant sequence is a
 finite Wick cylinder. -/
 theorem interactionCutoffSubUniformApprox_isFiniteWickCylinder
@@ -1289,8 +1436,285 @@ theorem gap_finiteWickCylinder_even_moment_comparison
 /-- Frontier theorem for approximating cutoff-interaction differences by finite
 Wick cylinders.
 
-This is the approximation input needed to transfer the finite-dimensional
-moment comparison to the actual integrated cutoff difference by Fatou. -/
+This is split along the actual canonical approximation sequence:
+the uniform-refinement cell-anchor approximants. The two genuine remaining
+inputs are:
+1. almost-everywhere convergence of the canonical sequence,
+2. convergence of its second moments. -/
+theorem gap_interactionCutoffSubUniformApprox_tendsto_ae
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) :
+    ∀ᵐ ω ∂(freeFieldMeasure params.mass params.mass_pos),
+      Tendsto
+        (fun n : ℕ => interactionCutoffSubUniformApprox params Λ κ κ₀ n ω) atTop
+        (𝓝 (interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω)) := by
+  refine ae_of_all _ ?_
+  intro ω
+  let d : Spacetime2D → ℝ :=
+    fun x => wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x
+  have hcont : ContinuousOn d Λ.toSet := by
+    exact
+      ((wickPower_continuous_in_x 4 params.mass κ ω).sub
+        (wickPower_continuous_in_x 4 params.mass κ₀ ω)).continuousOn
+  have hint : IntegrableOn d Λ.toSet volume := by
+    exact hcont.integrableOn_compact Λ.toSet_isCompact
+  have hriemann :
+      Filter.Tendsto
+        (fun n : ℕ => (Phi4.uniformRectLattice Λ n).riemannSumCellAnchorFun d)
+        Filter.atTop
+        (nhds (∫ x in Λ.toSet, d x)) := by
+    exact
+      Phi4.tendsto_riemannSumCellAnchorFun_of_continuousOn
+        Λ Λ.toSet_isCompact hcont hint
+  have happ :
+      Filter.Tendsto
+        (fun n : ℕ => interactionCutoffSubUniformApprox params Λ κ κ₀ n ω)
+        Filter.atTop
+        (nhds (params.coupling * ∫ x in Λ.toSet, d x)) := by
+    simpa [interactionCutoffSubUniformApprox_eq_riemannSumCellAnchorFun, d] using
+      hriemann.const_mul params.coupling
+  have hκ_int : Integrable (fun x => wickPower 4 params.mass κ ω x) (volume.restrict Λ.toSet) := by
+    exact (wickPower_continuous_in_x 4 params.mass κ ω).continuousOn.integrableOn_compact
+      Λ.toSet_isCompact
+  have hκ₀_int : Integrable (fun x => wickPower 4 params.mass κ₀ ω x) (volume.restrict Λ.toSet) := by
+    exact (wickPower_continuous_in_x 4 params.mass κ₀ ω).continuousOn.integrableOn_compact
+      Λ.toSet_isCompact
+  have htarget :
+      params.coupling * ∫ x in Λ.toSet, d x =
+        interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω := by
+    unfold d interactionCutoff
+    rw [← mul_sub, integral_sub hκ_int hκ₀_int]
+  simpa [htarget] using happ
+
+/-- For a fixed cutoff, the two-point second moment of the quartic Wick-power
+difference is continuous in the spacetime pair `(y, x)`. -/
+private theorem continuous_wickPower_sq_diff_expectation
+    (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff) :
+    Continuous fun p : Spacetime2D × Spacetime2D =>
+      ∫ ω : FieldConfig2D,
+        (wickPower 4 mass κ ω p.1 - wickPower 4 mass κ ω p.2) ^ 2
+          ∂(freeFieldMeasure mass hmass) := by
+  let T := freeCovarianceCLM mass hmass
+  let c := regularizedPointCovariance mass κ
+  let cov11 : Spacetime2D × Spacetime2D → ℝ := fun p =>
+    GaussianField.covariance T (uvMollifier κ p.1) (uvMollifier κ p.1)
+  let cov22 : Spacetime2D × Spacetime2D → ℝ := fun p =>
+    GaussianField.covariance T (uvMollifier κ p.2) (uvMollifier κ p.2)
+  let cov12 : Spacetime2D × Spacetime2D → ℝ := fun p =>
+    GaussianField.covariance T (uvMollifier κ p.2) (uvMollifier κ p.1)
+  have huv_fst : Continuous fun p : Spacetime2D × Spacetime2D => uvMollifier κ p.1 :=
+    (gap_uvMollifier_continuous κ).comp continuous_fst
+  have huv_snd : Continuous fun p : Spacetime2D × Spacetime2D => uvMollifier κ p.2 :=
+    (gap_uvMollifier_continuous κ).comp continuous_snd
+  have hcov11 : Continuous cov11 := by
+    simpa [cov11, GaussianField.covariance] using (T.continuous.comp huv_fst).inner
+      (T.continuous.comp huv_fst)
+  have hcov22 : Continuous cov22 := by
+    simpa [cov22, GaussianField.covariance] using (T.continuous.comp huv_snd).inner
+      (T.continuous.comp huv_snd)
+  have hcov12 : Continuous cov12 := by
+    simpa [cov12, GaussianField.covariance] using (T.continuous.comp huv_snd).inner
+      (T.continuous.comp huv_fst)
+  let P : Spacetime2D × Spacetime2D → ℝ := fun p =>
+      105 * (cov11 p) ^ 4
+        - 180 * c * (cov11 p) ^ 3
+        + 108 * c ^ 2 * (cov11 p) ^ 2
+        + 105 * (cov22 p) ^ 4
+        - 180 * c * (cov22 p) ^ 3
+        + 108 * c ^ 2 * (cov22 p) ^ 2
+        - 18 * (cov22 p) ^ 2 * (cov11 p) ^ 2
+        - 144 * cov22 p * cov11 p * (cov12 p) ^ 2
+        - 48 * (cov12 p) ^ 4
+        + 36 * c * cov22 p * (cov11 p) ^ 2
+        + 36 * c * (cov22 p) ^ 2 * cov11 p
+        + 144 * c * cov11 p * (cov12 p) ^ 2
+        + 144 * c * cov22 p * (cov12 p) ^ 2
+        - 72 * c ^ 2 * cov22 p * cov11 p
+        - 144 * c ^ 2 * (cov12 p) ^ 2
+  have hP : Continuous P := by
+    dsimp [P]
+    continuity
+  convert hP using 1
+  ext p
+  simpa [P, cov11, cov22, cov12, T, c, wickPower, rawFieldEval] using
+    (wickMonomial_four_diff_sq_expectation mass hmass
+      (uvMollifier κ p.2) (uvMollifier κ p.1) c)
+
+/-- On sufficiently fine uniform meshes, the quartic Wick-power second-moment
+increment between a point and its cell anchor is uniformly small over the whole
+rectangle. -/
+private theorem eventually_uniform_wickPower_sq_diff_expectation_lt
+    (Λ : Rectangle) (mass : ℝ) (hmass : 0 < mass) (κ : UVCutoff)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ N : ℕ, ∀ n ≥ N,
+      ∀ (i : Fin (Phi4.uniformRectLattice Λ n).Nt) (j : Fin (Phi4.uniformRectLattice Λ n).Nx)
+        {x : Spacetime2D},
+        x ∈ ((Phi4.uniformRectLattice Λ n).cell i j).toSet →
+        ∫ ω : FieldConfig2D,
+          (wickPower 4 mass κ ω ((Phi4.uniformRectLattice Λ n).cellAnchor i j) -
+            wickPower 4 mass κ ω x) ^ 2
+          ∂(freeFieldMeasure mass hmass) < ε := by
+  let F : Spacetime2D × Spacetime2D → ℝ := fun p =>
+    ∫ ω : FieldConfig2D,
+      (wickPower 4 mass κ ω p.1 - wickPower 4 mass κ ω p.2) ^ 2
+        ∂(freeFieldMeasure mass hmass)
+  have hF_cont : Continuous F := continuous_wickPower_sq_diff_expectation mass hmass κ
+  have huc : UniformContinuousOn F (Λ.toSet ×ˢ Λ.toSet) := by
+    exact (Λ.toSet_isCompact.prod Λ.toSet_isCompact).uniformContinuousOn_of_continuous
+      hF_cont.continuousOn
+  rw [Metric.uniformContinuousOn_iff] at huc
+  rcases huc ε hε with ⟨δ, hδpos, hδ⟩
+  have hstep :
+      Filter.Tendsto
+        (fun n : ℕ =>
+          (Phi4.uniformRectLattice Λ n).timeStep + (Phi4.uniformRectLattice Λ n).spaceStep)
+        Filter.atTop (nhds 0) := by
+    simpa [zero_add] using
+      (Phi4.tendsto_uniformRectLattice_timeStep Λ).add
+        (Phi4.tendsto_uniformRectLattice_spaceStep Λ)
+  have hsmall : ∀ᶠ n : ℕ in Filter.atTop,
+      (Phi4.uniformRectLattice Λ n).timeStep + (Phi4.uniformRectLattice Λ n).spaceStep < δ :=
+    hstep (Iio_mem_nhds hδpos)
+  rcases Filter.eventually_atTop.mp hsmall with ⟨N, hN⟩
+  refine ⟨N, ?_⟩
+  intro n hn i j x hx
+  have hxΛ : x ∈ Λ.toSet :=
+    Phi4.RectLattice.cell_subset_rect (L := Phi4.uniformRectLattice Λ n) i j hx
+  have haΛ : (Phi4.uniformRectLattice Λ n).cellAnchor i j ∈ Λ.toSet :=
+    Phi4.RectLattice.cell_subset_rect (L := Phi4.uniformRectLattice Λ n) i j
+      ((Phi4.uniformRectLattice Λ n).cellAnchor_mem_cell i j)
+  have hdist : dist ((Phi4.uniformRectLattice Λ n).cellAnchor i j) x < δ := by
+    have hle :=
+      Phi4.RectLattice.dist_cellAnchor_le_timeStep_add_spaceStep
+        (L := Phi4.uniformRectLattice Λ n) (i := i) (j := j) hx
+    rw [dist_comm] at hle
+    exact lt_of_le_of_lt hle (hN n hn)
+  have hclose :
+      dist
+        (F ((Phi4.uniformRectLattice Λ n).cellAnchor i j, x))
+        (F (x, x)) < ε := by
+    apply hδ
+    · exact ⟨haΛ, hxΛ⟩
+    · exact ⟨hxΛ, hxΛ⟩
+    · simpa [Prod.dist_eq] using hdist
+  have hdiag : F (x, x) = 0 := by
+    simp [F]
+  have hnonneg : 0 ≤ F ((Phi4.uniformRectLattice Λ n).cellAnchor i j, x) := by
+    exact integral_nonneg (fun _ => sq_nonneg _)
+  rw [Real.dist_eq, hdiag, sub_zero, abs_of_nonneg hnonneg] at hclose
+  simpa [F] using hclose
+
+/-- On sufficiently fine uniform meshes, the pointwise second moment of the
+full cutoff-difference error between a point and its cell anchor is uniformly
+small over the whole rectangle. -/
+private theorem eventually_uniform_wickPowerSub_sq_expectation_lt
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ N : ℕ, ∀ n ≥ N,
+      ∀ (i : Fin (Phi4.uniformRectLattice Λ n).Nt) (j : Fin (Phi4.uniformRectLattice Λ n).Nx)
+        {x : Spacetime2D},
+        x ∈ ((Phi4.uniformRectLattice Λ n).cell i j).toSet →
+        ∫ ω : FieldConfig2D,
+          (((wickPower 4 params.mass κ ω ((Phi4.uniformRectLattice Λ n).cellAnchor i j) -
+              wickPower 4 params.mass κ₀ ω ((Phi4.uniformRectLattice Λ n).cellAnchor i j)) -
+            (wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x)) ^ 2)
+            ∂(freeFieldMeasure params.mass params.mass_pos) < ε := by
+  let η : ℝ := ε / 4
+  have hη : 0 < η := by
+    unfold η
+    linarith
+  rcases eventually_uniform_wickPower_sq_diff_expectation_lt
+      Λ params.mass params.mass_pos κ hη with ⟨Nκ, hNκ⟩
+  rcases eventually_uniform_wickPower_sq_diff_expectation_lt
+      Λ params.mass params.mass_pos κ₀ hη with ⟨Nκ₀, hNκ₀⟩
+  refine ⟨max Nκ Nκ₀, ?_⟩
+  intro n hn i j x hx
+  have hnκ : Nκ ≤ n := le_trans (le_max_left _ _) hn
+  have hnκ₀ : Nκ₀ ≤ n := le_trans (le_max_right _ _) hn
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  let a : Spacetime2D := (Phi4.uniformRectLattice Λ n).cellAnchor i j
+  let A : FieldConfig2D → ℝ := fun ω =>
+    wickPower 4 params.mass κ ω a - wickPower 4 params.mass κ ω x
+  let B : FieldConfig2D → ℝ := fun ω =>
+    wickPower 4 params.mass κ₀ ω a - wickPower 4 params.mass κ₀ ω x
+  have hA_mem : MemLp A 2 μ := by
+    simpa [A, μ] using
+      (wickPower_memLp 4 params.mass params.mass_pos κ a
+        (by norm_num : (2 : ℝ≥0∞) ≠ ⊤)).sub
+      (wickPower_memLp 4 params.mass params.mass_pos κ x
+        (by norm_num : (2 : ℝ≥0∞) ≠ ⊤))
+  have hB_mem : MemLp B 2 μ := by
+    simpa [B, μ] using
+      (wickPower_memLp 4 params.mass params.mass_pos κ₀ a
+        (by norm_num : (2 : ℝ≥0∞) ≠ ⊤)).sub
+      (wickPower_memLp 4 params.mass params.mass_pos κ₀ x
+        (by norm_num : (2 : ℝ≥0∞) ≠ ⊤))
+  have hleft_int : Integrable (fun ω => (A ω - B ω) ^ 2) μ := by
+    simpa [μ] using (hA_mem.sub hB_mem).integrable_sq
+  have hA_int : Integrable (fun ω => (A ω) ^ 2) μ := by
+    simpa [μ] using hA_mem.integrable_sq
+  have hB_int : Integrable (fun ω => (B ω) ^ 2) μ := by
+    simpa [μ] using hB_mem.integrable_sq
+  have hright_int : Integrable (fun ω => 2 * (A ω) ^ 2 + 2 * (B ω) ^ 2) μ := by
+    exact (hA_int.const_mul 2).add (hB_int.const_mul 2)
+  have htarget_eq :
+      (∫ ω : FieldConfig2D,
+          (((wickPower 4 params.mass κ ω a -
+              wickPower 4 params.mass κ₀ ω a) -
+            (wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x)) ^ 2) ∂μ)
+        =
+      ∫ ω : FieldConfig2D, (A ω - B ω) ^ 2 ∂μ := by
+    congr 1
+    ext ω
+    simp [A, B]
+    ring
+  have hmono :
+      ∫ ω : FieldConfig2D, (A ω - B ω) ^ 2 ∂μ
+        ≤ ∫ ω : FieldConfig2D, 2 * (A ω) ^ 2 + 2 * (B ω) ^ 2 ∂μ := by
+    refine integral_mono_ae hleft_int hright_int ?_
+    filter_upwards with ω
+    have hsq : 0 ≤ (A ω + B ω) ^ 2 := sq_nonneg (A ω + B ω)
+    nlinarith
+  have hA_lt :
+      ∫ ω : FieldConfig2D, (A ω) ^ 2 ∂μ < η := by
+    simpa [A, a] using hNκ n hnκ i j hx
+  have hB_lt :
+      ∫ ω : FieldConfig2D, (B ω) ^ 2 ∂μ < η := by
+    simpa [B, a] using hNκ₀ n hnκ₀ i j hx
+  calc
+    ∫ ω : FieldConfig2D,
+        (((wickPower 4 params.mass κ ω a -
+            wickPower 4 params.mass κ₀ ω a) -
+          (wickPower 4 params.mass κ ω x - wickPower 4 params.mass κ₀ ω x)) ^ 2) ∂μ
+        = ∫ ω : FieldConfig2D, (A ω - B ω) ^ 2 ∂μ := htarget_eq
+    _ 
+      ≤ ∫ ω : FieldConfig2D, 2 * (A ω) ^ 2 + 2 * (B ω) ^ 2 ∂μ := hmono
+    _ = 2 * ∫ ω : FieldConfig2D, (A ω) ^ 2 ∂μ +
+          2 * ∫ ω : FieldConfig2D, (B ω) ^ 2 ∂μ := by
+          rw [integral_add (hA_int.const_mul 2) (hB_int.const_mul 2),
+            integral_const_mul, integral_const_mul]
+    _ < 2 * η + 2 * η := by
+          gcongr
+    _ = ε := by
+          unfold η
+          ring
+
+/-- Frontier theorem for `L²` convergence of the canonical uniform-refinement
+cell-anchor approximants to the cutoff-interaction difference. -/
+theorem gap_interactionCutoffSubUniformApprox_L2
+    (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) :
+    Tendsto
+      (fun n : ℕ =>
+        ∫ ω, (interactionCutoffSubUniformApprox params Λ κ κ₀ n ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos))
+      atTop
+      (𝓝
+        (∫ ω,
+            (interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω) ^ 2
+          ∂(freeFieldMeasure params.mass params.mass_pos))) := by
+  sorry
+
+/-- Derived finite-cylinder approximation theorem for cutoff-interaction
+differences. -/
 theorem gap_interactionCutoff_sub_finiteWickCylinder_approx
     (params : Phi4Params) (Λ : Rectangle) (κ κ₀ : UVCutoff) :
     ∃ Z : ℕ → FieldConfig2D → ℝ,
@@ -1306,7 +1730,10 @@ theorem gap_interactionCutoff_sub_finiteWickCylinder_approx
           (∫ ω,
               (interactionCutoff params Λ κ ω - interactionCutoff params Λ κ₀ ω) ^ 2
             ∂(freeFieldMeasure params.mass params.mass_pos))) := by
-  sorry
+  refine ⟨interactionCutoffSubUniformApprox params Λ κ κ₀,
+    interactionCutoffSubUniformApprox_isFiniteWickCylinder params Λ κ κ₀,
+    gap_interactionCutoffSubUniformApprox_tendsto_ae params Λ κ κ₀,
+    gap_interactionCutoffSubUniformApprox_L2 params Λ κ κ₀⟩
 
 /-- Derived theorem for the canonical reference-shell even-moment bound in
 Nelson's argument.
