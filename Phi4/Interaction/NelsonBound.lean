@@ -2,8 +2,10 @@
 Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
+import Phi4.WickProduct
 import Phi4.Interaction.UVInfra
 import Phi4.LatticeApproximation
+import GaussianField.IsGaussian
 
 /-!
 # Nelson Bounds for Interaction Analytic Inputs
@@ -2076,11 +2078,57 @@ theorem gap_interactionCutoffSubUniformApprox_even_moment_comparison
                     (interactionCutoffSubUniformApprox params Λ κ κ₀ n ω) ^ 2
                     ∂(freeFieldMeasure params.mass params.mass_pos)) ^ j := by
   obtain ⟨C, hC, hcmp⟩ :=
-    gap_finiteWickCylinder_even_moment_comparison params.mass params.mass_pos
+    gap_centeredGaussian_mvPolynomial_even_moment_comparison_totalDegree_le_four
   refine ⟨C, hC, ?_⟩
   intro κ κ₀ n j hj
-  exact
-    hcmp (interactionCutoffSubUniformApprox_isFiniteWickCylinder params Λ κ κ₀ n) j hj
+  let μ : Measure FieldConfig2D := freeFieldMeasure params.mass params.mass_pos
+  rcases
+      IsFiniteWickCylinder.exists_mvPolynomial_model_totalDegree_le_four
+        (interactionCutoffSubUniformApprox_isFiniteWickCylinder params Λ κ κ₀ n) with
+    ⟨m, P, f4, f2, hdeg, hP⟩
+  let ν : Measure (Fin m ⊕ Fin m → ℝ) := Measure.map (finiteWickCylinderEvalCLM f4 f2) μ
+  letI : OpensMeasurableSpace (Fin m ⊕ Fin m → ℝ) := by infer_instance
+  haveI : ProbabilityTheory.IsGaussian μ := by
+    dsimp [μ, freeFieldMeasure]
+    exact GaussianField.measure_isGaussian (freeCovarianceCLM params.mass params.mass_pos)
+  have hmap_meas : Measurable (finiteWickCylinderEvalFamily f4 f2) := by
+    classical
+    exact measurable_pi_lambda (finiteWickCylinderEvalFamily f4 f2) <| by
+      intro i
+      cases i with
+      | inl k =>
+          simpa [finiteWickCylinderEvalFamily] using configuration_eval_measurable (f4 k)
+      | inr k =>
+          simpa [finiteWickCylinderEvalFamily] using configuration_eval_measurable (f2 k)
+  have hmap_clm_meas : Measurable (finiteWickCylinderEvalCLM f4 f2) := by
+    convert hmap_meas using 1
+    ext ω
+    simp [finiteWickCylinderEvalCLM_apply]
+  have hmap_ae :
+      AEMeasurable (finiteWickCylinderEvalCLM f4 f2) μ :=
+    hmap_clm_meas.aemeasurable
+  have hν : ProbabilityTheory.IsGaussian ν := by
+    dsimp [ν]
+    exact ProbabilityTheory.isGaussian_map_of_measurable (μ := μ) hmap_clm_meas
+  have hν_centered : ∀ i : Fin m ⊕ Fin m, ∫ x, x i ∂ν = 0 := by
+    simpa [ν] using
+      finiteWickCylinderEvalCLM_centered params.mass params.mass_pos f4 f2
+  have hleft :
+      ∫ x, |P.eval x| ^ (2 * j) ∂ν
+        = ∫ ω, |P.eval (finiteWickCylinderEvalFamily f4 f2 ω)| ^ (2 * j) ∂μ := by
+    dsimp [ν]
+    rw [integral_map hmap_ae
+      (((continuous_mvPolynomial_eval P).abs.pow (2 * j)).aestronglyMeasurable)]
+    simp [finiteWickCylinderEvalCLM_apply]
+  have hright :
+      ∫ x, (P.eval x) ^ 2 ∂ν
+        = ∫ ω, (P.eval (finiteWickCylinderEvalFamily f4 f2 ω)) ^ 2 ∂μ := by
+    dsimp [ν]
+    rw [integral_map hmap_ae
+      (((continuous_mvPolynomial_eval P).pow 2).aestronglyMeasurable)]
+    simp [finiteWickCylinderEvalCLM_apply]
+  have hcmp' := hcmp ν hν hν_centered P hdeg j hj
+  simpa [μ, hP, hleft, hright] using hcmp'
 
 /-- Derived theorem for the canonical reference-shell even-moment bound in
 Nelson's argument.

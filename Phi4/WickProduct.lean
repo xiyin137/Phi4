@@ -3,6 +3,9 @@ Copyright (c) 2026 Phi4 Contributors. All rights reserved.
 Released under Apache 2.0 license.
 -/
 import Phi4.CovarianceOperators
+import Mathlib.Algebra.MvPolynomial.Degrees
+import Mathlib.Algebra.MvPolynomial.Eval
+import Mathlib.Algebra.Module.LinearMap.Polynomial
 
 /-!
 # Wick Products (Normal Ordering)
@@ -284,6 +287,51 @@ private theorem power_integrable (mass : ℝ) (hmass : 0 < mass) (f : TestFun2D)
   simp_rw [h]
   change Integrable (fun ω => ∏ i : Fin n, ω ((fun _ => f) i)) (measure T)
   exact product_integrable T n (fun _ => f)
+
+/-- Even moments of a single Gaussian pairing admit the factorial Wick bound.
+
+This is the one-variable Gaussian estimate underlying later Nelson-side
+hypercontractive infrastructure. -/
+theorem pairing_even_moment_factorial_bound
+    (mass : ℝ) (hmass : 0 < mass) (f : TestFun2D) (m : ℕ) :
+    ∫ ω : FieldConfig2D, |ω f| ^ (2 * m) ∂(freeFieldMeasure mass hmass)
+      ≤ ((2 * m).factorial : ℝ) ^ ((1 : ℝ) / 2) *
+          (GaussianField.covariance (freeCovarianceCLM mass hmass) f f) ^ m := by
+  let T := freeCovarianceCLM mass hmass
+  have hpow_pt : ∀ x : ℝ, |x| ^ (2 * m) = x ^ (2 * m) := by
+    intro x
+    have hsq : |x ^ m| ^ 2 = (x ^ m) ^ 2 := sq_abs (x ^ m)
+    simpa [abs_pow, pow_mul, mul_comm, mul_left_comm, mul_assoc] using hsq
+  have hpow :
+      ∫ ω : FieldConfig2D, |ω f| ^ (2 * m) ∂(freeFieldMeasure mass hmass)
+        = ∫ ω : FieldConfig2D, (ω f) ^ (2 * m) ∂(freeFieldMeasure mass hmass) := by
+    congr with ω
+    exact hpow_pt (ω f)
+  rw [hpow]
+  have hwick_abs := GaussianField.wick_bound (T := T) (2 * m) (fun _ => f)
+  have hnonneg_int_T :
+      0 ≤ ∫ (ω : FieldConfig2D), (ω f) ^ (2 * m) ∂(GaussianField.measure T) := by
+    refine integral_nonneg ?_
+    intro ω
+    have hsq : 0 ≤ ((ω f) ^ m) ^ 2 := sq_nonneg _
+    simpa [pow_mul, mul_comm, mul_left_comm, mul_assoc] using hsq
+  have hwick :
+      ∫ (ω : FieldConfig2D), (ω f) ^ (2 * m) ∂(GaussianField.measure T)
+        ≤ ((2 * m - 1).doubleFactorial : ℝ) * ‖T f‖ ^ (2 * m) := by
+    simpa [abs_of_nonneg hnonneg_int_T] using hwick_abs
+  have hnormTf_sq : ‖T f‖ ^ (2 * m) = (GaussianField.covariance T f f) ^ m := by
+    rw [show GaussianField.covariance T f f = ‖T f‖ ^ 2 by simp [GaussianField.covariance]]
+    rw [← pow_mul]
+  calc
+    ∫ (ω : FieldConfig2D), (ω f) ^ (2 * m) ∂(freeFieldMeasure mass hmass)
+      = ∫ (ω : FieldConfig2D), (ω f) ^ (2 * m) ∂(GaussianField.measure T) := by rfl
+    _ ≤ ((2 * m - 1).doubleFactorial : ℝ) * ‖T f‖ ^ (2 * m) := hwick
+    _ ≤ ((2 * m).factorial : ℝ) ^ ((1 : ℝ) / 2) * ‖T f‖ ^ (2 * m) := by
+      gcongr
+      exact double_factorial_le_sqrt_factorial (2 * m)
+    _ = ((2 * m).factorial : ℝ) ^ ((1 : ℝ) / 2) *
+          (GaussianField.covariance T f f) ^ m := by
+      rw [hnormTf_sq]
 
 open Polynomial in
 /-- Any polynomial evaluated at a Gaussian pairing is integrable. -/
@@ -589,6 +637,192 @@ def finiteWickCylinder
   (∑ i, a4 i * wickMonomial 4 (c4 i) (ω (f4 i))) +
     (∑ i, a2 i * wickMonomial 2 (c2 i) (ω (f2 i))) + a0
 
+/-- Evaluation of a field configuration against a fixed test function as a
+continuous linear functional on `FieldConfig2D`. -/
+def configurationEvalCLM (f : TestFun2D) : FieldConfig2D →L[ℝ] ℝ where
+  toLinearMap :=
+    { toFun := fun ω => ω f
+      map_add' := by intro ω η; rfl
+      map_smul' := by intro r ω; rfl }
+  cont := WeakDual.eval_continuous f
+
+@[simp] theorem configurationEvalCLM_apply (f : TestFun2D) (ω : FieldConfig2D) :
+    configurationEvalCLM f ω = ω f := rfl
+
+/-- Finite-dimensional coordinate family used by `finiteWickCylinderPolynomial`:
+the left copy of `ι` records quartic coordinates, the right copy quadratic ones. -/
+def finiteWickCylinderEvalFamily
+    {ι : Type*}
+    (f4 f2 : ι → TestFun2D) (ω : FieldConfig2D) : ι ⊕ ι → ℝ
+  | Sum.inl i => ω (f4 i)
+  | Sum.inr i => ω (f2 i)
+
+/-- Continuous linear coordinate map underlying `finiteWickCylinderEvalFamily`. -/
+def finiteWickCylinderEvalCLM
+    {ι : Type*} [Fintype ι]
+    (f4 f2 : ι → TestFun2D) :
+    FieldConfig2D →L[ℝ] (ι ⊕ ι → ℝ) :=
+  ContinuousLinearMap.pi fun i =>
+    match i with
+    | Sum.inl j => configurationEvalCLM (f4 j)
+    | Sum.inr j => configurationEvalCLM (f2 j)
+
+@[simp] theorem finiteWickCylinderEvalCLM_apply
+    {ι : Type*} [Fintype ι]
+    (f4 f2 : ι → TestFun2D) (ω : FieldConfig2D) :
+    finiteWickCylinderEvalCLM f4 f2 ω = finiteWickCylinderEvalFamily f4 f2 ω := by
+  ext i <;> cases i <;> rfl
+
+/-- The finite-dimensional Gaussian coordinate law induced by
+`finiteWickCylinderEvalCLM` is centered in every coordinate. This is the exact
+bridge needed to feed the centered finite-dimensional Gaussian reduction on the
+Nelson side. -/
+theorem finiteWickCylinderEvalCLM_centered
+    {ι : Type*} [Fintype ι] (mass : ℝ) (hmass : 0 < mass)
+    (f4 f2 : ι → TestFun2D) :
+    ∀ i : ι ⊕ ι,
+      ∫ x, x i ∂(Measure.map (finiteWickCylinderEvalCLM f4 f2)
+        (freeFieldMeasure mass hmass)) = 0 := by
+  intro i
+  have hmap_meas : Measurable (finiteWickCylinderEvalFamily f4 f2) := by
+    classical
+    exact measurable_pi_lambda (finiteWickCylinderEvalFamily f4 f2) <| by
+      intro j
+      cases j with
+      | inl k =>
+          simpa [finiteWickCylinderEvalFamily] using configuration_eval_measurable (f4 k)
+      | inr k =>
+          simpa [finiteWickCylinderEvalFamily] using configuration_eval_measurable (f2 k)
+  have hmap_clm_meas : Measurable (finiteWickCylinderEvalCLM f4 f2) := by
+    convert hmap_meas using 1
+    ext ω
+    simp [finiteWickCylinderEvalCLM_apply]
+  rw [integral_map hmap_clm_meas.aemeasurable (continuous_apply i).aestronglyMeasurable]
+  cases i with
+  | inl k =>
+      simpa [finiteWickCylinderEvalCLM_apply, finiteWickCylinderEvalFamily] using
+        GaussianField.measure_centered (freeCovarianceCLM mass hmass) (f4 k)
+  | inr k =>
+      simpa [finiteWickCylinderEvalCLM_apply, finiteWickCylinderEvalFamily] using
+        GaussianField.measure_centered (freeCovarianceCLM mass hmass) (f2 k)
+
+/-- Explicit multivariate polynomial realizing a finite `0/2/4` Wick cylinder. -/
+def finiteWickCylinderPolynomial
+    {ι : Type*} [Fintype ι]
+    (a4 a2 : ι → ℝ) (c4 c2 : ι → ℝ) (a0 : ℝ) : MvPolynomial (ι ⊕ ι) ℝ :=
+  (∑ i, MvPolynomial.C (a4 i) *
+      ((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ)
+        - MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ)
+        + MvPolynomial.C (3 * (c4 i) ^ 2))) +
+    (∑ i, MvPolynomial.C (a2 i) *
+      ((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) - MvPolynomial.C (c2 i))) +
+    MvPolynomial.C a0
+
+/-- A finite Wick cylinder is exactly the evaluation of an explicit
+finite-dimensional degree-4 polynomial on finitely many Gaussian coordinates. -/
+theorem finiteWickCylinder_eq_mvPolynomial_eval
+    {ι : Type*} [Fintype ι]
+    (a4 a2 : ι → ℝ) (c4 c2 : ι → ℝ) (f4 f2 : ι → TestFun2D)
+    (a0 : ℝ) (ω : FieldConfig2D) :
+    (finiteWickCylinderPolynomial a4 a2 c4 c2 a0).eval
+        (finiteWickCylinderEvalFamily f4 f2 ω)
+      = finiteWickCylinder a4 a2 c4 c2 f4 f2 a0 ω := by
+  simp [finiteWickCylinderPolynomial, finiteWickCylinderEvalFamily,
+    finiteWickCylinder, wickMonomial_two, wickMonomial_four]
+
+/-- The explicit multivariate polynomial model for a finite Wick cylinder has
+total degree at most `4`. -/
+theorem finiteWickCylinderPolynomial_totalDegree_le_four
+    {ι : Type*} [Fintype ι]
+    (a4 a2 : ι → ℝ) (c4 c2 : ι → ℝ) (a0 : ℝ) :
+    (finiteWickCylinderPolynomial a4 a2 c4 c2 a0).totalDegree ≤ 4 := by
+  classical
+  have hquartic_term :
+      ∀ i : ι,
+        (MvPolynomial.C (a4 i) *
+            ((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ)
+              - MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ)
+              + MvPolynomial.C (3 * (c4 i) ^ 2) : MvPolynomial (ι ⊕ ι) ℝ)).totalDegree ≤ 4 := by
+    intro i
+    have hX4 :
+        ((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 4 := by
+      simp [MvPolynomial.totalDegree_X_pow]
+    have hCX2 :
+        (MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ) :
+          MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 2 := by
+      have hC : (MvPolynomial.C (6 * c4 i) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree = 0 :=
+        MvPolynomial.totalDegree_C (6 * c4 i)
+      calc
+        (MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ) :
+            MvPolynomial (ι ⊕ ι) ℝ).totalDegree
+            ≤ (MvPolynomial.C (6 * c4 i) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree +
+                ((MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree :=
+              MvPolynomial.totalDegree_mul _ _
+        _ = 0 + 2 := by rw [hC, MvPolynomial.totalDegree_X_pow]
+        _ ≤ 2 := by norm_num
+    have hconst :
+        (MvPolynomial.C (3 * (c4 i) ^ 2) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 4 := by
+      calc
+        (MvPolynomial.C (3 * (c4 i) ^ 2) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree = 0 := by
+          exact MvPolynomial.totalDegree_C (3 * (c4 i) ^ 2)
+        _ ≤ 4 := by norm_num
+    have hsub :
+        (((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ)) -
+            MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ) :
+            MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 4 := by
+      exact le_trans (MvPolynomial.totalDegree_sub _ _) <| by
+        exact max_le_iff.mpr ⟨hX4, le_trans hCX2 (by norm_num)⟩
+    have hinner :
+        (((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ)
+            - MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ)
+            + MvPolynomial.C (3 * (c4 i) ^ 2)) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 4 := by
+      exact le_trans (MvPolynomial.totalDegree_add _ _) <| by
+        exact max_le_iff.mpr ⟨hsub, hconst⟩
+    exact le_trans (MvPolynomial.totalDegree_mul _ _) <| by
+      simpa using hinner
+  have hquadratic_term :
+      ∀ i : ι,
+        (MvPolynomial.C (a2 i) *
+            ((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) - MvPolynomial.C (c2 i) :
+              MvPolynomial (ι ⊕ ι) ℝ)).totalDegree ≤ 4 := by
+    intro i
+    have hX2 :
+        ((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 2 := by
+      simp [MvPolynomial.totalDegree_X_pow]
+    have hsub :
+        (((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) - MvPolynomial.C (c2 i)) :
+            MvPolynomial (ι ⊕ ι) ℝ).totalDegree ≤ 2 := by
+      exact le_trans (MvPolynomial.totalDegree_sub _ _) <| by
+        exact max_le_iff.mpr ⟨hX2, le_trans (MvPolynomial.totalDegree_C (c2 i)).le (by norm_num)⟩
+    exact le_trans (MvPolynomial.totalDegree_mul _ _) <| by
+      have hCa : (MvPolynomial.C (a2 i) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree = 0 :=
+        MvPolynomial.totalDegree_C (a2 i)
+      calc
+        (MvPolynomial.C (a2 i) : MvPolynomial (ι ⊕ ι) ℝ).totalDegree +
+            (((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) - MvPolynomial.C (c2 i)) :
+              MvPolynomial (ι ⊕ ι) ℝ).totalDegree
+            ≤ 0 + 2 := by
+              rw [hCa]
+              exact add_le_add le_rfl hsub
+        _ ≤ 4 := by norm_num
+  have hquartic_sum :
+      (∑ i, MvPolynomial.C (a4 i) *
+          ((MvPolynomial.X (Sum.inl i)) ^ (4 : ℕ)
+            - MvPolynomial.C (6 * c4 i) * (MvPolynomial.X (Sum.inl i)) ^ (2 : ℕ)
+            + MvPolynomial.C (3 * (c4 i) ^ 2) : MvPolynomial (ι ⊕ ι) ℝ)).totalDegree ≤ 4 := by
+    exact MvPolynomial.totalDegree_finsetSum_le (fun i _ => hquartic_term i)
+  have hquadratic_sum :
+      (∑ i, MvPolynomial.C (a2 i) *
+          ((MvPolynomial.X (Sum.inr i)) ^ (2 : ℕ) - MvPolynomial.C (c2 i) :
+            MvPolynomial (ι ⊕ ι) ℝ)).totalDegree ≤ 4 := by
+    exact le_trans (MvPolynomial.totalDegree_finsetSum_le (fun i _ => hquadratic_term i)) (by norm_num)
+  unfold finiteWickCylinderPolynomial
+  refine le_trans (MvPolynomial.totalDegree_add _ _) ?_
+  refine max_le_iff.mpr ?_
+  refine ⟨?_, by simp⟩
+  exact le_trans (MvPolynomial.totalDegree_add _ _) <| by
+    exact max_le_iff.mpr ⟨hquartic_sum, hquadratic_sum⟩
+
 /-- A real-valued random variable is a finite Wick cylinder if it is given by a
 finite `0/2/4` Wick polynomial. This is the natural algebraic class expected in
 finite-dimensional approximants to the Nelson branch. -/
@@ -710,24 +944,271 @@ theorem finiteWickCylinder_isFinite
   simp only [finiteWickCylinder]
   rw [h4, h2]
 
-/-- Honest frontier for Nelson-type hypercontractive comparison on degree-4
-finite Wick cylinders.
+/-- Any finite Wick cylinder observable admits an explicit finite-dimensional
+multivariate-polynomial model on finitely many Gaussian coordinates. -/
+theorem IsFiniteWickCylinder.exists_mvPolynomial_model
+    {Z : FieldConfig2D → ℝ} (hZ : IsFiniteWickCylinder Z) :
+    ∃ n : ℕ, ∃ P : MvPolynomial (Fin n ⊕ Fin n) ℝ, ∃ f4 f2 : Fin n → TestFun2D,
+      ∀ ω : FieldConfig2D,
+        P.eval (finiteWickCylinderEvalFamily f4 f2 ω) = Z ω := by
+  rcases hZ with ⟨n, a4, a2, c4, c2, f4, f2, a0, rfl⟩
+  refine ⟨n, finiteWickCylinderPolynomial a4 a2 c4 c2 a0, f4, f2, ?_⟩
+  intro ω
+  exact finiteWickCylinder_eq_mvPolynomial_eval a4 a2 c4 c2 f4 f2 a0 ω
 
-This isolates the genuine Gaussian-polynomial inequality needed downstream: any
-finite linear combination of quadratic and quartic Wick monomials under the free
-field measure should satisfy a dimension-free even-moment comparison with degree
-`4` growth `(C j)^(4j)`. The canonical Nelson uniform approximants are already
-instances of `IsFiniteWickCylinder`, so this is the real remaining
-hypercontractive leaf rather than sequence-specific bookkeeping. -/
-theorem gap_finiteWickCylinder_even_moment_comparison
-    (mass : ℝ) (hmass : 0 < mass) :
+/-- Any finite Wick cylinder observable admits an explicit finite-dimensional
+polynomial model whose total degree is at most `4`. This is the precise
+finite-dimensional theorem surface needed for the Nelson hypercontractive leaf. -/
+theorem IsFiniteWickCylinder.exists_mvPolynomial_model_totalDegree_le_four
+    {Z : FieldConfig2D → ℝ} (hZ : IsFiniteWickCylinder Z) :
+    ∃ n : ℕ, ∃ P : MvPolynomial (Fin n ⊕ Fin n) ℝ, ∃ f4 f2 : Fin n → TestFun2D,
+      P.totalDegree ≤ 4 ∧
+      ∀ ω : FieldConfig2D,
+        P.eval (finiteWickCylinderEvalFamily f4 f2 ω) = Z ω := by
+  rcases hZ with ⟨n, a4, a2, c4, c2, f4, f2, a0, rfl⟩
+  refine ⟨n, finiteWickCylinderPolynomial a4 a2 c4 c2 a0, f4, f2,
+    finiteWickCylinderPolynomial_totalDegree_le_four a4 a2 c4 c2 a0, ?_⟩
+  intro ω
+  exact finiteWickCylinder_eq_mvPolynomial_eval a4 a2 c4 c2 f4 f2 a0 ω
+
+/-- Polynomial evaluation on a finite real coordinate space is continuous. -/
+theorem continuous_mvPolynomial_eval {σ : Type*} [Fintype σ] [DecidableEq σ]
+    (P : MvPolynomial σ ℝ) :
+    Continuous (fun x : σ → ℝ => P.eval x) := by
+  classical
+  induction P using MvPolynomial.induction_on with
+  | C a =>
+      simpa using continuous_const
+  | add P Q hP hQ =>
+      simpa [MvPolynomial.eval_add] using hP.add hQ
+  | mul_X P i hP =>
+      simpa [MvPolynomial.eval_mul, MvPolynomial.eval_X] using hP.mul (continuous_apply i)
+
+/-- Standard-Gaussian hypercontractive frontier behind the Nelson step.
+
+This is the finite-dimensional core estimate one expects from Gaussian
+hypercontractivity: degree-`4` polynomials under the standard product Gaussian
+measure satisfy dimension-free `L^(2j)` versus `L²` control. -/
+theorem gap_standardGaussian_mvPolynomial_even_moment_comparison_totalDegree_le_four :
     ∃ C : ℝ, 0 < C ∧
-      ∀ {Z : FieldConfig2D → ℝ}, IsFiniteWickCylinder Z →
+      ∀ {n : ℕ},
+        ∀ (P : MvPolynomial (Fin n ⊕ Fin n) ℝ), P.totalDegree ≤ 4 →
         ∀ (j : ℕ), 0 < j →
-          ∫ ω, |Z ω| ^ (2 * j) ∂(freeFieldMeasure mass hmass)
+          ∫ x, |P.eval x| ^ (2 * j)
+              ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1))
             ≤ (C * ↑j) ^ (4 * j) *
-                (∫ ω, (Z ω) ^ 2 ∂(freeFieldMeasure mass hmass)) ^ j := by
+                (∫ x, (P.eval x) ^ 2
+                    ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1))) ^ j := by
   sorry
+
+/-- Finite-dimensional centered-Gaussian reduction frontier behind the Nelson step.
+
+The remaining reduction is that any centered Gaussian measure on a finite real
+coordinate space should be reducible, for degree-`4` polynomial moments, to the
+standard product Gaussian on the same coordinate space. Centeredness is exposed
+explicitly because a bare linear image of the standard Gaussian is always
+centered. This isolates the linear-algebra / covariance-factorization part from
+the genuinely hypercontractive estimate above. -/
+theorem gap_centeredGaussian_finiteDimensional_eq_map_standardGaussian :
+    ∀ {n : ℕ} (μ : Measure (Fin n ⊕ Fin n → ℝ)), IsGaussian μ →
+      (∀ i : Fin n ⊕ Fin n, ∫ x, x i ∂μ = 0) →
+      ∃ L : (Fin n ⊕ Fin n → ℝ) →ₗ[ℝ] (Fin n ⊕ Fin n → ℝ),
+        μ = Measure.map L (Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1)) := by
+  sorry
+
+/-- Substitution of variables by linear polynomials does not increase total
+degree. This is the algebraic core behind linear pullback for multivariate
+polynomials on finite real coordinate spaces. -/
+private lemma totalDegree_bind₁_le_of_forall_totalDegree_le_one
+    {σ τ : Type*} [DecidableEq σ] [DecidableEq τ]
+    (f : σ → MvPolynomial τ ℝ)
+    (hf : ∀ i, (f i).totalDegree ≤ 1) :
+    ∀ P : MvPolynomial σ ℝ, (MvPolynomial.bind₁ f P).totalDegree ≤ P.totalDegree := by
+  intro P
+  classical
+  have hsum :
+      MvPolynomial.bind₁ f P =
+        Finset.sum P.support
+          (fun d => MvPolynomial.bind₁ f (MvPolynomial.monomial d (MvPolynomial.coeff d P))) := by
+    rw [← map_sum, ← P.as_sum]
+  rw [hsum]
+  apply MvPolynomial.totalDegree_finsetSum_le
+  intro d hd
+  rw [MvPolynomial.bind₁_monomial]
+  have hprod :
+      (∏ i ∈ d.support, f i ^ d i).totalDegree ≤
+        ∑ i ∈ d.support, (f i ^ d i).totalDegree :=
+    MvPolynomial.totalDegree_finset_prod d.support (fun i => f i ^ d i)
+  have hpow_sum :
+      ∑ i ∈ d.support, (f i ^ d i).totalDegree ≤ ∑ i ∈ d.support, d i := by
+    refine Finset.sum_le_sum ?_
+    intro i hi
+    calc
+      (f i ^ d i).totalDegree ≤ d i * (f i).totalDegree := MvPolynomial.totalDegree_pow _ _
+      _ ≤ d i * 1 := Nat.mul_le_mul_left _ (hf i)
+      _ = d i := by simp
+  calc
+    (MvPolynomial.C (MvPolynomial.coeff d P) * ∏ i ∈ d.support, f i ^ d i).totalDegree
+        ≤ (MvPolynomial.C (MvPolynomial.coeff d P)).totalDegree +
+            (∏ i ∈ d.support, f i ^ d i).totalDegree :=
+      MvPolynomial.totalDegree_mul _ _
+    _ ≤ 0 + ∑ i ∈ d.support, (f i ^ d i).totalDegree := by
+      simpa using hprod
+    _ ≤ ∑ i ∈ d.support, d i := by
+      simpa using hpow_sum
+    _ ≤ P.totalDegree := MvPolynomial.le_totalDegree hd
+
+/-- The standard basis on a finite real coordinate space identifies the Finsupp
+coordinate representation with the original coordinate function. -/
+private lemma pi_basisFun_repr_symm_equivFunOnFinite_symm
+    (n : ℕ) (x : Fin n ⊕ Fin n → ℝ) :
+    let b := Pi.basisFun ℝ (Fin n ⊕ Fin n)
+    let c : (Fin n ⊕ Fin n) →₀ ℝ := Finsupp.equivFunOnFinite.symm x
+    b.repr.symm c = x := by
+  intro b c
+  have hx' : (∑ j, x j • b j) = x := by
+    simpa [b, Pi.basisFun_equivFun] using (Module.Basis.equivFun_symm_apply b x).symm
+  have hlin :
+      (Finsupp.linearCombination ℝ (fun j => b j)) (Finsupp.equivFunOnFinite.symm x) =
+        ∑ j, x j • b j := by
+    simpa [Fintype.linearCombination_apply] using
+      (Finsupp.linearCombination_eq_fintype_linearCombination_apply ℝ (fun j => b j) x)
+  simpa [c] using hlin.trans hx'
+
+/-- Algebraic pullback frontier for degree-`4` multivariate polynomials.
+
+Given a linear self-map on a finite real coordinate space, substitution along
+that linear map should preserve the degree-`≤ 4` class. This is the purely
+algebraic input needed to transport standard-Gaussian polynomial bounds to an
+arbitrary centered finite-dimensional Gaussian law once the measure is realized
+as a linear image of the standard product Gaussian. -/
+theorem gap_mvPolynomial_linear_pullback_totalDegree_le_four :
+    ∀ {n : ℕ}
+      (L : (Fin n ⊕ Fin n → ℝ) →ₗ[ℝ] (Fin n ⊕ Fin n → ℝ))
+      (P : MvPolynomial (Fin n ⊕ Fin n) ℝ), P.totalDegree ≤ 4 →
+        ∃ Q : MvPolynomial (Fin n ⊕ Fin n) ℝ,
+          Q.totalDegree ≤ 4 ∧
+          ∀ x : Fin n ⊕ Fin n → ℝ, Q.eval x = P.eval (L x) := by
+  intro n L P hdeg
+  let b := Pi.basisFun ℝ (Fin n ⊕ Fin n)
+  let f := L.toMvPolynomial b b
+  let Q : MvPolynomial (Fin n ⊕ Fin n) ℝ := MvPolynomial.bind₁ f P
+  refine ⟨Q, ?_, ?_⟩
+  · dsimp [Q, f]
+    exact
+      (totalDegree_bind₁_le_of_forall_totalDegree_le_one (L.toMvPolynomial b b)
+        (fun i => LinearMap.toMvPolynomial_totalDegree_le b b L i) P).trans hdeg
+  · intro x
+    dsimp [Q, f]
+    change (MvPolynomial.eval x) (MvPolynomial.eval₂ MvPolynomial.C (L.toMvPolynomial b b) P) =
+      (MvPolynomial.eval (L x)) P
+    calc
+      (MvPolynomial.eval x) (MvPolynomial.eval₂ MvPolynomial.C (L.toMvPolynomial b b) P)
+          = (MvPolynomial.eval (MvPolynomial.eval x ∘ L.toMvPolynomial b b)) P := by
+              simpa [Function.comp] using
+                (MvPolynomial.eval_assoc (f := L.toMvPolynomial b b) (g := x) (p := P)).symm
+      _ = (MvPolynomial.eval (L x)) P := by
+            have hhom :
+                MvPolynomial.eval (MvPolynomial.eval x ∘ L.toMvPolynomial b b) =
+                  MvPolynomial.eval (L x) := by
+              apply MvPolynomial.ringHom_ext'
+              · ext r
+                simp
+              · intro i
+                simp [MvPolynomial.eval_X]
+                let c : (Fin n ⊕ Fin n) →₀ ℝ := Finsupp.equivFunOnFinite.symm x
+                have hx : b.repr.symm c = x := pi_basisFun_repr_symm_equivFunOnFinite_symm n x
+                have h := LinearMap.toMvPolynomial_eval_eq_apply (b₁ := b) (b₂ := b) (f := L) i c
+                rw [hx] at h
+                simpa [b] using h
+            exact congrArg (fun φ => φ P) hhom
+
+/-- Finite-dimensional centered-Gaussian reduction frontier behind the Nelson step.
+
+This is now a derived theorem from:
+1. realization of a centered finite-dimensional Gaussian measure as a linear
+   image of the standard product Gaussian, and
+2. degree-preserving pullback of degree-`4` polynomials along that linear map. -/
+theorem gap_centeredGaussian_mvPolynomial_integral_reduction_to_standardGaussian_totalDegree_le_four :
+    ∀ {n : ℕ} (μ : Measure (Fin n ⊕ Fin n → ℝ)), IsGaussian μ →
+      (∀ i : Fin n ⊕ Fin n, ∫ x, x i ∂μ = 0) →
+      ∀ (P : MvPolynomial (Fin n ⊕ Fin n) ℝ), P.totalDegree ≤ 4 →
+        ∃ Q : MvPolynomial (Fin n ⊕ Fin n) ℝ,
+          Q.totalDegree ≤ 4 ∧
+          (∀ (j : ℕ), 0 < j →
+            ∫ x, |P.eval x| ^ (2 * j) ∂μ
+              =
+            ∫ x, |Q.eval x| ^ (2 * j)
+              ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1))) ∧
+          ∫ x, (P.eval x) ^ 2 ∂μ
+            =
+          ∫ x, (Q.eval x) ^ 2
+            ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1)) := by
+  intro n μ hμ hμ_centered P hdeg
+  letI : OpensMeasurableSpace (Fin n ⊕ Fin n → ℝ) := by infer_instance
+  obtain ⟨L, hμeq⟩ :=
+    gap_centeredGaussian_finiteDimensional_eq_map_standardGaussian μ hμ hμ_centered
+  obtain ⟨Q, hQdeg, hQeval⟩ :=
+    gap_mvPolynomial_linear_pullback_totalDegree_le_four L P hdeg
+  refine ⟨Q, hQdeg, ?_, ?_⟩
+  · intro j hj
+    let γ : Measure (Fin n ⊕ Fin n → ℝ) :=
+      Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1)
+    have htarget_ae :
+        AEStronglyMeasurable (fun x : Fin n ⊕ Fin n → ℝ => |P.eval x| ^ (2 * j))
+          (Measure.map L γ) :=
+      ((continuous_mvPolynomial_eval P).abs.pow (2 * j)).aestronglyMeasurable
+    rw [hμeq, integral_map]
+    · congr with x
+      rw [← hQeval]
+    · exact (L.continuous_of_finiteDimensional.measurable.aemeasurable)
+    · exact htarget_ae
+  · rw [hμeq, integral_map]
+    · congr with x
+      rw [← hQeval]
+    · exact (L.continuous_of_finiteDimensional.measurable.aemeasurable)
+    · let γ : Measure (Fin n ⊕ Fin n → ℝ) :=
+          Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1)
+      have htarget_ae :
+          AEStronglyMeasurable (fun x : Fin n ⊕ Fin n → ℝ => (P.eval x) ^ 2)
+            (Measure.map L γ) :=
+        ((continuous_mvPolynomial_eval P).pow 2).aestronglyMeasurable
+      exact htarget_ae
+
+/-- Honest finite-dimensional centered-Gaussian polynomial frontier behind the
+Nelson hypercontractive step.
+
+This is now a derived theorem from the two genuine subfrontiers:
+reduction from a centered finite-dimensional Gaussian measure to the standard
+product Gaussian, and the standard-Gaussian degree-`4` hypercontractive
+estimate itself. -/
+theorem gap_centeredGaussian_mvPolynomial_even_moment_comparison_totalDegree_le_four :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ {n : ℕ} (μ : Measure (Fin n ⊕ Fin n → ℝ)), IsGaussian μ →
+        (∀ i : Fin n ⊕ Fin n, ∫ x, x i ∂μ = 0) →
+        ∀ (P : MvPolynomial (Fin n ⊕ Fin n) ℝ), P.totalDegree ≤ 4 →
+        ∀ (j : ℕ), 0 < j →
+          ∫ x, |P.eval x| ^ (2 * j) ∂μ
+            ≤ (C * ↑j) ^ (4 * j) *
+                (∫ x, (P.eval x) ^ 2 ∂μ) ^ j := by
+  obtain ⟨C, hC, hstd⟩ :=
+    gap_standardGaussian_mvPolynomial_even_moment_comparison_totalDegree_le_four
+  refine ⟨C, hC, ?_⟩
+  intro n μ hμ hμ_centered P hdeg j hj
+  obtain ⟨Q, hQdeg, hmoment, hsq⟩ :=
+    gap_centeredGaussian_mvPolynomial_integral_reduction_to_standardGaussian_totalDegree_le_four
+      μ hμ hμ_centered P hdeg
+  calc
+    ∫ x, |P.eval x| ^ (2 * j) ∂μ
+        =
+      ∫ x, |Q.eval x| ^ (2 * j)
+        ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1)) := hmoment j hj
+    _ ≤ (C * ↑j) ^ (4 * j) *
+          (∫ x, (Q.eval x) ^ 2
+              ∂(Measure.pi (fun _ : Fin n ⊕ Fin n => gaussianReal 0 1))) ^ j :=
+        hstd Q hQdeg j hj
+    _ = (C * ↑j) ^ (4 * j) * (∫ x, (P.eval x) ^ 2 ∂μ) ^ j := by
+      rw [hsq]
 
 /-! ## Re-Wick-ordering under change of covariance
 
