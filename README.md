@@ -6,11 +6,11 @@ A Lean 4 formalization of constructive 2D φ⁴ Euclidean QFT aimed at the Glimm
 2. prove the Osterwalder-Schrader axioms,
 3. reconstruct the corresponding Wightman theory.
 
-## Current Status (March 9, 2026)
+## Current Status (March 10, 2026)
 
-- Core theorem-level `sorry` in `Phi4/**/*.lean` excluding `Phi4/Scratch`: `20`
+- Core theorem-level `sorry` in `Phi4/**/*.lean` excluding `Phi4/Scratch`: `21`
 - Legacy `class/structure .*Model` declarations: `13`
-- Canonical `gap_*` theorem frontiers: `39`
+- Canonical `gap_*` theorem frontiers: `45`
 - `axiom` declarations: `0`
 - `def`/`abbrev := by sorry`: `0`
 
@@ -21,12 +21,26 @@ The correct status framing is:
 - the open mathematics is now partly surfaced as explicit theorem-level frontiers,
 - a reduced but still real legacy assumption surface remains in `...Model` classes.
 
+In particular, the repository does not yet locally prove that `phi^4_2`
+satisfies the Osterwalder-Schrader axioms from first principles. The current
+OS file is still an assembly layer:
+
+- [phi4_satisfies_OS](/Users/xiyin/Phi4/Phi4/OSAxioms.lean:78) packages an OS
+  object from explicit OS0/OS2/E2/E3/clustering hypotheses,
+- [gap_phi4_linear_growth](/Users/xiyin/Phi4/Phi4/Reconstruction/Part1Core.lean:470)
+  is an assumption-explicit reconstruction/OS1 bridge,
+- [gap_infiniteVolumeLimit_exists](/Users/xiyin/Phi4/Phi4/InfiniteVolumeLimit/Part1.lean:319)
+  is an explicit package-construction theorem for infinite-volume data,
+  not yet the local proof of that data.
+
 ## Roadmap To OS Axioms
 
 1. `WP0`: complete the free/Gaussian combinatorial bridge needed by WP1.
    Main explicit targets:
    - `gap_covariance_eq_kernel` (honest flat-space CLM existence frontier, not an
      equality statement for the harmonic-oscillator `freeCovarianceCLM`)
+   - `gap_uvMollifier_covariance_eq_freeCovKernel`
+   - `gap_uvMollifier_freeCovKernel_log_growth`
    - `gap_pairing_card`
    - `gap_wicks_theorem_even`
    - `gap_feynman_graph_expansion`
@@ -49,9 +63,14 @@ The correct status framing is:
 
    The current Nelson branch is reduced to three honest leaf theorems:
    - `gap_regularizedPointCovariance_log_growth`
-   - `gap_interactionCutoff_sub_even_moment_comparison`
+   - `gap_finiteWickCylinder_even_moment_comparison`
    - `gap_interactionCutoff_reference_shell_L2_bound`
-   and derived closures:
+   together with the canonical approximation bridge:
+   - `gap_interactionCutoffSubUniformApprox_tendsto_ae` `[closed]`
+   - `gap_interactionCutoffSubUniformApprox_L2` `[closed]`
+   - `gap_interactionCutoffSubUniformApprox_even_moment_comparison` `[closed modulo finite-cylinder leaf]`
+   and downstream derived closures:
+   - `gap_interactionCutoff_sub_even_moment_comparison`
    - `gap_interactionCutoff_reference_shell_even_moment_bound`
    - `gap_interaction_double_exponential_tail_bound`
    - `gap_exp_neg_interaction_uniform_bound`
@@ -96,6 +115,32 @@ The correct status framing is:
    - OS2 translation/rotation covariance of the packaged Schwinger functions
    - distributional E2 reflection positivity
    - E3 permutation symmetry
+
+## Practical Bottom Line
+
+The construction is closest to completion on the packaging side and still far
+from completion on the analytic side.
+
+The most important remaining local leaf blockers are:
+
+1. free-field / covariance bridge:
+   - `gap_covariance_eq_kernel`
+   - `gap_uvMollifier_covariance_eq_freeCovKernel`
+   - `gap_uvMollifier_freeCovKernel_log_growth`
+2. WP1 shell branch:
+   - `gap_wickPowerStandardSeqShellUpper_spatial_sq_rate`
+3. WP1 Nelson branch:
+   - `gap_finiteWickCylinder_even_moment_comparison`
+   - `gap_interactionCutoff_reference_shell_L2_bound`
+4. regularity / OS1:
+   - `gap_wick_powers_infinite_volume`
+   - `gap_wickCubicSmeared_tendsto_ae`
+   - `gap_euclidean_equation_of_motion`
+5. OS3:
+   - `gap_measure_os3_reflection_positive`
+
+Once those are resolved, the existing OS/reconstruction assembly layer is much
+closer to being feedable by local data.
 
 ## Main Architectural Constraint
 

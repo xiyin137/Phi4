@@ -1,6 +1,6 @@
 # Phi4 Audit Notes
 
-Date: 2026-03-09
+Date: 2026-03-10
 
 ## Main vs Simplified Branch Review
 
@@ -27,9 +27,9 @@ for direct merge. In particular:
 
 ## Current Honest Status
 
-- theorem-level `sorry` in core modules: `20`
+- theorem-level `sorry` in core modules: `21`
 - legacy `class/structure .*Model`: `13`
-- canonical `gap_*` theorem frontiers: `39`
+- canonical `gap_*` theorem frontiers: `45`
 - `axiom`: `0`
 - `def/abbrev := by sorry`: `0`
 
@@ -61,6 +61,39 @@ algebra or basic Gaussian moment identities. The remaining obstruction is the
 actual covariance-shell analysis behind
 `gap_wickPowerStandardSeqShellUpper_spatial_sq_rate`, together with the
 Nelson-side leaf frontiers in `Interaction/NelsonBound.lean`.
+
+The latest Nelson-focused pass refined the theorem surface further:
+
+1. `gap_interactionCutoffSubUniformApprox_tendsto_ae` is closed,
+2. `gap_interactionCutoffSubUniformApprox_L2` is closed,
+3. the remaining hypercontractive Nelson leaf is now attached to
+   `gap_finiteWickCylinder_even_moment_comparison` in
+   [WickProduct.lean](/Users/xiyin/Phi4/Phi4/WickProduct.lean:722),
+4. `gap_interactionCutoffSubUniformApprox_even_moment_comparison` is now a
+   derived theorem for the canonical uniform approximant sequence,
+5. `gap_interactionCutoff_sub_even_moment_comparison` is derived from the
+   canonical approximant sequence rather than from an over-broad generic route.
+
+This is a theorem-surface improvement, not just refactoring. The remaining
+Nelson mathematics is now concentrated in:
+
+1. covariance growth,
+2. finite Wick-cylinder hypercontractivity, and
+3. reference-shell `L²` decay.
+
+The FreeField side was also made more honest:
+
+1. `gap_covariance_eq_kernel` remains the flat-space CLM existence frontier,
+2. `gap_uvMollifier_covariance_eq_freeCovKernel` isolates the narrower
+   mollifier-family covariance bridge actually used by WP1,
+3. `gap_uvMollifier_freeCovKernel_log_growth` isolates the kernel-side
+   logarithmic growth estimate.
+
+The project is therefore in a cleaner state than before, but the local proof
+that `phi^4_2` satisfies the OS axioms is still not complete. The OS file is
+still an assembly layer with explicit OS0/OS2/E2/E3 hypotheses, and the
+dominant remaining blockers are the WP1 analytic leafs, the regularity
+theorems, and local OS3 reflection positivity.
 
 ## Refactor Update
 
